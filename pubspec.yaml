@@ -1,0 +1,63 @@
+name: hairspare
+description: HairSpare - 미용실 스페어 급구 해결 플랫폼 모바일 앱
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # 상태 관리
+  provider: ^6.1.1
+  
+  # HTTP 통신
+  http: ^1.1.0
+  dio: ^5.4.0
+  
+  # 로컬 저장소
+  shared_preferences: ^2.2.2
+  flutter_secure_storage: ^9.0.0
+  
+  # 이미지 처리
+  image_picker: ^1.0.5
+  cached_network_image: ^3.3.0
+  
+  # 비디오 플레이어
+  video_player: ^2.8.2
+  
+  # UI 컴포넌트
+  flutter_svg: ^2.0.9
+  intl: ^0.20.2
+  
+  # 유틸리티
+  uuid: ^4.2.1
+  path_provider: ^2.1.1
+  url_launcher: ^6.2.2
+  share_plus: ^7.2.1
+  
+  # 소셜 로그인 SDK
+  kakao_flutter_sdk_user: ^1.7.0
+  flutter_naver_login: ^1.7.0
+  google_sign_in: ^6.2.1
+  
+  # 로컬라이제이션
+  flutter_localizations:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/
+    - assets/images/banners/
+    - assets/images/social/
+    - assets/images/missions/
+    - assets/fonts/
