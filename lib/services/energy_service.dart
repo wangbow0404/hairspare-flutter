@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import '../utils/api_client.dart';
+import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
+import '../mocks/mock_spare_data.dart';
 
 class EnergyTransaction {
   final String id;
@@ -40,6 +42,15 @@ class EnergyService {
 
   /// 에너지 지갑 정보 조회
   Future<Map<String, dynamic>> getWallet() async {
+    if (ApiConfig.useMockData) {
+      final data = await MockSpareData.getWallet();
+      return {
+        'balance': data['balance'],
+        'transactions': (data['transactions'] as List)
+            .map((t) => EnergyTransaction.fromJson(t as Map<String, dynamic>))
+            .toList(),
+      };
+    }
     try {
       final response = await _apiClient.dio.get('/api/energy/wallet');
 

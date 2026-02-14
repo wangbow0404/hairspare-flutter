@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'providers/auth_provider.dart';
 import 'providers/job_provider.dart';
 import 'providers/favorite_provider.dart';
@@ -15,7 +16,8 @@ import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+  await initializeDateFormatting('ko_KR', null);
+
   // 카카오 SDK 초기화
   kakao.KakaoSdk.init(
     nativeAppKey: 'YOUR_KAKAO_NATIVE_APP_KEY', // TODO: 실제 카카오 네이티브 앱 키로 변경 필요

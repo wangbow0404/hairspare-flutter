@@ -2,6 +2,9 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ApiConfig {
+  /// Mock 데이터 사용 여부 (true: 백엔드 없이 UI/UX 검증, false: 실제 API 사용)
+  static const bool useMockData = true;
+
   // Android 에뮬레이터는 10.0.2.2를 사용해야 localhost에 접근 가능
   // iOS 시뮬레이터와 웹은 localhost 사용 가능
   // 실제 디바이스는 컴퓨터의 로컬 IP 주소 사용 필요

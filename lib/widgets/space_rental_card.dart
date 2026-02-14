@@ -120,12 +120,22 @@ class SpaceRentalCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-          child: Padding(
-            padding: AppTheme.spacing(AppTheme.spacing4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 헤더: 미용실명과 예약 가능 배지
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 이미지 영역 (imageUrls 있으면 표시, 없으면 그라데이션 플레이스홀더)
+              ClipRRect(
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(AppTheme.radiusLg),
+                ),
+                child: _buildImageSection(),
+              ),
+              Padding(
+                padding: AppTheme.spacing(AppTheme.spacing4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 헤더: 미용실명과 예약 가능 배지
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -237,7 +247,7 @@ class SpaceRentalCard extends StatelessWidget {
 
                 // 하단: 가격과 시설
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 가격
                     Column(
@@ -261,11 +271,15 @@ class SpaceRentalCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    // 시설 아이콘
-                    if (spaceRental.facilities.isNotEmpty)
-                      Wrap(
-                        spacing: AppTheme.spacing2,
-                        children: spaceRental.facilities.take(4).map((facility) {
+                    // 시설 아이콘 (오버플로우 방지: Expanded + SingleChildScrollView)
+                    if (spaceRental.facilities.isNotEmpty) ...[
+                      SizedBox(width: AppTheme.spacing3),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: spaceRental.facilities.take(4).map((facility) {
                           final icon = _getFacilityIcon(facility);
                           return Container(
                             padding: AppTheme.spacingSymmetric(
@@ -299,12 +313,60 @@ class SpaceRentalCard extends StatelessWidget {
                             ),
                           );
                         }).toList(),
+                          ),
+                        ),
                       ),
+                    ],
                   ],
                 ),
               ],
             ),
           ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageSection() {
+    final hasImage = spaceRental.imageUrls != null &&
+        spaceRental.imageUrls!.isNotEmpty &&
+        spaceRental.imageUrls!.first.startsWith('http');
+
+    return Container(
+      width: double.infinity,
+      height: 140,
+      color: AppTheme.backgroundGray,
+      child: hasImage
+          ? Image.network(
+              spaceRental.imageUrls!.first,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => _buildImagePlaceholder(),
+            )
+          : _buildImagePlaceholder(),
+    );
+  }
+
+  Widget _buildImagePlaceholder() {
+    return Container(
+      width: double.infinity,
+      height: 140,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.primaryPurple.withOpacity(0.2),
+            AppTheme.primaryBlue.withOpacity(0.2),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.store,
+          size: 48,
+          color: AppTheme.primaryPurple.withOpacity(0.5),
         ),
       ),
     );

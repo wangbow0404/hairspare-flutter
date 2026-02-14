@@ -3,10 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/date_filter_button.dart';
 import '../../widgets/space_rental_card.dart';
 import '../../widgets/job_filter_dropdown.dart';
-import '../../widgets/notification_bell.dart';
-import '../../providers/chat_provider.dart';
+import '../../widgets/spare_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../models/space_rental.dart';
 import '../../models/region.dart';
@@ -30,7 +30,6 @@ class RegionSelectScreen extends StatefulWidget {
 
 class _RegionSelectScreenState extends State<RegionSelectScreen> {
   int _currentNavIndex = 0;
-  bool _isSearchOpen = false;
   final TextEditingController _searchController = TextEditingController();
   String? _activeFilter;
   String _sortBy = 'latest';
@@ -161,6 +160,25 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
       }).toList();
     }
 
+    // 날짜 필터
+    if (_selectedDateStart != null) {
+      final targetDate = DateTime(
+        _selectedDateStart!.year,
+        _selectedDateStart!.month,
+        _selectedDateStart!.day,
+      );
+      filtered = filtered.where((space) {
+        return space.availableSlots.any((slot) {
+          final slotDate = DateTime(
+            slot.startTime.year,
+            slot.startTime.month,
+            slot.startTime.day,
+          );
+          return slotDate.isAtSameMomentAs(targetDate) && slot.isAvailable;
+        });
+      }).toList();
+    }
+
     // 공간 유형 필터
     if (_spaceType != null) {
       filtered = filtered.where((space) {
@@ -230,104 +248,7 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '공간대여',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
-        actions: _isSearchOpen
-            ? [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      hintText: '미용실명 또는 주소 검색',
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: AppTheme.spacing2,
-                        vertical: AppTheme.spacing2,
-                      ),
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        _filteredSpaces = _getFilteredSpaces(_allSpaces);
-                      });
-                    },
-                  ),
-                ),
-                IconButton(
-                  icon: IconMapper.icon('x', size: 24, color: AppTheme.textSecondary) ??
-                      const Icon(Icons.close, color: AppTheme.textSecondary),
-                  onPressed: () {
-                    setState(() {
-                      _isSearchOpen = false;
-                      _searchController.clear();
-                      _filteredSpaces = _getFilteredSpaces(_allSpaces);
-                    });
-                  },
-                ),
-              ]
-            : [
-                IconButton(
-                  icon: IconMapper.icon('search', size: 24, color: AppTheme.textSecondary) ??
-                      const Icon(Icons.search, color: AppTheme.textSecondary),
-                  onPressed: () {
-                    setState(() {
-                      _isSearchOpen = true;
-                    });
-                  },
-                ),
-                Consumer<ChatProvider>(
-                  builder: (context, chatProvider, _) {
-                    final unreadCount = chatProvider.totalUnreadCount;
-                    return Stack(
-                      children: [
-                        IconButton(
-                          icon: IconMapper.icon('messagecircle', size: 24, color: AppTheme.textSecondary) ??
-                              const Icon(Icons.message_outlined, color: AppTheme.textSecondary),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const MessagesScreen()),
-                            );
-                          },
-                        ),
-                        if (unreadCount > 0)
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: Container(
-                              width: 12,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                color: AppTheme.urgentRed,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
-                              ),
-                            ),
-                          ),
-                      ],
-                    );
-                  },
-                ),
-                NotificationBell(
-                  role: 'spare',
-                ),
-              ],
-      ),
+      appBar: const SpareAppBar(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -359,6 +280,28 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                             constraints: const BoxConstraints(),
                           ),
                         ],
+                      ),
+                      SizedBox(height: AppTheme.spacing3),
+                      // 검색
+                      TextField(
+                        controller: _searchController,
+                        onChanged: (_) {
+                          setState(() {
+                            _filteredSpaces = _getFilteredSpaces(_allSpaces);
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText: '미용실명 또는 주소 검색',
+                          prefixIcon: Icon(Icons.search, size: 20, color: AppTheme.textSecondary),
+                          border: OutlineInputBorder(
+                            borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing4,
+                            vertical: AppTheme.spacing2,
+                          ),
+                          isDense: true,
+                        ),
                       ),
                       SizedBox(height: AppTheme.spacing3),
                       
@@ -423,6 +366,31 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                                 },
                               ),
                             ],
+                            SizedBox(width: AppTheme.spacing2),
+                            // 날짜 선택
+                            DateFilterButton(
+                              selectedDate: _selectedDateStart,
+                              onDateSelected: (date) {
+                                setState(() {
+                                  _selectedDateStart = date;
+                                  _selectedDateEnd = null;
+                                });
+                                _loadSpaces();
+                                setState(() {
+                                  _filteredSpaces = _getFilteredSpaces(_allSpaces);
+                                });
+                              },
+                              onClear: () {
+                                setState(() {
+                                  _selectedDateStart = null;
+                                  _selectedDateEnd = null;
+                                });
+                                _loadSpaces();
+                                setState(() {
+                                  _filteredSpaces = _getFilteredSpaces(_allSpaces);
+                                });
+                              },
+                            ),
                             SizedBox(width: AppTheme.spacing2),
                             // 정렬 드롭다운
                             JobFilterDropdown(

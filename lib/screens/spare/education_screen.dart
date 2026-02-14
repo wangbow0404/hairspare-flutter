@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/spare_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../widgets/education_filter_dropdown.dart';
+import '../../widgets/date_filter_button.dart';
 import '../../utils/region_helper.dart';
 import '../../models/region.dart';
 import 'home_screen.dart';
 import 'payment_screen.dart';
 import 'favorites_screen.dart';
 import 'profile_screen.dart';
+import 'education_detail_screen.dart';
 import 'dart:math';
 
 /// Next.js와 동일한 교육 화면 (복잡한 필터링 시스템)
@@ -47,6 +51,8 @@ class _EducationScreenState extends State<EducationScreen> {
   bool _showCategoryDropdown = false;
   bool _showSubCategoryDropdown = false;
   bool _showSortDropdown = false;
+
+  DateTime? _selectedDateStart;
 
   // 드롭다운 버튼 키
   final GlobalKey _provinceButtonKey = GlobalKey();
@@ -105,15 +111,62 @@ class _EducationScreenState extends State<EducationScreen> {
 
   List<Education> _generateMockEducations() {
     final provinces = _provinces;
+    final now = DateTime.now();
     return List.generate(20, (index) {
       final province = provinces[index % provinces.length];
       final districts = RegionHelper.getDistrictsByProvince(province.id);
       final district = districts.isNotEmpty ? districts[index % districts.length] : null;
-      
+      final hasRichContent = index < 3;
+      final isOnline = index % 2 == 0;
+      final deadline = now.add(Duration(days: index + 5));
+      final startDate = deadline.add(const Duration(days: 1));
+      final endDate = startDate.add(const Duration(days: 1));
+      final curriculumSchedule = hasRichContent
+          ? [
+              CurriculumDay(
+                day: 1,
+                date: startDate,
+                content: '이론 (2시간)\n• 기초 이론 및 트렌드 분석\n• 실무 사례 연구',
+              ),
+              CurriculumDay(
+                day: 2,
+                date: endDate,
+                content: '실습 (3시간)\n• 직접 실습 및 피드백\n• Q&A 및 수료',
+              ),
+            ]
+          : null;
+      final reviews = hasRichContent
+          ? [
+              EducationReview(
+                userName: '김스타',
+                rating: 5,
+                comment: '실무에 바로 적용할 수 있는 내용이 많았어요. 강사님이 친절하시고 실습 비중이 좋았습니다.',
+                createdAt: now.subtract(const Duration(days: 3)),
+              ),
+              EducationReview(
+                userName: '이디자인',
+                rating: 4,
+                comment: '커리큘럼이 체계적이고 유익했습니다. 다음 교육도 신청할 예정이에요.',
+                createdAt: now.subtract(const Duration(days: 7)),
+              ),
+              EducationReview(
+                userName: '박헤어',
+                rating: 5,
+                comment: '강사님 설명이 정말 잘 되었어요. 실습 시간이 충분해서 좋았습니다.',
+                createdAt: now.subtract(const Duration(days: 10)),
+              ),
+              EducationReview(
+                userName: '최스타일',
+                rating: 4,
+                comment: '가격 대비 만족도 높아요. 추천합니다!',
+                createdAt: now.subtract(const Duration(days: 14)),
+              ),
+            ]
+          : null;
       return Education(
         id: 'edu_$index',
         title: '교육 프로그램 ${index + 1}',
-        description: '교육 프로그램 ${index + 1}에 대한 설명입니다.',
+        description: '교육 프로그램 ${index + 1}에 대한 설명입니다. 전문가 과정과 실습 위주의 커리큘럼으로 구성되어 있습니다. 미용 분야 실무 역량을 키우고 싶은 분들에게 적합한 과정입니다.',
         category: _categories[index % _categories.length].name,
         subCategory: _categories[index % _categories.length].subCategories[0],
         province: province.name,
@@ -121,11 +174,27 @@ class _EducationScreenState extends State<EducationScreen> {
         regionId: district?.id ?? province.id,
         price: (index + 1) * 10000,
         isUrgent: index % 3 == 0,
-        isOnline: index % 2 == 0,
-        deadline: DateTime.now().add(Duration(days: index + 1)),
+        isOnline: isOnline,
+        isLive: hasRichContent && isOnline && index == 0, // 첫 번째 온라인만 LIVE
+        deadline: deadline,
+        startDate: hasRichContent ? startDate : null,
+        endDate: hasRichContent ? endDate : null,
         applicants: index * 2,
         maxApplicants: 20,
-        createdAt: DateTime.now().subtract(Duration(days: index)),
+        createdAt: now.subtract(Duration(days: index)),
+        imageUrl: null,
+        curriculum: null,
+        curriculumSchedule: curriculumSchedule,
+        duration: hasRichContent ? '2일 과정 (총 5시간)' : null,
+        instructorName: hasRichContent ? '김미용 강사' : null,
+        instructorBio: hasRichContent ? '15년 경력, 한국미용예술인협회 인증' : null,
+        benefits: hasRichContent
+            ? ['실무 중심 커리큘럼', '소수 정원 맞춤 교육', '수료증 발급', '재수강 50% 할인']
+            : null,
+        targetAudience: hasRichContent ? '1~3년차 디자이너, 이직 준비 중인 스타일리스트' : null,
+        averageRating: reviews != null ? 4.5 : null,
+        reviewCount: reviews?.length ?? 0,
+        reviews: reviews,
       );
     });
   }
@@ -175,6 +244,22 @@ class _EducationScreenState extends State<EducationScreen> {
       filtered = filtered.where((e) => e.deadline.difference(now).inDays <= 3).toList();
     }
 
+    // 날짜 필터: 선택한 날짜에 진행되는 교육 (startDate~endDate) 또는 진행일 없으면 마감일 기준
+    if (_selectedDateStart != null) {
+      final targetDate = DateTime(_selectedDateStart!.year, _selectedDateStart!.month, _selectedDateStart!.day);
+      final targetEnd = DateTime(targetDate.year, targetDate.month, targetDate.day, 23, 59, 59);
+      filtered = filtered.where((e) {
+        if (e.startDate != null) {
+          final start = DateTime(e.startDate!.year, e.startDate!.month, e.startDate!.day);
+          final end = e.endDate != null
+              ? DateTime(e.endDate!.year, e.endDate!.month, e.endDate!.day)
+              : start;
+          return !targetDate.isBefore(start) && !targetDate.isAfter(end);
+        }
+        return e.deadline.isAfter(targetEnd);
+      }).toList();
+    }
+
     // 정렬
     switch (_sortBy) {
       case 'price':
@@ -211,6 +296,7 @@ class _EducationScreenState extends State<EducationScreen> {
       _insufficientApplicants = false;
       _deadlineImminent = false;
       _noReservation = false;
+      _selectedDateStart = null;
     });
     _applyFilters();
   }
@@ -226,24 +312,7 @@ class _EducationScreenState extends State<EducationScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '교육',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
-      ),
+      appBar: const SpareAppBar(),
       body: Column(
         children: [
           // 필터 섹션
@@ -289,6 +358,22 @@ class _EducationScreenState extends State<EducationScreen> {
                         SizedBox(width: AppTheme.spacing2),
                         _buildSubCategoryDropdown(),
                       ],
+                      SizedBox(width: AppTheme.spacing2),
+                      DateFilterButton(
+                        selectedDate: _selectedDateStart,
+                        onDateSelected: (date) {
+                          setState(() {
+                            _selectedDateStart = date;
+                            _applyFilters();
+                          });
+                        },
+                        onClear: () {
+                          setState(() {
+                            _selectedDateStart = null;
+                            _applyFilters();
+                          });
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -644,19 +729,39 @@ class _EducationScreenState extends State<EducationScreen> {
   }
 
   Widget _buildEducationCard(Education education) {
-    return Container(
-      margin: EdgeInsets.only(bottom: AppTheme.spacing4),
-      padding: EdgeInsets.all(AppTheme.spacing4),
-      decoration: BoxDecoration(
-        color: AppTheme.backgroundWhite,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: AppTheme.borderGray),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EducationDetailScreen(education: education),
+          ),
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: AppTheme.spacing4),
+        decoration: BoxDecoration(
+          color: AppTheme.backgroundWhite,
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          border: Border.all(color: AppTheme.borderGray),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 이미지 영역 (imageUrl 있으면 표시, 없으면 그라데이션)
+            ClipRRect(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+              child: education.imageUrl != null && education.imageUrl!.isNotEmpty
+                  ? _buildEducationImage(education.imageUrl!)
+                  : _buildEducationImagePlaceholder(),
+            ),
+            Padding(
+              padding: EdgeInsets.all(AppTheme.spacing4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
               if (education.isUrgent)
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
@@ -696,62 +801,107 @@ class _EducationScreenState extends State<EducationScreen> {
                   ),
                 ),
               ),
-            ],
-          ),
-          SizedBox(height: AppTheme.spacing3),
-          Text(
-            education.title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
+                    ],
+                  ),
+                  SizedBox(height: AppTheme.spacing3),
+                  Text(
+                    education.title,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: AppTheme.spacing2),
+                  Text(
+                    education.description,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.textSecondary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: AppTheme.spacing2),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on, size: 16, color: AppTheme.textSecondary),
+                      SizedBox(width: 4),
+                      Text(
+                        '${education.province}${education.district != null ? ' ${education.district}' : ''}',
+                        style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                      ),
+                      SizedBox(width: AppTheme.spacing3),
+                      Icon(Icons.attach_money, size: 16, color: AppTheme.textSecondary),
+                      SizedBox(width: 4),
+                      Text(
+                        '${NumberFormat('#,###').format(education.price)}원',
+                        style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: AppTheme.spacing2),
+                  Row(
+                    children: [
+                      Icon(Icons.people, size: 16, color: AppTheme.textSecondary),
+                      SizedBox(width: 4),
+                      Text(
+                        '신청 ${education.applicants}/${education.maxApplicants}명',
+                        style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '마감: ${DateFormat('yyyy-MM-dd').format(education.deadline)}',
+                        style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          SizedBox(height: AppTheme.spacing2),
-          Text(
-            education.description,
-            style: TextStyle(
-              fontSize: 14,
-              color: AppTheme.textSecondary,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEducationImage(String url) {
+    final isAsset = url.startsWith('assets/');
+    return SizedBox(
+      height: 140,
+      width: double.infinity,
+      child: isAsset
+          ? Image.asset(
+              url,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _buildEducationImagePlaceholder(),
+            )
+          : Image.network(
+              url,
+              height: 140,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _buildEducationImagePlaceholder(),
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          SizedBox(height: AppTheme.spacing2),
-          Row(
-            children: [
-              Icon(Icons.location_on, size: 16, color: AppTheme.textSecondary),
-              SizedBox(width: 4),
-              Text(
-                '${education.province}${education.district != null ? ' ${education.district}' : ''}',
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-              ),
-              SizedBox(width: AppTheme.spacing3),
-              Icon(Icons.attach_money, size: 16, color: AppTheme.textSecondary),
-              SizedBox(width: 4),
-              Text(
-                '${education.price.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}원',
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-              ),
-            ],
-          ),
-          SizedBox(height: AppTheme.spacing2),
-          Row(
-            children: [
-              Icon(Icons.people, size: 16, color: AppTheme.textSecondary),
-              SizedBox(width: 4),
-              Text(
-                '신청 ${education.applicants}/${education.maxApplicants}명',
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-              ),
-              const Spacer(),
-              Text(
-                '마감: ${education.deadline.toString().split(' ')[0]}',
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-              ),
-            ],
-          ),
-        ],
+    );
+  }
+
+  Widget _buildEducationImagePlaceholder() {
+    return Container(
+      height: 140,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.primaryPurple.withOpacity(0.6),
+            AppTheme.primaryBlue.withOpacity(0.6),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Icon(Icons.school, size: 48, color: Colors.white.withOpacity(0.8)),
       ),
     );
   }
@@ -784,6 +934,30 @@ class Category {
   });
 }
 
+/// 커리큘럼 일차 (날짜 포함)
+class CurriculumDay {
+  final int day;
+  final DateTime date;
+  final String content;
+
+  CurriculumDay({required this.day, required this.date, required this.content});
+}
+
+/// 교육 리뷰
+class EducationReview {
+  final String userName;
+  final int rating; // 1~5
+  final String comment;
+  final DateTime createdAt;
+
+  EducationReview({
+    required this.userName,
+    required this.rating,
+    required this.comment,
+    required this.createdAt,
+  });
+}
+
 class Education {
   final String id;
   final String title;
@@ -792,14 +966,28 @@ class Education {
   final String subCategory;
   final String province;
   final String? district;
-  final String? regionId; // RegionHelper의 region ID 추가
+  final String? regionId;
   final int price;
   final bool isUrgent;
   final bool isOnline;
+  final bool isLive; // true: 실시간 라이브, false: 녹화/VOD
   final DateTime deadline;
+  final DateTime? startDate; // 교육 진행 시작일
+  final DateTime? endDate; // 교육 진행 종료일
   final int applicants;
   final int maxApplicants;
   final DateTime createdAt;
+  final String? imageUrl;
+  final String? curriculum;
+  final List<CurriculumDay>? curriculumSchedule; // 일차별 날짜+내용
+  final String? duration;
+  final String? instructorName;
+  final String? instructorBio;
+  final List<String>? benefits;
+  final String? targetAudience;
+  final double? averageRating;
+  final int? reviewCount;
+  final List<EducationReview>? reviews;
 
   Education({
     required this.id,
@@ -813,9 +1001,23 @@ class Education {
     required this.price,
     required this.isUrgent,
     required this.isOnline,
+    this.isLive = false,
     required this.deadline,
+    this.startDate,
+    this.endDate,
     required this.applicants,
     required this.maxApplicants,
     required this.createdAt,
+    this.imageUrl,
+    this.curriculum,
+    this.curriculumSchedule,
+    this.duration,
+    this.instructorName,
+    this.instructorBio,
+    this.benefits,
+    this.targetAudience,
+    this.averageRating,
+    this.reviewCount,
+    this.reviews,
   });
 }

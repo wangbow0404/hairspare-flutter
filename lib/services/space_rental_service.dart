@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
 import '../utils/api_client.dart';
+import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
 import '../models/space_rental.dart';
+import '../mocks/mock_spare_data.dart';
 
 /// 공간대여 서비스
 class SpaceRentalService {
@@ -26,6 +28,7 @@ class SpaceRentalService {
     int? maxPrice,
     List<String>? facilities,
   }) async {
+    if (ApiConfig.useMockData) return await MockSpareData.getSpaceRentals();
     try {
       final queryParams = <String, dynamic>{};
       
@@ -82,6 +85,7 @@ class SpaceRentalService {
 
   /// 공간 상세 조회
   Future<SpaceRental> getSpaceRentalById(String id) async {
+    if (ApiConfig.useMockData) return await MockSpareData.getSpaceRentalById(id);
     try {
       final response = await _apiClient.dio.get('/api/space-rentals/$id');
 
@@ -111,6 +115,24 @@ class SpaceRentalService {
     required DateTime startTime,
     required DateTime endTime,
   }) async {
+    if (ApiConfig.useMockData) {
+      final duration = endTime.difference(startTime).inHours;
+      final space = await MockSpareData.getSpaceRentalById(spaceId);
+      final totalPrice = duration * space.pricePerHour;
+      final booking = SpaceBooking(
+        id: 'booking-mock-${DateTime.now().millisecondsSinceEpoch}',
+        spaceRentalId: spaceId,
+        spareId: 'mock-spare',
+        spareName: '스페어',
+        startTime: startTime,
+        endTime: endTime,
+        totalPrice: totalPrice,
+        status: BookingStatus.confirmed,
+        createdAt: DateTime.now(),
+      );
+      MockSpareData.addMockBooking(booking);
+      return booking;
+    }
     try {
       final response = await _apiClient.dio.post(
         '/api/space-rentals/$spaceId/book',
@@ -160,6 +182,7 @@ class SpaceRentalService {
   Future<List<SpaceBooking>> getMyBookings({
     BookingStatus? status,
   }) async {
+    if (ApiConfig.useMockData) return await MockSpareData.getMySpaceBookings();
     try {
       final queryParams = <String, dynamic>{};
       if (status != null) {

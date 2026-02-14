@@ -1,6 +1,30 @@
 /// 공간대여 모델
 /// 미용실이 공간을 시간 단위로 대여할 수 있도록 하는 시스템
 
+/// 공간대여 리뷰
+class SpaceRentalReview {
+  final String userName;
+  final int rating;
+  final String comment;
+  final DateTime createdAt;
+
+  SpaceRentalReview({
+    required this.userName,
+    required this.rating,
+    required this.comment,
+    required this.createdAt,
+  });
+
+  factory SpaceRentalReview.fromJson(Map<String, dynamic> json) {
+    return SpaceRentalReview(
+      userName: json['userName']?.toString() ?? '',
+      rating: json['rating'] is int ? json['rating'] : int.tryParse(json['rating']?.toString() ?? '0') ?? 0,
+      comment: json['comment']?.toString() ?? '',
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'].toString()) : DateTime.now(),
+    );
+  }
+}
+
 enum SpaceStatus {
   available, // 예약 가능
   booked, // 예약됨
@@ -67,10 +91,18 @@ class SpaceRental {
   final int pricePerHour; // 시간당 가격
   final List<String> facilities; // 시설 (의자, 세트, 샴푸대 등)
   final List<String>? imageUrls; // 공간 사진 (여러 장)
-  final SpaceStatus status; // 예약 가능, 예약 완료 등
-  final String? description; // 공간 설명
+  final SpaceStatus status;
+  final String? description;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final String? contactPhone;
+  final String? subwayInfo;
+  final bool isPremium;
+  final String? usageNotes;
+  final double? averageRating;
+  final int? reviewCount;
+  final List<SpaceRentalReview>? reviews;
+  final int minHours;
 
   SpaceRental({
     required this.id,
@@ -88,6 +120,14 @@ class SpaceRental {
     this.description,
     required this.createdAt,
     this.updatedAt,
+    this.contactPhone,
+    this.subwayInfo,
+    this.isPremium = false,
+    this.usageNotes,
+    this.averageRating,
+    this.reviewCount,
+    this.reviews,
+    this.minHours = 1,
   });
 
   factory SpaceRental.fromJson(Map<String, dynamic> json) {
@@ -121,6 +161,18 @@ class SpaceRental {
       updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'].toString())
           : null,
+      contactPhone: json['contactPhone']?.toString(),
+      subwayInfo: json['subwayInfo']?.toString(),
+      isPremium: json['isPremium'] == true,
+      usageNotes: json['usageNotes']?.toString(),
+      averageRating: (json['averageRating'] is num) ? (json['averageRating'] as num).toDouble() : null,
+      reviewCount: json['reviewCount'] != null
+          ? (json['reviewCount'] is int ? json['reviewCount'] as int : int.tryParse(json['reviewCount'].toString()))
+          : null,
+      reviews: (json['reviews'] as List<dynamic>?)
+          ?.map((r) => SpaceRentalReview.fromJson(r as Map<String, dynamic>))
+          .toList(),
+      minHours: json['minHours'] is int ? json['minHours'] : int.tryParse(json['minHours']?.toString() ?? '1') ?? 1,
     );
   }
 

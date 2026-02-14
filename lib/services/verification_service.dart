@@ -1,13 +1,16 @@
 import 'package:dio/dio.dart';
 import '../utils/api_client.dart';
+import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
+import '../mocks/mock_spare_data.dart';
 
 class VerificationService {
   final ApiClient _apiClient = ApiClient();
 
   /// 본인인증 상태 확인 (사용자 정보에서 확인)
   Future<Map<String, dynamic>> getVerificationStatus() async {
+    if (ApiConfig.useMockData) return await MockSpareData.getVerificationStatus();
     try {
       // /api/verification/status API가 없으므로 /api/auth/me로 사용자 정보 조회
       final response = await _apiClient.dio.get('/api/auth/me');
@@ -68,6 +71,7 @@ class VerificationService {
 
   /// PASS 본인인증 상태 확인
   Future<Map<String, dynamic>> getPassVerificationStatus() async {
+    if (ApiConfig.useMockData) return await MockSpareData.getPassVerificationStatus();
     try {
       final response = await _apiClient.dio.get('/api/verification/pass/status');
 
@@ -89,6 +93,7 @@ class VerificationService {
 
   /// 자격증 인증 상태 확인
   Future<Map<String, dynamic>> getLicenseVerificationStatus() async {
+    if (ApiConfig.useMockData) return await MockSpareData.getLicenseVerificationStatus();
     try {
       final response = await _apiClient.dio.get('/api/verification/license/status');
 

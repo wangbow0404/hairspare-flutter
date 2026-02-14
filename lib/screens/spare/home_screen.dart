@@ -203,7 +203,12 @@ class _SpareHomeScreenState extends State<SpareHomeScreen> {
   Widget _buildHomeScreen() {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray, // bg-gray-50
-      body: CustomScrollView(
+      body: SafeArea(
+        top: true,
+        left: true,
+        right: true,
+        bottom: true,
+        child: CustomScrollView(
         controller: _scrollController,
         slivers: [
           // Sticky 헤더
@@ -213,6 +218,7 @@ class _SpareHomeScreenState extends State<SpareHomeScreen> {
             elevation: 0,
             leading: null,
             automaticallyImplyLeading: false,
+            toolbarHeight: 56,
             flexibleSpace: Container(
               decoration: BoxDecoration(
                 color: AppTheme.backgroundWhite,
@@ -651,7 +657,7 @@ class _SpareHomeScreenState extends State<SpareHomeScreen> {
                                 final bTime = b.createdAt?.millisecondsSinceEpoch ?? 0;
                                 return bTime.compareTo(aTime);
                               });
-                            final topUpcomingJobs = upcomingJobs.take(4).toList();
+                            final topUpcomingJobs = upcomingJobs.take(3).toList();
                             
                             return UpcomingShopsSection(
                               jobs: topUpcomingJobs,
@@ -692,6 +698,7 @@ class _SpareHomeScreenState extends State<SpareHomeScreen> {
             ),
           ),
         ],
+      ),
       ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentNavIndex,

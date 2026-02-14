@@ -68,7 +68,12 @@ class AdminSearchFilterBar extends StatelessWidget {
               ),
               if (filterDropdown != null) ...[
                 SizedBox(width: AppTheme.spacing4),
-                filterDropdown!,
+                Flexible(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: filterDropdown!,
+                  ),
+                ),
               ],
             ],
           ),

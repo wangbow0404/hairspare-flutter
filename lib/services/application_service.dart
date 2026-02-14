@@ -1,14 +1,17 @@
 import 'package:dio/dio.dart';
 import '../models/application.dart';
 import '../utils/api_client.dart';
+import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
+import '../mocks/mock_shop_data.dart';
 
 class ApplicationService {
   final ApiClient _apiClient = ApiClient();
 
   /// 스페어용: 내 지원 목록 조회
   Future<List<Application>> getMyApplications() async {
+    if (ApiConfig.useMockData) return await MockShopData.getMyApplications();
     try {
       final response = await _apiClient.dio.get('/api/applications/my');
 
@@ -38,6 +41,7 @@ class ApplicationService {
 
   /// 미용실용: 매장 공고에 지원한 목록 조회
   Future<List<Application>> getShopApplications() async {
+    if (ApiConfig.useMockData) return await MockShopData.getShopApplications();
     try {
       final response = await _apiClient.dio.get('/api/applications/shop');
 

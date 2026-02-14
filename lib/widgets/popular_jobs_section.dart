@@ -55,38 +55,31 @@ class _PopularJobsSectionState extends State<PopularJobsSection>
     _autoScrollTimer?.cancel();
     if (widget.jobs.isEmpty) return;
 
-    // 초기 스크롤 위치 설정을 위해 첫 프레임 대기
+    // 초기 스크롤 위치: 처음부터 시작 (첫 번째 카드가 온전히 보이도록)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _scrollController.hasClients) {
-        final cardWidth = 288.0 + AppTheme.spacing4; // 카드 너비 + 마진
-        final oneThird = (widget.jobs.length * cardWidth) / 3;
-        _scrollPosition = oneThird;
-        _scrollController.jumpTo(oneThird);
+        _scrollPosition = 0;
+        _scrollController.jumpTo(0);
       }
     });
 
-    // 60fps 기준으로 0.3px/frame = 18px/초
+    // 60fps 기준으로 0.3px/frame = 18px/초 (기차처럼 자동 스크롤)
     _autoScrollTimer = Timer.periodic(
       const Duration(milliseconds: 16), // ~60fps
       (timer) {
         if (!_isScrolling && mounted && _scrollController.hasClients) {
           final cardWidth = 288.0 + AppTheme.spacing4; // 카드 너비 + 마진
+          final oneSetWidth = widget.jobs.length * cardWidth; // 한 세트 전체 너비
           final maxScroll = _scrollController.position.maxScrollExtent;
           final currentScroll = _scrollController.position.pixels;
-          
-          // 무한 스크롤: 2/3 지점에 도달하면 1/3 지점으로 리셋
-          final oneThird = maxScroll / 3;
-          final twoThird = oneThird * 2;
-          
-          if (currentScroll >= twoThird) {
-            _scrollPosition = oneThird;
-            _scrollController.jumpTo(oneThird);
+
+          // 무한 스크롤: 한 세트를 지나면 맨 앞으로 리셋
+          if (currentScroll >= oneSetWidth - 1) {
+            _scrollPosition = 0;
+            _scrollController.jumpTo(0);
           } else {
             _scrollPosition += 0.3;
-            if (_scrollPosition > maxScroll) {
-              _scrollPosition = oneThird;
-            }
-            _scrollController.jumpTo(_scrollPosition);
+            _scrollController.jumpTo(_scrollPosition.clamp(0.0, maxScroll));
           }
         }
       },
@@ -192,6 +185,10 @@ class _PopularJobsSectionState extends State<PopularJobsSection>
               child: ListView.builder(
                 controller: _scrollController,
                 scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.only(
+                  left: MediaQuery.of(context).padding.left,
+                  right: MediaQuery.of(context).padding.right,
+                ),
                 itemCount: repeatedJobs.length,
                 itemBuilder: (context, index) {
                   final job = repeatedJobs[index];

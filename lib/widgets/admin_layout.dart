@@ -6,6 +6,7 @@ import '../screens/admin/admin_jobs_screen.dart';
 import '../screens/admin/admin_payments_screen.dart';
 import '../screens/admin/admin_energy_screen.dart';
 import '../screens/admin/admin_noshow_screen.dart';
+import '../screens/admin/admin_checkin_screen.dart';
 import '../screens/common/role_select_screen.dart';
 
 /// 관리자 레이아웃 위젯 (사이드바 + 헤더)
@@ -62,6 +63,12 @@ class _AdminLayoutState extends State<AdminLayout> {
       label: '노쇼 관리',
       icon: Icons.warning,
       screen: const AdminNoshowScreen(),
+    ),
+    AdminNavItem(
+      route: '/admin/checkin',
+      label: '체크인 관리',
+      icon: Icons.calendar_today,
+      screen: const AdminCheckinScreen(),
     ),
   ];
 
@@ -207,47 +214,53 @@ class _AdminLayoutState extends State<AdminLayout> {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
     final isNarrow = width < 480;
-    final isTablet = MediaQuery.of(context).size.width >= 768 && MediaQuery.of(context).size.width < 1024;
+    final isVeryNarrow = width < 360;
 
     return Scaffold(
       key: _scaffoldKey,
       drawer: isMobile ? Drawer(child: _buildSidebar(true)) : null,
       body: Container(
         decoration: AppTheme.adminBackgroundGradient,
-        child: Column(
-          children: [
-            // 헤더
-            Container(
-              height: isMobile ? 56 : 80,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.95),
-                border: Border(
-                  bottom: BorderSide(color: AppTheme.adminPurple100, width: 1),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+        child: SafeArea(
+          top: true,
+          bottom: false,
+          child: Column(
+            children: [
+              // 헤더
+              Container(
+                height: isMobile ? 56 : 80,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.95),
+                  border: Border(
+                    bottom: BorderSide(color: AppTheme.adminPurple100, width: 1),
                   ),
-                ],
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? AppTheme.spacing2 : AppTheme.spacing3,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                child: Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isVeryNarrow ? AppTheme.spacing1 : (isMobile ? AppTheme.spacing2 : AppTheme.spacing3),
+                  ),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       // 햄버거 메뉴 (모바일)
                       if (isMobile)
                         IconButton(
-                          icon: const Icon(Icons.menu, color: AppTheme.textPrimary),
+                          icon: Icon(Icons.menu, color: AppTheme.textPrimary, size: isVeryNarrow ? 20 : 24),
                           onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                          style: IconButton.styleFrom(
+                            minimumSize: isVeryNarrow ? const Size(36, 36) : const Size(48, 48),
+                            padding: isVeryNarrow ? const EdgeInsets.all(8) : null,
+                          ),
                         ),
                       // 로고 (클릭 시 대시보드로 이동)
-                        Material(
+                      Expanded(
+                        child: Material(
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () => _navigateToRoute('/admin'),
@@ -256,16 +269,16 @@ class _AdminLayoutState extends State<AdminLayout> {
                           highlightColor: AppTheme.primaryPurple500.withOpacity(0.1),
                           child: Padding(
                             padding: EdgeInsets.symmetric(
-                              horizontal: AppTheme.spacing2,
-                              vertical: isMobile ? AppTheme.spacing1 : AppTheme.spacing2,
+                              horizontal: isVeryNarrow ? AppTheme.spacing1 : AppTheme.spacing2,
+                              vertical: isVeryNarrow ? 4 : (isMobile ? AppTheme.spacing1 : AppTheme.spacing2),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Container(
-                                  width: isMobile ? 36 : 40,
-                                  height: isMobile ? 36 : 40,
+                                  width: isVeryNarrow ? 28 : (isMobile ? 36 : 40),
+                                  height: isVeryNarrow ? 28 : (isMobile ? 36 : 40),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
                               begin: Alignment.topLeft,
@@ -275,61 +288,60 @@ class _AdminLayoutState extends State<AdminLayout> {
                             borderRadius: BorderRadius.circular(AppTheme.radius2xl),
                             boxShadow: AppTheme.shadowLg,
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Text(
                               'H',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 18,
+                                fontSize: isVeryNarrow ? 14 : (isMobile ? 16 : 18),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
                         ),
-                        SizedBox(width: AppTheme.spacing2),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ShaderMask(
-                              shaderCallback: (bounds) => const LinearGradient(
-                                colors: [AppTheme.primaryPurple, AppTheme.primaryPink],
-                              ).createShader(bounds),
-                              child: Text(
-                                'HairSpare',
-                                style: TextStyle(
-                                  fontSize: isMobile ? 14 : 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
+                        if (!isVeryNarrow) ...[
+                          SizedBox(width: isMobile ? AppTheme.spacing1 : AppTheme.spacing2),
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'HairSpare',
+                                    style: TextStyle(
+                                      fontSize: isMobile ? 12 : 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.primaryPurple,
+                                    ),
+                                    maxLines: 1,
+                                  ),
+                                  Text(
+                                    '관리자',
+                                    style: TextStyle(
+                                      fontSize: isMobile ? 9 : 11,
+                                      color: AppTheme.textSecondary,
+                                    ),
+                                    maxLines: 1,
+                                  ),
+                                ],
                               ),
                             ),
-                            Text(
-                              '관리자',
-                              style: TextStyle(
-                                fontSize: isMobile ? 10 : 11,
-                                color: AppTheme.textSecondary,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
                 ),
               ),
-                    const Spacer(),
-                    // 오른쪽 영역: 오버플로우 방지
-                    Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
+            ),
+                    // 오른쪽 영역 (최소 공간만 사용, 오버플로우 방지)
+            Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                         if (!isMobile && !isNarrow)
                           Flexible(
                             fit: FlexFit.loose,
@@ -375,29 +387,41 @@ class _AdminLayoutState extends State<AdminLayout> {
                               ),
                             ),
                           ),
-                        if (!isMobile && !isNarrow) SizedBox(width: AppTheme.spacing2),
-                        Flexible(
-                          fit: FlexFit.loose,
-                          child: TextButton.icon(
+                        if (isMobile)
+                          IconButton(
+                            icon: const Icon(Icons.dashboard, size: 20, color: AppTheme.textSecondary),
                             onPressed: () => _navigateToRoute('/admin'),
-                            icon: const Icon(Icons.dashboard, size: 18, color: AppTheme.textSecondary),
-                            label: Text(
-                              '대시보드',
-                              style: TextStyle(
-                                color: AppTheme.textSecondary,
-                                fontSize: 13,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                            style: IconButton.styleFrom(
+                              minimumSize: const Size(36, 36),
+                              padding: EdgeInsets.zero,
                             ),
                           ),
-                        ),
+                        if (!isMobile && !isNarrow) ...[
+                          SizedBox(width: AppTheme.spacing2),
+                          Flexible(
+                            fit: FlexFit.loose,
+                            child: TextButton.icon(
+                              onPressed: () => _navigateToRoute('/admin'),
+                              icon: const Icon(Icons.dashboard, size: 18, color: AppTheme.textSecondary),
+                              label: Text(
+                                '대시보드',
+                                style: TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 13,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: AppTheme.spacing1),
+                        ],
                         SizedBox(width: AppTheme.spacing1),
                         isMobile
                             ? IconButton(
-                                icon: const Icon(Icons.logout, size: 22, color: AppTheme.textSecondary),
+                                icon: const Icon(Icons.logout, size: 20, color: AppTheme.textSecondary),
                                 onPressed: _handleLogout,
                                 style: IconButton.styleFrom(
-                                  minimumSize: const Size(40, 40),
+                                  minimumSize: const Size(36, 36),
                                   padding: EdgeInsets.zero,
                                 ),
                               )
@@ -415,28 +439,27 @@ class _AdminLayoutState extends State<AdminLayout> {
                               ),
                         ],
                       ),
-                    ),
                   ],
                 ),
               ),
             ),
-          ),
-          // 본문
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (!isMobile) _buildSidebar(false),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.all(isMobile ? AppTheme.spacing3 : AppTheme.spacing4),
-                    child: widget.child,
-                  ),
+              // 본문
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (!isMobile) _buildSidebar(false),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.all(isMobile ? AppTheme.spacing3 : AppTheme.spacing4),
+                        child: widget.child,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
         ),
       ),
     );

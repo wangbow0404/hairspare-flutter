@@ -10,10 +10,12 @@ import '../../services/energy_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/icon_mapper.dart';
+import '../../widgets/spare_app_bar.dart';
 import '../../utils/navigation_helper.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/region_helper.dart';
 import '../spare/verification_screen.dart';
+import '../spare/messages_screen.dart';
 
 /// Next.js와 동일한 공고 상세 화면
 class JobDetailScreen extends StatefulWidget {
@@ -40,6 +42,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   bool _showVerificationModal = false;
   bool _identityVerified = false;
   int _energyBalance = 0;
+  bool _hasApplied = false; // 지원 완료 시 연락하기 활성화
 
   @override
   void initState() {
@@ -184,6 +187,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
 
       setState(() {
         _isLocked = true;
+        _hasApplied = true;
         _energyBalance -= _job!.energy;
         _showConfirmModal = false;
       });
@@ -191,7 +195,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('지원이 완료되었습니다. 미용실의 승인을 기다려주세요.'),
+            content: Text('지원이 완료되었습니다. 미용실의 승인을 기다려주세요. 연락하기로 소통할 수 있습니다.'),
             backgroundColor: AppTheme.primaryBlue,
           ),
         );
@@ -235,6 +239,27 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     return RegionHelper.getRegionName(regionId);
   }
 
+  /// 연도 제외, 가독성 좋은 날짜 (예: 2월 16일)
+  String _formatJobDate(String date) {
+    try {
+      final d = DateTime.parse(date);
+      return DateFormat('M월 d일', 'ko_KR').format(d);
+    } catch (_) {
+      return date;
+    }
+  }
+
+  /// 시작~종료 시간 표시 (몇시부터 몇시인지)
+  String _formatJobTime(Job job) {
+    final start = job.time;
+    final end = job.endTime;
+    if (start.isEmpty) return '-';
+    if (end != null && end.isNotEmpty) {
+      return '$start ~ $end';
+    }
+    return start;
+  }
+
   String _getRegionAddress(String regionId) {
     // TODO: 실제 지역 데이터에서 가져오기
     const addressMap = {
@@ -273,14 +298,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     if (_error != null || _job == null) {
       return Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        appBar: AppBar(
-          backgroundColor: AppTheme.backgroundWhite,
-          leading: IconButton(
-            icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textGray700) ??
-                const Icon(Icons.arrow_back_ios, color: AppTheme.textGray700),
-            onPressed: () => NavigationHelper.safePop(context),
-          ),
-        ),
+        appBar: const SpareAppBar(showSearch: false, showBackButton: true),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -309,7 +327,10 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
       },
       child: Scaffold(
         backgroundColor: AppTheme.backgroundWhite,
-        body: Stack(
+        body: SafeArea(
+          top: true,
+          bottom: false,
+          child: Stack(
           children: [
           SingleChildScrollView(
             child: Column(
@@ -332,8 +353,8 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                 // 상세 정보 섹션
                 _buildDetailSection(job),
 
-                // 하단 여백
-                SizedBox(height: 120), // 하단 네비게이션 바 + 지원하기 버튼 높이
+                // 하단 여백 (지원하기 버튼 높이 + SafeArea)
+                SizedBox(height: 100),
               ],
             ),
           ),
@@ -346,6 +367,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
           if (_showConfirmModal) _buildConfirmModal(job),
         ],
       ),
+        ),
       ),
     );
   }
@@ -615,17 +637,17 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
 
   Widget _buildQuickInfoGrid(Job job) {
     return Padding(
-        padding: AppTheme.spacingSymmetric(
-          horizontal: AppTheme.spacing4,
-          vertical: AppTheme.spacing4,
-        ),
+      padding: AppTheme.spacingSymmetric(
+        horizontal: AppTheme.spacing4,
+        vertical: AppTheme.spacing4,
+      ),
       child: GridView.count(
         crossAxisCount: 2,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisSpacing: AppTheme.spacing3,
         mainAxisSpacing: AppTheme.spacing3,
-        childAspectRatio: 1.5,
+        childAspectRatio: 1.6,
         children: [
           _buildQuickInfoItem(
             icon: IconMapper.icon('mappin', size: 16, color: AppTheme.primaryBlue) ??
@@ -637,7 +659,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
             icon: IconMapper.icon('clock', size: 16, color: AppTheme.primaryPurple) ??
                 const Icon(Icons.access_time, size: 16, color: AppTheme.primaryPurple),
             label: '근무 시간',
-            value: '${job.date} ${job.time}',
+            value: '${_formatJobDate(job.date)}\n${_formatJobTime(job)}',
           ),
           _buildQuickInfoItem(
             icon: IconMapper.icon('users', size: 16, color: AppTheme.primaryGreen) ??
@@ -662,10 +684,10 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     required String value,
   }) {
     return Container(
-      padding: AppTheme.spacing(AppTheme.spacing4),
+      padding: AppTheme.spacing(AppTheme.spacing3),
       decoration: BoxDecoration(
         color: AppTheme.backgroundGray,
-        borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
+        borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -675,12 +697,16 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
             children: [
               icon,
               SizedBox(width: AppTheme.spacing2),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.textSecondary,
+              Expanded(
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -688,11 +714,14 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
           SizedBox(height: AppTheme.spacing2),
           Text(
             value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontSize: 16,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontSize: 14,
               fontWeight: FontWeight.bold,
               color: AppTheme.textPrimary,
+              height: 1.3,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -701,7 +730,10 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
 
   Widget _buildHowToApplySection(Job job) {
     return Container(
-      padding: AppTheme.spacing(AppTheme.spacing8),
+      padding: AppTheme.spacingSymmetric(
+        horizontal: AppTheme.spacing4,
+        vertical: AppTheme.spacing6,
+      ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -710,11 +742,12 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         ),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             '지원 방법',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontSize: 24,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: AppTheme.textPrimary,
             ),
@@ -729,19 +762,19 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
             ),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: AppTheme.spacing8),
+          SizedBox(height: AppTheme.spacing6),
           _buildStepItem(
             step: 1,
             title: '공고 확인하기',
             description: '근무 지역, 시간, 급여 등 상세 정보를 꼼꼼히 확인하세요.',
           ),
-          SizedBox(height: AppTheme.spacing6),
+          SizedBox(height: AppTheme.spacing4),
           _buildStepItem(
             step: 2,
             title: '지원하기 버튼 클릭',
             description: '예약금(에너지) ${job.energy}개가 잠금되며, 출근 완료 시 반환됩니다.',
           ),
-          SizedBox(height: AppTheme.spacing6),
+          SizedBox(height: AppTheme.spacing4),
           _buildStepItem(
             step: 3,
             title: '매장 확인 및 출근',
@@ -758,10 +791,11 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     required String description,
   }) {
     return Container(
-      padding: AppTheme.spacing(AppTheme.spacing6),
+      width: double.infinity,
+      padding: AppTheme.spacing(AppTheme.spacing4),
       decoration: BoxDecoration(
         color: AppTheme.backgroundWhite,
-        borderRadius: AppTheme.borderRadius(AppTheme.radius2xl),
+        borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
         border: Border.all(color: AppTheme.borderGray.withOpacity(0.5)),
         boxShadow: AppTheme.shadowSm,
       ),
@@ -769,8 +803,8 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: AppTheme.primaryPurple,
               borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
@@ -781,7 +815,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 18,
+                  fontSize: 16,
                 ),
               ),
             ),
@@ -793,19 +827,19 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               children: [
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 18,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textPrimary,
                   ),
                 ),
-                SizedBox(height: AppTheme.spacing2),
+                SizedBox(height: AppTheme.spacing1),
                 Text(
                   description,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontSize: 14,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontSize: 13,
                     color: AppTheme.textSecondary,
-                    height: 1.5,
+                    height: 1.45,
                   ),
                 ),
               ],
@@ -818,29 +852,33 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
 
   Widget _buildDetailSection(Job job) {
     return Padding(
-      padding: AppTheme.spacing(AppTheme.spacing8),
+      padding: AppTheme.spacingSymmetric(
+        horizontal: AppTheme.spacing4,
+        vertical: AppTheme.spacing4,
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             '상세 정보',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontSize: 24,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: AppTheme.textPrimary,
             ),
           ),
-          SizedBox(height: AppTheme.spacing6),
+          SizedBox(height: AppTheme.spacing4),
           // 급여 정보
           Container(
-            padding: AppTheme.spacing(AppTheme.spacing6),
+            width: double.infinity,
+            padding: AppTheme.spacing(AppTheme.spacing4),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFFF0FDF4), Color(0xFFD1FAE5)], // from-green-50 to-emerald-50
+                colors: [Color(0xFFF0FDF4), Color(0xFFD1FAE5)],
               ),
-              borderRadius: AppTheme.borderRadius(AppTheme.radius2xl),
+              borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
               border: Border.all(color: AppTheme.green100),
             ),
             child: Column(
@@ -848,79 +886,76 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               children: [
                 Text(
                   '급여',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
                     color: AppTheme.green700,
                   ),
                 ),
                 SizedBox(height: AppTheme.spacing2),
                 Text(
                   '${NumberFormat('#,###').format(job.amount)}원',
-                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                    fontSize: 36,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontSize: 26,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.green700,
+                    height: 1.2,
                   ),
                 ),
                 SizedBox(height: AppTheme.spacing1),
                 Text(
                   '당일 지급',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontSize: 14,
-                    color: AppTheme.green700.withOpacity(0.8),
+                    fontSize: 13,
+                    color: AppTheme.green700.withOpacity(0.85),
                   ),
                 ),
               ],
             ),
           ),
-          SizedBox(height: AppTheme.spacing6),
+          SizedBox(height: AppTheme.spacing4),
           // 근무 조건
           Container(
-            padding: AppTheme.spacing(AppTheme.spacing6),
+            width: double.infinity,
+            padding: AppTheme.spacing(AppTheme.spacing4),
             decoration: BoxDecoration(
               color: AppTheme.backgroundGray,
-              borderRadius: AppTheme.borderRadius(AppTheme.radius2xl),
+              borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '근무 조건',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 18,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textPrimary,
                   ),
                 ),
-                SizedBox(height: AppTheme.spacing4),
-                _buildConditionItem('근무 날짜: ${job.date}'),
                 SizedBox(height: AppTheme.spacing3),
-                _buildConditionItem('근무 시간: ${job.time}'),
-                SizedBox(height: AppTheme.spacing3),
+                _buildConditionItem('근무 날짜: ${_formatJobDate(job.date)}'),
+                SizedBox(height: AppTheme.spacing2),
+                _buildConditionItem('근무 시간: ${_formatJobTime(job)}'),
+                SizedBox(height: AppTheme.spacing2),
                 _buildConditionItem('위치: ${_getRegionName(job.regionId)}'),
               ],
             ),
           ),
-          SizedBox(height: AppTheme.spacing6),
+          SizedBox(height: AppTheme.spacing4),
           // 예약금 안내
           Container(
-            padding: AppTheme.spacing(AppTheme.spacing6),
+            width: double.infinity,
+            padding: AppTheme.spacing(AppTheme.spacing4),
             decoration: BoxDecoration(
-              color: AppTheme.yellow50, // bg-yellow-50
-              borderRadius: AppTheme.borderRadius(AppTheme.radius2xl),
-              border: Border.all(
-                color: AppTheme.yellow200, // border-yellow-200
-                width: 2,
-              ),
+              color: AppTheme.yellow50,
+              borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
+              border: Border.all(color: AppTheme.yellow200, width: 2),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '⚡',
-                  style: TextStyle(fontSize: 32),
-                ),
+                const Text('⚡', style: TextStyle(fontSize: 24)),
                 SizedBox(width: AppTheme.spacing3),
                 Expanded(
                   child: Column(
@@ -928,19 +963,19 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     children: [
                       Text(
                         '예약금(에너지) 안내',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 18,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFF78350F), // yellow-900
+                          color: const Color(0xFF78350F),
                         ),
                       ),
                       SizedBox(height: AppTheme.spacing2),
                       _buildEnergyInfoItem('지원 시 예약금(에너지) ${job.energy}개가 잠금됩니다.'),
-                      SizedBox(height: AppTheme.spacing2),
+                      SizedBox(height: AppTheme.spacing1),
                       _buildEnergyInfoItem('정상 출근 완료 시 예약금이 반환됩니다.'),
-                      SizedBox(height: AppTheme.spacing2),
+                      SizedBox(height: AppTheme.spacing1),
                       _buildEnergyInfoItem('노쇼(무단결근) 시 예약금이 차감됩니다.'),
-                      SizedBox(height: AppTheme.spacing2),
+                      SizedBox(height: AppTheme.spacing1),
                       _buildEnergyInfoItem('부득이한 사유로 취소 시 24시간 전 연락 필수'),
                     ],
                   ),
@@ -948,13 +983,14 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               ],
             ),
           ),
-          SizedBox(height: AppTheme.spacing6),
+          SizedBox(height: AppTheme.spacing4),
           // 매장 정보
           Container(
-            padding: AppTheme.spacing(AppTheme.spacing6),
+            width: double.infinity,
+            padding: AppTheme.spacing(AppTheme.spacing4),
             decoration: BoxDecoration(
               color: AppTheme.backgroundWhite,
-              borderRadius: AppTheme.borderRadius(AppTheme.radius2xl),
+              borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
               border: Border.all(color: AppTheme.borderGray),
             ),
             child: Column(
@@ -962,29 +998,19 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               children: [
                 Text(
                   '매장 정보',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 18,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textPrimary,
                   ),
                 ),
-                SizedBox(height: AppTheme.spacing4),
+                SizedBox(height: AppTheme.spacing3),
                 _buildShopInfoItem('매장명', job.isPremium ? '${job.shopName} (프리미엄)' : job.shopName),
+                SizedBox(height: AppTheme.spacing3),
+                _buildShopInfoItem('위치', '${_getRegionName(job.regionId)} 인근'),
                 SizedBox(height: AppTheme.spacing4),
-                _buildShopInfoItem('주소', _getRegionAddress(job.regionId)),
-                SizedBox(height: AppTheme.spacing1),
-                Text(
-                  _getRegionSubway(job.regionId),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontSize: 14,
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
+                _buildContactButton(context),
                 SizedBox(height: AppTheme.spacing4),
-                _buildShopInfoItem('연락처', '010-1234-5678'),
-                SizedBox(height: AppTheme.spacing4),
-                _buildShopInfoItem('특징', ''),
-                SizedBox(height: AppTheme.spacing2),
                 Wrap(
                   spacing: AppTheme.spacing2,
                   runSpacing: AppTheme.spacing2,
@@ -1007,15 +1033,16 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        IconMapper.icon('checkcircle2', size: 20, color: AppTheme.primaryPurple) ??
-            const Icon(Icons.check_circle, size: 20, color: AppTheme.primaryPurple),
-        SizedBox(width: AppTheme.spacing3),
+        IconMapper.icon('checkcircle2', size: 18, color: AppTheme.primaryPurple) ??
+            const Icon(Icons.check_circle, size: 18, color: AppTheme.primaryPurple),
+        SizedBox(width: AppTheme.spacing2),
         Expanded(
           child: Text(
             text,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontSize: 14,
               color: AppTheme.textGray700,
+              height: 1.4,
             ),
           ),
         ),
@@ -1027,9 +1054,43 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     return Text(
       '• $text',
       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-        fontSize: 14,
-        color: textColor ?? const Color(0xFF92400E), // yellow-800
-        height: 1.5,
+        fontSize: 13,
+        color: textColor ?? const Color(0xFF92400E),
+        height: 1.45,
+      ),
+    );
+  }
+
+  Widget _buildContactButton(BuildContext context) {
+    final canContact = _hasApplied;
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: canContact
+            ? () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MessagesScreen()),
+                );
+              }
+            : null,
+        icon: Icon(
+          Icons.chat_bubble_outline,
+          size: 18,
+          color: canContact ? AppTheme.primaryBlue : AppTheme.textTertiary,
+        ),
+        label: Text(
+          canContact ? '연락하기' : '지원 후 연락 가능',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: canContact ? AppTheme.primaryBlue : AppTheme.textTertiary,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: canContact ? AppTheme.primaryBlue : AppTheme.borderGray),
+          padding: AppTheme.spacingSymmetric(horizontal: AppTheme.spacing4, vertical: AppTheme.spacing3),
+        ),
       ),
     );
   }
@@ -1041,7 +1102,8 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontSize: 14,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
             color: AppTheme.textSecondary,
           ),
         ),
@@ -1051,8 +1113,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
             value,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontSize: 14,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
               color: AppTheme.textPrimary,
+              height: 1.35,
             ),
           ),
         ],
@@ -1083,7 +1146,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
 
   Widget _buildBottomButton(Job job) {
     return Positioned(
-      bottom: 80, // 하단 네비게이션 바 위 (bottom-20)
+      bottom: 0, // 제일 하단부 고정
       left: 0,
       right: 0,
       child: Container(

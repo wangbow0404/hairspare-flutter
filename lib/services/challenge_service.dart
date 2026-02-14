@@ -4,15 +4,18 @@ import '../models/challenge_profile.dart';
 import '../models/challenge_comment.dart';
 import '../models/user.dart';
 import '../utils/api_client.dart';
+import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
 import '../screens/spare/challenge_screen.dart';
+import '../mocks/mock_spare_data.dart';
 
 class ChallengeService {
   final ApiClient _apiClient = ApiClient();
 
   /// 사용자 챌린지 프로필 조회
   Future<ChallengeProfile> getChallengeProfile(String userId) async {
+    if (ApiConfig.useMockData) return await MockSpareData.getChallengeProfile(userId);
     try {
       final response = await _apiClient.dio.get('/api/users/$userId/challenge-profile');
 
@@ -61,6 +64,7 @@ class ChallengeService {
     String? filter, // 'all', 'public', 'private'
     String? sortBy, // 'latest', 'popular', 'views'
   }) async {
+    if (ApiConfig.useMockData) return await MockSpareData.getMyChallenges();
     try {
       final queryParams = <String, dynamic>{};
       if (filter != null && filter != 'all') queryParams['filter'] = filter;
@@ -97,6 +101,7 @@ class ChallengeService {
 
   /// 구독한 크리에이터의 챌린지 영상 목록 조회
   Future<List<Challenge>> getSubscribedChallenges() async {
+    if (ApiConfig.useMockData) return await MockSpareData.getSubscribedChallenges();
     try {
       final response = await _apiClient.dio.get('/api/challenges/subscribed');
 
@@ -126,6 +131,7 @@ class ChallengeService {
 
   /// 챌린지 댓글 목록 조회
   Future<List<ChallengeComment>> getChallengeComments(String challengeId) async {
+    if (ApiConfig.useMockData) return await MockSpareData.getChallengeComments(challengeId);
     try {
       final response = await _apiClient.dio.get('/api/challenges/$challengeId/comments');
 

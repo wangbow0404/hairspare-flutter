@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import '../utils/api_client.dart';
+import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
+import '../mocks/mock_spare_data.dart';
 
 class Chat {
   final String id;
@@ -35,12 +37,12 @@ class Chat {
       spareName: json['spareName']?.toString() ?? json['spare']?['name']?.toString() ?? '스페어',
       jobId: json['jobId']?.toString(),
       jobTitle: json['jobTitle']?.toString() ?? json['job']?['title']?.toString(),
-      lastMessage: json['lastMessage'] != null || json['messages'] != null
-          ? LastMessage.fromJson(
-              json['lastMessage'] ?? (json['messages'] is List && (json['messages'] as List).isNotEmpty
-                  ? (json['messages'] as List)[0]
-                  : null))
-          : null,
+      lastMessage: () {
+        final data = json['lastMessage'] ?? (json['messages'] is List && (json['messages'] as List).isNotEmpty
+            ? (json['messages'] as List)[0]
+            : null);
+        return data != null ? LastMessage.fromJson(Map<String, dynamic>.from(data as Map)) : null;
+      }(),
       unreadCount: json['unreadCount'] is int
           ? json['unreadCount']
           : int.tryParse(json['unreadCount']?.toString() ?? '0') ?? 0,
@@ -57,11 +59,14 @@ class LastMessage {
     required this.createdAt,
   });
 
-  factory LastMessage.fromJson(Map<String, dynamic> json) {
+  factory LastMessage.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      return LastMessage(content: '', createdAt: DateTime.now());
+    }
     return LastMessage(
       content: json['content']?.toString() ?? '',
       createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'].toString())
+          ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
           : DateTime.now(),
     );
   }
@@ -72,6 +77,7 @@ class ChatService {
 
   /// 채팅 목록 조회
   Future<List<Chat>> getChats() async {
+    if (ApiConfig.useMockData) return await MockSpareData.getChats();
     try {
       final response = await _apiClient.dio.get('/api/chats');
 
@@ -101,6 +107,7 @@ class ChatService {
 
   /// 채팅방 정보 조회 (메시지 포함)
   Future<ChatWithMessages> getChatById(String chatId) async {
+    if (ApiConfig.useMockData) return await MockSpareData.getChatById(chatId);
     try {
       final response = await _apiClient.dio.get('/api/chats/$chatId');
 
@@ -210,7 +217,18 @@ class Message {
     this.isRead = false,
   });
 
-  factory Message.fromJson(Map<String, dynamic> json) {
+  factory Message.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      return Message(
+        id: '',
+        chatId: '',
+        senderId: '',
+        senderName: '',
+        senderRole: 'spare',
+        content: '',
+        createdAt: DateTime.now(),
+      );
+    }
     return Message(
       id: json['id']?.toString() ?? '',
       chatId: json['chatId']?.toString() ?? '',

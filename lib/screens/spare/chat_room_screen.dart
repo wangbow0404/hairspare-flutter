@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/contact_blocker.dart';
 import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/spare_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../utils/navigation_helper.dart';
 import '../../utils/error_handler.dart';
@@ -88,6 +90,19 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     }
 
     final content = _messageController.text.trim();
+
+    if (ContactBlocker.containsBlockedPattern(content)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ContactBlocker.blockedMessage),
+            backgroundColor: AppTheme.urgentRed,
+          ),
+        );
+      }
+      return;
+    }
+
     _messageController.clear();
     setState(() {
       _isSending = true;
@@ -156,15 +171,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     if (_chat == null) {
       return Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        appBar: AppBar(
-          backgroundColor: AppTheme.backgroundWhite,
-          elevation: 0,
-          leading: IconButton(
-            icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-                const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-            onPressed: () => NavigationHelper.safePop(context),
-          ),
-        ),
+        appBar: const SpareAppBar(showSearch: false),
         body: const Center(
           child: Text('채팅방을 찾을 수 없습니다.'),
         ),
@@ -178,38 +185,34 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              otherUserName,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
-              ),
-            ),
-            if (_chat!.jobTitle != null && _chat!.jobTitle!.isNotEmpty)
-              Text(
-                _chat!.jobTitle!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontSize: 12,
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-          ],
-        ),
-      ),
+      appBar: const SpareAppBar(showSearch: false),
       body: Column(
         children: [
+          // 채팅 상대방 정보 헤더
+          Container(
+            padding: EdgeInsets.all(AppTheme.spacing4),
+            color: AppTheme.backgroundWhite,
+            child: Row(
+              children: [
+                Text(
+                  otherUserName,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                if (_chat!.jobTitle != null && _chat!.jobTitle!.isNotEmpty)
+                  Text(
+                    ' · ${_chat!.jobTitle!}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+              ],
+            ),
+          ),
           // 연락처 공유 안내 문구
           Container(
             margin: AppTheme.spacing(AppTheme.spacing4),
@@ -373,10 +376,11 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                   borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                                 ),
                                 child: Center(
-                                  child: Text(
-                                    authProvider.currentUser?.name?.isNotEmpty == true
-                                        ? authProvider.currentUser!.name![0]
-                                        : '나',
+                                    child: Text(
+                                        () {
+                                          final name = authProvider.currentUser?.name;
+                                          return (name != null && name.isNotEmpty) ? name[0] : '나';
+                                        }(),
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 12,

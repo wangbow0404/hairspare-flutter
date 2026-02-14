@@ -17,7 +17,7 @@ class BannerCarousel extends StatefulWidget {
 }
 
 class _BannerCarouselState extends State<BannerCarousel> {
-  final PageController _pageController = PageController();
+  final PageController _pageController = PageController(initialPage: 0);
   int _currentPage = 0;
   bool _isBannerScrolling = false; // 수동 스크롤 중인지 여부
   Timer? _autoScrollTimer;
@@ -91,16 +91,22 @@ class _BannerCarouselState extends State<BannerCarousel> {
       return const SizedBox.shrink();
     }
 
-    // 화면 전체 너비를 가져옴
-    final screenWidth = MediaQuery.of(context).size.width;
-    // 배너 비율: 일반적으로 16:9 또는 21:9, 여기서는 약 2.5:1 비율 사용
-    // 높이를 화면 너비에 맞춰 계산 (더 넓은 배너를 위해 비율 조정)
-    final bannerHeight = screenWidth / 2.2; // 약 2.2:1 비율로 높이 계산
+    // 화면 전체 너비를 가져옴 (좌우 패딩으로 짤림 방지)
+    final media = MediaQuery.of(context);
+    final screenWidth = media.size.width;
+    final horizontalPadding = media.padding.horizontal + AppTheme.spacing4;
+    final bannerWidth = (screenWidth - horizontalPadding).clamp(0.0, double.infinity);
+    // 배너 비율: 크게 표시 (약 1.6:1 비율로 위아래 여백 최소화)
+    final bannerHeight = bannerWidth / 1.6;
 
-    return SizedBox(
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
+      child: SizedBox(
       width: double.infinity, // 전체 너비 사용
       height: bannerHeight, // 계산된 높이 사용
-      child: Stack(
+      child: ClipRect(
+        clipBehavior: Clip.hardEdge,
+        child: Stack(
         children: [
           // 배너 페이지뷰
           NotificationListener<ScrollNotification>(
@@ -114,12 +120,15 @@ class _BannerCarouselState extends State<BannerCarousel> {
             child: PageView.builder(
               controller: _pageController,
               onPageChanged: _onPageChanged,
+              scrollDirection: Axis.horizontal,
+              physics: const PageScrollPhysics(),
               itemCount: widget.bannerImages.length,
             itemBuilder: (context, index) {
               final imagePath = widget.bannerImages[index];
               final isAsset = imagePath.startsWith('assets/');
               
               return GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () => widget.onBannerTap?.call(index),
                 child: Container(
                   width: double.infinity,
@@ -129,7 +138,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
                         ? null // Asset 이미지는 Image.asset 위젯으로 처리
                         : DecorationImage(
                             image: NetworkImage(imagePath),
-                            fit: BoxFit.cover, // cover로 변경하여 전체 영역 채움
+                            fit: BoxFit.cover, // 1.6:1 비율 이미지 권장
                             alignment: Alignment.center,
                             onError: (exception, stackTrace) {
                               // 이미지 로드 실패 시 기본 배경색
@@ -151,7 +160,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
                           imagePath,
                           width: double.infinity,
                           height: double.infinity,
-                          fit: BoxFit.cover, // cover로 변경하여 전체 영역 채움
+                          fit: BoxFit.cover, // 1.6:1 비율 이미지 사용 시 여백 없이 표시 (BANNER_SIZE.md 참고)
                           alignment: Alignment.center,
                           errorBuilder: (context, error, stackTrace) {
                             // Asset 이미지 로드 실패 시 그라데이션 배경만 표시
@@ -193,7 +202,9 @@ class _BannerCarouselState extends State<BannerCarousel> {
             ),
           ),
         ],
+        ),
       ),
+    ),
     );
   }
 }

@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
-import '../../widgets/notification_bell.dart';
-import '../../providers/chat_provider.dart';
+import '../../widgets/spare_app_bar.dart';
 import '../../utils/icon_mapper.dart';
-import '../../utils/navigation_helper.dart';
 import 'home_screen.dart';
-import 'messages_screen.dart';
 import 'payment_screen.dart';
 import 'favorites_screen.dart';
 import 'profile_screen.dart';
@@ -28,8 +24,6 @@ class _PointsScreenState extends State<PointsScreen> {
   bool _showMoreSimple = false;
   bool _showMoreParticipation = false;
   bool _showMorePurchase = false;
-  bool _isSearchOpen = false;
-  final TextEditingController _searchController = TextEditingController();
   Set<String> _completedMissionIds = {}; // 완료된 미션 ID 추적
 
   // Mock 데이터
@@ -162,11 +156,6 @@ class _PointsScreenState extends State<PointsScreen> {
     ),
   ];
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
 
   void _handleAttendanceCheck() {
     if (!_attendanceChecked) {
@@ -203,177 +192,32 @@ class _PointsScreenState extends State<PointsScreen> {
     return _completedMissionIds.contains(missionId);
   }
 
+  Widget _buildMissionPlaceholder() {
+    return Container(
+      width: 64,
+      height: 64,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppTheme.green200, AppTheme.blue100],
+        ),
+      ),
+      child: Center(
+        child: IconMapper.icon('briefcase', size: 28, color: Colors.white.withOpacity(0.9)) ??
+            Icon(Icons.work_outline, size: 28, color: Colors.white.withOpacity(0.9)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      body: CustomScrollView(
-        slivers: [
-          // Sticky 헤더
-          SliverAppBar(
-            pinned: true,
-            backgroundColor: AppTheme.backgroundWhite,
-            elevation: 0,
-            leading: null,
-            automaticallyImplyLeading: false,
-            flexibleSpace: Container(
-              decoration: BoxDecoration(
-                color: AppTheme.backgroundWhite,
-                border: Border(
-                  bottom: BorderSide(
-                    color: AppTheme.borderGray,
-                    width: 1,
-                  ),
-                ),
-              ),
-              padding: AppTheme.spacingSymmetric(
-                horizontal: AppTheme.spacing4,
-                vertical: AppTheme.spacing3,
-              ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      NavigationHelper.navigateToHomeFromLogo(context);
-                    },
-                    child: Text(
-                      'HairSpare',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryBlue,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  if (_isSearchOpen) ...[
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        autofocus: true,
-                        decoration: InputDecoration(
-                          hintText: '검색어를 입력하세요',
-                          border: OutlineInputBorder(
-                            borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                            borderSide: const BorderSide(
-                              color: AppTheme.primaryBlue,
-                              width: 2,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                            borderSide: const BorderSide(
-                              color: AppTheme.primaryBlue,
-                              width: 2,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                            borderSide: const BorderSide(
-                              color: AppTheme.primaryBlue,
-                              width: 2,
-                            ),
-                          ),
-                          contentPadding: AppTheme.spacingSymmetric(
-                            horizontal: AppTheme.spacing4,
-                            vertical: AppTheme.spacing2,
-                          ),
-                          isDense: true,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: AppTheme.spacing2),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            _isSearchOpen = false;
-                            _searchController.clear();
-                          });
-                        },
-                        borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-                        child: Container(
-                          padding: EdgeInsets.all(AppTheme.spacing2),
-                          child: IconMapper.icon('x', size: 24, color: AppTheme.textSecondary) ??
-                              const Icon(Icons.close, size: 24, color: AppTheme.textSecondary),
-                        ),
-                      ),
-                    ),
-                  ] else ...[
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            _isSearchOpen = true;
-                          });
-                        },
-                        borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-                        child: Container(
-                          padding: EdgeInsets.all(AppTheme.spacing2),
-                          child: IconMapper.icon('search', size: 24, color: AppTheme.textSecondary) ??
-                              const Icon(Icons.search, size: 24, color: AppTheme.textSecondary),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: AppTheme.spacing3),
-                    // 메시지 버튼
-                    Consumer<ChatProvider>(
-                      builder: (context, chatProvider, _) {
-                        final unreadCount = chatProvider.totalUnreadCount;
-                        return Stack(
-                          children: [
-                            Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => const MessagesScreen()),
-                                  );
-                                },
-                                borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-                                child: Container(
-                                  padding: EdgeInsets.all(AppTheme.spacing2),
-                                  child: IconMapper.icon('messagecircle', size: 24, color: AppTheme.textSecondary) ??
-                                      const Icon(Icons.message_outlined, size: 24, color: AppTheme.textSecondary),
-                                ),
-                              ),
-                            ),
-                            if (unreadCount > 0)
-                              Positioned(
-                                top: 8,
-                                right: 8,
-                                child: Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.urgentRed,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        );
-                      },
-                    ),
-                    SizedBox(width: AppTheme.spacing3),
-                    // 알림 버튼
-                    NotificationBell(
-                      role: 'spare',
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-
-          // 메인 콘텐츠
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
+      appBar: const SpareAppBar(),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
                 // 상단 배너 (광고용)
                 Container(
                   width: double.infinity,
@@ -599,12 +443,10 @@ class _PointsScreenState extends State<PointsScreen> {
                   ),
                 ),
 
-                // 하단 여백 (하단 네비게이션 바 공간)
-                SizedBox(height: 80),
-              ],
-            ),
-          ),
-        ],
+            // 하단 여백 (하단 네비게이션 바 공간)
+            SizedBox(height: 80),
+          ],
+        ),
       ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentNavIndex,
@@ -748,46 +590,42 @@ class _PointsScreenState extends State<PointsScreen> {
       padding: EdgeInsets.symmetric(vertical: AppTheme.spacing2),
       child: Row(
         children: [
-          // 아이콘 영역
+          // 사진 미리보기 영역 (4번 사진 스타일: 정사각형, 라운드, 그라데이션)
           Container(
-            width: 48,
-            height: 48,
+            width: 64,
+            height: 64,
             decoration: BoxDecoration(
-              color: mission.category == 'daily' 
-                  ? AppTheme.purple100 
-                  : AppTheme.backgroundGray,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: mission.icon != null
-                  ? Text(
-                      mission.icon!,
-                      style: const TextStyle(fontSize: 24),
+              borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+              gradient: mission.category == 'daily'
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [AppTheme.purple100, AppTheme.primaryPurple.withOpacity(0.3)],
                     )
-                  : mission.iconUrl != null
-                      ? ClipOval(
-                          child: Image.network(
-                            mission.iconUrl!,
-                            width: 48,
-                            height: 48,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                width: 48,
-                                height: 48,
-                                color: AppTheme.borderGray300,
-                              );
-                            },
-                          ),
+                  : const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [AppTheme.green200, AppTheme.blue100],
+                    ),
+            ),
+            child: ClipRRect(
+              borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+              child: mission.icon != null
+                  ? Center(
+                      child: Text(
+                        mission.icon!,
+                        style: const TextStyle(fontSize: 28),
+                      ),
+                    )
+                  : mission.iconUrl != null && mission.iconUrl!.startsWith('http')
+                      ? Image.network(
+                          mission.iconUrl!,
+                          width: 64,
+                          height: 64,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => _buildMissionPlaceholder(),
                         )
-                      : Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: AppTheme.borderGray300,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
+                      : _buildMissionPlaceholder(),
             ),
           ),
           SizedBox(width: AppTheme.spacing3),

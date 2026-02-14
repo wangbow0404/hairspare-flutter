@@ -18,58 +18,77 @@ class AdminPageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 400;
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                    fontSize: 30,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textPrimary,
+                          fontSize: isNarrow ? 22 : 30,
+                        ),
                   ),
+                  if (subtitle != null) ...[
+                    SizedBox(height: AppTheme.spacing2),
+                    Text(
+                      subtitle!,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.textSecondary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                    ),
+                  ],
+                ],
+              ),
             ),
-            if (subtitle != null) ...[
-              SizedBox(height: AppTheme.spacing2),
-              Text(
-                subtitle!,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppTheme.textSecondary,
-                ),
+            SizedBox(width: AppTheme.spacing2),
+            Flexible(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (showLiveBadge) ...[
+                    Container(
+                      width: 6,
+                      height: 6,
+                      margin: const EdgeInsets.only(right: 4),
+                      decoration: const BoxDecoration(
+                        color: AppTheme.primaryGreen,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    Flexible(
+                      child: Text(
+                        '실시간 업데이트 중',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.textTertiary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ),
+                    SizedBox(width: AppTheme.spacing2),
+                  ],
+                  if (trailing != null) trailing!,
+                ],
               ),
-            ],
+            ),
           ],
-        ),
-        Row(
-          children: [
-            if (showLiveBadge) ...[
-              Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: AppTheme.primaryGreen,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              SizedBox(width: AppTheme.spacing1),
-              Text(
-                '실시간 업데이트 중',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.textTertiary,
-                ),
-              ),
-              SizedBox(width: AppTheme.spacing4),
-            ],
-            if (trailing != null) trailing!,
-          ],
-        ),
-      ],
+        );
+      },
     );
   }
 }

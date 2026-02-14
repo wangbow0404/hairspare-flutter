@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/spare_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../models/schedule.dart';
 import '../../services/schedule_service.dart';
@@ -114,27 +115,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '스케줄',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
-      ),
-      body: Stack(
-        children: [
-          sortedDates.isEmpty
+      appBar: const SpareAppBar(),
+      body: SafeArea(
+        top: true,
+        bottom: false,
+        child: Stack(
+          children: [
+            sortedDates.isEmpty
               ? Center(
                   child: Text(
                     '확정된 일정이 없습니다.',
@@ -144,7 +131,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   ),
                 )
               : ListView.builder(
-                  padding: AppTheme.spacing(AppTheme.spacing4),
+                  padding: EdgeInsets.only(
+                    left: AppTheme.spacing4,
+                    right: AppTheme.spacing4,
+                    top: AppTheme.spacing4,
+                    bottom: AppTheme.spacing4 + MediaQuery.of(context).padding.bottom + 70,
+                  ),
                   itemCount: sortedDates.length,
                   itemBuilder: (context, index) {
                     final date = sortedDates[index];
@@ -264,6 +256,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               onCancel: _handleCancelSchedule,
             ),
         ],
+        ),
       ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentNavIndex,

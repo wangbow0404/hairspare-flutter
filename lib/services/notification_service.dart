@@ -1,8 +1,11 @@
 import 'package:dio/dio.dart';
 import '../utils/api_client.dart';
+import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
+import '../utils/api_config.dart';
 import '../models/notification.dart';
+import '../mocks/mock_spare_data.dart';
 
 class NotificationSettings {
   final bool pushEnabled;
@@ -57,6 +60,7 @@ class NotificationService {
 
   /// 알림 설정 조회
   Future<NotificationSettings> getNotificationSettings() async {
+    if (ApiConfig.useMockData) return await MockSpareData.getNotificationSettings();
     try {
       final response = await _apiClient.dio.get('/api/notifications/settings');
 
@@ -104,6 +108,7 @@ class NotificationService {
     int? limit,
     int? offset,
   }) async {
+    if (ApiConfig.useMockData) return await MockSpareData.getNotifications();
     try {
       final queryParams = <String, dynamic>{};
       if (isRead != null) queryParams['isRead'] = isRead.toString();
@@ -162,6 +167,7 @@ class NotificationService {
 
   /// 알림 삭제
   Future<void> deleteNotification(String notificationId) async {
+    if (ApiConfig.useMockData) return; // mock: 로컬에서만 제거
     try {
       final response = await _apiClient.dio.delete(
         '/api/notifications/$notificationId',

@@ -1,13 +1,16 @@
 import 'package:dio/dio.dart';
 import '../utils/api_client.dart';
+import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
+import '../mocks/mock_shop_data.dart';
 
 class WorkCheckService {
   final ApiClient _apiClient = ApiClient();
 
   /// 미용실용 VIP 통계 조회
   Future<Map<String, dynamic>> getShopStats() async {
+    if (ApiConfig.useMockData) return await MockShopData.getShopStats();
     try {
       final response = await _apiClient.dio.get('/api/work-check/shop-stats');
 

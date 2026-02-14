@@ -8,6 +8,7 @@ import 'admin_jobs_screen.dart';
 import 'admin_payments_screen.dart';
 import 'admin_energy_screen.dart';
 import 'admin_noshow_screen.dart';
+import 'admin_checkin_screen.dart';
 import 'dart:async';
 
 /// 관리자 대시보드 화면
@@ -253,19 +254,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                   icon: Icons.calendar_today,
                                   color: Colors.orange,
                                   onTap: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (ctx) => AlertDialog(
-                                        title: const Text('체크인 관리'),
-                                        content: const Text(
-                                          '체크인 관리 기능은 준비 중입니다.\n곧 만나보실 수 있습니다.',
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(ctx),
-                                            child: const Text('확인'),
-                                          ),
-                                        ],
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const AdminCheckinScreen(),
                                       ),
                                     );
                                   },

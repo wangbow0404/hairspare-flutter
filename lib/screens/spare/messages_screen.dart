@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/spare_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/chat_service.dart';
 import '../../utils/navigation_helper.dart';
@@ -89,47 +90,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => NavigationHelper.safePop(context),
-        ),
-        title: Text(
-          '메시지',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
-        actions: [
-          PopupMenuButton<String>(
-            icon: IconMapper.icon('morehorizontal', size: 24, color: AppTheme.textSecondary) ??
-                const Icon(Icons.more_vert, color: AppTheme.textSecondary),
-            onSelected: (value) async {
-              if (value == 'delete_all') {
-                await _showDeleteAllDialog();
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'delete_all',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_outline, size: 20),
-                    SizedBox(width: 8),
-                    Text('전체 삭제'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+      appBar: const SpareAppBar(showSearch: false),
       body: Column(
         children: [
           // 탭 버튼

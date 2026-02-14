@@ -2,8 +2,10 @@ import 'package:dio/dio.dart';
 import 'dart:io';
 import '../models/user.dart';
 import '../utils/api_client.dart';
+import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
+import '../mocks/mock_auth_data.dart';
 
 class AuthService {
   final ApiClient _apiClient = ApiClient();
@@ -13,6 +15,13 @@ class AuthService {
     required String password,
     required UserRole role,
   }) async {
+    if (ApiConfig.useMockData) {
+      if (username.isEmpty || password.isEmpty) {
+        throw ValidationException('아이디와 비밀번호를 입력해주세요');
+      }
+      await _apiClient.setAuthToken('mock_token');
+      return role == UserRole.spare ? MockAuthData.spareUser() : MockAuthData.shopUser();
+    }
     try {
       final response = await _apiClient.dio.post(
         '/api/auth/login',
@@ -59,6 +68,13 @@ class AuthService {
     String? phone,
     String? referralCode,
   }) async {
+    if (ApiConfig.useMockData) {
+      if (username.isEmpty || password.isEmpty) {
+        throw ValidationException('아이디와 비밀번호를 입력해주세요');
+      }
+      await _apiClient.setAuthToken('mock_token');
+      return role == UserRole.spare ? MockAuthData.spareUser() : MockAuthData.shopUser();
+    }
     try {
       final response = await _apiClient.dio.post(
         '/api/auth/register',
@@ -96,6 +112,11 @@ class AuthService {
   }
 
   Future<User?> getCurrentUser() async {
+    if (ApiConfig.useMockData) {
+      final token = await _apiClient.getAuthToken();
+      if (token == null || token.isEmpty) return null;
+      return MockAuthData.spareUser(); // mock에서는 spare로 통일 (필요시 수정)
+    }
     try {
       final response = await _apiClient.dio.get('/api/auth/me');
 

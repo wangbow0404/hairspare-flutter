@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import '../utils/api_client.dart';
+import '../utils/api_config.dart';
+import '../mocks/mock_spare_data.dart';
 
 class Payment {
   final String id;
@@ -39,6 +41,7 @@ class PaymentService {
 
   /// 결제 내역 조회
   Future<List<Payment>> getPayments() async {
+    if (ApiConfig.useMockData) return await MockSpareData.getPayments();
     try {
       final response = await _apiClient.dio.get('/api/payments');
 

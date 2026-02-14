@@ -1,14 +1,17 @@
 import 'package:dio/dio.dart';
 import '../models/job.dart';
 import '../utils/api_client.dart';
+import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
+import '../mocks/mock_spare_data.dart';
 
 class FavoriteService {
   final ApiClient _apiClient = ApiClient();
 
   /// 찜 목록 조회
   Future<List<Job>> getFavorites() async {
+    if (ApiConfig.useMockData) return await MockSpareData.getFavorites();
     try {
       final response = await _apiClient.dio.get('/api/favorites');
 
@@ -42,6 +45,7 @@ class FavoriteService {
 
   /// 찜 추가
   Future<void> addFavorite(String jobId) async {
+    if (ApiConfig.useMockData) return; // mock: no-op
     try {
       final response = await _apiClient.dio.post(
         '/api/favorites',
@@ -63,6 +67,7 @@ class FavoriteService {
 
   /// 찜 삭제
   Future<void> removeFavorite(String jobId) async {
+    if (ApiConfig.useMockData) return; // mock: no-op
     try {
       final response = await _apiClient.dio.delete(
         '/api/favorites',
@@ -84,6 +89,7 @@ class FavoriteService {
 
   /// 찜 여부 확인
   Future<bool> isFavorite(String jobId) async {
+    if (ApiConfig.useMockData) return jobId == 'job-mock-1'; // mock
     try {
       final response = await _apiClient.dio.post(
         '/api/favorites/check',

@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
 import '../models/job.dart';
 import '../utils/api_client.dart';
+import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
+import '../mocks/mock_spare_data.dart';
 
 class JobService {
   final ApiClient _apiClient = ApiClient();
@@ -17,6 +19,7 @@ class JobService {
     int? limit,
     int? offset,
   }) async {
+    if (ApiConfig.useMockData) return await MockSpareData.getJobs();
     try {
       final queryParams = <String, dynamic>{};
       if (regionIds != null && regionIds.isNotEmpty) {
@@ -69,6 +72,7 @@ class JobService {
     int? limit,
     int? offset,
   }) async {
+    if (ApiConfig.useMockData) return await MockSpareData.getJobs();
     try {
       final queryParams = <String, dynamic>{
         'ownerId': 'me', // 자신이 등록한 공고만 가져오기
@@ -115,6 +119,7 @@ class JobService {
 
   /// 공고 상세 조회
   Future<Job> getJobById(String jobId) async {
+    if (ApiConfig.useMockData) return await MockSpareData.getJobById(jobId);
     try {
       final response = await _apiClient.dio.get('/api/jobs/$jobId');
 

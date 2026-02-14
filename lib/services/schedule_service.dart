@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
 import '../models/schedule.dart';
 import '../utils/api_client.dart';
+import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
+import '../mocks/mock_spare_data.dart';
 
 class ScheduleService {
   final ApiClient _apiClient = ApiClient();
@@ -14,6 +16,7 @@ class ScheduleService {
     String? status,
     String? ownerId, // 'me'로 설정하면 자신의 스케줄만 조회
   }) async {
+    if (ApiConfig.useMockData) return await MockSpareData.getSchedules();
     try {
       final queryParams = <String, dynamic>{};
       if (dateFrom != null) queryParams['dateFrom'] = dateFrom;
@@ -72,6 +75,7 @@ class ScheduleService {
 
   /// 근무 체크 통계 조회
   Future<Map<String, dynamic>> getWorkCheckStats() async {
+    if (ApiConfig.useMockData) return await MockSpareData.getWorkCheckStats();
     try {
       final response = await _apiClient.dio.get('/api/work-check/stats');
 

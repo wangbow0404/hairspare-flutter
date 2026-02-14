@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../utils/api_client.dart';
+import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
+import '../mocks/mock_admin_data.dart';
 
 /// 관리자 서비스
 class AdminService {
@@ -10,6 +12,7 @@ class AdminService {
 
   /// 대시보드 통계 조회
   Future<Map<String, dynamic>> getDashboardStats() async {
+    if (ApiConfig.useMockData) return await MockAdminData.getDashboardStats();
     try {
       final response = await _apiClient.dio.get('/api/admin/stats');
 
@@ -54,6 +57,7 @@ class AdminService {
 
   /// 최근 활동 목록 조회
   Future<Map<String, dynamic>> getRecentActivities() async {
+    if (ApiConfig.useMockData) return await MockAdminData.getRecentActivities();
     try {
       final response = await _apiClient.dio.get('/api/admin/activities');
       if (response.statusCode == 200) {
@@ -80,6 +84,7 @@ class AdminService {
     int page = 1,
     int limit = 20,
   }) async {
+    if (ApiConfig.useMockData) return await MockAdminData.getUsers(page: page, limit: limit);
     try {
       final queryParams = <String, dynamic>{
         'page': page,
@@ -138,6 +143,7 @@ class AdminService {
 
   /// 회원 상세 정보 조회
   Future<Map<String, dynamic>> getUserDetail(String userId) async {
+    if (ApiConfig.useMockData) return await MockAdminData.getUserDetail(userId);
     try {
       final response = await _apiClient.dio.get('/api/admin/users/$userId');
 
@@ -165,6 +171,7 @@ class AdminService {
     int page = 1,
     int limit = 20,
   }) async {
+    if (ApiConfig.useMockData) return await MockAdminData.getJobs(page: page, limit: limit);
     try {
       final queryParams = <String, dynamic>{
         'page': page,
@@ -197,6 +204,7 @@ class AdminService {
 
   /// 공고 상세 정보 조회
   Future<Map<String, dynamic>> getJobDetail(String jobId) async {
+    if (ApiConfig.useMockData) return await MockAdminData.getJobDetail(jobId);
     try {
       final response = await _apiClient.dio.get('/api/admin/jobs/$jobId');
       if (response.statusCode == 200) {
@@ -217,6 +225,7 @@ class AdminService {
 
   /// 결제 상세 정보 조회
   Future<Map<String, dynamic>> getPaymentDetail(String paymentId) async {
+    if (ApiConfig.useMockData) return await MockAdminData.getPaymentDetail(paymentId);
     try {
       final response = await _apiClient.dio.get('/api/admin/payments/$paymentId');
       if (response.statusCode == 200) {
@@ -242,6 +251,7 @@ class AdminService {
     int page = 1,
     int limit = 20,
   }) async {
+    if (ApiConfig.useMockData) return await MockAdminData.getPayments(page: page, limit: limit);
     try {
       final queryParams = <String, dynamic>{
         'page': page,
@@ -277,6 +287,7 @@ class AdminService {
     int page = 1,
     int limit = 20,
   }) async {
+    if (ApiConfig.useMockData) return await MockAdminData.getEnergyTransactions(page: page, limit: limit);
     try {
       final queryParams = <String, dynamic>{
         'page': page,
@@ -305,11 +316,58 @@ class AdminService {
     }
   }
 
+  /// 체크인/스케줄 목록 조회
+  Future<Map<String, dynamic>> getSchedules({
+    String? search,
+    String? dateFilter,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    if (ApiConfig.useMockData) return await MockAdminData.getSchedules(page: page, limit: limit);
+    try {
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'limit': limit,
+      };
+      if (search != null && search.isNotEmpty) queryParams['search'] = search;
+      if (dateFilter != null && dateFilter.isNotEmpty) queryParams['dateFilter'] = dateFilter;
+
+      final response = await _apiClient.dio.get(
+        '/api/admin/schedules',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'] ?? response.data;
+        return data is Map<String, dynamic>
+            ? data
+            : {'schedules': [], 'pagination': {'page': 1, 'limit': 20, 'total': 0, 'totalPages': 1}};
+      } else {
+        throw ServerException(
+          '체크인 목록 조회 실패: ${response.statusMessage}',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      // API 미구현(404) 시 빈 목록 반환
+      if (e.response?.statusCode == 404) {
+        return {
+          'schedules': [],
+          'pagination': {'page': 1, 'limit': 20, 'total': 0, 'totalPages': 1},
+        };
+      }
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
   /// 노쇼 이력 조회
   Future<Map<String, dynamic>> getNoShowHistory({
     int page = 1,
     int limit = 20,
   }) async {
+    if (ApiConfig.useMockData) return await MockAdminData.getNoShowHistory(page: page, limit: limit);
     try {
       final queryParams = <String, dynamic>{
         'page': page,

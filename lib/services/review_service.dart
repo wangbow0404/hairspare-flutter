@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import '../utils/api_client.dart';
+import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
+import '../mocks/mock_spare_data.dart';
 
 class Review {
   final String id;
@@ -37,6 +39,7 @@ class ReviewService {
 
   /// 리뷰 목록 조회
   Future<List<Review>> getReviews() async {
+    if (ApiConfig.useMockData) return await MockSpareData.getReviews();
     try {
       final response = await _apiClient.dio.get('/api/reviews');
 

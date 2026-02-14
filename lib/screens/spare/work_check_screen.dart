@@ -449,9 +449,12 @@ class _WorkCheckScreenState extends State<WorkCheckScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      body: Stack(
-        children: [
-          CustomScrollView(
+      body: SafeArea(
+        top: true,
+        bottom: false,
+        child: Stack(
+          children: [
+            CustomScrollView(
         slivers: [
           // Sticky 헤더
           SliverAppBar(
@@ -772,91 +775,98 @@ class _WorkCheckScreenState extends State<WorkCheckScreen> {
                           color: AppTheme.backgroundGray,
                           borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                         ),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final barWidth = constraints.maxWidth;
+                            final fillWidth = (displayDays / 10) * barWidth;
+                            return Column(
                               children: [
-                                Text(
-                                  '에너지 진행률',
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppTheme.textGray700,
-                                  ),
-                                ),
-                                Text(
-                                  '$displayDays / 10일',
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.primaryBlue,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: AppTheme.spacing4),
-                            // 에너지 게이지
-                            Stack(
-                              children: [
-                                Container(
-                                  width: double.infinity,
-                                  height: 60,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFEEF0F3),
-                                    borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      // 틱 마크 (9개 구분선 - 10등분)
-                                      ...List.generate(9, (index) {
-                                        return Expanded(
-                                          child: Container(
-                                            margin: EdgeInsets.only(
-                                              right: index < 8 ? 0 : 0,
-                                            ),
-                                            child: Align(
-                                              alignment: Alignment.centerRight,
-                                              child: Container(
-                                                width: 3,
-                                                height: 20,
-                                                decoration: BoxDecoration(
-                                                  color: AppTheme.borderGray300,
-                                                  borderRadius: BorderRadius.circular(2),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      }),
-                                    ],
-                                  ),
-                                ),
-                                // 채워진 진행률 (그라데이션)
-                                if (displayDays > 0)
-                                  Positioned(
-                                    left: 0,
-                                    top: 0,
-                                    child: Container(
-                                      width: (displayDays / 10) * MediaQuery.of(context).size.width * 0.9,
-                                      height: 60,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            AppTheme.primaryBlue,
-                                            AppTheme.primaryPurple500,
-                                          ],
-                                        ),
-                                        borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '에너지 진행률',
+                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppTheme.textGray700,
                                       ),
                                     ),
-                                  ),
-                                // 원형 배지 (번개 아이콘)
-                                if (displayDays > 0)
-                                  Positioned(
-                                    left: (displayDays / 10) * MediaQuery.of(context).size.width * 0.9 - 32,
-                                    top: 0,
-                                    child: Container(
+                                    Text(
+                                      '$displayDays / 10일',
+                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.primaryBlue,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: AppTheme.spacing4),
+                                // 에너지 게이지
+                                Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    Container(
+                                      width: double.infinity,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFEEF0F3),
+                                        borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          // 틱 마크 (9개 구분선 - 10등분)
+                                          ...List.generate(9, (index) {
+                                            return Expanded(
+                                              child: Container(
+                                                margin: EdgeInsets.only(
+                                                  right: index < 8 ? 0 : 0,
+                                                ),
+                                                child: Align(
+                                                  alignment: Alignment.centerRight,
+                                                  child: Container(
+                                                    width: 3,
+                                                    height: 20,
+                                                    decoration: BoxDecoration(
+                                                      color: AppTheme.borderGray300,
+                                                      borderRadius: BorderRadius.circular(2),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          }),
+                                        ],
+                                      ),
+                                    ),
+                                    // 채워진 진행률 (그라데이션)
+                                    if (displayDays > 0)
+                                      Positioned(
+                                        left: 0,
+                                        top: 0,
+                                        child: SizedBox(
+                                          width: fillWidth.clamp(0.0, barWidth),
+                                          height: 60,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: [
+                                                  AppTheme.primaryBlue,
+                                                  AppTheme.primaryPurple500,
+                                                ],
+                                              ),
+                                              borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    // 원형 배지 (번개 아이콘)
+                                    if (displayDays > 0)
+                                      Positioned(
+                                        left: (fillWidth - 32).clamp(0.0, barWidth - 64),
+                                        top: 0,
+                                        child: Container(
                                       width: 64,
                                       height: 64,
                                       decoration: BoxDecoration(
@@ -887,55 +897,9 @@ class _WorkCheckScreenState extends State<WorkCheckScreen> {
                                   ),
                               ],
                             ),
-                            SizedBox(height: AppTheme.spacing4),
-                            Row(
-                              children: [
-                                Text(
-                                  '획득한 에너지:',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontSize: 14,
-                                    color: AppTheme.textGray700,
-                                  ),
-                                ),
-                                SizedBox(width: AppTheme.spacing2),
-                                if (_energyFromWork > 0)
-                                  Row(
-                                    children: List.generate(_energyFromWork, (index) {
-                                      return Container(
-                                        width: 32,
-                                        height: 32,
-                                        margin: EdgeInsets.only(right: AppTheme.spacing1),
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: [
-                                              AppTheme.blue200,
-                                              AppTheme.primaryPurple500,
-                                            ],
-                                          ),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Center(
-                                          child: Text(
-                                            '⚡',
-                                            style: TextStyle(fontSize: 16),
-                                          ),
-                                        ),
-                                      );
-                                    }),
-                                  )
-                                else
-                                  Text(
-                                    '아직 없음',
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      fontSize: 14,
-                                      color: AppTheme.primaryBlue,
-                                    ),
-                                  ),
-                              ],
-                            ),
                           ],
+                        );
+                          },
                         ),
                       ),
                     ],
@@ -1053,7 +1017,7 @@ class _WorkCheckScreenState extends State<WorkCheckScreen> {
                         physics: const NeverScrollableScrollPhysics(),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 7,
-                          childAspectRatio: 1,
+                          childAspectRatio: 0.82, // 달력 셀 크기 확대 + BOTTOM 오버플로우 방지
                           mainAxisSpacing: 4,
                           crossAxisSpacing: 4,
                         ),
@@ -1628,8 +1592,8 @@ class _WorkCheckScreenState extends State<WorkCheckScreen> {
                   ),
                 ),
 
-                // 하단 여백
-                SizedBox(height: 80),
+                // 하단 여백 (하단 네비게이션 바)
+                SizedBox(height: MediaQuery.of(context).padding.bottom + 70),
               ],
             ),
           ),
@@ -1642,6 +1606,7 @@ class _WorkCheckScreenState extends State<WorkCheckScreen> {
           if (_showTimeWarningModal)
             _buildTimeWarningModal(),
         ],
+        ),
       ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentNavIndex,
