@@ -222,6 +222,36 @@ class _NotificationBellState extends State<NotificationBell> {
                             },
                           ),
               ),
+              if (inOverlay)
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing3,
+                    vertical: AppTheme.spacing2,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(color: AppTheme.borderGray),
+                    ),
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      onPressed: () {
+                        _hideOverlay();
+                        if (mounted) setState(() => _showNotifications = false);
+                        NavigationHelper.navigateToNotificationsList(context);
+                      },
+                      child: Text(
+                        '전체 보기',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primaryBlue,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         );

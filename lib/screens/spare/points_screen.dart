@@ -8,6 +8,7 @@ import 'home_screen.dart';
 import 'payment_screen.dart';
 import 'favorites_screen.dart';
 import 'profile_screen.dart';
+import 'point_history_screen.dart';
 
 /// Next.js와 동일한 +포인트 화면
 class PointsScreen extends StatefulWidget {
@@ -306,6 +307,30 @@ class _PointsScreenState extends State<PointsScreen> {
                             'P',
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               color: AppTheme.textSecondary,
+                            ),
+                          ),
+                          SizedBox(width: AppTheme.spacing3),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const PointHistoryScreen(),
+                                ),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text(
+                              '내역',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.primaryBlue,
+                              ),
                             ),
                           ),
                         ],

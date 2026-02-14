@@ -23,6 +23,7 @@ class JobProvider with ChangeNotifier {
   Future<void> loadJobs({
     List<String>? regionIds,
     bool? isUrgent,
+    String? searchQuery,
   }) async {
     _isLoading = true;
     _error = null;
@@ -32,6 +33,7 @@ class JobProvider with ChangeNotifier {
       _jobs = await _jobService.getJobs(
         regionIds: regionIds,
         isUrgent: isUrgent,
+        searchQuery: searchQuery,
       );
 
       // 급구와 일반 공고 분리
@@ -56,9 +58,19 @@ class JobProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  String? _searchQuery;
+
+  String? get searchQuery => _searchQuery;
+
+  void setSearchQuery(String? query) {
+    _searchQuery = query;
+    notifyListeners();
+  }
+
   Future<void> refreshJobs() async {
     await loadJobs(
       regionIds: _selectedRegionId != null ? [_selectedRegionId!] : null,
+      searchQuery: _searchQuery,
     );
   }
 }

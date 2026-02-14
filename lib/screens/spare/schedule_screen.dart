@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:table_calendar/table_calendar.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/spare_app_bar.dart';
@@ -25,12 +26,28 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   List<Schedule> _schedules = [];
   bool _isLoading = true;
   Schedule? _selectedSchedule;
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
   final ScheduleService _scheduleService = ScheduleService();
 
   @override
   void initState() {
     super.initState();
+    _selectedDay = DateTime.now();
     _loadSchedules();
+  }
+
+  int _getDDay(DateTime scheduleDate) {
+    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final target = DateTime(scheduleDate.year, scheduleDate.month, scheduleDate.day);
+    return target.difference(today).inDays;
+  }
+
+  String _getDDayLabel(DateTime scheduleDate) {
+    final d = _getDDay(scheduleDate);
+    if (d < 0) return '완료';
+    if (d == 0) return 'D-day';
+    return 'D-$d';
   }
 
   Future<void> _loadSchedules() async {
@@ -113,6 +130,16 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final schedulesByDate = _groupSchedulesByDate();
     final sortedDates = schedulesByDate.keys.toList()..sort();
 
+    // 선택된 날짜에 해당하는 스케줄만 표시 (선택 없으면 전체)
+    final datesToShow = _selectedDay != null
+        ? sortedDates.where((d) {
+            final dt = DateTime.parse(d);
+            return dt.year == _selectedDay!.year &&
+                dt.month == _selectedDay!.month &&
+                dt.day == _selectedDay!.day;
+          }).toList()
+        : sortedDates;
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
       appBar: const SpareAppBar(),
@@ -121,31 +148,93 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         bottom: false,
         child: Stack(
           children: [
-            sortedDates.isEmpty
-              ? Center(
-                  child: Text(
-                    '확정된 일정이 없습니다.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
+            SingleChildScrollView(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).padding.bottom + 70,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 월별 캘린더
+                  Container(
+                    margin: AppTheme.spacing(AppTheme.spacing4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.backgroundWhite,
+                      borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
+                      border: Border.all(color: AppTheme.borderGray),
+                    ),
+                    child: TableCalendar(
+                      firstDay: DateTime.utc(2020, 1, 1),
+                      lastDay: DateTime.utc(2030, 12, 31),
+                      focusedDay: _focusedDay,
+                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                      onDaySelected: (selected, focused) {
+                        setState(() {
+                          _selectedDay = selected;
+                          _focusedDay = focused;
+                        });
+                      },
+                      onPageChanged: (focused) {
+                        setState(() => _focusedDay = focused);
+                      },
+                      calendarFormat: CalendarFormat.month,
+                      locale: 'ko_KR',
+                      eventLoader: (day) {
+                        final key = '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
+                        return schedulesByDate.containsKey(key) ? [''] : [];
+                      },
+                      calendarStyle: CalendarStyle(
+                        markerDecoration: BoxDecoration(
+                          color: AppTheme.primaryBlue,
+                          shape: BoxShape.circle,
+                        ),
+                        selectedDecoration: BoxDecoration(
+                          color: AppTheme.primaryBlue,
+                          shape: BoxShape.circle,
+                        ),
+                        todayDecoration: BoxDecoration(
+                          color: AppTheme.primaryBlue.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
                     ),
                   ),
-                )
-              : ListView.builder(
-                  padding: EdgeInsets.only(
-                    left: AppTheme.spacing4,
-                    right: AppTheme.spacing4,
-                    top: AppTheme.spacing4,
-                    bottom: AppTheme.spacing4 + MediaQuery.of(context).padding.bottom + 70,
-                  ),
-                  itemCount: sortedDates.length,
-                  itemBuilder: (context, index) {
-                    final date = sortedDates[index];
+                  if (sortedDates.isEmpty)
+                    Padding(
+                      padding: AppTheme.spacing(AppTheme.spacing4),
+                      child: Center(
+                        child: Text(
+                          '확정된 일정이 없습니다.',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ),
+                    )
+                  else if (datesToShow.isEmpty)
+                    Padding(
+                      padding: AppTheme.spacing(AppTheme.spacing4),
+                      child: Center(
+                        child: Text(
+                          '선택한 날짜에 일정이 없습니다.',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    ...datesToShow.map((date) {
                     final schedules = schedulesByDate[date]!;
                     final dateTime = DateTime.parse(date);
                     final isPast = dateTime.isBefore(DateTime.now());
 
                     return Container(
-                      margin: EdgeInsets.only(bottom: AppTheme.spacing6),
+                      margin: EdgeInsets.only(
+                        left: AppTheme.spacing4,
+                        right: AppTheme.spacing4,
+                        bottom: AppTheme.spacing6,
+                      ),
                       padding: AppTheme.spacing(AppTheme.spacing4),
                       decoration: BoxDecoration(
                         color: AppTheme.backgroundWhite,
@@ -155,13 +244,40 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            DateFormat('yyyy년 M월 d일 (E)', 'ko_KR').format(dateTime),
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.textPrimary,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                DateFormat('yyyy년 M월 d일 (E)', 'ko_KR').format(dateTime),
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.textPrimary,
+                                ),
+                              ),
+                              SizedBox(width: AppTheme.spacing2),
+                              Container(
+                                padding: AppTheme.spacingSymmetric(
+                                  horizontal: AppTheme.spacing2,
+                                  vertical: AppTheme.spacing1,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isPast
+                                      ? AppTheme.textTertiary.withOpacity(0.2)
+                                      : AppTheme.primaryBlue.withOpacity(0.15),
+                                  borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
+                                ),
+                                child: Text(
+                                  _getDDayLabel(dateTime),
+                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: isPast
+                                        ? AppTheme.textSecondary
+                                        : AppTheme.primaryBlue,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           SizedBox(height: AppTheme.spacing3),
                           ...schedules.map((schedule) {
@@ -190,13 +306,41 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      schedule.job?.title ?? '공고 제목 없음',
-                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppTheme.textPrimary,
-                                      ),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            schedule.job?.title ?? '공고 제목 없음',
+                                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppTheme.textPrimary,
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: AppTheme.spacingSymmetric(
+                                            horizontal: AppTheme.spacing2,
+                                            vertical: AppTheme.spacing1,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: scheduleIsPast
+                                                ? AppTheme.textTertiary.withOpacity(0.15)
+                                                : AppTheme.primaryBlue.withOpacity(0.1),
+                                            borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
+                                          ),
+                                          child: Text(
+                                            _getDDayLabel(scheduleDate),
+                                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: scheduleIsPast
+                                                  ? AppTheme.textSecondary
+                                                  : AppTheme.primaryBlue,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                     SizedBox(height: AppTheme.spacing1),
                                     Text(
@@ -242,8 +386,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         ],
                       ),
                     );
-                  },
-                ),
+                    }),
+                ],
+              ),
+            ),
           // 스케줄 상세 모달
           if (_selectedSchedule != null)
             _ScheduleDetailModal(

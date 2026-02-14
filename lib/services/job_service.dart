@@ -16,10 +16,11 @@ class JobService {
     bool? isPremium,
     String? dateFrom,
     String? dateTo,
+    String? searchQuery,
     int? limit,
     int? offset,
   }) async {
-    if (ApiConfig.useMockData) return await MockSpareData.getJobs();
+    if (ApiConfig.useMockData) return await MockSpareData.getJobs(searchQuery: searchQuery);
     try {
       final queryParams = <String, dynamic>{};
       if (regionIds != null && regionIds.isNotEmpty) {
@@ -29,6 +30,7 @@ class JobService {
       if (isPremium != null) queryParams['isPremium'] = isPremium;
       if (dateFrom != null) queryParams['dateFrom'] = dateFrom;
       if (dateTo != null) queryParams['dateTo'] = dateTo;
+      if (searchQuery != null && searchQuery.isNotEmpty) queryParams['search'] = searchQuery;
       if (limit != null) queryParams['limit'] = limit;
       if (offset != null) queryParams['offset'] = offset;
 

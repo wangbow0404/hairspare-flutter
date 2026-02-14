@@ -4,6 +4,7 @@ import '../screens/spare/schedule_screen.dart';
 import '../screens/spare/messages_screen.dart';
 import '../screens/spare/chat_room_screen.dart';
 import '../screens/spare/home_screen.dart';
+import '../screens/spare/notifications_list_screen.dart';
 
 /// 네비게이션 헬퍼 유틸리티
 class NavigationHelper {
@@ -99,6 +100,16 @@ class NavigationHelper {
       context,
       MaterialPageRoute(
         builder: (context) => const MessagesScreen(),
+      ),
+    );
+  }
+
+  /// 전체 알림 목록 화면으로 이동
+  static void navigateToNotificationsList(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const NotificationsListScreen(),
       ),
     );
   }

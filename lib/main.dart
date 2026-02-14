@@ -9,6 +9,7 @@ import 'providers/schedule_provider.dart';
 import 'providers/energy_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/chat_provider.dart';
+import 'providers/point_provider.dart';
 import 'screens/common/role_select_screen.dart';
 import 'utils/api_client.dart';
 import 'theme/app_theme.dart';
@@ -43,6 +44,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => EnergyProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => PointProvider()),
       ],
       child: MaterialApp(
         title: 'HairSpare',

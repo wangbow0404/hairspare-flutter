@@ -1,6 +1,7 @@
 import '../models/job.dart';
 import '../models/schedule.dart';
 import '../models/notification.dart';
+import '../models/point_transaction.dart';
 import '../models/challenge_profile.dart';
 import '../models/challenge_comment.dart';
 import '../models/space_rental.dart';
@@ -9,6 +10,9 @@ import '../services/notification_service.dart';
 import '../services/payment_service.dart';
 import '../services/review_service.dart';
 import '../screens/spare/challenge_screen.dart';
+import '../screens/spare/education_screen.dart';
+import '../utils/region_helper.dart';
+import '../models/region.dart';
 
 /// 스페어 화면용 Mock 데이터
 class MockSpareData {
@@ -45,9 +49,18 @@ class MockSpareData {
     },
   ];
 
-  static Future<List<Job>> getJobs() async {
+  static Future<List<Job>> getJobs({String? searchQuery}) async {
     await Future.delayed(const Duration(milliseconds: 300));
-    return _jobsJson.map((j) => Job.fromJson(j)).toList();
+    var jobs = _jobsJson.map((j) => Job.fromJson(j)).toList();
+    if (searchQuery != null && searchQuery.trim().isNotEmpty) {
+      final q = searchQuery.trim().toLowerCase();
+      jobs = jobs.where((j) {
+        final title = (j.title).toLowerCase();
+        final shopName = (j.shopName).toLowerCase();
+        return title.contains(q) || shopName.contains(q);
+      }).toList();
+    }
+    return jobs;
   }
 
   static Future<Job> getJobById(String jobId) async {
@@ -514,6 +527,137 @@ class MockSpareData {
       'isUrgent': i % 3 == 0,
       'province': '서울',
       'district': '강남구',
+    });
+  }
+
+  static Future<int> getPointBalance() async {
+    await Future.delayed(const Duration(milliseconds: 150));
+    return 1250;
+  }
+
+  static Future<List<PointTransaction>> getPointHistory({
+    int limit = 50,
+    int offset = 0,
+    String? type,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    final now = DateTime.now();
+    final items = [
+      {'id': 'pt-1', 'type': 'earn', 'amount': 10, 'description': '출석체크', 'createdAt': now.toIso8601String(), 'relatedId': 'daily-1'},
+      {'id': 'pt-2', 'type': 'earn', 'amount': 94, 'description': '채널추가 미션', 'createdAt': now.subtract(const Duration(days: 1)).toIso8601String(), 'relatedId': 'simple-1'},
+      {'id': 'pt-3', 'type': 'spend', 'amount': -50, 'description': '상품 구매', 'createdAt': now.subtract(const Duration(days: 2)).toIso8601String(), 'relatedId': 'purchase-1'},
+      {'id': 'pt-4', 'type': 'earn', 'amount': 3, 'description': '참여 미션', 'createdAt': now.subtract(const Duration(days: 3)).toIso8601String(), 'relatedId': 'participation-1'},
+    ];
+    var list = items.map((j) => PointTransaction.fromJson(Map<String, dynamic>.from(j))).toList();
+    if (type != null) {
+      list = list.where((t) => t.type == type).toList();
+    }
+    return list.skip(offset).take(limit).toList();
+  }
+
+  static Future<bool> completePointMission(String missionId) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    return true;
+  }
+
+  static Future<List<Education>> getEducationsForSearch(String query) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    final provinces = RegionHelper.getAllRegions()
+        .where((r) => r.type == RegionType.province)
+        .toList();
+    final categories = [
+      Category(id: 'cut', name: '컷트', subCategories: ['여성컷트', '남성컷트']),
+      Category(id: 'perm', name: '펌', subCategories: ['디지털펌', '볼륨펌']),
+      Category(id: 'color', name: '염색', subCategories: ['탈색', '브릿지']),
+      Category(id: 'styling', name: '스타일링', subCategories: ['웨딩스타일링']),
+    ];
+    final now = DateTime.now();
+    final educations = <Education>[];
+    for (var i = 0; i < 20; i++) {
+      final province = provinces[i % provinces.length];
+      final district = RegionHelper.getDistrictsByProvince(province.id);
+      final dist = district.isNotEmpty ? district[i % district.length] : null;
+      final cat = categories[i % categories.length];
+      final deadline = now.add(Duration(days: i + 5));
+      final startDate = deadline.add(const Duration(days: 1));
+      final endDate = startDate.add(const Duration(days: 1));
+      final edu = Education(
+        id: 'edu_$i',
+        title: '교육 프로그램 ${i + 1}',
+        description: '교육 ${i + 1} 설명. ${cat.name} ${cat.subCategories[0]} 과정.',
+        category: cat.name,
+        subCategory: cat.subCategories[0],
+        province: province.name,
+        district: dist?.name,
+        regionId: dist?.id ?? province.id,
+        price: (i + 1) * 10000,
+        isUrgent: i % 3 == 0,
+        isOnline: i % 2 == 0,
+        isLive: i % 4 == 0,
+        deadline: deadline,
+        startDate: startDate,
+        endDate: endDate,
+        applicants: 5 + i,
+        maxApplicants: 20,
+        createdAt: now,
+      );
+      educations.add(edu);
+    }
+    if (query.trim().isEmpty) return educations;
+    final q = query.trim().toLowerCase();
+    return educations.where((e) {
+      return e.title.toLowerCase().contains(q) ||
+          e.category.toLowerCase().contains(q) ||
+          e.description.toLowerCase().contains(q);
+    }).toList();
+  }
+
+  static Future<List<Challenge>> getChallengesForSearch(String query) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    final challenges = _generateMockChallengesForSearch();
+    if (query.trim().isEmpty) return challenges;
+    final q = query.trim().toLowerCase();
+    return challenges.where((c) {
+      return c.title.toLowerCase().contains(q) ||
+          (c.creatorName.toLowerCase().contains(q)) ||
+          (c.tags?.any((t) => t.toLowerCase().contains(q)) ?? false);
+    }).toList();
+  }
+
+  static List<Challenge> _generateMockChallengesForSearch() {
+    return List.generate(15, (i) {
+      final hasProduct = i % 3 == 0;
+      final hasEducation = i % 5 == 0 && !hasProduct;
+      return Challenge(
+        id: 'challenge_$i',
+        title: '챌린지 ${i + 1}',
+        description: '챌린지 ${i + 1} 설명입니다',
+        creatorName: '크리에이터 ${i + 1}',
+        creatorId: 'creator_$i',
+        creatorAvatar: null,
+        videoUrl: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
+        thumbnailUrl: null,
+        likes: 100 + i * 10,
+        comments: 10 + i,
+        shares: 5 + i,
+        views: 1000 + i * 100,
+        isLiked: false,
+        isDisliked: false,
+        isSubscribed: false,
+        subscriberCount: 500 + i * 10,
+        tags: ['태그${i + 1}', '미용'],
+        productUrl: hasProduct ? 'https://example.com/product/$i' : null,
+        productName: hasProduct ? '제품 ${i + 1}' : null,
+        productThumbnailUrl: null,
+        educationId: hasEducation ? 'edu_$i' : null,
+        educationName: hasEducation ? '교육 ${i + 1}' : null,
+        educationUrl: hasEducation ? 'https://example.com/edu/$i' : null,
+        educationThumbnailUrl: null,
+        taggedType: hasProduct ? 'product' : (hasEducation ? 'education' : null),
+        musicName: '음악 ${i + 1}',
+        musicArtist: '아티스트 ${i + 1}',
+        createdAt: DateTime.now(),
+      );
     });
   }
 }

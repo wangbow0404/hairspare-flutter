@@ -30,6 +30,7 @@ import '../spare/region_select_screen.dart';
 import '../spare/education_screen.dart';
 import '../spare/challenge_screen.dart';
 import '../spare/jobs_list_screen.dart';
+import '../spare/search_screen.dart';
 import '../spare/energy_screen.dart';
 import '../spare/store_screen.dart';
 import '../spare/connect_screen.dart';
@@ -262,6 +263,19 @@ class _SpareHomeScreenState extends State<SpareHomeScreen> {
                       child: TextField(
                         controller: _searchController,
                         autofocus: true,
+                        onSubmitted: (query) {
+                          if (query.trim().isEmpty) return;
+                          setState(() {
+                            _isSearchOpen = false;
+                            _searchController.clear();
+                          });
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => JobsListScreen(searchQuery: query.trim()),
+                            ),
+                          );
+                        },
                         decoration: InputDecoration(
                           hintText: '검색어를 입력하세요',
                           border: OutlineInputBorder(
@@ -312,14 +326,17 @@ class _SpareHomeScreenState extends State<SpareHomeScreen> {
                       ),
                     ),
                   ] else ...[
-                    // 검색 버튼
+                    // 검색 버튼 (SearchScreen으로 이동)
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: () {
-                          setState(() {
-                            _isSearchOpen = true;
-                          });
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SearchScreen(),
+                            ),
+                          );
                         },
                         borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                         child: Container(

@@ -14,6 +14,8 @@ import '../spare/verification_screen.dart';
 import '../spare/profile_edit_screen.dart';
 import '../spare/referral_screen.dart';
 import '../spare/settings_screen.dart';
+import '../spare/my_applications_screen.dart';
+import '../spare/my_space_bookings_screen.dart';
 import '../spare/challenge_profile_screen.dart';
 import '../spare/subscriptions_screen.dart';
 import '../spare/home_screen.dart';
@@ -70,9 +72,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
+      body: SafeArea(
+        bottom: false,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).padding.bottom + 70,
+          ),
+          child: Column(
+            children: [
             // Header
             Container(
               decoration: BoxDecoration(
@@ -485,6 +492,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   SizedBox(height: AppTheme.spacing2),
                   _MenuItem(
+                    icon: IconMapper.icon('filetext') ?? const Icon(Icons.assignment),
+                    label: '내 지원 현황',
+                    description: '공고 지원 내역 확인',
+                    color: AppTheme.primaryBlue,
+                    bgColor: AppTheme.primaryBlue.withOpacity(0.1),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const MyApplicationsScreen()),
+                      );
+                    },
+                  ),
+                  SizedBox(height: AppTheme.spacing2),
+                  _MenuItem(
+                    icon: IconMapper.icon('home') ?? const Icon(Icons.room),
+                    label: '내 공간 예약',
+                    description: '공간대여 예약 내역',
+                    color: AppTheme.primaryGreen,
+                    bgColor: AppTheme.primaryGreen.withOpacity(0.1),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const MySpaceBookingsScreen()),
+                      );
+                    },
+                  ),
+                  SizedBox(height: AppTheme.spacing2),
+                  _MenuItem(
                     icon: IconMapper.icon('creditcard') ?? const Icon(Icons.credit_card),
                     label: '결제 정보',
                     description: '결제 내역 및 구독 관리',
@@ -616,10 +651,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // 고객센터 섹션
             CustomerServiceSection(),
-            
-            // 하단 여백
-            SizedBox(height: 80),
           ],
+          ),
         ),
       ),
       bottomNavigationBar: BottomNavBar(

@@ -26,8 +26,9 @@ import 'profile_screen.dart';
 /// Next.js와 동일한 공고 목록 화면
 class JobsListScreen extends StatefulWidget {
   final String? filter; // 'urgent', 'latest', 'deadline', 'hourly', 'daily', 'recommended'
+  final String? searchQuery; // 홈 검색에서 전달된 검색어
 
-  const JobsListScreen({super.key, this.filter});
+  const JobsListScreen({super.key, this.filter, this.searchQuery});
 
   @override
   State<JobsListScreen> createState() => _JobsListScreenState();
@@ -37,6 +38,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
   int _currentNavIndex = 0;
   String? _activeFilter;
   String _sortBy = 'latest';
+  String? _searchQuery;
 
   // 지역 필터 상태
   String? _selectedProvince;
@@ -72,8 +74,11 @@ class _JobsListScreenState extends State<JobsListScreen> {
   void initState() {
     super.initState();
     _activeFilter = widget.filter;
+    _searchQuery = widget.searchQuery;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<JobProvider>(context, listen: false).loadJobs();
+      final jobProvider = Provider.of<JobProvider>(context, listen: false);
+      if (_searchQuery != null) jobProvider.setSearchQuery(_searchQuery);
+      jobProvider.loadJobs(searchQuery: _searchQuery);
       Provider.of<FavoriteProvider>(context, listen: false).loadFavorites();
     });
   }
@@ -86,8 +91,11 @@ class _JobsListScreenState extends State<JobsListScreen> {
       _sortBy = 'latest';
       _isPremium = false;
       _selectedDateStart = null;
+      _searchQuery = null;
     });
-    Provider.of<JobProvider>(context, listen: false).refreshJobs();
+    Provider.of<JobProvider>(context, listen: false)
+      ..setSearchQuery(null)
+      ..refreshJobs();
   }
 
 
@@ -167,6 +175,14 @@ class _JobsListScreenState extends State<JobsListScreen> {
 
   List<Job> _getFilteredJobs(List<Job> allJobs) {
     List<Job> filtered = [...allJobs];
+
+    // 검색어 필터 (searchQuery가 있으면 JobProvider에서 이미 필터링된 결과가 오지만, 이중 적용 방지)
+    if (_searchQuery != null && _searchQuery!.trim().isNotEmpty) {
+      final q = _searchQuery!.trim().toLowerCase();
+      filtered = filtered.where((j) {
+        return j.title.toLowerCase().contains(q) || j.shopName.toLowerCase().contains(q);
+      }).toList();
+    }
 
     // 날짜 필터
     if (_selectedDateStart != null) {
