@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:ui'; // ImageFilter를 위해 import
 import '../../theme/app_theme.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/auth_service.dart';
 import '../../services/verification_service.dart';
 import '../../utils/error_handler.dart';
-import '../spare/login_screen.dart';
-import '../spare/find_id_screen.dart';
-import '../spare/signup_screen.dart';
+import '../../core/router/app_navigation.dart';
+import '../../core/router/app_routes.dart';
 
 /// Next.js와 동일한 비밀번호 찾기 화면
 class FindPasswordScreen extends StatefulWidget {
@@ -34,7 +34,6 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
   bool _isLoading = false;
   bool _showNewPassword = false;
   bool _showConfirmPassword = false;
-  bool _phoneVerified = false;
 
   @override
   void initState() {
@@ -71,10 +70,11 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
     });
 
     try {
+      final messenger = ScaffoldMessenger.of(context);
       if (_step == 'input') {
         // API 호출하여 인증번호 발송
         await _verificationService.sendVerificationCode(_phoneController.text.replaceAll('-', ''));
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(
             content: Text('인증번호가 발송되었습니다.'),
             backgroundColor: AppTheme.primaryBlue,
@@ -92,11 +92,10 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
         
         if (verified) {
           setState(() {
-            _phoneVerified = true;
             _step = 'reset';
           });
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
+          messenger.showSnackBar(
             const SnackBar(
               content: Text('인증번호가 올바르지 않습니다.'),
               backgroundColor: AppTheme.urgentRed,
@@ -105,7 +104,7 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
         }
       } else if (_step == 'reset') {
         if (_newPasswordController.text != _confirmPasswordController.text) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          messenger.showSnackBar(
             const SnackBar(
               content: Text('비밀번호가 일치하지 않습니다.'),
               backgroundColor: AppTheme.urgentRed,
@@ -115,7 +114,7 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
         }
 
         if (_newPasswordController.text.length < 8) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          messenger.showSnackBar(
             const SnackBar(
               content: Text('비밀번호는 8자 이상이어야 합니다.'),
               backgroundColor: AppTheme.urgentRed,
@@ -131,20 +130,19 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
           code: _verificationCodeController.text,
           newPassword: _newPasswordController.text,
         );
-        
-        ScaffoldMessenger.of(context).showSnackBar(
+
+        messenger.showSnackBar(
           const SnackBar(
             content: Text('비밀번호가 재설정되었습니다.'),
             backgroundColor: AppTheme.primaryGreen,
           ),
         );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => SpareLoginScreen()),
-        );
+        if (!mounted) return;
+        AppNavigation.goSpareLogin(context);
       }
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(ErrorHandler.getUserFriendlyMessage(appException)),
@@ -178,7 +176,7 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: AppTheme.spacing10),
+                const SizedBox(height: AppTheme.spacing10),
                 // 로고
                 Column(
                   children: [
@@ -220,7 +218,7 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
                             width: 64, // w-16
                             height: 64, // h-16
                             decoration: BoxDecoration(
-                              color: AppTheme.yellow400.withOpacity(0.4), // bg-yellow-400/40
+                              color: AppTheme.yellow400.withValues(alpha: 0.4), // bg-yellow-400/40
                               borderRadius: AppTheme.borderRadius(AppTheme.radiusXl), // rounded-xl
                             ),
                             child: BackdropFilter(
@@ -233,7 +231,7 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: AppTheme.spacing4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Text(
                       'hairspare',
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -242,7 +240,7 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
                         color: AppTheme.primaryPurpleDarker, // text-purple-800
                       ),
                     ),
-                    SizedBox(height: AppTheme.spacing2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Text(
                       '비밀번호 찾기',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -251,7 +249,7 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: AppTheme.spacing10),
+                const SizedBox(height: AppTheme.spacing10),
                 // 폼
                 Form(
                   key: _formKey,
@@ -272,7 +270,7 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
                             return null;
                           },
                         ),
-                        SizedBox(height: AppTheme.spacing4),
+                        const SizedBox(height: AppTheme.spacing4),
                         TextFormField(
                           controller: _phoneController,
                           decoration: AppTheme.inputDecoration.copyWith(
@@ -324,7 +322,7 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
                             return null;
                           },
                         ),
-                        SizedBox(height: AppTheme.spacing2),
+                        const SizedBox(height: AppTheme.spacing2),
                         Text(
                           '${_phoneController.text}로 발송된 인증번호를 입력하세요.',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -369,7 +367,7 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
                             return null;
                           },
                         ),
-                        SizedBox(height: AppTheme.spacing4),
+                        const SizedBox(height: AppTheme.spacing4),
                         TextFormField(
                           controller: _confirmPasswordController,
                           obscureText: !_showConfirmPassword,
@@ -406,7 +404,7 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
                           },
                         ),
                       ],
-                      SizedBox(height: AppTheme.spacing6),
+                      const SizedBox(height: AppTheme.spacing6),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -442,17 +440,14 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
                     ],
                   ),
                 ),
-                SizedBox(height: AppTheme.spacing8),
+                const SizedBox(height: AppTheme.spacing8),
                 // 하단 링크
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     TextButton(
                       onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => SpareLoginScreen()),
-                        );
+                        AppNavigation.goSpareLogin(context);
                       },
                       child: Text(
                         '로그인',
@@ -471,10 +466,7 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
                     ),
                     TextButton(
                       onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => SpareSignupScreen()),
-                        );
+                        context.replace(AppRoutes.spareSignup);
                       },
                       child: Text(
                         '회원가입',
@@ -493,10 +485,7 @@ class _FindPasswordScreenState extends State<FindPasswordScreen> {
                     ),
                     TextButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => FindIdScreen()),
-                        );
+                        context.push(AppRoutes.spareFindId);
                       },
                       child: Text(
                         '아이디 찾기',

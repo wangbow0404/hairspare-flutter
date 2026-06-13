@@ -2,18 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../models/challenge_profile.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/challenge_service.dart';
 import '../../utils/error_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:dio/dio.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 
 /// 챌린지 프로필 편집 화면
 class ChallengeProfileEditScreen extends StatefulWidget {
@@ -29,7 +24,6 @@ class ChallengeProfileEditScreen extends StatefulWidget {
 }
 
 class _ChallengeProfileEditScreenState extends State<ChallengeProfileEditScreen> {
-  int _currentNavIndex = 0;
   final ChallengeService _challengeService = ChallengeService();
   final _formKey = GlobalKey<FormState>();
   final _nicknameController = TextEditingController();
@@ -146,23 +140,8 @@ class _ChallengeProfileEditScreenState extends State<ChallengeProfileEditScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '프로필 편집',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
+      appBar: SharedAppBar(
+        title: '프로필 편집',
         actions: [
           TextButton(
             onPressed: _isSaving ? null : _handleSave,
@@ -190,7 +169,7 @@ class _ChallengeProfileEditScreenState extends State<ChallengeProfileEditScreen>
                       width: 120,
                       height: 120,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
+                        gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
@@ -249,7 +228,7 @@ class _ChallengeProfileEditScreenState extends State<ChallengeProfileEditScreen>
                   ],
                 ),
               ),
-              SizedBox(height: AppTheme.spacing6),
+              const SizedBox(height: AppTheme.spacing6),
 
               // 닉네임 입력
               Container(
@@ -269,22 +248,22 @@ class _ChallengeProfileEditScreenState extends State<ChallengeProfileEditScreen>
                         color: AppTheme.textPrimary,
                       ),
                     ),
-                    SizedBox(height: AppTheme.spacing2),
+                    const SizedBox(height: AppTheme.spacing2),
                     TextFormField(
                       controller: _nicknameController,
                       decoration: InputDecoration(
                         hintText: '닉네임을 입력하세요',
                         border: OutlineInputBorder(
                           borderRadius: AppTheme.borderRadius(AppTheme.radiusMd),
-                          borderSide: BorderSide(color: AppTheme.borderGray),
+                          borderSide: const BorderSide(color: AppTheme.borderGray),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: AppTheme.borderRadius(AppTheme.radiusMd),
-                          borderSide: BorderSide(color: AppTheme.borderGray),
+                          borderSide: const BorderSide(color: AppTheme.borderGray),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: AppTheme.borderRadius(AppTheme.radiusMd),
-                          borderSide: BorderSide(color: AppTheme.primaryPurple, width: 2),
+                          borderSide: const BorderSide(color: AppTheme.primaryPurple, width: 2),
                         ),
                       ),
                       validator: (value) {
@@ -297,7 +276,7 @@ class _ChallengeProfileEditScreenState extends State<ChallengeProfileEditScreen>
                   ],
                 ),
               ),
-              SizedBox(height: AppTheme.spacing4),
+              const SizedBox(height: AppTheme.spacing4),
 
               // 바이오 입력
               Container(
@@ -317,7 +296,7 @@ class _ChallengeProfileEditScreenState extends State<ChallengeProfileEditScreen>
                         color: AppTheme.textPrimary,
                       ),
                     ),
-                    SizedBox(height: AppTheme.spacing2),
+                    const SizedBox(height: AppTheme.spacing2),
                     TextFormField(
                       controller: _bioController,
                       maxLines: 5,
@@ -325,22 +304,22 @@ class _ChallengeProfileEditScreenState extends State<ChallengeProfileEditScreen>
                         hintText: '소개를 입력하세요',
                         border: OutlineInputBorder(
                           borderRadius: AppTheme.borderRadius(AppTheme.radiusMd),
-                          borderSide: BorderSide(color: AppTheme.borderGray),
+                          borderSide: const BorderSide(color: AppTheme.borderGray),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: AppTheme.borderRadius(AppTheme.radiusMd),
-                          borderSide: BorderSide(color: AppTheme.borderGray),
+                          borderSide: const BorderSide(color: AppTheme.borderGray),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: AppTheme.borderRadius(AppTheme.radiusMd),
-                          borderSide: BorderSide(color: AppTheme.primaryPurple, width: 2),
+                          borderSide: const BorderSide(color: AppTheme.primaryPurple, width: 2),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: AppTheme.spacing4),
+              const SizedBox(height: AppTheme.spacing4),
 
               // 공개 설정
               Container(
@@ -363,7 +342,7 @@ class _ChallengeProfileEditScreenState extends State<ChallengeProfileEditScreen>
                             color: AppTheme.textPrimary,
                           ),
                         ),
-                        SizedBox(height: AppTheme.spacing1),
+                        const SizedBox(height: AppTheme.spacing1),
                         Text(
                           _isPublic ? '모든 사용자가 볼 수 있습니다' : '나만 볼 수 있습니다',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -380,7 +359,7 @@ class _ChallengeProfileEditScreenState extends State<ChallengeProfileEditScreen>
                           _isPublic = value;
                         });
                       },
-                      activeColor: AppTheme.primaryPurple,
+                      activeThumbColor: AppTheme.primaryPurple,
                     ),
                   ],
                 ),
@@ -388,41 +367,6 @@ class _ChallengeProfileEditScreenState extends State<ChallengeProfileEditScreen>
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }

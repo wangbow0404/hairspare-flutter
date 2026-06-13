@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'providers/auth_provider.dart';
 import 'providers/job_provider.dart';
@@ -10,8 +11,15 @@ import 'providers/energy_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/chat_provider.dart';
 import 'providers/point_provider.dart';
-import 'screens/common/role_select_screen.dart';
+import 'package:go_router/go_router.dart';
+
+import 'core/di/service_locator.dart'
+    show configureDependencies, registerGoRouter, sl;
+import 'core/router/app_routes.dart';
+import 'core/services/global_messenger_service.dart';
+import 'core/router/app_router.dart';
 import 'utils/api_client.dart';
+import 'utils/env_config.dart';
 import 'theme/app_theme.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 
@@ -19,36 +27,62 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ko_KR', null);
 
-  // 카카오 SDK 초기화
-  kakao.KakaoSdk.init(
-    nativeAppKey: 'YOUR_KAKAO_NATIVE_APP_KEY', // TODO: 실제 카카오 네이티브 앱 키로 변경 필요
+  await dotenv.load(fileName: 'assets/env/app.env');
+
+  final kakaoKey = EnvConfig.kakaoNativeAppKey;
+  if (kakaoKey.isEmpty) {
+    assert(() {
+      debugPrint(
+        '[HairSpare] KAKAO_NATIVE_APP_KEY 가 비어 있어 카카오 SDK 초기화를 건너뜁니다. '
+        '카카오 로그인을 쓰려면 --dart-define=KAKAO_NATIVE_APP_KEY=... 를 설정하세요.',
+      );
+      return true;
+    }());
+  } else {
+    kakao.KakaoSdk.init(nativeAppKey: kakaoKey);
+  }
+  
+  configureDependencies();
+  // API 클라이언트 초기화 (JWT + refresh cookie + 동시성 제어 인터셉터)
+  ApiClient().init(
+    onSessionExpiredMessage: (message) {
+      sl<GlobalMessengerService>().showError(message);
+    },
+    onSessionExpired: () async {
+      await sl<AuthProvider>().logout();
+      appRouter.go(AppRoutes.roleSelect);
+    },
   );
-  
-  // API 클라이언트 초기화
-  ApiClient().init();
-  
-  runApp(const MyApp());
+  await sl<AuthProvider>().checkAuth();
+  final router = AppRouter.createRouter(sl<AuthProvider>());
+  registerGoRouter(router);
+
+  runApp(MyApp(router: router));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.router});
+
+  final GoRouter router;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => JobProvider()),
-        ChangeNotifierProvider(create: (_) => FavoriteProvider()),
-        ChangeNotifierProvider(create: (_) => ScheduleProvider()),
-        ChangeNotifierProvider(create: (_) => EnergyProvider()),
-        ChangeNotifierProvider(create: (_) => NotificationProvider()),
-        ChangeNotifierProvider(create: (_) => ChatProvider()),
-        ChangeNotifierProvider(create: (_) => PointProvider()),
+        ChangeNotifierProvider.value(value: sl<AuthProvider>()),
+        ChangeNotifierProvider.value(value: sl<JobProvider>()),
+        ChangeNotifierProvider.value(value: sl<FavoriteProvider>()),
+        ChangeNotifierProvider.value(value: sl<ScheduleProvider>()),
+        ChangeNotifierProvider.value(value: sl<EnergyProvider>()),
+        ChangeNotifierProvider.value(value: sl<NotificationProvider>()),
+        ChangeNotifierProvider.value(value: sl<ChatProvider>()),
+        ChangeNotifierProvider.value(value: sl<PointProvider>()),
       ],
-      child: MaterialApp(
+      child: MaterialApp.router(
         title: 'HairSpare',
         debugShowCheckedModeBanner: false,
+        scaffoldMessengerKey: sl<GlobalMessengerService>().messengerKey,
+        routerConfig: router,
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
@@ -59,8 +93,7 @@ class MyApp extends StatelessWidget {
           Locale('en', 'US'),
         ],
         locale: const Locale('ko', 'KR'),
-        theme: AppTheme.lightTheme, // Next.js 디자인 시스템 적용
-        home: const RoleSelectScreen(),
+        theme: AppTheme.lightTheme,
       ),
     );
   }

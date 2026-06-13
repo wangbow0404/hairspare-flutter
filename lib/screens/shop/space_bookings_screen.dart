@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import '../../theme/app_theme.dart';
+
 import '../../models/space_rental.dart';
 import '../../services/space_rental_service.dart';
+import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
+import '../../widgets/common/shared_app_bar.dart';
+import '../../widgets/shop_space_bookings/shop_space_booking_card.dart';
 
 class ShopSpaceBookingsScreen extends StatefulWidget {
-  final String? spaceId; // null이면 모든 공간의 예약 조회
-
   const ShopSpaceBookingsScreen({
     super.key,
     this.spaceId,
   });
+
+  final String? spaceId;
 
   @override
   State<ShopSpaceBookingsScreen> createState() => _ShopSpaceBookingsScreenState();
@@ -23,6 +25,9 @@ class _ShopSpaceBookingsScreenState extends State<ShopSpaceBookingsScreen> {
   bool _isLoading = true;
   String? _error;
   BookingStatus? _selectedStatus;
+
+  int get _pendingCount =>
+      _bookings.where((b) => b.status == BookingStatus.pending).length;
 
   @override
   void initState() {
@@ -41,39 +46,64 @@ class _ShopSpaceBookingsScreenState extends State<ShopSpaceBookingsScreen> {
         spaceId: widget.spaceId,
         status: _selectedStatus,
       );
+      if (!mounted) return;
       setState(() {
         _bookings = bookings;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _error = ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e));
+        _error = ErrorHandler.getUserFriendlyMessage(
+          ErrorHandler.handleException(e),
+        );
         _isLoading = false;
       });
     }
   }
 
   Future<void> _approveBooking(String bookingId) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('예약 승인'),
+        content: const Text('이 예약을 승인하시겠습니까?\n승인 후 예약이 확정됩니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('승인'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
     try {
       await _spaceRentalService.approveBooking(bookingId);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('예약이 승인되었습니다'),
-            backgroundColor: AppTheme.primaryGreen,
-          ),
-        );
-        _loadBookings();
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('예약이 승인되었습니다. 채팅방이 열렸고 스케줄 현황에 반영됩니다.'),
+          backgroundColor: AppTheme.primaryGreen,
+        ),
+      );
+      await _loadBookings();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))),
-            backgroundColor: AppTheme.urgentRed,
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ErrorHandler.getUserFriendlyMessage(
+              ErrorHandler.handleException(e),
+            ),
           ),
-        );
-      }
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
     }
   }
 
@@ -99,9 +129,7 @@ class _ShopSpaceBookingsScreenState extends State<ShopSpaceBookingsScreen> {
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, controller.text),
-              style: TextButton.styleFrom(
-                foregroundColor: AppTheme.urgentRed,
-              ),
+              style: TextButton.styleFrom(foregroundColor: AppTheme.urgentRed),
               child: const Text('거절'),
             ),
           ],
@@ -109,321 +137,192 @@ class _ShopSpaceBookingsScreenState extends State<ShopSpaceBookingsScreen> {
       },
     );
 
-    if (reason != null || reason == null) {
-      try {
-        await _spaceRentalService.rejectBooking(bookingId, reason: reason);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('예약이 거절되었습니다'),
-              backgroundColor: AppTheme.primaryGreen,
+    if (reason == null) return;
+
+    try {
+      await _spaceRentalService.rejectBooking(bookingId, reason: reason);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('예약이 거절되었습니다'),
+          backgroundColor: AppTheme.primaryGreen,
+        ),
+      );
+      await _loadBookings();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ErrorHandler.getUserFriendlyMessage(
+              ErrorHandler.handleException(e),
             ),
-          );
-          _loadBookings();
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))),
-              backgroundColor: AppTheme.urgentRed,
-            ),
-          );
-        }
-      }
+          ),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
     }
   }
 
-  String _getStatusText(BookingStatus status) {
-    switch (status) {
-      case BookingStatus.pending:
-        return '대기 중';
-      case BookingStatus.confirmed:
-        return '확정됨';
-      case BookingStatus.inProgress:
-        return '진행 중';
-      case BookingStatus.completed:
-        return '완료됨';
-      case BookingStatus.cancelled:
-        return '취소됨';
-    }
+  String _statusLabel(BookingStatus status) {
+    return switch (status) {
+      BookingStatus.pending => '승인 대기',
+      BookingStatus.confirmed => '확정',
+      BookingStatus.inProgress => '이용 중',
+      BookingStatus.completed => '완료',
+      BookingStatus.cancelled => '취소',
+    };
   }
 
-  Color _getStatusColor(BookingStatus status) {
-    switch (status) {
-      case BookingStatus.pending:
-        return Colors.orange;
-      case BookingStatus.confirmed:
-        return AppTheme.primaryPurple;
-      case BookingStatus.inProgress:
-        return Colors.blue;
-      case BookingStatus.completed:
-        return AppTheme.primaryGreen;
-      case BookingStatus.cancelled:
-        return AppTheme.urgentRed;
-    }
+  Color _statusColor(BookingStatus status) {
+    return switch (status) {
+      BookingStatus.pending => AppTheme.orange600,
+      BookingStatus.confirmed => AppTheme.primaryPurple,
+      BookingStatus.inProgress => AppTheme.primaryBlue,
+      BookingStatus.completed => AppTheme.primaryGreen,
+      BookingStatus.cancelled => AppTheme.urgentRed,
+    };
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.spaceId == null ? '예약 관리' : '공간 예약 관리'),
-        backgroundColor: AppTheme.primaryPurple,
-        foregroundColor: Colors.white,
+      backgroundColor: AppTheme.backgroundGray,
+      appBar: SharedAppBar(
+        title: widget.spaceId == null ? '예약 관리' : '공간 예약 관리',
       ),
-      body: Column(
-        children: [
-          // 필터
-          Container(
-            padding: EdgeInsets.all(AppTheme.spacing3),
-            decoration: BoxDecoration(
-              color: AppTheme.backgroundWhite,
-            ),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildFilterChip(
-                    label: '전체',
-                    isSelected: _selectedStatus == null,
-                    onTap: () {
-                      setState(() {
-                        _selectedStatus = null;
-                      });
-                      _loadBookings();
-                    },
-                  ),
-                  SizedBox(width: AppTheme.spacing2),
-                  ...BookingStatus.values.map((status) {
-                    return Padding(
-                      padding: EdgeInsets.only(right: AppTheme.spacing2),
-                      child: _buildFilterChip(
-                        label: _getStatusText(status),
-                        isSelected: _selectedStatus == status,
-                        onTap: () {
-                          setState(() {
-                            _selectedStatus = status;
-                          });
-                          _loadBookings();
-                        },
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ),
-          ),
-          
-          // 예약 목록
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.error_outline, size: 48, color: AppTheme.textSecondary),
-                            SizedBox(height: AppTheme.spacing4),
-                            Text(
-                              _error!,
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: AppTheme.textSecondary,
-                                  ),
-                            ),
-                            SizedBox(height: AppTheme.spacing4),
-                            ElevatedButton(
-                              onPressed: _loadBookings,
-                              child: const Text('다시 시도'),
-                            ),
-                          ],
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? _ShopSpaceBookingsErrorState(
+                  message: _error!,
+                  onRetry: _loadBookings,
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadBookings,
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: ShopSpaceBookingsHero(
+                          pendingCount: _pendingCount,
+                          totalCount: _bookings.length,
                         ),
-                      )
-                    : _bookings.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.calendar_today_outlined, size: 64, color: AppTheme.textSecondary),
-                                SizedBox(height: AppTheme.spacing4),
-                                Text(
-                                  '예약 내역이 없습니다',
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                        color: AppTheme.textSecondary,
-                                      ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : RefreshIndicator(
-                            onRefresh: _loadBookings,
-                            child: ListView.builder(
-                              padding: EdgeInsets.all(AppTheme.spacing4),
-                              itemCount: _bookings.length,
-                              itemBuilder: (context, index) {
+                      ),
+                      SliverToBoxAdapter(
+                        child: ShopSpaceBookingFilterBar(
+                          selected: _selectedStatus,
+                          onChanged: (status) {
+                            setState(() => _selectedStatus = status);
+                            _loadBookings();
+                          },
+                          statusLabel: _statusLabel,
+                        ),
+                      ),
+                      if (_bookings.isEmpty)
+                        const SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: _ShopSpaceBookingsEmptyState(),
+                        )
+                      else
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppTheme.spacing4,
+                            0,
+                            AppTheme.spacing4,
+                            AppTheme.spacing6,
+                          ),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
                                 final booking = _bookings[index];
-                                return _buildBookingCard(booking);
+                                return ShopSpaceBookingCard(
+                                  booking: booking,
+                                  statusLabel: _statusLabel,
+                                  statusColor: _statusColor,
+                                  onApprove: () => _approveBooking(booking.id),
+                                  onReject: () => _rejectBooking(booking.id),
+                                );
                               },
+                              childCount: _bookings.length,
                             ),
                           ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterChip({
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: AppTheme.spacing3,
-          vertical: AppTheme.spacing2,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryPurple : AppTheme.backgroundGray,
-          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(
-            color: isSelected ? AppTheme.primaryPurple : AppTheme.borderGray,
-          ),
-        ),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: isSelected ? Colors.white : AppTheme.textSecondary,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBookingCard(SpaceBooking booking) {
-    return Container(
-      margin: EdgeInsets.only(bottom: AppTheme.spacing4),
-      padding: EdgeInsets.all(AppTheme.spacing4),
-      decoration: BoxDecoration(
-        color: AppTheme.backgroundWhite,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: AppTheme.borderGray),
-        boxShadow: AppTheme.shadowSm,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  booking.spareName,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: AppTheme.spacing2,
-                  vertical: AppTheme.spacing1,
-                ),
-                decoration: BoxDecoration(
-                  color: _getStatusColor(booking.status).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                ),
-                child: Text(
-                  _getStatusText(booking.status),
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: _getStatusColor(booking.status),
-                        fontWeight: FontWeight.w500,
-                      ),
-                ),
-              ),
-            ],
-          ),
-          
-          SizedBox(height: AppTheme.spacing3),
-          
-          // 예약 시간
-          Row(
-            children: [
-              const Icon(Icons.access_time, size: 16, color: AppTheme.textSecondary),
-              SizedBox(width: AppTheme.spacing1),
-              Text(
-                '${DateFormat('yyyy-MM-dd HH:mm').format(booking.startTime)} ~ ${DateFormat('HH:mm').format(booking.endTime)}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
-                    ),
-              ),
-            ],
-          ),
-          
-          SizedBox(height: AppTheme.spacing2),
-          
-          // 예약 시간 (시간)
-          Row(
-            children: [
-              const Icon(Icons.timer, size: 16, color: AppTheme.textSecondary),
-              SizedBox(width: AppTheme.spacing1),
-              Text(
-                '${booking.durationInHours.toStringAsFixed(1)}시간',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
-                    ),
-              ),
-            ],
-          ),
-          
-          SizedBox(height: AppTheme.spacing2),
-          
-          // 총 금액
-          Row(
-            children: [
-              const Icon(Icons.attach_money, size: 16, color: AppTheme.primaryPurple),
-              SizedBox(width: AppTheme.spacing1),
-              Text(
-                '총 ${NumberFormat('#,###').format(booking.totalPrice)}원',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppTheme.primaryPurple,
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-            ],
-          ),
-          
-          if (booking.status == BookingStatus.pending) ...[
-            SizedBox(height: AppTheme.spacing4),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => _rejectBooking(booking.id),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.urgentRed,
-                      side: const BorderSide(color: AppTheme.urgentRed),
-                    ),
-                    child: const Text('거절'),
+                        ),
+                    ],
                   ),
                 ),
-                SizedBox(width: AppTheme.spacing2),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _approveBooking(booking.id),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryPurple,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('승인'),
-                  ),
-                ),
-              ],
+    );
+  }
+}
+
+class _ShopSpaceBookingsErrorState extends StatelessWidget {
+  const _ShopSpaceBookingsErrorState({
+    required this.message,
+    required this.onRetry,
+  });
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spacing6),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: AppTheme.textSecondary),
+            const SizedBox(height: AppTheme.spacing4),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing4),
+            ElevatedButton(
+              onPressed: onRetry,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryPurple,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('다시 시도'),
             ),
           ],
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ShopSpaceBookingsEmptyState extends StatelessWidget {
+  const _ShopSpaceBookingsEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spacing6),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.calendar_month_outlined,
+              size: 56,
+              color: AppTheme.textTertiary.withValues(alpha: 0.8),
+            ),
+            const SizedBox(height: AppTheme.spacing3),
+            Text(
+              '예약 내역이 없습니다',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

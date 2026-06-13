@@ -2,16 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../widgets/notification_bell.dart';
 import '../../providers/chat_provider.dart';
-import '../../providers/notification_provider.dart';
 import '../../utils/icon_mapper.dart';
-import 'home_screen.dart';
 import 'messages_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
+import '../../widgets/shop/shop_screen_safe_area.dart';
 
 /// Shop용 포인트 화면 (Next.js와 동일한 구조)
 class ShopPointsScreen extends StatefulWidget {
@@ -22,7 +18,6 @@ class ShopPointsScreen extends StatefulWidget {
 }
 
 class _ShopPointsScreenState extends State<ShopPointsScreen> {
-  int _currentNavIndex = 0;
   int _currentPoints = 1250; // 보유 포인트
   bool _attendanceChecked = false; // 출석체크 여부
   bool _showMoreSimple = false;
@@ -30,7 +25,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
   bool _showMorePurchase = false;
   bool _isSearchOpen = false;
   final TextEditingController _searchController = TextEditingController();
-  Set<String> _completedMissionIds = {}; // 완료된 미션 ID 추적
+  final Set<String> _completedMissionIds = {}; // 완료된 미션 ID 추적
 
   // Mock 데이터
   final List<_Mission> _dailyMissions = [
@@ -207,17 +202,13 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      body: CustomScrollView(
+      body: ShopScreenSafeArea(
+        child: CustomScrollView(
         slivers: [
-          // Sticky 헤더
-          SliverAppBar(
-            pinned: true,
-            backgroundColor: AppTheme.backgroundWhite,
-            elevation: 0,
-            leading: null,
-            automaticallyImplyLeading: false,
-            flexibleSpace: Container(
-              decoration: BoxDecoration(
+          SliverToBoxAdapter(
+            child: Container(
+              height: 44,
+              decoration: const BoxDecoration(
                 color: AppTheme.backgroundWhite,
                 border: Border(
                   bottom: BorderSide(
@@ -226,27 +217,22 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                   ),
                 ),
               ),
-              padding: AppTheme.spacingSymmetric(
+              padding: const EdgeInsets.symmetric(
                 horizontal: AppTheme.spacing4,
-                vertical: AppTheme.spacing3,
               ),
-              child: Row(
+              child: SizedBox(
+                height: 44,
+                child: Row(
                 children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ShopHomeScreen()),
-                      );
-                    },
-                    child: Text(
-                      'HairSpare',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryPurple,
-                      ),
-                    ),
+                  IconButton(
+                    icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
+                        const Icon(Icons.arrow_back_ios, size: 20, color: AppTheme.textSecondary),
+                    onPressed: () => Navigator.maybePop(context),
+                    tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                  ),
+                  Text(
+                    '포인트',
+                    style: SharedAppBar.titleTextStyle(context),
                   ),
                   const Spacer(),
                   if (_isSearchOpen) ...[
@@ -285,7 +271,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: AppTheme.spacing2),
+                    const SizedBox(width: AppTheme.spacing2),
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
@@ -297,7 +283,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                         },
                         borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                         child: Container(
-                          padding: EdgeInsets.all(AppTheme.spacing2),
+                          padding: const EdgeInsets.all(AppTheme.spacing2),
                           child: IconMapper.icon('x', size: 24, color: AppTheme.textSecondary) ??
                               const Icon(Icons.close, size: 24, color: AppTheme.textSecondary),
                         ),
@@ -314,13 +300,13 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                         },
                         borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                         child: Container(
-                          padding: EdgeInsets.all(AppTheme.spacing2),
+                          padding: const EdgeInsets.all(AppTheme.spacing2),
                           child: IconMapper.icon('search', size: 24, color: AppTheme.textSecondary) ??
                               const Icon(Icons.search, size: 24, color: AppTheme.textSecondary),
                         ),
                       ),
                     ),
-                    SizedBox(width: AppTheme.spacing3),
+                    const SizedBox(width: AppTheme.spacing3),
                     // 메시지 버튼
                     Consumer<ChatProvider>(
                       builder: (context, chatProvider, _) {
@@ -338,7 +324,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                                 },
                                 borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                                 child: Container(
-                                  padding: EdgeInsets.all(AppTheme.spacing2),
+                                  padding: const EdgeInsets.all(AppTheme.spacing2),
                                   child: IconMapper.icon('messagecircle', size: 24, color: AppTheme.textSecondary) ??
                                       const Icon(Icons.message_outlined, size: 24, color: AppTheme.textSecondary),
                                 ),
@@ -362,13 +348,14 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                         );
                       },
                     ),
-                    SizedBox(width: AppTheme.spacing3),
+                    const SizedBox(width: AppTheme.spacing3),
                     // 알림 버튼
-                    NotificationBell(
+                    const NotificationBell(
                       role: 'shop',
                     ),
                   ],
                 ],
+                ),
               ),
             ),
           ),
@@ -381,7 +368,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                 Container(
                   width: double.infinity,
                   height: 128,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -408,7 +395,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                     horizontal: AppTheme.spacing4,
                     vertical: AppTheme.spacing4,
                   ),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppTheme.backgroundWhite,
                     border: Border(
                       bottom: BorderSide(
@@ -425,7 +412,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                           Container(
                             width: 32,
                             height: 32,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: AppTheme.yellow400,
                               shape: BoxShape.circle,
                             ),
@@ -440,7 +427,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                               ),
                             ),
                           ),
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           Text(
                             '보유 포인트',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -460,7 +447,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                               color: AppTheme.textPrimary,
                             ),
                           ),
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           Text(
                             'P',
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -480,7 +467,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                     horizontal: AppTheme.spacing4,
                     vertical: AppTheme.spacing4,
                   ),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppTheme.backgroundWhite,
                     border: Border(
                       bottom: BorderSide(
@@ -503,7 +490,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                               color: AppTheme.textPrimary,
                             ),
                           ),
-                          SizedBox(height: AppTheme.spacing1),
+                          const SizedBox(height: AppTheme.spacing1),
                           Text(
                             '매주 일요일 00시에 초기화돼요',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -513,7 +500,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: AppTheme.spacing3),
+                      const SizedBox(height: AppTheme.spacing3),
                       ..._dailyMissions.map((mission) {
                         final isCompleted = _isMissionCompleted(mission.id) || 
                             (mission.id == 'daily-1' && _attendanceChecked);
@@ -568,20 +555,20 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                 // 하단 배너 (광고용)
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.only(
+                  padding: const EdgeInsets.only(
                     left: AppTheme.spacing4,
                     right: AppTheme.spacing4,
                     top: AppTheme.spacing6,
                     bottom: AppTheme.spacing2,
                   ),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppTheme.backgroundWhite,
                   ),
                   child: Container(
                     width: double.infinity,
                     height: 128,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
@@ -603,50 +590,12 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                 ),
 
                 // 하단 여백 (하단 네비게이션 바 공간)
-                SizedBox(height: 80),
+                const SizedBox(height: 80),
               ],
             ),
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          // 네비게이션 처리
-          switch (index) {
-            case 0:
-              // 홈으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopHomeScreen()),
-              );
-              break;
-            case 1:
-              // 결제로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopPaymentScreen()),
-              );
-              break;
-            case 2:
-              // 찜으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopFavoritesScreen()),
-              );
-              break;
-            case 3:
-              // 마이(프로필)로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }
@@ -665,7 +614,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
         horizontal: AppTheme.spacing4,
         vertical: AppTheme.spacing4,
       ),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppTheme.backgroundWhite,
         border: Border(
           bottom: BorderSide(
@@ -707,7 +656,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                             color: AppTheme.textSecondary,
                           ),
                         ),
-                        SizedBox(width: AppTheme.spacing1),
+                        const SizedBox(width: AppTheme.spacing1),
                         IconMapper.icon(
                           'chevrondown',
                           size: 16,
@@ -728,7 +677,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing3),
+          const SizedBox(height: AppTheme.spacing3),
           ...displayedMissions.map((mission) {
             final isCompleted = _isMissionCompleted(mission.id);
             return _buildMissionItem(
@@ -748,7 +697,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
     required VoidCallback onTap,
   }) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: AppTheme.spacing2),
+      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing2),
       child: Row(
         children: [
           // 아이콘 영역
@@ -786,14 +735,14 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                       : Container(
                           width: 48,
                           height: 48,
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: AppTheme.borderGray300,
                             shape: BoxShape.circle,
                           ),
                         ),
             ),
           ),
-          SizedBox(width: AppTheme.spacing3),
+          const SizedBox(width: AppTheme.spacing3),
           // 텍스트 영역
           Expanded(
             child: Column(
@@ -809,7 +758,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: AppTheme.spacing1 / 2),
+                const SizedBox(height: AppTheme.spacing1 / 2),
                 Text(
                   mission.description,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -822,7 +771,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
               ],
             ),
           ),
-          SizedBox(width: AppTheme.spacing2),
+          const SizedBox(width: AppTheme.spacing2),
           // 버튼 영역
           ElevatedButton(
             onPressed: isCompleted ? null : onTap,
@@ -847,7 +796,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                     children: [
                       IconMapper.icon('check', size: 16, color: AppTheme.textSecondary) ??
                           const Icon(Icons.check, size: 16),
-                      SizedBox(width: AppTheme.spacing1),
+                      const SizedBox(width: AppTheme.spacing1),
                       Text(
                         '완료',
                         style: Theme.of(context).textTheme.labelMedium?.copyWith(

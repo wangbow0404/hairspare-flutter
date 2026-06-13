@@ -1,11 +1,11 @@
 import 'package:dio/dio.dart';
-import '../utils/api_client.dart';
 import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
-import '../utils/api_config.dart';
 import '../models/notification.dart';
+import '../mocks/mock_shop_data.dart';
 import '../mocks/mock_spare_data.dart';
+import '../core/di/service_locator.dart';
 
 class NotificationSettings {
   final bool pushEnabled;
@@ -56,13 +56,13 @@ class NotificationSettings {
 }
 
 class NotificationService {
-  final ApiClient _apiClient = ApiClient();
+  final Dio _dio = sl<Dio>();
 
   /// 알림 설정 조회
   Future<NotificationSettings> getNotificationSettings() async {
     if (ApiConfig.useMockData) return await MockSpareData.getNotificationSettings();
     try {
-      final response = await _apiClient.dio.get('/api/notifications/settings');
+      final response = await _dio.get('/api/notifications/settings');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -83,7 +83,7 @@ class NotificationService {
   /// 알림 설정 저장
   Future<void> updateNotificationSettings(NotificationSettings settings) async {
     try {
-      final response = await _apiClient.dio.put(
+      final response = await _dio.put(
         '/api/notifications/settings',
         data: settings.toJson(),
       );
@@ -107,8 +107,14 @@ class NotificationService {
     String? type,
     int? limit,
     int? offset,
+    String audience = 'spare',
   }) async {
-    if (ApiConfig.useMockData) return await MockSpareData.getNotifications();
+    if (ApiConfig.useMockData) {
+      if (audience == 'shop') {
+        return MockShopData.getShopNotifications();
+      }
+      return MockSpareData.getSpareNotifications();
+    }
     try {
       final queryParams = <String, dynamic>{};
       if (isRead != null) queryParams['isRead'] = isRead.toString();
@@ -116,7 +122,7 @@ class NotificationService {
       if (limit != null) queryParams['limit'] = limit.toString();
       if (offset != null) queryParams['offset'] = offset.toString();
 
-      final response = await _apiClient.dio.get(
+      final response = await _dio.get(
         '/api/notifications',
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
@@ -145,10 +151,18 @@ class NotificationService {
     }
   }
 
-  /// 알림 읽음 처리
-  Future<void> markAsRead(String notificationId) async {
+  /// 알림 읽음 처리 (자세히 보기에서는 읽음 섹션으로 이동).
+  Future<void> markAsRead(String notificationId, {String audience = 'spare'}) async {
+    if (ApiConfig.useMockData) {
+      if (audience == 'shop') {
+        await MockShopData.dismissNotification(notificationId);
+      } else {
+        await MockSpareData.markNotificationRead(notificationId);
+      }
+      return;
+    }
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/notifications/$notificationId/read',
       );
 
@@ -166,10 +180,20 @@ class NotificationService {
   }
 
   /// 알림 삭제
-  Future<void> deleteNotification(String notificationId) async {
-    if (ApiConfig.useMockData) return; // mock: 로컬에서만 제거
+  Future<void> deleteNotification(
+    String notificationId, {
+    String audience = 'spare',
+  }) async {
+    if (ApiConfig.useMockData) {
+      if (audience == 'shop') {
+        await MockShopData.dismissNotification(notificationId);
+      } else {
+        await MockSpareData.dismissNotification(notificationId);
+      }
+      return;
+    }
     try {
-      final response = await _apiClient.dio.delete(
+      final response = await _dio.delete(
         '/api/notifications/$notificationId',
       );
 

@@ -62,7 +62,7 @@ class _PointHistoryScreenState extends State<PointHistoryScreen> {
                             color: AppTheme.textSecondary,
                           ),
                     ),
-                    SizedBox(height: AppTheme.spacing2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Text(
                       provider.isLoading
                           ? '-'
@@ -93,13 +93,13 @@ class _PointHistoryScreenState extends State<PointHistoryScreen> {
                   isActive: _filter == 'all',
                   onTap: () => _onFilterChanged('all'),
                 ),
-                SizedBox(width: AppTheme.spacing2),
+                const SizedBox(width: AppTheme.spacing2),
                 _FilterChip(
                   label: '적립',
                   isActive: _filter == 'earn',
                   onTap: () => _onFilterChanged('earn'),
                 ),
-                SizedBox(width: AppTheme.spacing2),
+                const SizedBox(width: AppTheme.spacing2),
                 _FilterChip(
                   label: '사용',
                   isActive: _filter == 'spend',
@@ -108,7 +108,7 @@ class _PointHistoryScreenState extends State<PointHistoryScreen> {
               ],
             ),
           ),
-          SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing4),
           Expanded(
             child: Consumer<PointProvider>(
               builder: (context, provider, _) {
@@ -127,7 +127,7 @@ class _PointHistoryScreenState extends State<PointHistoryScreen> {
                               ),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: AppTheme.spacing4),
+                        const SizedBox(height: AppTheme.spacing4),
                         ElevatedButton(
                           onPressed: () => provider.loadHistory(type: _filter == 'all' ? null : _filter),
                           child: const Text('다시 시도'),
@@ -214,7 +214,7 @@ class _TransactionCard extends StatelessWidget {
     final displayAmount = isEarn ? amount : -amount;
 
     return Container(
-      margin: EdgeInsets.only(bottom: AppTheme.spacing3),
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
       padding: AppTheme.spacing(AppTheme.spacing4),
       decoration: BoxDecoration(
         color: AppTheme.backgroundWhite,
@@ -228,8 +228,8 @@ class _TransactionCard extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               color: isEarn
-                  ? AppTheme.primaryGreen.withOpacity(0.15)
-                  : AppTheme.urgentRed.withOpacity(0.15),
+                  ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                  : AppTheme.urgentRed.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -238,7 +238,7 @@ class _TransactionCard extends StatelessWidget {
               size: 24,
             ),
           ),
-          SizedBox(width: AppTheme.spacing3),
+          const SizedBox(width: AppTheme.spacing3),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,7 +250,7 @@ class _TransactionCard extends StatelessWidget {
                         color: AppTheme.textPrimary,
                       ),
                 ),
-                SizedBox(height: AppTheme.spacing1),
+                const SizedBox(height: AppTheme.spacing1),
                 Text(
                   DateFormat('yyyy.M.d HH:mm', 'ko_KR').format(transaction.createdAt),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(

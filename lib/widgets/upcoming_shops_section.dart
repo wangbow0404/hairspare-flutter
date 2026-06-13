@@ -73,17 +73,17 @@ class UpcomingShopsSection extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF1F2937), // gray-800
-            const Color(0xFF111827), // gray-900
+            Color(0xFF1F2937), // gray-800
+            Color(0xFF111827), // gray-900
           ],
         ),
       ),
-      padding: EdgeInsets.fromLTRB(
+      padding: const EdgeInsets.fromLTRB(
         AppTheme.spacing4,
         AppTheme.spacing4,
         AppTheme.spacing4,
@@ -101,7 +101,7 @@ class UpcomingShopsSection extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          SizedBox(height: AppTheme.spacing2),
+          const SizedBox(height: AppTheme.spacing2),
           Text(
             '기대되는 매장을 찜해보세요!',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -109,14 +109,14 @@ class UpcomingShopsSection extends StatelessWidget {
               color: const Color(0xFFD1D5DB), // gray-300
             ),
           ),
-          SizedBox(height: AppTheme.spacing3),
+          const SizedBox(height: AppTheme.spacing3),
           // 한 줄 가로 스크롤 (고정 폭/높이, Expanded 사용 없음)
           SizedBox(
             height: 200,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: displayJobs.length,
-              separatorBuilder: (_, __) => SizedBox(width: AppTheme.spacing2),
+              separatorBuilder: (_, __) => const SizedBox(width: AppTheme.spacing2),
               itemBuilder: (context, index) {
                 final job = displayJobs[index];
                 final isFavorite = favoriteMap[job.id] ?? false;
@@ -145,12 +145,12 @@ class UpcomingShopsSection extends StatelessWidget {
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                     colors: [
-                                      AppTheme.primaryPink.withOpacity(0.8),
-                                      AppTheme.primaryPurple.withOpacity(0.8),
-                                      AppTheme.primaryBlue.withOpacity(0.8),
+                                      AppTheme.primaryPink.withValues(alpha: 0.8),
+                                      AppTheme.primaryPurple.withValues(alpha: 0.8),
+                                      AppTheme.primaryBlue.withValues(alpha: 0.8),
                                     ],
                                   ),
-                                  borderRadius: BorderRadius.only(
+                                  borderRadius: const BorderRadius.only(
                                     topLeft: Radius.circular(AppTheme.radiusLg),
                                     topRight: Radius.circular(AppTheme.radiusLg),
                                   ),
@@ -160,14 +160,14 @@ class UpcomingShopsSection extends StatelessWidget {
                               Container(
                                 width: 160,
                                 height: 100,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF374151),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF374151),
                                   borderRadius: BorderRadius.only(
                                     bottomLeft: Radius.circular(AppTheme.radiusLg),
                                     bottomRight: Radius.circular(AppTheme.radiusLg),
                                   ),
                                 ),
-                                padding: EdgeInsets.symmetric(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: AppTheme.spacing1,
                                   vertical: AppTheme.spacing1 / 2,
                                 ),
@@ -199,7 +199,7 @@ class UpcomingShopsSection extends StatelessWidget {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.2),
+                                            color: Colors.white.withValues(alpha: 0.2),
                                             borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
                                           ),
                                           child: Text(
@@ -217,7 +217,7 @@ class UpcomingShopsSection extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      job.shopName ?? '매장명',
+                                      job.shopName.isEmpty ? '매장명' : job.shopName,
                                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                         fontSize: 9,
                                         fontWeight: FontWeight.w600,
@@ -231,7 +231,7 @@ class UpcomingShopsSection extends StatelessWidget {
                                       '오픈: $openDateStr',
                                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                         fontSize: 8,
-                                        color: AppTheme.primaryPink.withOpacity(0.9),
+                                        color: AppTheme.primaryPink.withValues(alpha: 0.9),
                                         fontWeight: FontWeight.w500,
                                       ),
                                       maxLines: 1,
@@ -239,7 +239,7 @@ class UpcomingShopsSection extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      '${_formatAmount(job.amount ?? 0)}원~',
+                                      '${_formatAmount(job.amount)}원~',
                                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                         fontSize: 8,
                                         color: const Color(0xFFD1D5DB),
@@ -274,7 +274,7 @@ class UpcomingShopsSection extends StatelessWidget {
                             top: 4,
                             right: 4,
                             child: Material(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                               child: InkWell(
                                 onTap: () {
@@ -285,7 +285,7 @@ class UpcomingShopsSection extends StatelessWidget {
                                   width: 20,
                                   height: 20,
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Center(

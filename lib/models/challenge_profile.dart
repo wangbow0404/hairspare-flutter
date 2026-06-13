@@ -1,16 +1,53 @@
-/// 챌린지 프로필 모델
-class ChallengeProfile {
-  final String userId;
-  final String? challengeNickname;
-  final String? challengeBio;
-  final String? challengeProfileImage;
-  final bool isPublic;
-  final int videoCount;
-  final int totalLikes;
-  final int totalViews;
-  final int subscriberCount;
+import 'package:json_annotation/json_annotation.dart';
 
-  ChallengeProfile({
+import 'json_converters.dart';
+
+part 'challenge_profile.g.dart';
+
+List<String>? _stringListFromJson(Object? json) {
+  if (json == null) return null;
+  if (json is! List) return null;
+  return json.map((e) => e.toString()).toList();
+}
+
+List<String>? _myChallengeTagsFromJson(Object? json) =>
+    _stringListFromJson(json);
+
+List<ChallengeProfileExternalLink>? _externalLinksFromJson(Object? json) {
+  if (json == null) return null;
+  if (json is! List) return null;
+  return json
+      .whereType<Map<String, dynamic>>()
+      .map(ChallengeProfileExternalLink.fromJson)
+      .toList();
+}
+
+/// SNS·블로그 등 외부 링크 (인스타, 유튜브 등).
+@JsonSerializable()
+class ChallengeProfileExternalLink {
+  const ChallengeProfileExternalLink({
+    required this.type,
+    required this.url,
+    this.label,
+  });
+
+  factory ChallengeProfileExternalLink.fromJson(Map<String, dynamic> json) =>
+      _$ChallengeProfileExternalLinkFromJson(json);
+
+  /// instagram | youtube | tiktok | blog | website
+  @JsonKey(defaultValue: 'website')
+  final String type;
+  @JsonKey(defaultValue: '')
+  final String url;
+  final String? label;
+
+  Map<String, dynamic> toJson() => _$ChallengeProfileExternalLinkToJson(this);
+}
+
+/// 챌린지 프로필 모델
+@JsonSerializable()
+class ChallengeProfile {
+  const ChallengeProfile({
     required this.userId,
     this.challengeNickname,
     this.challengeBio,
@@ -20,35 +57,40 @@ class ChallengeProfile {
     this.totalLikes = 0,
     this.totalViews = 0,
     this.subscriberCount = 0,
+    this.isSubscribed = false,
+    this.specialtyTags,
+    this.joinedAt,
+    this.externalLinks,
   });
 
-  factory ChallengeProfile.fromJson(Map<String, dynamic> json) {
-    return ChallengeProfile(
-      userId: json['userId'] as String,
-      challengeNickname: json['challengeNickname']?.toString(),
-      challengeBio: json['challengeBio']?.toString(),
-      challengeProfileImage: json['challengeProfileImage']?.toString(),
-      isPublic: json['isPublic'] as bool? ?? true,
-      videoCount: json['videoCount'] as int? ?? 0,
-      totalLikes: json['totalLikes'] as int? ?? 0,
-      totalViews: json['totalViews'] as int? ?? 0,
-      subscriberCount: json['subscriberCount'] as int? ?? 0,
-    );
-  }
+  factory ChallengeProfile.fromJson(Map<String, dynamic> json) =>
+      _$ChallengeProfileFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return {
-      'userId': userId,
-      'challengeNickname': challengeNickname,
-      'challengeBio': challengeBio,
-      'challengeProfileImage': challengeProfileImage,
-      'isPublic': isPublic,
-      'videoCount': videoCount,
-      'totalLikes': totalLikes,
-      'totalViews': totalViews,
-      'subscriberCount': subscriberCount,
-    };
-  }
+  @JsonKey(defaultValue: '')
+  final String userId;
+  final String? challengeNickname;
+  final String? challengeBio;
+  final String? challengeProfileImage;
+  @JsonKey(defaultValue: true)
+  final bool isPublic;
+  @LooseIntAsZeroConverter()
+  final int videoCount;
+  @LooseIntAsZeroConverter()
+  final int totalLikes;
+  @LooseIntAsZeroConverter()
+  final int totalViews;
+  @LooseIntAsZeroConverter()
+  final int subscriberCount;
+  @JsonKey(defaultValue: false)
+  final bool isSubscribed;
+  @JsonKey(fromJson: _stringListFromJson)
+  final List<String>? specialtyTags;
+  @DateTimeNullableConverter()
+  final DateTime? joinedAt;
+  @JsonKey(fromJson: _externalLinksFromJson)
+  final List<ChallengeProfileExternalLink>? externalLinks;
+
+  Map<String, dynamic> toJson() => _$ChallengeProfileToJson(this);
 
   ChallengeProfile copyWith({
     String? userId,
@@ -60,36 +102,34 @@ class ChallengeProfile {
     int? totalLikes,
     int? totalViews,
     int? subscriberCount,
+    bool? isSubscribed,
+    List<String>? specialtyTags,
+    DateTime? joinedAt,
+    List<ChallengeProfileExternalLink>? externalLinks,
   }) {
     return ChallengeProfile(
       userId: userId ?? this.userId,
       challengeNickname: challengeNickname ?? this.challengeNickname,
       challengeBio: challengeBio ?? this.challengeBio,
-      challengeProfileImage: challengeProfileImage ?? this.challengeProfileImage,
+      challengeProfileImage:
+          challengeProfileImage ?? this.challengeProfileImage,
       isPublic: isPublic ?? this.isPublic,
       videoCount: videoCount ?? this.videoCount,
       totalLikes: totalLikes ?? this.totalLikes,
       totalViews: totalViews ?? this.totalViews,
       subscriberCount: subscriberCount ?? this.subscriberCount,
+      isSubscribed: isSubscribed ?? this.isSubscribed,
+      specialtyTags: specialtyTags ?? this.specialtyTags,
+      joinedAt: joinedAt ?? this.joinedAt,
+      externalLinks: externalLinks ?? this.externalLinks,
     );
   }
 }
 
 /// 내가 업로드한 챌린지 영상 모델
+@JsonSerializable(explicitToJson: true)
 class MyChallenge {
-  final String id;
-  final String title;
-  final String? description;
-  final String? thumbnailUrl;
-  final String videoUrl;
-  final int likes;
-  final int comments;
-  final int views;
-  final bool isPublic;
-  final DateTime createdAt;
-  final List<String>? tags;
-
-  MyChallenge({
+  const MyChallenge({
     required this.id,
     required this.title,
     this.description,
@@ -103,50 +143,29 @@ class MyChallenge {
     this.tags,
   });
 
-  factory MyChallenge.fromJson(Map<String, dynamic> json) {
-    return MyChallenge(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      description: json['description']?.toString(),
-      thumbnailUrl: json['thumbnailUrl']?.toString(),
-      videoUrl: json['videoUrl'] as String,
-      likes: json['likes'] as int? ?? 0,
-      comments: json['comments'] as int? ?? 0,
-      views: json['views'] as int? ?? 0,
-      isPublic: json['isPublic'] as bool? ?? true,
-      createdAt: _parseDateTime(json['createdAt']),
-      tags: json['tags'] != null
-          ? List<String>.from(json['tags'] as List)
-          : null,
-    );
-  }
+  factory MyChallenge.fromJson(Map<String, dynamic> json) =>
+      _$MyChallengeFromJson(json);
 
-  static DateTime _parseDateTime(dynamic value) {
-    if (value == null) return DateTime.now();
-    if (value is DateTime) return value;
-    if (value is String) {
-      try {
-        return DateTime.parse(value);
-      } catch (e) {
-        return DateTime.now();
-      }
-    }
-    return DateTime.now();
-  }
+  @JsonKey(defaultValue: '')
+  final String id;
+  @JsonKey(defaultValue: '')
+  final String title;
+  final String? description;
+  final String? thumbnailUrl;
+  @JsonKey(defaultValue: '')
+  final String videoUrl;
+  @LooseIntAsZeroConverter()
+  final int likes;
+  @LooseIntAsZeroConverter()
+  final int comments;
+  @LooseIntAsZeroConverter()
+  final int views;
+  @JsonKey(defaultValue: true)
+  final bool isPublic;
+  @DateTimeOrNowConverter()
+  final DateTime createdAt;
+  @JsonKey(fromJson: _myChallengeTagsFromJson)
+  final List<String>? tags;
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'description': description,
-      'thumbnailUrl': thumbnailUrl,
-      'videoUrl': videoUrl,
-      'likes': likes,
-      'comments': comments,
-      'views': views,
-      'isPublic': isPublic,
-      'createdAt': createdAt.toIso8601String(),
-      'tags': tags,
-    };
-  }
+  Map<String, dynamic> toJson() => _$MyChallengeToJson(this);
 }

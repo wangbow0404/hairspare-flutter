@@ -4,12 +4,11 @@ import 'dart:async';
 import '../../theme/app_theme.dart';
 import '../../services/admin_service.dart';
 import '../../utils/error_handler.dart';
-import '../../widgets/admin_layout.dart';
+import '../../core/router/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import '../../widgets/admin/admin_page_header.dart';
 import '../../widgets/admin/admin_search_filter_bar.dart';
 import '../../widgets/admin/admin_table_card.dart';
-import 'admin_payment_detail_screen.dart';
-
 /// 관리자 결제 관리 화면
 class AdminPaymentsScreen extends StatefulWidget {
   const AdminPaymentsScreen({super.key});
@@ -147,16 +146,14 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AdminLayout(
-      currentRoute: '/admin/payments',
-      child: Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AdminPageHeader(
+          const AdminPageHeader(
             title: '결제 관리',
             subtitle: '전체 결제 내역을 조회하고 관리할 수 있습니다',
           ),
-          SizedBox(height: AppTheme.spacing6),
+          const SizedBox(height: AppTheme.spacing6),
           AdminSearchFilterBar(
             searchController: _searchController,
             searchHint: '주문번호, 사용자로 검색...',
@@ -180,9 +177,9 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                     });
                     _loadPayments();
                   },
-                  style: TextStyle(color: AppTheme.textPrimary),
+                  style: const TextStyle(color: AppTheme.textPrimary),
                 ),
-                SizedBox(width: AppTheme.spacing2),
+                const SizedBox(width: AppTheme.spacing2),
                 DropdownButton<String>(
                   value: _typeFilter.isEmpty ? null : _typeFilter,
                   hint: const Text('전체 유형'),
@@ -199,19 +196,19 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                     });
                     _loadPayments();
                   },
-                  style: TextStyle(color: AppTheme.textPrimary),
+                  style: const TextStyle(color: AppTheme.textPrimary),
                 ),
               ],
             ),
           ),
-          SizedBox(height: AppTheme.spacing6),
+          const SizedBox(height: AppTheme.spacing6),
           SizedBox(
             height: 600,
             child: AdminTableCard(
               child: _isLoading && _payments.isEmpty
                   ? const Center(child: CircularProgressIndicator())
                   : _payments.isEmpty
-                      ? Center(
+                      ? const Center(
                           child: Padding(
                             padding: EdgeInsets.all(AppTheme.spacing8),
                             child: Text(
@@ -226,7 +223,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                             constraints: const BoxConstraints(minWidth: 900),
                             child: Column(
                               children: [
-                                AdminTableHeader(
+                                const AdminTableHeader(
                               headers: ['주문 정보', '사용자', '유형', '금액', '상태', '결제일'],
                               flexValues: [1, 1, 1, 1, 1, 1],
                             ),
@@ -241,24 +238,20 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                                   return InkWell(
                                     onTap: paymentId != null
                                         ? () {
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder: (context) => AdminPaymentDetailScreen(
-                                                  paymentId: paymentId,
-                                                  initialData: payment,
-                                                ),
-                                              ),
+                                            context.push(
+                                              AppRoutes.adminPaymentDetail(paymentId),
+                                              extra: payment,
                                             );
                                           }
                                         : null,
                                     child: Container(
-                                    padding: EdgeInsets.symmetric(
+                                    padding: const EdgeInsets.symmetric(
                                       horizontal: AppTheme.spacing4,
                                       vertical: AppTheme.spacing3,
                                     ),
                                     decoration: BoxDecoration(
                                       border: Border(
-                                        bottom: BorderSide(color: AppTheme.adminPurple100.withOpacity(0.5)),
+                                        bottom: BorderSide(color: AppTheme.adminPurple100.withValues(alpha: 0.5)),
                                       ),
                                     ),
                                     child: Row(
@@ -280,7 +273,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                                           flex: 1,
                                           child: Text(
                                             payment['user']?['email'] ?? '-',
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 13,
                                               color: AppTheme.textSecondary,
                                             ),
@@ -292,7 +285,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                                           flex: 1,
                                           child: Text(
                                             _getTypeLabel(payment['type'] ?? ''),
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 13,
                                               color: AppTheme.textSecondary,
                                             ),
@@ -316,12 +309,12 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                                         Expanded(
                                           flex: 1,
                                           child: Container(
-                                            padding: EdgeInsets.symmetric(
+                                            padding: const EdgeInsets.symmetric(
                                               horizontal: AppTheme.spacing2,
                                               vertical: AppTheme.spacing1,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: statusColor.withOpacity(0.1),
+                                              color: statusColor.withValues(alpha: 0.1),
                                               borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                                             ),
                                             child: Text(
@@ -338,7 +331,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                                           flex: 1,
                                           child: Text(
                                             _formatDate(payment['createdAt'] ?? ''),
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 12,
                                               color: AppTheme.textSecondary,
                                             ),
@@ -356,18 +349,18 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                             // 페이지네이션
                             if (_totalPages > 1)
                               Container(
-                                padding: EdgeInsets.symmetric(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: AppTheme.spacing6,
                                   vertical: AppTheme.spacing4,
                                 ),
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      AppTheme.adminPurple50.withOpacity(0.3),
-                                      AppTheme.adminPink50.withOpacity(0.3),
+                                      AppTheme.adminPurple50.withValues(alpha: 0.3),
+                                      AppTheme.adminPink50.withValues(alpha: 0.3),
                                     ],
                                   ),
-                                  border: Border(
+                                  border: const Border(
                                     top: BorderSide(color: AppTheme.adminPurple100, width: 2),
                                   ),
                                 ),
@@ -376,7 +369,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                                   children: [
                                     Text(
                                       '총 $_total건 중 ${(_currentPage - 1) * 20 + 1}-${(_currentPage * 20).clamp(0, _total)}건 표시',
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 12,
                                         color: AppTheme.textSecondary,
                                       ),
@@ -394,7 +387,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                                               : null,
                                           child: const Text('이전'),
                                         ),
-                                        SizedBox(width: AppTheme.spacing2),
+                                        const SizedBox(width: AppTheme.spacing2),
                                         TextButton(
                                           onPressed: _currentPage < _totalPages
                                               ? () {
@@ -418,7 +411,6 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 }

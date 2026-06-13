@@ -1,34 +1,60 @@
 import 'package:dio/dio.dart';
 import 'dart:io';
+import '../models/login_portal.dart';
 import '../models/user.dart';
 import '../utils/api_client.dart';
 import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
 import '../mocks/mock_auth_data.dart';
+import '../core/di/service_locator.dart';
 
 class AuthService {
   final ApiClient _apiClient = ApiClient();
+  final Dio _dio = sl<Dio>();
 
   Future<User> login({
     required String username,
     required String password,
-    required UserRole role,
+    LoginPortal? portal,
   }) async {
     if (ApiConfig.useMockData) {
       if (username.isEmpty || password.isEmpty) {
         throw ValidationException('아이디와 비밀번호를 입력해주세요');
       }
-      await _apiClient.setAuthToken('mock_token');
-      return role == UserRole.spare ? MockAuthData.spareUser() : MockAuthData.shopUser();
+      final user = portal != null
+          ? MockAuthData.userForCredentialsOnPortal(
+              username,
+              password,
+              portal,
+            )
+          : MockAuthData.userForCredentials(username, password);
+      if (user == null) {
+        if (portal == LoginPortal.shop &&
+            username == MockAuthData.devShopUsername &&
+            MockAuthData.isShopAccountTerminated) {
+          throw ValidationException(
+            MockAuthData.loginBlockedMessageForTerminatedShop(),
+            code: 'SHOP_ACCOUNT_TERMINATED',
+          );
+        }
+        throw ValidationException(
+          portal != null &&
+                  MockAuthData.userForCredentials(username, password) !=
+                      null
+              ? '등록되지 않은 아이디입니다.'
+              : '아이디 또는 비밀번호가 올바르지 않습니다',
+        );
+      }
+      await _apiClient.setAuthToken(MockAuthData.mockTokenForRole(user.role));
+      return user;
     }
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/auth/login',
         data: {
           'username': username,
           'password': password,
-          'role': role.name,
         },
       );
 
@@ -72,11 +98,17 @@ class AuthService {
       if (username.isEmpty || password.isEmpty) {
         throw ValidationException('아이디와 비밀번호를 입력해주세요');
       }
+      if (role == UserRole.shop) {
+        MockAuthData.assertCanRegisterShop(
+          phone: phone,
+          username: username,
+        );
+      }
       await _apiClient.setAuthToken('mock_token');
       return role == UserRole.spare ? MockAuthData.spareUser() : MockAuthData.shopUser();
     }
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/auth/register',
         data: {
           'username': username,
@@ -114,11 +146,10 @@ class AuthService {
   Future<User?> getCurrentUser() async {
     if (ApiConfig.useMockData) {
       final token = await _apiClient.getAuthToken();
-      if (token == null || token.isEmpty) return null;
-      return MockAuthData.spareUser(); // mock에서는 spare로 통일 (필요시 수정)
+      return MockAuthData.userForMockToken(token);
     }
     try {
-      final response = await _apiClient.dio.get('/api/auth/me');
+      final response = await _dio.get('/api/auth/me');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -154,7 +185,7 @@ class AuthService {
     List<String>? profileImages,
   }) async {
     try {
-      final response = await _apiClient.dio.put(
+      final response = await _dio.put(
         '/api/users/profile',
         data: {
           if (name != null && name.isNotEmpty) 'name': name,
@@ -193,7 +224,7 @@ class AuthService {
     required String newPassword,
   }) async {
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/auth/change-password',
         data: {
           'currentPassword': currentPassword,
@@ -222,7 +253,7 @@ class AuthService {
     required String newPassword,
   }) async {
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/auth/reset-password',
         data: {
           'id': id,
@@ -248,7 +279,7 @@ class AuthService {
   /// 아이디 찾기
   Future<Map<String, String>> findUsername({required String phone}) async {
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/auth/find-id',
         data: {
           'phone': phone,
@@ -278,7 +309,7 @@ class AuthService {
   /// 계정 삭제
   Future<void> deleteAccount({String? password}) async {
     try {
-      final response = await _apiClient.dio.delete(
+      final response = await _dio.delete(
         '/api/auth/delete-account',
         data: {
           if (password != null && password.isNotEmpty) 'password': password,
@@ -311,7 +342,7 @@ class AuthService {
         ),
       });
 
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/auth/profile-image/upload',
         data: formData,
       );
@@ -346,7 +377,7 @@ class AuthService {
         ),
       });
 
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/auth/profile-images/upload',
         data: formData,
       );
@@ -371,7 +402,7 @@ class AuthService {
   /// 추천 이력 조회
   Future<List<Map<String, dynamic>>> getReferralHistory() async {
     try {
-      final response = await _apiClient.dio.get('/api/auth/referral-history');
+      final response = await _dio.get('/api/auth/referral-history');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;

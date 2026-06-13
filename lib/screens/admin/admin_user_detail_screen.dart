@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
 import '../../services/admin_service.dart';
 import '../../utils/error_handler.dart';
-import '../../widgets/admin_layout.dart';
+import 'package:go_router/go_router.dart';
 import '../../widgets/admin/admin_table_card.dart';
 
 /// 관리자 회원 상세 화면
@@ -47,7 +47,7 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
       final data = await _adminService.getUserDetail(widget.userId);
       if (mounted) {
         setState(() {
-          _user = data is Map ? data as Map<String, dynamic>? : null;
+          _user = data as Map<String, dynamic>?;
           _isLoading = false;
         });
       }
@@ -103,7 +103,7 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
 
   String _getSignupLabel(dynamic accounts) {
     if (accounts == null || (accounts as List).isEmpty) return '일반 가입';
-    final provider = (accounts as List).first['provider'] ?? '';
+    final provider = (accounts).first['provider'] ?? '';
     switch (provider) {
       case 'kakao':
         return '카카오';
@@ -118,20 +118,18 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AdminLayout(
-      currentRoute: '/admin/users',
-      child: Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => context.pop(),
                 color: AppTheme.textPrimary,
               ),
-              SizedBox(width: AppTheme.spacing2),
-              Text(
+              const SizedBox(width: AppTheme.spacing2),
+              const Text(
                 '회원 상세',
                 style: TextStyle(
                   fontSize: 24,
@@ -141,26 +139,26 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing6),
+          const SizedBox(height: AppTheme.spacing6),
           if (_isLoading && _user == null)
-            Center(
+            const Center(
               child: Padding(
                 padding: EdgeInsets.all(AppTheme.spacing8),
-                child: const CircularProgressIndicator(),
+                child: CircularProgressIndicator(),
               ),
             )
           else if (_error != null && _user == null)
             Center(
               child: Padding(
-                padding: EdgeInsets.all(AppTheme.spacing8),
+                padding: const EdgeInsets.all(AppTheme.spacing8),
                 child: Column(
                   children: [
                     Text(
                       _error!,
-                      style: TextStyle(color: AppTheme.urgentRed),
+                      style: const TextStyle(color: AppTheme.urgentRed),
                       textAlign: TextAlign.center,
                     ),
-                    SizedBox(height: AppTheme.spacing4),
+                    const SizedBox(height: AppTheme.spacing4),
                     TextButton(
                       onPressed: _loadUser,
                       child: const Text('다시 시도'),
@@ -174,8 +172,7 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
           else
             const SizedBox.shrink(),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildContent() {
@@ -191,7 +188,7 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
       children: [
         AdminTableCard(
           child: Padding(
-            padding: EdgeInsets.all(AppTheme.spacing6),
+            padding: const EdgeInsets.all(AppTheme.spacing6),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -224,7 +221,7 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: AppTheme.spacing6),
+                    const SizedBox(width: AppTheme.spacing6),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,14 +236,14 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
                                   color: AppTheme.textPrimary,
                                 ),
                               ),
-                              SizedBox(width: AppTheme.spacing2),
+                              const SizedBox(width: AppTheme.spacing2),
                               Container(
-                                padding: EdgeInsets.symmetric(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: AppTheme.spacing3,
                                   vertical: AppTheme.spacing1,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: roleColor.withOpacity(0.15),
+                                  color: roleColor.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                                 ),
                                 child: Text(
@@ -258,9 +255,9 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
                                   ),
                                 ),
                               ),
-                              SizedBox(width: AppTheme.spacing2),
+                              const SizedBox(width: AppTheme.spacing2),
                               Container(
-                                padding: EdgeInsets.symmetric(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: AppTheme.spacing3,
                                   vertical: AppTheme.spacing1,
                                 ),
@@ -270,7 +267,7 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
                                 ),
                                 child: Text(
                                   _getSignupLabel(user['accounts']),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
                                     color: AppTheme.purple700,
@@ -279,38 +276,38 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
                               ),
                             ],
                           ),
-                          SizedBox(height: AppTheme.spacing2),
+                          const SizedBox(height: AppTheme.spacing2),
                           Row(
                             children: [
-                              Icon(Icons.email, size: 16, color: AppTheme.textSecondary),
-                              SizedBox(width: AppTheme.spacing1),
+                              const Icon(Icons.email, size: 16, color: AppTheme.textSecondary),
+                              const SizedBox(width: AppTheme.spacing1),
                               Text(
                                 user['email'] ?? '-',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 14,
                                   color: AppTheme.textSecondary,
                                 ),
                               ),
                             ],
                           ),
-                          SizedBox(height: AppTheme.spacing1),
+                          const SizedBox(height: AppTheme.spacing1),
                           Row(
                             children: [
-                              Icon(Icons.phone, size: 16, color: AppTheme.textSecondary),
-                              SizedBox(width: AppTheme.spacing1),
+                              const Icon(Icons.phone, size: 16, color: AppTheme.textSecondary),
+                              const SizedBox(width: AppTheme.spacing1),
                               Text(
                                 user['phone'] ?? '-',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 14,
                                   color: AppTheme.textSecondary,
                                 ),
                               ),
                             ],
                           ),
-                          SizedBox(height: AppTheme.spacing2),
+                          const SizedBox(height: AppTheme.spacing2),
                           Text(
                             '가입일: ${_formatDate(user['createdAt'])}',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                               color: AppTheme.textTertiary,
                             ),
@@ -320,10 +317,10 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: AppTheme.spacing6),
+                const SizedBox(height: AppTheme.spacing6),
                 const Divider(height: 1),
-                SizedBox(height: AppTheme.spacing4),
-                Text(
+                const SizedBox(height: AppTheme.spacing4),
+                const Text(
                   '활동 통계',
                   style: TextStyle(
                     fontSize: 14,
@@ -331,19 +328,19 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
                     color: AppTheme.textPrimary,
                   ),
                 ),
-                SizedBox(height: AppTheme.spacing3),
+                const SizedBox(height: AppTheme.spacing3),
                 Row(
                   children: [
                     _buildStatChip('공고', jobs.toString()),
-                    SizedBox(width: AppTheme.spacing2),
+                    const SizedBox(width: AppTheme.spacing2),
                     _buildStatChip('지원', apps.toString()),
-                    SizedBox(width: AppTheme.spacing2),
+                    const SizedBox(width: AppTheme.spacing2),
                     _buildStatChip('스케줄', sched.toString()),
-                    SizedBox(width: AppTheme.spacing2),
+                    const SizedBox(width: AppTheme.spacing2),
                     _buildStatChip('에너지', '$balance개', color: AppTheme.yellow600),
                   ],
                 ),
-                SizedBox(height: AppTheme.spacing6),
+                const SizedBox(height: AppTheme.spacing6),
                 Row(
                   children: [
                     FilledButton.icon(
@@ -358,7 +355,7 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
                         backgroundColor: AppTheme.urgentRed,
                       ),
                     ),
-                    SizedBox(width: AppTheme.spacing4),
+                    const SizedBox(width: AppTheme.spacing4),
                     OutlinedButton.icon(
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -380,12 +377,12 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
 
   Widget _buildStatChip(String label, String value, {Color? color}) {
     return Container(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.spacing4,
         vertical: AppTheme.spacing2,
       ),
       decoration: BoxDecoration(
-        color: (color ?? AppTheme.adminPurple50).withOpacity(0.5),
+        color: (color ?? AppTheme.adminPurple50).withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         border: Border.all(color: AppTheme.adminPurple100),
       ),
@@ -394,12 +391,12 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
         children: [
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12,
               color: AppTheme.textSecondary,
             ),
           ),
-          SizedBox(width: AppTheme.spacing1),
+          const SizedBox(width: AppTheme.spacing1),
           Text(
             value,
             style: TextStyle(

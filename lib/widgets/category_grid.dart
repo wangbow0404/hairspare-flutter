@@ -17,26 +17,30 @@ class CategoryItem {
 
 class CategoryGrid extends StatelessWidget {
   final List<CategoryItem> categories;
+  /// 컴팩트 모드(스페어/미용실 통일): 상하 패딩 축소. null이면 기본 py-4
+  final EdgeInsetsGeometry? padding;
 
   const CategoryGrid({
     super.key,
     required this.categories,
+    this.padding,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppTheme.backgroundWhite, // bg-white
       ),
-      padding: AppTheme.spacingVertical(AppTheme.spacing4), // py-4
+      padding: padding ?? const EdgeInsets.symmetric(horizontal: AppTheme.spacing4, vertical: AppTheme.spacing2),
       child: GridView.builder(
+        padding: EdgeInsets.zero,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4, // grid-cols-4
-          crossAxisSpacing: AppTheme.spacing4, // gap-4
-          mainAxisSpacing: AppTheme.spacing4, // gap-4
+          crossAxisCount: 4,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
         ),
         itemCount: categories.length,
         itemBuilder: (context, index) {
@@ -96,7 +100,7 @@ class _CategoryItemWidgetState extends State<_CategoryItemWidget> {
                 style: const TextStyle(fontSize: 30), // text-3xl
               ),
             ),
-            SizedBox(height: AppTheme.spacing2), // gap-2
+            const SizedBox(height: AppTheme.spacing2), // gap-2
             // 라벨 텍스트
             Text(
               widget.label,

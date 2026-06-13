@@ -158,7 +158,7 @@ class _KoreaMapState extends State<KoreaMap> {
             onTapDown: (details) {
               // 클릭 위치에 해당하는 시도 찾기
               final renderBox = context.findRenderObject() as RenderBox;
-              final localPosition = renderBox.globalToLocal(details.globalPosition);
+              renderBox.globalToLocal(details.globalPosition);
               // 시도 감지 로직 구현 필요
             },
           ),

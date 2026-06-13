@@ -2,14 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/auth_service.dart';
 import '../../utils/error_handler.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 
 /// Next.js와 동일한 추천 화면
 class ReferralScreen extends StatefulWidget {
@@ -20,7 +16,6 @@ class ReferralScreen extends StatefulWidget {
 }
 
 class _ReferralScreenState extends State<ReferralScreen> {
-  int _currentNavIndex = 0;
   final AuthService _authService = AuthService();
   List<_ReferralHistory> _referralHistory = [];
   String? _referralCode;
@@ -64,7 +59,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
           }).toList();
         } catch (e) {
           // 추천 이력 조회 실패 시 빈 리스트 유지
-          print('추천 이력 조회 오류: $e');
+          debugPrint('추천 이력 조회 오류: $e');
         }
         
         setState(() {
@@ -128,32 +123,15 @@ class _ReferralScreenState extends State<ReferralScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '추천하기',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
-      ),
+      appBar: const SharedAppBar(title: '추천하기'),
       body: SingleChildScrollView(
         padding: AppTheme.spacing(AppTheme.spacing6),
         child: Column(
@@ -175,13 +153,13 @@ class _ReferralScreenState extends State<ReferralScreen> {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryPink.withOpacity(0.1),
+                          color: AppTheme.primaryPink.withValues(alpha: 0.1),
                           borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                         ),
                         child: IconMapper.icon('users', size: 24, color: AppTheme.primaryPink) ??
                             const Icon(Icons.people, size: 24, color: AppTheme.primaryPink),
                       ),
-                      SizedBox(width: AppTheme.spacing3),
+                      const SizedBox(width: AppTheme.spacing3),
                       Text(
                         '추천 링크',
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -192,7 +170,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   // 추천 링크
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,7 +182,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                           color: AppTheme.textSecondary,
                         ),
                       ),
-                      SizedBox(height: AppTheme.spacing2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Row(
                         children: [
                           Expanded(
@@ -228,7 +206,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                               ),
                             ),
                           ),
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           ElevatedButton(
                             onPressed: _referralLink.isEmpty ? null : _copyLink,
                             style: ElevatedButton.styleFrom(
@@ -251,7 +229,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                                       size: 16,
                                       color: Colors.white,
                                     ),
-                                SizedBox(width: AppTheme.spacing1),
+                                const SizedBox(width: AppTheme.spacing1),
                                 Text(
                                   _copiedType == 'link' ? '복사됨' : '복사',
                                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -266,7 +244,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                       ),
                       if (_userEmail == null && !_isLoading)
                         Padding(
-                          padding: EdgeInsets.only(top: AppTheme.spacing1),
+                          padding: const EdgeInsets.only(top: AppTheme.spacing1),
                           child: Text(
                             '⚠️ 사용자 이메일을 불러올 수 없습니다',
                             style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -277,7 +255,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                         ),
                     ],
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   // 추천 코드
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -289,7 +267,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                           color: AppTheme.textSecondary,
                         ),
                       ),
-                      SizedBox(height: AppTheme.spacing2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Row(
                         children: [
                           Expanded(
@@ -313,7 +291,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                               ),
                             ),
                           ),
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           ElevatedButton(
                             onPressed: (_referralCode == null || _referralCode!.isEmpty)
                                 ? null
@@ -338,7 +316,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                                       size: 16,
                                       color: Colors.white,
                                     ),
-                                SizedBox(width: AppTheme.spacing1),
+                                const SizedBox(width: AppTheme.spacing1),
                                 Text(
                                   _copiedType == 'code' ? '복사됨' : '복사',
                                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -353,7 +331,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                       ),
                       if (_referralCode == null && !_isLoading)
                         Padding(
-                          padding: EdgeInsets.only(top: AppTheme.spacing1),
+                          padding: const EdgeInsets.only(top: AppTheme.spacing1),
                           child: Text(
                             '⚠️ 추천 코드를 생성할 수 없습니다',
                             style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -367,7 +345,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                 ],
               ),
             ),
-            SizedBox(height: AppTheme.spacing6),
+            const SizedBox(height: AppTheme.spacing6),
             // 리워드 안내
             Container(
               padding: AppTheme.spacing(AppTheme.spacing6),
@@ -376,7 +354,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                   colors: [AppTheme.primaryPinkLight, AppTheme.primaryPurpleLight],
                 ),
                 borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                border: Border.all(color: AppTheme.primaryPink.withOpacity(0.2), width: 2),
+                border: Border.all(color: AppTheme.primaryPink.withValues(alpha: 0.2), width: 2),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -389,18 +367,18 @@ class _ReferralScreenState extends State<ReferralScreen> {
                       color: AppTheme.primaryPinkDarker,
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     '친구가 가입하면 예약금(에너지) +1개가 지급됩니다.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontSize: 14,
-                      color: AppTheme.primaryPinkDarker.withOpacity(0.9),
+                      color: AppTheme.primaryPinkDarker.withValues(alpha: 0.9),
                     ),
                   ),
                 ],
               ),
             ),
-            SizedBox(height: AppTheme.spacing6),
+            const SizedBox(height: AppTheme.spacing6),
             // 추천 내역
             Container(
               padding: AppTheme.spacing(AppTheme.spacing6),
@@ -420,7 +398,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                       color: AppTheme.textPrimary,
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   _referralHistory.isEmpty
                       ? Padding(
                           padding: AppTheme.spacing(AppTheme.spacing8),
@@ -428,7 +406,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                             children: [
                               IconMapper.icon('users', size: 48, color: AppTheme.textTertiary) ??
                                   const Icon(Icons.people, size: 48, color: AppTheme.textTertiary),
-                              SizedBox(height: AppTheme.spacing4),
+                              const SizedBox(height: AppTheme.spacing4),
                               Text(
                                 '추천한 친구가 없습니다.',
                                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -441,7 +419,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                       : Column(
                           children: _referralHistory.map((ref) {
                             return Container(
-                              margin: EdgeInsets.only(bottom: AppTheme.spacing3),
+                              margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
                               padding: AppTheme.spacing(AppTheme.spacing4),
                               decoration: BoxDecoration(
                                 color: AppTheme.backgroundGray,
@@ -461,7 +439,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                                           color: AppTheme.textPrimary,
                                         ),
                                       ),
-                                      SizedBox(height: AppTheme.spacing1 / 2),
+                                      const SizedBox(height: AppTheme.spacing1 / 2),
                                       Text(
                                         '가입일: ${DateFormat('yyyy년 M월 d일', 'ko_KR').format(DateTime.parse(ref.joinedDate))}',
                                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -499,46 +477,6 @@ class _ReferralScreenState extends State<ReferralScreen> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          
-          // 네비게이션 처리
-          switch (index) {
-            case 0:
-              // 홈으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              // 결제로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              // 찜으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              // 마이(프로필)로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }

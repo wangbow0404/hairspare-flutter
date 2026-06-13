@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../spare/profile_edit_screen.dart';
 import '../spare/notifications_settings_screen.dart';
 import '../spare/change_password_screen.dart';
 import '../spare/delete_account_screen.dart';
-import '../spare/login_screen.dart';
 import '../../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
+import '../../core/router/app_navigation.dart';
 
 /// Next.js와 동일한 설정 화면
 class SettingsScreen extends StatefulWidget {
@@ -23,7 +19,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  int _currentNavIndex = 0;
   bool _isLoading = true;
 
   @override
@@ -33,6 +28,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _handleLogout() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -52,45 +48,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
 
     if (confirmed == true) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.logout();
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => SpareLoginScreen()),
-        (route) => false,
-      );
+      if (!mounted) return;
+      AppNavigation.goRoleSelect(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '설정',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
-      ),
+      appBar: const SharedAppBar(title: '설정', showHubActions: true),
       body: SingleChildScrollView(
         padding: AppTheme.spacing(AppTheme.spacing6),
         child: Column(
@@ -123,7 +98,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ].map((item) {
               return Container(
-                margin: EdgeInsets.only(bottom: AppTheme.spacing2),
+                margin: const EdgeInsets.only(bottom: AppTheme.spacing2),
                 child: InkWell(
                   onTap: () {
                     Navigator.push(
@@ -142,7 +117,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Row(
                       children: [
                         item['icon'] as Widget,
-                        SizedBox(width: AppTheme.spacing4),
+                        const SizedBox(width: AppTheme.spacing4),
                         Expanded(
                           child: Text(
                             item['label'] as String,
@@ -161,7 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               );
             }),
-            SizedBox(height: AppTheme.spacing4),
+            const SizedBox(height: AppTheme.spacing4),
             // 로그아웃 버튼
             SizedBox(
               width: double.infinity,
@@ -171,14 +146,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   backgroundColor: AppTheme.urgentRedLight,
                   foregroundColor: AppTheme.urgentRed,
                   padding: AppTheme.spacing(AppTheme.spacing3),
-                  side: BorderSide(color: AppTheme.urgentRed.withOpacity(0.2)),
+                  side: BorderSide(color: AppTheme.urgentRed.withValues(alpha: 0.2)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     IconMapper.icon('logout', size: 20, color: AppTheme.urgentRed) ??
                         const Icon(Icons.logout, size: 20, color: AppTheme.urgentRed),
-                    SizedBox(width: AppTheme.spacing2),
+                    const SizedBox(width: AppTheme.spacing2),
                     Text(
                       '로그아웃',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -193,46 +168,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          
-          // 네비게이션 처리
-          switch (index) {
-            case 0:
-              // 홈으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              // 결제로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              // 찜으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              // 마이(프로필)로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }

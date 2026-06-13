@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/energy_service.dart';
 import '../../services/payment_service.dart';
 import '../../utils/error_handler.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 
 /// Next.js와 동일한 에너지 구매 화면
 class EnergyPurchaseScreen extends StatefulWidget {
@@ -34,7 +30,6 @@ class _EnergyPackage {
 }
 
 class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
-  int _currentNavIndex = 0;
   _EnergyPackage? _selectedPackage;
   bool _isProcessing = false;
   int _currentEnergy = 0;
@@ -108,7 +103,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
 
     try {
       // 결제 요청 생성
-      final payment = await _paymentService.createPayment(
+      await _paymentService.createPayment(
         type: 'energy_purchase',
         amount: _selectedPackage!.price,
         paymentMethod: 'CARD',
@@ -160,32 +155,15 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '에너지 구매',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
-      ),
+      appBar: const SharedAppBar(title: '에너지 구매'),
       body: SingleChildScrollView(
         padding: AppTheme.spacing(AppTheme.spacing4),
         child: Column(
@@ -217,7 +195,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                     child: IconMapper.icon('zap', size: 24, color: AppTheme.orange500) ??
                         const Icon(Icons.flash_on, size: 24, color: AppTheme.orange500),
                   ),
-                  SizedBox(width: AppTheme.spacing3),
+                  const SizedBox(width: AppTheme.spacing3),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -226,10 +204,10 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
-                      SizedBox(height: AppTheme.spacing1),
+                      const SizedBox(height: AppTheme.spacing1),
                       Text(
                         '$_currentEnergy개',
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -243,7 +221,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                 ],
               ),
             ),
-            SizedBox(height: AppTheme.spacing6),
+            const SizedBox(height: AppTheme.spacing6),
 
             // 패키지 선택
             Text(
@@ -254,11 +232,11 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                 color: AppTheme.textPrimary,
               ),
             ),
-            SizedBox(height: AppTheme.spacing4),
+            const SizedBox(height: AppTheme.spacing4),
             ..._energyPackages.map((pkg) {
               final isSelected = _selectedPackage?.id == pkg.id;
               return Container(
-                margin: EdgeInsets.only(bottom: AppTheme.spacing3),
+                margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
@@ -308,7 +286,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                                   )
                                 : null,
                           ),
-                          SizedBox(width: AppTheme.spacing3),
+                          const SizedBox(width: AppTheme.spacing3),
                           // 패키지 정보
                           Expanded(
                             child: Column(
@@ -325,7 +303,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                                       ),
                                     ),
                                     if (pkg.popular) ...[
-                                      SizedBox(width: AppTheme.spacing2),
+                                      const SizedBox(width: AppTheme.spacing2),
                                       Container(
                                         padding: AppTheme.spacingSymmetric(
                                           horizontal: AppTheme.spacing2,
@@ -347,7 +325,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                                     ],
                                   ],
                                 ),
-                                SizedBox(height: AppTheme.spacing1),
+                                const SizedBox(height: AppTheme.spacing1),
                                 Text(
                                   '₩${_formatPrice(pkg.price)}',
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -369,7 +347,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                                   color: AppTheme.textSecondary,
                                 ),
                               ),
-                              SizedBox(height: AppTheme.spacing1),
+                              const SizedBox(height: AppTheme.spacing1),
                               Text(
                                 '₩${_formatPrice((pkg.price / pkg.amount).round())}',
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -387,7 +365,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                 ),
               );
             }),
-            SizedBox(height: AppTheme.spacing6),
+            const SizedBox(height: AppTheme.spacing6),
 
             // 선택된 패키지 요약
             if (_selectedPackage != null)
@@ -409,7 +387,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                         color: AppTheme.textGray700,
                       ),
                     ),
-                    SizedBox(height: AppTheme.spacing3),
+                    const SizedBox(height: AppTheme.spacing3),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -430,7 +408,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                         ),
                       ],
                     ),
-                    Divider(height: AppTheme.spacing4, thickness: 1),
+                    const Divider(height: AppTheme.spacing4, thickness: 1),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -455,7 +433,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                   ],
                 ),
               ),
-            SizedBox(height: AppTheme.spacing6),
+            const SizedBox(height: AppTheme.spacing6),
 
             // 구매하기 버튼
             SizedBox(
@@ -476,7 +454,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                   elevation: _selectedPackage != null && !_isProcessing ? 4 : 0,
                 ).copyWith(
                   backgroundColor: _selectedPackage != null && !_isProcessing
-                      ? MaterialStateProperty.all<Color>(
+                      ? WidgetStateProperty.all<Color>(
                           AppTheme.orange500,
                         )
                       : null,
@@ -505,7 +483,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                 ),
               ),
             ),
-            SizedBox(height: AppTheme.spacing6),
+            const SizedBox(height: AppTheme.spacing6),
 
             // 안내 문구
             Container(
@@ -528,7 +506,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                       color: AppTheme.primaryBlueDark, // blue-800
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     '• 에너지는 공고 지원 시 예약금으로 사용됩니다.\n'
                     '• 근무 완료 시 에너지가 반환됩니다.\n'
@@ -542,49 +520,9 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                 ],
               ),
             ),
-            SizedBox(height: 80), // 하단 네비게이션 바 여백
+            const SizedBox(height: 80), // 하단 네비게이션 바 여백
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          
-          // 네비게이션 처리
-          switch (index) {
-            case 0:
-              // 홈으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              // 결제로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              // 찜으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              // 마이(프로필)로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }

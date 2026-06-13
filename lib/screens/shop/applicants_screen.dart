@@ -1,48 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
-import '../../utils/icon_mapper.dart';
+
+import '../../core/di/service_locator.dart';
+import '../../core/services/global_messenger_service.dart';
 import '../../models/application.dart';
 import '../../models/job.dart';
+import '../../utils/shop_applicant_counts.dart';
 import '../../services/application_service.dart';
 import '../../services/job_service.dart';
+import '../../theme/app_theme.dart';
+import '../../utils/application_status_utils.dart';
 import '../../utils/error_handler.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
+import '../../widgets/common/shared_app_bar.dart';
+import '../../widgets/shop_applicants/shop_applicant_card.dart';
+import '../../widgets/shop_applicants/shop_applicants_filter_chip.dart';
 import 'spare_detail_screen.dart';
 
-/// Shop 지원자 현황 화면
+/// 샵 지원자 관리 — 내 공고 목록과 동일한 필터·카드 톤.
 class ShopApplicantsScreen extends StatefulWidget {
-  const ShopApplicantsScreen({super.key});
+  const ShopApplicantsScreen({super.key, this.initialJobId});
+
+  final String? initialJobId;
 
   @override
   State<ShopApplicantsScreen> createState() => _ShopApplicantsScreenState();
 }
 
 class _ShopApplicantsScreenState extends State<ShopApplicantsScreen> {
-  final ApplicationService _applicationService = ApplicationService();
-  final JobService _jobService = JobService();
-  
+  final ApplicationService _applicationService = sl<ApplicationService>();
+  final JobService _jobService = sl<JobService>();
+  final GlobalMessengerService _messenger = sl<GlobalMessengerService>();
+
   List<Application> _applications = [];
   List<Job> _jobs = [];
   bool _isLoading = true;
-  String _statusFilter = 'all'; // 'all' | 'pending' | 'approved' | 'rejected'
+  String _statusFilter = 'all';
   String? _selectedJobId;
-  int _currentNavIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    _selectedJobId = widget.initialJobId;
     _loadData();
   }
 
   Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final results = await Future.wait([
@@ -50,503 +52,405 @@ class _ShopApplicantsScreenState extends State<ShopApplicantsScreen> {
         _jobService.getMyJobs(),
       ]);
 
+      if (!mounted) return;
+      final jobs = results[1] as List<Job>;
+      final jobIds = jobs.map((j) => j.id).toSet();
       setState(() {
-        _applications = results[0] as List<Application>;
-        _jobs = results[1] as List<Job>;
+        _jobs = jobs;
+        _applications = (results[0] as List<Application>)
+            .where((a) => jobIds.contains(a.job.id))
+            .toList();
         _isLoading = false;
       });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))),
-            backgroundColor: AppTheme.urgentRed,
-          ),
-        );
-      }
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      final ex = ErrorHandler.handleException(e);
+      _messenger.showError(ErrorHandler.getUserFriendlyMessage(ex));
     }
   }
 
   List<Application> get _filteredApplications {
     var filtered = List<Application>.from(_applications);
-    
-    // 공고 필터
+
     if (_selectedJobId != null) {
-      filtered = filtered.where((app) => app.job.id == _selectedJobId).toList();
+      filtered =
+          filtered.where((app) => app.job.id == _selectedJobId).toList();
     }
-    
-    // 상태 필터
+
     if (_statusFilter != 'all') {
-      filtered = filtered.where((app) => app.status == _statusFilter).toList();
+      filtered = filtered
+          .where(
+            (app) =>
+                ApplicationStatusUtils.normalize(app.status) == _statusFilter,
+          )
+          .toList();
     }
-    
-    // 최신순 정렬
+
     filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    
     return filtered;
   }
 
+  Job? _jobForApplication(Application application) {
+    for (final job in _jobs) {
+      if (job.id == application.job.id) return job;
+    }
+    return application.job;
+  }
+
   Future<void> _handleApprove(String applicationId) async {
+    final application = _applications.firstWhere((a) => a.id == applicationId);
+    final job = _jobForApplication(application)!;
+
+    if (!ShopApplicantCounts.canApproveApplication(job, _applications)) {
+      if (job.status == 'closed') {
+        _messenger.showMessage('이미 마감된 공고입니다');
+      } else {
+        _messenger.showMessage(
+          '모집 인원(${job.requiredCount}명)이 모두 찼습니다',
+        );
+      }
+      return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         title: const Text('지원 승인'),
         content: const Text('이 지원자를 승인하시겠습니까?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(ctx, false),
             child: const Text('취소'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: AppTheme.primaryGreen,
-            ),
+            onPressed: () => Navigator.pop(ctx, true),
             child: const Text('승인'),
           ),
         ],
       ),
     );
-
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
 
     try {
-      await _applicationService.approveApplication(applicationId);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('지원자가 승인되었습니다'),
-            backgroundColor: AppTheme.primaryGreen,
-          ),
+      final result = await _applicationService.approveApplication(applicationId);
+      if (!mounted) return;
+      if (result.jobAutoClosed) {
+        _messenger.showSuccess(
+          '지원자가 승인되었습니다.\n스케줄에 반영되었으며, 모집 인원 충족으로 공고가 마감되었습니다.',
+          duration: const Duration(seconds: 4),
         );
-        _loadData();
+      } else {
+        _messenger.showSuccess(
+          '지원자가 승인되었습니다.\n스케줄 탭에서 근무 일정을 확인할 수 있습니다.',
+          duration: const Duration(seconds: 4),
+        );
       }
+      await _loadData();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))),
-            backgroundColor: AppTheme.urgentRed,
-          ),
-        );
-      }
+      if (!mounted) return;
+      final ex = ErrorHandler.handleException(e);
+      _messenger.showError(ErrorHandler.getUserFriendlyMessage(ex));
     }
   }
 
   Future<void> _handleReject(String applicationId) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         title: const Text('지원 거절'),
         content: const Text('이 지원을 거절하시겠습니까?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(ctx, false),
             child: const Text('취소'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: AppTheme.urgentRed,
-            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.urgentRed),
             child: const Text('거절'),
           ),
         ],
       ),
     );
-
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
 
     try {
       await _applicationService.rejectApplication(applicationId);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('지원이 거절되었습니다'),
-            backgroundColor: AppTheme.primaryPurple,
-          ),
-        );
-        _loadData();
-      }
+      if (!mounted) return;
+      _messenger.showSuccess('지원이 거절되었습니다');
+      await _loadData();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))),
-            backgroundColor: AppTheme.urgentRed,
-          ),
-        );
-      }
+      if (!mounted) return;
+      final ex = ErrorHandler.handleException(e);
+      _messenger.showError(ErrorHandler.getUserFriendlyMessage(ex));
     }
+  }
+
+  void _openSpareProfile(String spareId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => ShopSpareDetailScreen(spareId: spareId),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final filtered = _filteredApplications;
+    final pendingCount = ShopApplicantCounts.pending(filtered);
+    final approvedCount = ShopApplicantCounts.approved(filtered);
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '지원자 확인',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
-      ),
+      appBar: const SharedAppBar(title: '지원자 관리'),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // 필터 섹션
-                Container(
-                  padding: EdgeInsets.all(AppTheme.spacing4),
-                  decoration: BoxDecoration(
-                    color: AppTheme.backgroundWhite,
-                    border: Border(
-                      bottom: BorderSide(color: AppTheme.borderGray),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 공고 선택
-                      if (_jobs.isNotEmpty) ...[
-                        Text(
-                          '공고 선택',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: AppTheme.spacing2),
-                        SizedBox(
-                          height: 40,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _jobs.length + 1,
-                            itemBuilder: (context, index) {
-                              if (index == 0) {
-                                final isSelected = _selectedJobId == null;
-                                return Padding(
-                                  padding: EdgeInsets.only(right: AppTheme.spacing2),
-                                  child: FilterChip(
-                                    label: const Text('전체'),
-                                    selected: isSelected,
-                                    onSelected: (selected) {
-                                      setState(() {
-                                        _selectedJobId = null;
-                                      });
-                                    },
-                                    selectedColor: AppTheme.primaryPurple.withOpacity(0.2),
-                                    checkmarkColor: AppTheme.primaryPurple,
-                                  ),
-                                );
-                              }
-                              final job = _jobs[index - 1];
-                              final isSelected = _selectedJobId == job.id;
-                              return Padding(
-                                padding: EdgeInsets.only(right: AppTheme.spacing2),
-                                child: FilterChip(
-                                  label: Text(
-                                    job.title,
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                  selected: isSelected,
-                                  onSelected: (selected) {
-                                    setState(() {
-                                      _selectedJobId = selected ? job.id : null;
-                                    });
-                                  },
-                                  selectedColor: AppTheme.primaryPurple.withOpacity(0.2),
-                                  checkmarkColor: AppTheme.primaryPurple,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        SizedBox(height: AppTheme.spacing4),
-                      ],
-                      // 상태 필터
-                      Text(
-                        '상태 필터',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: AppTheme.spacing2),
-                      Row(
-                        children: [
-                          _buildStatusFilterChip('전체', 'all'),
-                          SizedBox(width: AppTheme.spacing2),
-                          _buildStatusFilterChip('대기중', 'pending'),
-                          SizedBox(width: AppTheme.spacing2),
-                          _buildStatusFilterChip('승인됨', 'approved'),
-                          SizedBox(width: AppTheme.spacing2),
-                          _buildStatusFilterChip('거절됨', 'rejected'),
-                        ],
-                      ),
-                    ],
-                  ),
+                _ApplicantsSummaryBar(
+                  total: filtered.length,
+                  pending: pendingCount,
+                  approved: approvedCount,
                 ),
-                // 지원자 목록
+                _ApplicantsFilterPanel(
+                  jobs: _jobs,
+                  selectedJobId: _selectedJobId,
+                  statusFilter: _statusFilter,
+                  onJobSelected: (id) => setState(() => _selectedJobId = id),
+                  onStatusSelected: (value) =>
+                      setState(() => _statusFilter = value),
+                ),
                 Expanded(
-                  child: _filteredApplications.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.people_outline,
-                                size: 64,
-                                color: AppTheme.textTertiary,
-                              ),
-                              SizedBox(height: AppTheme.spacing4),
-                              Text(
-                                '지원자가 없습니다',
-                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  color: AppTheme.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
+                  child: filtered.isEmpty
+                      ? const _ApplicantsEmptyState()
                       : RefreshIndicator(
                           onRefresh: _loadData,
                           child: ListView.builder(
-                            padding: EdgeInsets.all(AppTheme.spacing4),
-                            itemCount: _filteredApplications.length,
+                            padding: const EdgeInsets.all(AppTheme.spacing4),
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemCount: filtered.length,
                             itemBuilder: (context, index) {
-                              final application = _filteredApplications[index];
-                              return _buildApplicantCard(application);
+                              final application = filtered[index];
+                              final status = ApplicationStatusUtils.normalize(
+                                application.status,
+                              );
+                              final isPending = status == 'pending';
+                              final job = _jobForApplication(application)!;
+                              final canApprove = isPending &&
+                                  ShopApplicantCounts.canApproveApplication(
+                                    job,
+                                    _applications,
+                                  );
+                              return ShopApplicantCard(
+                                application: application,
+                                onTapProfile: () => _openSpareProfile(
+                                  application.spare.id,
+                                ),
+                                onApprove: canApprove
+                                    ? () => _handleApprove(application.id)
+                                    : null,
+                                onReject: isPending
+                                    ? () => _handleReject(application.id)
+                                    : null,
+                              );
                             },
                           ),
                         ),
                 ),
               ],
             ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopHomeScreen()),
-              );
-              break;
-            case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopPaymentScreen()),
-              );
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopFavoritesScreen()),
-              );
-              break;
-            case 3:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopProfileScreen()),
-              );
-              break;
-          }
-        },
+    );
+  }
+}
+
+class _ApplicantsSummaryBar extends StatelessWidget {
+  const _ApplicantsSummaryBar({
+    required this.total,
+    required this.pending,
+    required this.approved,
+  });
+
+  final int total;
+  final int pending;
+  final int approved;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing4,
+        vertical: AppTheme.spacing3,
+      ),
+      color: AppTheme.backgroundWhite,
+      child: Row(
+        children: [
+          Text(
+            '총 $total명',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
+          ),
+          const SizedBox(width: AppTheme.spacing3),
+          _SummaryDot(label: '대기 $pending', color: Colors.amber.shade700),
+          const SizedBox(width: AppTheme.spacing2),
+          _SummaryDot(label: '승인 $approved', color: Colors.green.shade700),
+        ],
       ),
     );
   }
+}
 
-  Widget _buildStatusFilterChip(String label, String value) {
-    final isSelected = _statusFilter == value;
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (selected) {
-        setState(() {
-          _statusFilter = value;
-        });
-      },
-      selectedColor: AppTheme.primaryPurple.withOpacity(0.2),
-      checkmarkColor: AppTheme.primaryPurple,
+class _SummaryDot extends StatelessWidget {
+  const _SummaryDot({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: AppTheme.spacing1),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+        ),
+      ],
     );
   }
+}
 
-  Widget _buildApplicantCard(Application application) {
-    final spare = application.spare;
-    final job = application.job;
-    
-    Color statusColor;
-    String statusText;
-    switch (application.status) {
-      case 'pending':
-        statusColor = AppTheme.yellow600;
-        statusText = '대기중';
-        break;
-      case 'approved':
-        statusColor = AppTheme.primaryGreen;
-        statusText = '승인됨';
-        break;
-      case 'rejected':
-        statusColor = AppTheme.urgentRed;
-        statusText = '거절됨';
-        break;
-      default:
-        statusColor = AppTheme.textSecondary;
-        statusText = application.status;
-    }
+class _ApplicantsFilterPanel extends StatelessWidget {
+  const _ApplicantsFilterPanel({
+    required this.jobs,
+    required this.selectedJobId,
+    required this.statusFilter,
+    required this.onJobSelected,
+    required this.onStatusSelected,
+  });
 
+  final List<Job> jobs;
+  final String? selectedJobId;
+  final String statusFilter;
+  final ValueChanged<String?> onJobSelected;
+  final ValueChanged<String> onStatusSelected;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: AppTheme.spacing4),
-      padding: EdgeInsets.all(AppTheme.spacing4),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing4,
+        AppTheme.spacing2,
+        AppTheme.spacing4,
+        AppTheme.spacing3,
+      ),
+      decoration: const BoxDecoration(
         color: AppTheme.backgroundWhite,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: AppTheme.borderGray),
-        boxShadow: AppTheme.shadowSm,
+        border: Border(bottom: BorderSide(color: AppTheme.borderGray)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 헤더: 지원자 정보 및 상태
-          Row(
-            children: [
-              // 프로필 이미지
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ShopSpareDetailScreen(spareId: spare.id),
-                    ),
-                  );
-                },
-                child: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: AppTheme.backgroundGray,
-                    shape: BoxShape.circle,
-                  ),
-                  child: spare.profileImage != null
-                      ? ClipOval(
-                          child: Image.network(
-                            spare.profileImage!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(
-                                Icons.person,
-                                color: AppTheme.textSecondary,
-                              );
-                            },
-                          ),
-                        )
-                      : Icon(
-                          Icons.person,
-                          color: AppTheme.textSecondary,
-                        ),
-                ),
-              ),
-              SizedBox(width: AppTheme.spacing3),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            spare.name ?? spare.username,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: AppTheme.spacing2,
-                            vertical: AppTheme.spacing1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: statusColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                            border: Border.all(color: statusColor),
-                          ),
-                          child: Text(
-                            statusText,
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: statusColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: AppTheme.spacing1),
-                    Text(
-                      job.title,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                    SizedBox(height: AppTheme.spacing1),
-                    Text(
-                      DateFormat('yyyy년 M월 d일 HH:mm', 'ko_KR').format(application.createdAt),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textTertiary,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          
-          SizedBox(height: AppTheme.spacing4),
-          
-          // 액션 버튼
-          if (application.status == 'pending')
-            Row(
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
               children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => _handleReject(application.id),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.urgentRed,
-                      side: const BorderSide(color: AppTheme.urgentRed),
-                    ),
-                    child: const Text('거절'),
-                  ),
+                ShopApplicantsFilterChip(
+                  label: '전체',
+                  isSelected: statusFilter == 'all',
+                  onTap: () => onStatusSelected('all'),
                 ),
-                SizedBox(width: AppTheme.spacing2),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _handleApprove(application.id),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryGreen,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('승인'),
-                  ),
+                const SizedBox(width: AppTheme.spacing2),
+                ShopApplicantsFilterChip(
+                  label: '대기중',
+                  isSelected: statusFilter == 'pending',
+                  onTap: () => onStatusSelected('pending'),
+                ),
+                const SizedBox(width: AppTheme.spacing2),
+                ShopApplicantsFilterChip(
+                  label: '승인됨',
+                  isSelected: statusFilter == 'approved',
+                  onTap: () => onStatusSelected('approved'),
+                ),
+                const SizedBox(width: AppTheme.spacing2),
+                ShopApplicantsFilterChip(
+                  label: '거절됨',
+                  isSelected: statusFilter == 'rejected',
+                  onTap: () => onStatusSelected('rejected'),
                 ),
               ],
             ),
+          ),
+          if (jobs.isNotEmpty) ...[
+            const SizedBox(height: AppTheme.spacing3),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  ShopApplicantsFilterChip(
+                    label: '공고 전체',
+                    isSelected: selectedJobId == null,
+                    onTap: () => onJobSelected(null),
+                  ),
+                  const SizedBox(width: AppTheme.spacing2),
+                  for (final job in jobs)
+                    Padding(
+                      padding: const EdgeInsets.only(right: AppTheme.spacing2),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 160),
+                        child: ShopApplicantsFilterChip(
+                          label: job.title,
+                          isSelected: selectedJobId == job.id,
+                          onTap: () => onJobSelected(
+                            selectedJobId == job.id ? null : job.id,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ApplicantsEmptyState extends StatelessWidget {
+  const _ApplicantsEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.people_outline,
+            size: 56,
+            color: AppTheme.textTertiary,
+          ),
+          SizedBox(height: AppTheme.spacing3),
+          Text(
+            '지원자가 없습니다',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppTheme.textSecondary,
+            ),
+          ),
         ],
       ),
     );

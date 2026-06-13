@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui'; // ImageFilter를 위해 import
 import '../../models/user.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
-import '../spare/home_screen.dart';
+import '../../core/router/app_navigation.dart';
 
 class SpareSignupScreen extends StatefulWidget {
   const SpareSignupScreen({super.key});
@@ -73,23 +74,14 @@ class _SpareSignupScreenState extends State<SpareSignupScreen> {
         );
       }
     } else if (authProvider.isAuthenticated) {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-        );
-      }
+      if (mounted) AppNavigation.goSpareHome(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('스페어 회원가입'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
+      appBar: const SharedAppBar(title: '스페어 회원가입'),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -140,7 +132,7 @@ class _SpareSignupScreenState extends State<SpareSignupScreen> {
                             width: 64, // w-16
                             height: 64, // h-16
                             decoration: BoxDecoration(
-                              color: AppTheme.yellow400.withOpacity(0.4), // bg-yellow-400/40
+                              color: AppTheme.yellow400.withValues(alpha: 0.4), // bg-yellow-400/40
                               borderRadius: AppTheme.borderRadius(AppTheme.radiusXl), // rounded-xl
                             ),
                             child: BackdropFilter(
@@ -153,7 +145,7 @@ class _SpareSignupScreenState extends State<SpareSignupScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: AppTheme.spacing4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Text(
                       'hairspare',
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -162,7 +154,7 @@ class _SpareSignupScreenState extends State<SpareSignupScreen> {
                         color: AppTheme.primaryPurpleDarker, // text-purple-800
                       ),
                     ),
-                    SizedBox(height: AppTheme.spacing8),
+                    const SizedBox(height: AppTheme.spacing8),
                   ],
                 ),
                 // 필수 입력 필드

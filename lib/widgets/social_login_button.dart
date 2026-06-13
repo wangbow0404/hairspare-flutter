@@ -24,15 +24,13 @@ class SocialLoginButton extends StatelessWidget {
   Widget build(BuildContext context) {
     Color backgroundColor;
     Color? borderColor;
-    Color hoverColor;
     Widget icon;
 
     switch (provider) {
       case SocialProvider.kakao:
         backgroundColor = const Color(0xFFFEE500); // yellow-400
-        hoverColor = const Color(0xFFEAB308); // yellow-500
         icon = isLoading
-            ? SizedBox(
+            ? const SizedBox(
                 width: 16,
                 height: 16,
                 child: CircularProgressIndicator(
@@ -49,9 +47,8 @@ class SocialLoginButton extends StatelessWidget {
 
       case SocialProvider.naver:
         backgroundColor = const Color(0xFF03C75A); // green-500
-        hoverColor = const Color(0xFF059669); // green-600
         icon = isLoading
-            ? SizedBox(
+            ? const SizedBox(
                 width: 16,
                 height: 16,
                 child: CircularProgressIndicator(
@@ -73,9 +70,8 @@ class SocialLoginButton extends StatelessWidget {
       case SocialProvider.google:
         backgroundColor = AppTheme.backgroundWhite;
         borderColor = AppTheme.borderGray300; // border-gray-300
-        hoverColor = AppTheme.backgroundGray; // hover:bg-gray-50
         icon = isLoading
-            ? SizedBox(
+            ? const SizedBox(
                 width: 16,
                 height: 16,
                 child: CircularProgressIndicator(
@@ -102,7 +98,7 @@ class SocialLoginButton extends StatelessWidget {
           decoration: BoxDecoration(
             color: backgroundColor,
             border: borderColor != null
-                ? Border.all(color: borderColor!, width: 2)
+                ? Border.all(color: borderColor, width: 2)
                 : null,
             shape: BoxShape.circle,
             boxShadow: AppTheme.shadowSm, // shadow-sm

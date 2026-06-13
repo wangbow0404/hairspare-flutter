@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../models/space_rental.dart';
 import '../../services/space_rental_service.dart';
 import '../../utils/error_handler.dart';
 import 'space_rental_detail_screen.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 
 /// 내 예약 내역 화면
 class MySpaceBookingsScreen extends StatefulWidget {
@@ -22,7 +18,6 @@ class MySpaceBookingsScreen extends StatefulWidget {
 
 class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
     with SingleTickerProviderStateMixin {
-  int _currentNavIndex = 0;
   List<SpaceBooking> _bookings = [];
   bool _isLoading = true;
   final SpaceRentalService _spaceRentalService = SpaceRentalService();
@@ -176,9 +171,9 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -188,23 +183,8 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '내 예약 내역',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
+      appBar: SharedAppBar(
+        title: '내 예약 내역',
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -226,8 +206,8 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconMapper.icon('calendar', size: 64, color: AppTheme.textTertiary) ??
-                      Icon(Icons.calendar_today, size: 64, color: AppTheme.textTertiary),
-                  SizedBox(height: AppTheme.spacing4),
+                      const Icon(Icons.calendar_today, size: 64, color: AppTheme.textTertiary),
+                  const SizedBox(height: AppTheme.spacing4),
                   Text(
                     '예약 내역이 없습니다',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -246,7 +226,7 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
                 final canCancel = booking.canCancel;
 
                 return Container(
-                  margin: EdgeInsets.only(bottom: AppTheme.spacing3),
+                  margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
                   decoration: BoxDecoration(
                     color: AppTheme.backgroundWhite,
                     borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
@@ -291,7 +271,7 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
                                           color: AppTheme.textPrimary,
                                         ),
                                       ),
-                                      SizedBox(height: AppTheme.spacing1),
+                                      const SizedBox(height: AppTheme.spacing1),
                                       Text(
                                         booking.spaceRental?.fullAddress ?? '',
                                         style: Theme.of(context)
@@ -311,7 +291,7 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
                                     vertical: AppTheme.spacing1,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: statusColor.withOpacity(0.1),
+                                    color: statusColor.withValues(alpha: 0.1),
                                     borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
                                   ),
                                   child: Text(
@@ -328,14 +308,14 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
                                 ),
                               ],
                             ),
-                            SizedBox(height: AppTheme.spacing3),
-                            Divider(height: 1),
-                            SizedBox(height: AppTheme.spacing3),
+                            const SizedBox(height: AppTheme.spacing3),
+                            const Divider(height: 1),
+                            const SizedBox(height: AppTheme.spacing3),
                             Row(
                               children: [
                                 IconMapper.icon('clock', size: 16, color: AppTheme.textSecondary) ??
-                                    Icon(Icons.access_time, size: 16, color: AppTheme.textSecondary),
-                                SizedBox(width: AppTheme.spacing2),
+                                    const Icon(Icons.access_time, size: 16, color: AppTheme.textSecondary),
+                                const SizedBox(width: AppTheme.spacing2),
                                 Expanded(
                                   child: Text(
                                     '${DateFormat('yyyy년 M월 d일 HH:mm', 'ko_KR').format(booking.startTime)} - ${DateFormat('HH:mm', 'ko_KR').format(booking.endTime)}',
@@ -347,7 +327,7 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
                                 ),
                               ],
                             ),
-                            SizedBox(height: AppTheme.spacing2),
+                            const SizedBox(height: AppTheme.spacing2),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -369,13 +349,13 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
                               ],
                             ),
                             if (canCancel && booking.status != BookingStatus.cancelled) ...[
-                              SizedBox(height: AppTheme.spacing3),
+                              const SizedBox(height: AppTheme.spacing3),
                               SizedBox(
                                 width: double.infinity,
                                 child: OutlinedButton(
                                   onPressed: () => _handleCancelBooking(booking.id),
                                   style: OutlinedButton.styleFrom(
-                                    side: BorderSide(color: AppTheme.urgentRed),
+                                    side: const BorderSide(color: AppTheme.urgentRed),
                                     foregroundColor: AppTheme.urgentRed,
                                     padding: AppTheme.spacing(AppTheme.spacing2),
                                   ),
@@ -391,42 +371,6 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
                 );
               },
             ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          
-          // 네비게이션 처리
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
-      ),
     );
   }
 }

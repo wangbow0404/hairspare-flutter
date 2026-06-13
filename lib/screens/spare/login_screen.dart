@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'dart:ui'; // ImageFilter를 위해 import
-import '../../models/user.dart';
+import '../../models/login_portal.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
-import '../spare/home_screen.dart';
-import '../spare/signup_screen.dart';
-import '../spare/find_id_screen.dart';
-import '../spare/find_password_screen.dart';
-import '../admin/admin_dashboard_screen.dart';
+import '../../core/router/app_navigation.dart';
+import '../../core/router/app_routes.dart';
 import '../../widgets/social_login_button.dart'; // SocialLoginButton import
 import '../../utils/icon_mapper.dart'; // IconMapper import
 import '../../services/social_auth_service.dart';
+import '../../utils/api_config.dart';
 import '../../utils/error_handler.dart';
+import '../../mocks/mock_auth_data.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 import 'package:flutter_naver_login/flutter_naver_login.dart';
+import 'package:flutter_naver_login/interface/types/naver_login_result.dart';
+import 'package:flutter_naver_login/interface/types/naver_login_status.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class SpareLoginScreen extends StatefulWidget {
@@ -60,23 +61,12 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
 
-    // 관리자 로그인 체크 (아이디: villadeblanc, 비밀번호: since2016!!!!)
-    if (username == 'villadeblanc' && password == 'since2016!!!!') {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
-        );
-      }
-      return;
-    }
-
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
     await authProvider.login(
       username: username,
       password: password,
-      role: UserRole.spare,
+      portal: LoginPortal.spare,
     );
 
     if (authProvider.error != null) {
@@ -89,11 +79,9 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
         );
       }
     } else if (authProvider.isAuthenticated) {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-        );
+      final user = authProvider.currentUser;
+      if (mounted && user != null) {
+        AppNavigation.goHomeForRole(user.role);
       }
     }
   }
@@ -104,9 +92,10 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
     });
 
     try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       // 카카오 SDK를 사용하여 로그인
       kakao.OAuthToken? token;
-      
+
       // 카카오톡이 설치되어 있는지 확인
       if (await kakao.isKakaoTalkInstalled()) {
         // 카카오톡으로 로그인 시도
@@ -121,32 +110,21 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
         token = await kakao.UserApi.instance.loginWithKakaoAccount();
       }
       
-      if (token == null || token.accessToken == null) {
-        throw Exception('카카오 로그인 토큰을 받을 수 없습니다');
-      }
-      
-      final user = await _socialAuthService.loginWithKakao(token.accessToken!);
-      
-      // AuthProvider 업데이트
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final user = await _socialAuthService.loginWithKakao(token.accessToken);
+
       await authProvider.setUser(user);
-      
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-        );
-      }
+
+      if (!mounted) return;
+      AppNavigation.goSpareHome(context);
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('카카오 로그인 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}'),
-            backgroundColor: AppTheme.urgentRed,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('카카오 로그인 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}'),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -162,41 +140,34 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
     });
 
     try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       // 네이버 SDK를 사용하여 로그인
       final NaverLoginResult result = await FlutterNaverLogin.logIn();
-      
+
       if (result.status == NaverLoginStatus.loggedIn) {
         final accessToken = result.accessToken?.accessToken;
-        
-        if (accessToken == null) {
+        if (accessToken == null || accessToken.isEmpty) {
           throw Exception('네이버 로그인 토큰을 받을 수 없습니다');
         }
-        
+
         final user = await _socialAuthService.loginWithNaver(accessToken);
-        
-        // AuthProvider 업데이트
-        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
         await authProvider.setUser(user);
-        
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-          );
-        }
+
+        if (!mounted) return;
+        AppNavigation.goSpareHome(context);
       } else {
         throw Exception('네이버 로그인이 취소되었습니다');
       }
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('네이버 로그인 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}'),
-            backgroundColor: AppTheme.urgentRed,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('네이버 로그인 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}'),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -212,6 +183,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
     });
 
     try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       // 구글 SDK를 사용하여 로그인
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       
@@ -231,27 +203,20 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
       }
       
       final user = await _socialAuthService.loginWithGoogle(idToken);
-      
-      // AuthProvider 업데이트
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
       await authProvider.setUser(user);
-      
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-        );
-      }
+
+      if (!mounted) return;
+      AppNavigation.goSpareHome(context);
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('구글 로그인 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}'),
-            backgroundColor: AppTheme.urgentRed,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('구글 로그인 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}'),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -263,7 +228,12 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) AppNavigation.backFromLogin(context);
+      },
+      child: Scaffold(
       backgroundColor: AppTheme.backgroundWhite,
       body: SafeArea(
         child: Column(
@@ -277,7 +247,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
                   IconButton(
                     icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ?? const Icon(Icons.arrow_back),
                     color: AppTheme.textSecondary, // text-gray-600
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => AppNavigation.backFromLogin(context),
                   ),
                   // 중앙 타이틀
                   Expanded(
@@ -292,7 +262,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
                     ),
                   ),
                   // 균형을 위한 빈 공간
-                  SizedBox(width: 48), // w-6
+                  const SizedBox(width: 48), // w-6
                 ],
               ),
             ),
@@ -313,76 +283,78 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
                         constraints: const BoxConstraints(maxWidth: 384), // max-w-sm
                         child: Column(
                           children: [
-                            // 로고 영역
+                            // 로고 영역 (미용실 로그인과 동일: 보라 그라데이션 + 흰색 H)
                             Column(
                               children: [
-                                SizedBox(height: AppTheme.spacing12), // mb-12
-                                // 로고 박스
-                                Stack(
-                                  alignment: Alignment.topRight,
-                                  children: [
-                                    // 그라데이션 박스
-                                    Container(
-                                      width: 80, // w-20
-                                      height: 80, // h-20
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            AppTheme.primaryPurple, // from-purple-600
-                                            AppTheme.primaryPurpleDarker, // to-purple-800
-                                          ],
-                                        ),
-                                        borderRadius: AppTheme.borderRadius(AppTheme.radius2xl), // rounded-2xl
-                                        boxShadow: AppTheme.shadowLg, // shadow-lg
+                                const SizedBox(height: AppTheme.spacing12),
+                                Container(
+                                  width: 80,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [Color(0xFF9333EA), Color(0xFF7C3AED)],
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.1),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
                                       ),
-                                      child: const Center(
-                                        child: Text(
-                                          'H',
-                                          style: TextStyle(
-                                            fontSize: 30, // text-3xl (30px)
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
-                                        ),
+                                    ],
+                                  ),
+                                  child: const Center(
+                                    child: Text(
+                                      'H',
+                                      style: TextStyle(
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
                                       ),
                                     ),
-                                    // 블러 효과 (노란색 오버레이)
-                                    Positioned(
-                                      top: -4, // -top-1
-                                      right: -4, // -right-1
-                                      child: Container(
-                                        width: 64, // w-16
-                                        height: 64, // h-16
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.yellow400.withOpacity(0.4), // bg-yellow-400/40
-                                          borderRadius: AppTheme.borderRadius(AppTheme.radiusXl), // rounded-xl
-                                        ),
-                                        child: BackdropFilter(
-                                          filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4), // blur-sm
-                                          child: Container(
-                                            color: Colors.transparent,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                                SizedBox(height: AppTheme.spacing4), // mb-4
-                                // hairspare 텍스트
-                                Text(
+                                const SizedBox(height: AppTheme.spacing4),
+                                const Text(
                                   'hairspare',
-                                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                    fontSize: 24, // text-2xl
+                                  style: TextStyle(
+                                    fontSize: 24,
                                     fontWeight: FontWeight.bold,
-                                    color: AppTheme.primaryPurpleDarker, // text-purple-800
+                                    color: Color(0xFF7C3AED),
+                                    letterSpacing: -0.5,
                                   ),
                                 ),
                               ],
                             ),
 
-                            SizedBox(height: AppTheme.spacing8), // mb-8
+                                const SizedBox(height: AppTheme.spacing8), // mb-8
+
+                            if (ApiConfig.useMockData) ...[
+                              Container(
+                                width: double.infinity,
+                                padding: AppTheme.spacing(AppTheme.spacing3),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryPurple.withValues(alpha: 0.08),
+                                  borderRadius:
+                                      AppTheme.borderRadius(AppTheme.radiusLg),
+                                  border: Border.all(
+                                    color: AppTheme.primaryPurple.withValues(alpha: 0.25),
+                                  ),
+                                ),
+                                child: Text(
+                                  '목 데이터: 스페어 ${MockAuthData.devSpareUsername}/${MockAuthData.devSparePassword} · '
+                                  '샵 ${MockAuthData.devShopUsername}/${MockAuthData.devShopPassword} · '
+                                  '관리자 ${MockAuthData.devAdminUsername}/${MockAuthData.devAdminPassword}',
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: AppTheme.textSecondary,
+                                      ),
+                                ),
+                              ),
+                              const SizedBox(height: AppTheme.spacing4),
+                            ],
 
                             // 입력 필드들
                             Column(
@@ -416,7 +388,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
                                     return null;
                                   },
                                 ),
-                                SizedBox(height: AppTheme.spacing4), // space-y-4
+                                const SizedBox(height: AppTheme.spacing4), // space-y-4
 
                                 // 비밀번호 입력
                                 TextFormField(
@@ -459,7 +431,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
                                     return null;
                                   },
                                 ),
-                                SizedBox(height: AppTheme.spacing4), // space-y-4
+                                const SizedBox(height: AppTheme.spacing4), // space-y-4
 
                                 // 로그인 버튼
                                 Consumer<AuthProvider>(
@@ -473,7 +445,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
                               ],
                             ),
 
-                            SizedBox(height: AppTheme.spacing8), // mb-8
+                            const SizedBox(height: AppTheme.spacing8), // mb-8
 
                             // 하단 링크
                             Row(
@@ -481,12 +453,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
                               children: [
                                 TextButton(
                                   onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const SpareSignupScreen(),
-                                      ),
-                                    );
+                                    context.push(AppRoutes.spareSignup);
                                   },
                                   child: Text(
                                     '회원가입',
@@ -496,18 +463,13 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
                                     ),
                                   ),
                                 ),
-                                Text(
+                                const Text(
                                   '|',
                                   style: TextStyle(color: AppTheme.borderGray300), // text-gray-300
                                 ),
                                 TextButton(
                                   onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const FindIdScreen(),
-                                      ),
-                                    );
+                                    context.push(AppRoutes.spareFindId);
                                   },
                                   child: Text(
                                     '아이디 찾기',
@@ -517,18 +479,13 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
                                     ),
                                   ),
                                 ),
-                                Text(
+                                const Text(
                                   '|',
                                   style: TextStyle(color: AppTheme.borderGray300), // text-gray-300
                                 ),
                                 TextButton(
                                   onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const FindPasswordScreen(),
-                                      ),
-                                    );
+                                    context.push(AppRoutes.spareFindPassword);
                                   },
                                   child: Text(
                                     '비밀번호 찾기',
@@ -541,7 +498,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
                               ],
                             ),
 
-                            SizedBox(height: AppTheme.spacing8), // mb-8
+                            const SizedBox(height: AppTheme.spacing8), // mb-8
 
                             // 간편 로그인 섹션
                             Column(
@@ -553,7 +510,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
                                     color: AppTheme.textTertiary, // text-gray-500
                                   ),
                                 ),
-                                SizedBox(height: AppTheme.spacing4), // mb-4
+                                const SizedBox(height: AppTheme.spacing4), // mb-4
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -563,14 +520,14 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
                                       isLoading: _isSocialLoggingIn,
                                       onPressed: _isSocialLoggingIn ? null : _handleKakaoLogin,
                                     ),
-                                    SizedBox(width: AppTheme.spacing4), // gap-4
+                                    const SizedBox(width: AppTheme.spacing4), // gap-4
                                     // 네이버 로그인 버튼
                                     SocialLoginButton(
                                       provider: SocialProvider.naver,
                                       isLoading: _isSocialLoggingIn,
                                       onPressed: _isSocialLoggingIn ? null : _handleNaverLogin,
                                     ),
-                                    SizedBox(width: AppTheme.spacing4), // gap-4
+                                    const SizedBox(width: AppTheme.spacing4), // gap-4
                                     // 구글 로그인 버튼
                                     SocialLoginButton(
                                       provider: SocialProvider.google,
@@ -592,6 +549,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -627,7 +585,13 @@ class _LoginButtonState extends State<_LoginButton> {
           duration: const Duration(milliseconds: 200),
           width: double.infinity,
           padding: AppTheme.spacingVertical(AppTheme.spacing4), // py-4
-          transform: Matrix4.identity()..scale(_isPressed ? 0.98 : 1.0), // active:scale-[0.98]
+          transform: Matrix4.identity()
+            ..scaleByDouble(
+              _isPressed ? 0.98 : 1.0,
+              _isPressed ? 0.98 : 1.0,
+              _isPressed ? 0.98 : 1.0,
+              1.0,
+            ), // active:scale-[0.98]
           decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.centerLeft,

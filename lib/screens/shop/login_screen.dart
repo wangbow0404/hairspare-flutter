@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../models/user.dart';
+import '../../models/login_portal.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
-import '../shop/home_screen.dart';
-import '../shop/signup_screen.dart';
-import '../admin/admin_dashboard_screen.dart';
-// TODO: 미용실 전용 아이디 찾기/비밀번호 찾기 화면 생성 필요
-// 임시로 spare의 화면 사용
-import '../spare/find_password_screen.dart';
+import '../../core/router/app_navigation.dart';
+import '../../core/router/app_routes.dart';
+import '../../mocks/mock_auth_data.dart';
+import '../../utils/api_config.dart';
 
 class ShopLoginScreen extends StatefulWidget {
   const ShopLoginScreen({super.key});
@@ -38,23 +37,12 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
 
-    // 관리자 로그인 체크 (아이디: villadeblanc, 비밀번호: since2016!!!!)
-    if (username == 'villadeblanc' && password == 'since2016!!!!') {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
-        );
-      }
-      return;
-    }
-
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
     await authProvider.login(
       username: username,
       password: password,
-      role: UserRole.shop,
+      portal: LoginPortal.shop,
     );
 
     if (authProvider.error != null) {
@@ -67,30 +55,33 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
         );
       }
     } else if (authProvider.isAuthenticated) {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ShopHomeScreen()),
-        );
+      final user = authProvider.currentUser;
+      if (mounted && user != null) {
+        AppNavigation.goHomeForRole(user.role);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) AppNavigation.backFromLogin(context);
+      },
+      child: Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
             // 헤더
             Container(
-              padding: EdgeInsets.all(AppTheme.spacing4),
+              padding: const EdgeInsets.all(AppTheme.spacing4),
               child: Row(
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.grey),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => AppNavigation.backFromLogin(context),
                   ),
                   Expanded(
                     child: Text(
@@ -103,20 +94,20 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  SizedBox(width: 48), // 뒤로가기 버튼과 균형 맞추기
+                  const SizedBox(width: 48), // 뒤로가기 버튼과 균형 맞추기
                 ],
               ),
             ),
             // 본문
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing6, vertical: AppTheme.spacing8),
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing6, vertical: AppTheme.spacing8),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      SizedBox(height: AppTheme.spacing8),
+                      const SizedBox(height: AppTheme.spacing8),
                       // 로고
                       Center(
                         child: Column(
@@ -126,21 +117,21 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
                               width: 80,
                               height: 80,
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(
+                                gradient: const LinearGradient(
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
-                                  colors: [const Color(0xFF9333EA), const Color(0xFF7C3AED)],
+                                  colors: [Color(0xFF9333EA), Color(0xFF7C3AED)],
                                 ),
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black.withValues(alpha: 0.1),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
                                 ],
                               ),
-                              child: Center(
+                              child: const Center(
                                 child: Text(
                                   'H',
                                   style: TextStyle(
@@ -151,20 +142,44 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
                                 ),
                               ),
                             ),
-                            SizedBox(height: AppTheme.spacing4),
-                            Text(
+                            const SizedBox(height: AppTheme.spacing4),
+                            const Text(
                               'hairspare',
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF7C3AED),
+                                color: Color(0xFF7C3AED),
                                 letterSpacing: -0.5,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      SizedBox(height: AppTheme.spacing12),
+                      const SizedBox(height: AppTheme.spacing12),
+                      if (ApiConfig.useMockData) ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(AppTheme.spacing3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF9333EA).withValues(alpha: 0.08),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusLg),
+                            border: Border.all(
+                              color: const Color(0xFF9333EA).withValues(alpha: 0.25),
+                            ),
+                          ),
+                          child: Text(
+                            '목 데이터: 스페어 ${MockAuthData.devSpareUsername}/${MockAuthData.devSparePassword} · '
+                            '샵 ${MockAuthData.devShopUsername}/${MockAuthData.devShopPassword} · '
+                            '관리자 ${MockAuthData.devAdminUsername}/${MockAuthData.devAdminPassword}',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Colors.black54,
+                                ),
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.spacing4),
+                      ],
                       // 아이디 입력
                       TextFormField(
                         controller: _usernameController,
@@ -180,13 +195,13 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                            borderSide: BorderSide(color: const Color(0xFF9333EA), width: 2),
+                            borderSide: const BorderSide(color: Color(0xFF9333EA), width: 2),
                           ),
-                          contentPadding: EdgeInsets.all(AppTheme.spacing4),
+                          contentPadding: const EdgeInsets.all(AppTheme.spacing4),
                           filled: true,
                           fillColor: Colors.white,
                         ),
-                        style: TextStyle(fontSize: 16),
+                        style: const TextStyle(fontSize: 16),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return '아이디를 입력해주세요';
@@ -194,7 +209,7 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
                           return null;
                         },
                       ),
-                      SizedBox(height: AppTheme.spacing4),
+                      const SizedBox(height: AppTheme.spacing4),
                       // 비밀번호 입력
                       TextFormField(
                         controller: _passwordController,
@@ -210,9 +225,9 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                            borderSide: BorderSide(color: const Color(0xFF9333EA), width: 2),
+                            borderSide: const BorderSide(color: Color(0xFF9333EA), width: 2),
                           ),
-                          contentPadding: EdgeInsets.all(AppTheme.spacing4),
+                          contentPadding: const EdgeInsets.all(AppTheme.spacing4),
                           filled: true,
                           fillColor: Colors.white,
                           suffixIcon: IconButton(
@@ -228,7 +243,7 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
                           ),
                         ),
                         obscureText: _obscurePassword,
-                        style: TextStyle(fontSize: 16),
+                        style: const TextStyle(fontSize: 16),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return '비밀번호를 입력해주세요';
@@ -236,19 +251,19 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
                           return null;
                         },
                       ),
-                      SizedBox(height: AppTheme.spacing8),
+                      const SizedBox(height: AppTheme.spacing8),
                       // 로그인 버튼
                       Consumer<AuthProvider>(
                         builder: (context, authProvider, _) {
                           return Container(
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [const Color(0xFF9333EA), const Color(0xFF7C3AED)],
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF9333EA), Color(0xFF7C3AED)],
                               ),
                               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF9333EA).withOpacity(0.3),
+                                  color: const Color(0xFF9333EA).withValues(alpha: 0.3),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -259,13 +274,13 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.transparent,
                                 shadowColor: Colors.transparent,
-                                padding: EdgeInsets.symmetric(vertical: AppTheme.spacing4),
+                                padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing4),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                                 ),
                               ),
                               child: authProvider.isLoading
-                                  ? SizedBox(
+                                  ? const SizedBox(
                                       height: 20,
                                       width: 20,
                                       child: CircularProgressIndicator(
@@ -273,7 +288,7 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
                                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                       ),
                                     )
-                                  : Text(
+                                  : const Text(
                                       '로그인',
                                       style: TextStyle(
                                         fontSize: 16,
@@ -285,19 +300,14 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
                           );
                         },
                       ),
-                      SizedBox(height: AppTheme.spacing8),
+                      const SizedBox(height: AppTheme.spacing8),
                       // 하단 링크
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           TextButton(
                             onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const ShopSignupScreen(),
-                                ),
-                              );
+                              context.push(AppRoutes.shopSignup);
                             },
                             child: Text(
                               '회원가입',
@@ -315,12 +325,7 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
                           ),
                           TextButton(
                             onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => FindPasswordScreen(), // TODO: Shop 전용 FindPasswordScreen 생성 필요
-                                ),
-                              );
+                              context.push(AppRoutes.shopFindPassword);
                             },
                             child: Text(
                               '비밀번호 찾기',
@@ -340,6 +345,7 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 }

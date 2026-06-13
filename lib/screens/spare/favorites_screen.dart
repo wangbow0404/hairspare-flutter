@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
 import '../../utils/icon_mapper.dart';
+import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../models/job.dart';
 import '../../services/favorite_service.dart';
 import 'job_detail_screen.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'profile_screen.dart';
-
 /// Next.js와 동일한 찜 화면
+
+
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
 
@@ -19,7 +17,6 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
-  int _currentNavIndex = 2; // 찜 탭
   List<Job> _favoriteJobs = [];
   bool _isLoading = true;
   final FavoriteService _favoriteService = FavoriteService();
@@ -95,26 +92,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final canPop = Navigator.canPop(context);
     if (_isLoading) {
       return Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        appBar: AppBar(
-          backgroundColor: AppTheme.backgroundWhite,
-          elevation: 0,
-          leading: IconButton(
-            icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-                const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: Text(
-            '찜한 공고',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-          centerTitle: false,
+        appBar: SpareSubpageAppBar(
+          title: '찜한 공고',
+          showBackButton: canPop,
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -122,23 +106,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '찜한 공고',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
+      appBar: SpareSubpageAppBar(
+        title: '찜한 공고',
+        showBackButton: canPop,
       ),
       body: _favoriteJobs.isEmpty
           ? Center(
@@ -155,7 +125,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     child: IconMapper.icon('heart', size: 32, color: AppTheme.textTertiary) ??
                         const Icon(Icons.favorite_border, size: 32, color: AppTheme.textTertiary),
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   Text(
                     '찜한 공고가 없습니다',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -163,7 +133,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       color: AppTheme.textSecondary,
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing2),
+                  const SizedBox(height: AppTheme.spacing2),
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context);
@@ -186,7 +156,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               itemBuilder: (context, index) {
                 final job = _favoriteJobs[index];
                 return Padding(
-                  padding: EdgeInsets.only(bottom: AppTheme.spacing4),
+                  padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
                   child: GestureDetector(
                     onTap: () => _handleJobTap(job),
                     child: Container(
@@ -226,7 +196,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                           ),
                           // 메인 콘텐츠
                           Padding(
-                            padding: EdgeInsets.only(right: 48), // 찜 버튼 공간
+                            padding: const EdgeInsets.only(right: 48), // 찜 버튼 공간
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -248,7 +218,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                           '🚀',
                                           style: TextStyle(fontSize: 16),
                                         ),
-                                        SizedBox(width: AppTheme.spacing1),
+                                        const SizedBox(width: AppTheme.spacing1),
                                         Text(
                                           '급구',
                                           style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -260,7 +230,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                       ],
                                     ),
                                   ),
-                                  SizedBox(height: AppTheme.spacing2),
+                                  const SizedBox(height: AppTheme.spacing2),
                                 ],
                                 // 미용실 이름
                                 Text(
@@ -271,16 +241,16 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                     color: AppTheme.textPrimary,
                                   ),
                                 ),
-                                SizedBox(height: AppTheme.spacing2),
+                                const SizedBox(height: AppTheme.spacing2),
                                 // 지역 및 날짜/시간
                                 Text(
-                                  '${job.regionId}',
+                                  job.regionId,
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     fontSize: 14,
                                     color: AppTheme.textSecondary,
                                   ),
                                 ),
-                                SizedBox(height: AppTheme.spacing1),
+                                const SizedBox(height: AppTheme.spacing1),
                                 Text(
                                   '${job.date} ${job.time}',
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -290,7 +260,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                 ),
                                 // 급구일 경우 카운트다운
                                 if (job.isUrgent && job.countdown != null) ...[
-                                  SizedBox(height: AppTheme.spacing2),
+                                  const SizedBox(height: AppTheme.spacing2),
                                   Text(
                                     '${(job.countdown! / 86400).floor()}일 남음',
                                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -300,7 +270,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                     ),
                                   ),
                                 ],
-                                SizedBox(height: AppTheme.spacing2),
+                                const SizedBox(height: AppTheme.spacing2),
                                 // 금액 및 예약금
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -332,7 +302,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: AppTheme.spacing1),
+                                const SizedBox(height: AppTheme.spacing1),
                                 // 필요 인원
                                 Text(
                                   '필요 인원: ${job.requiredCount}명',
@@ -351,42 +321,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 );
               },
             ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          
-          // 네비게이션 처리
-          switch (index) {
-            case 0:
-              // 홈으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              // 결제로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              // 찜은 현재 화면이므로 아무것도 하지 않음
-              break;
-            case 3:
-              // 마이로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
-      ),
     );
   }
 }

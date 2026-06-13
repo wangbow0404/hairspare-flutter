@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../widgets/education_filter_dropdown.dart';
 import '../../utils/region_helper.dart';
 import '../../models/region.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 import 'education_new_screen.dart';
-import 'dart:math';
 
 /// Shop용 교육 화면 (스페어 화면과 동일한 구조)
 class ShopEducationScreen extends StatefulWidget {
@@ -21,7 +16,6 @@ class ShopEducationScreen extends StatefulWidget {
 }
 
 class _ShopEducationScreenState extends State<ShopEducationScreen> {
-  int _currentNavIndex = 0;
   List<_Education> _educations = [];
   List<_Education> _filteredEducations = [];
   bool _isLoading = true;
@@ -219,35 +213,20 @@ class _ShopEducationScreenState extends State<ShopEducationScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '교육',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
+      appBar: SharedAppBar(
+        title: '교육',
         actions: [
           IconButton(
             icon: Container(
-              padding: EdgeInsets.all(AppTheme.spacing2),
+              padding: const EdgeInsets.all(AppTheme.spacing2),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF9333EA), Color(0xFFEC4899)],
@@ -266,7 +245,7 @@ class _ShopEducationScreenState extends State<ShopEducationScreen> {
               }
             },
           ),
-          SizedBox(width: AppTheme.spacing2),
+          const SizedBox(width: AppTheme.spacing2),
         ],
       ),
       body: Column(
@@ -274,20 +253,20 @@ class _ShopEducationScreenState extends State<ShopEducationScreen> {
           // 필터 섹션
           Container(
             color: AppTheme.backgroundWhite,
-            padding: EdgeInsets.all(AppTheme.spacing3),
+            padding: const EdgeInsets.all(AppTheme.spacing3),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 전체교육 개수
                 Text(
                   '전체교육 총 ${_filteredEducations.length}개',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: AppTheme.textPrimary,
                   ),
                 ),
-                SizedBox(height: AppTheme.spacing3),
+                const SizedBox(height: AppTheme.spacing3),
 
                 // 첫 번째 줄: 새로고침, 지역, 상세지역, 카테고리, 세부카테고리
                 SingleChildScrollView(
@@ -300,24 +279,24 @@ class _ShopEducationScreenState extends State<ShopEducationScreen> {
                             const Icon(Icons.refresh, size: 20, color: AppTheme.textSecondary),
                         onPressed: _handleRefresh,
                       ),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
 
                       // 지역 드롭다운
                       _buildProvinceDropdown(),
                       if (_selectedProvince != null && _districts.isNotEmpty) ...[
-                        SizedBox(width: AppTheme.spacing2),
+                        const SizedBox(width: AppTheme.spacing2),
                         _buildDistrictDropdown(),
                       ],
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       _buildCategoryDropdown(),
                       if (_selectedCategory != null && _availableSubCategories.isNotEmpty) ...[
-                        SizedBox(width: AppTheme.spacing2),
+                        const SizedBox(width: AppTheme.spacing2),
                         _buildSubCategoryDropdown(),
                       ],
                     ],
                   ),
                 ),
-                SizedBox(height: AppTheme.spacing3),
+                const SizedBox(height: AppTheme.spacing3),
 
                 // 두 번째 줄: 정렬, 오프라인/온라인, 필터 버튼들
                 SingleChildScrollView(
@@ -325,34 +304,34 @@ class _ShopEducationScreenState extends State<ShopEducationScreen> {
                   child: Row(
                     children: [
                       _buildSortDropdown(),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       _buildEducationTypeToggle(),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       _buildFilterButton('🚀', '급구', _isUrgent, () {
                         setState(() => _isUrgent = !_isUrgent);
                         _applyFilters();
                       }),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       _buildFilterButton('⭐', '무료교육', _reviewReward, () {
                         setState(() => _reviewReward = !_reviewReward);
                         _applyFilters();
                       }),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       _buildFilterButton('🏠', '우리동네', _myNeighborhood, () {
                         setState(() => _myNeighborhood = !_myNeighborhood);
                         _applyFilters();
                       }),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       _buildFilterButton('👥', '신청자부족', _insufficientApplicants, () {
                         setState(() => _insufficientApplicants = !_insufficientApplicants);
                         _applyFilters();
                       }),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       _buildFilterButton('⏰', '마감임박', _deadlineImminent, () {
                         setState(() => _deadlineImminent = !_deadlineImminent);
                         _applyFilters();
                       }),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       _buildFilterButton('📅', '예약불필요', _noReservation, () {
                         setState(() => _noReservation = !_noReservation);
                         _applyFilters();
@@ -373,7 +352,7 @@ class _ShopEducationScreenState extends State<ShopEducationScreen> {
                       children: [
                         IconMapper.icon('book', size: 64, color: AppTheme.textTertiary) ??
                             const Icon(Icons.book, size: 64, color: AppTheme.textTertiary),
-                        SizedBox(height: AppTheme.spacing4),
+                        const SizedBox(height: AppTheme.spacing4),
                         Text(
                           '교육 목록이 없습니다',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -384,7 +363,7 @@ class _ShopEducationScreenState extends State<ShopEducationScreen> {
                     ),
                   )
                 : ListView.builder(
-                    padding: EdgeInsets.all(AppTheme.spacing4),
+                    padding: const EdgeInsets.all(AppTheme.spacing4),
                     itemCount: _filteredEducations.length,
                     itemBuilder: (context, index) {
                       final education = _filteredEducations[index];
@@ -393,41 +372,6 @@ class _ShopEducationScreenState extends State<ShopEducationScreen> {
                   ),
           ),
         ],
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopHomeScreen()),
-              );
-              break;
-            case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopPaymentScreen()),
-              );
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopFavoritesScreen()),
-              );
-              break;
-            case 3:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }
@@ -585,7 +529,7 @@ class _ShopEducationScreenState extends State<ShopEducationScreen> {
 
   Widget _buildEducationTypeToggle() {
     return Container(
-      padding: EdgeInsets.all(2),
+      padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: AppTheme.backgroundGray,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -616,12 +560,12 @@ class _ShopEducationScreenState extends State<ShopEducationScreen> {
         _applyFilters();
       },
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing3, vertical: AppTheme.spacing1),
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing3, vertical: AppTheme.spacing1),
         decoration: BoxDecoration(
           color: isSelected ? AppTheme.backgroundWhite : Colors.transparent,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           boxShadow: isSelected
-              ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 2)]
+              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 2)]
               : null,
         ),
         child: Text(
@@ -640,7 +584,7 @@ class _ShopEducationScreenState extends State<ShopEducationScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing3, vertical: AppTheme.spacing2),
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing3, vertical: AppTheme.spacing2),
         decoration: BoxDecoration(
           color: isActive ? Colors.purple.shade100 : AppTheme.backgroundGray,
           border: Border.all(
@@ -653,7 +597,7 @@ class _ShopEducationScreenState extends State<ShopEducationScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(emoji, style: const TextStyle(fontSize: 16)),
-            SizedBox(width: AppTheme.spacing1),
+            const SizedBox(width: AppTheme.spacing1),
             Text(
               label,
               style: TextStyle(
@@ -670,8 +614,8 @@ class _ShopEducationScreenState extends State<ShopEducationScreen> {
 
   Widget _buildEducationCard(_Education education) {
     return Container(
-      margin: EdgeInsets.only(bottom: AppTheme.spacing4),
-      padding: EdgeInsets.all(AppTheme.spacing4),
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
+      padding: const EdgeInsets.all(AppTheme.spacing4),
       decoration: BoxDecoration(
         color: AppTheme.backgroundWhite,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
@@ -684,12 +628,12 @@ class _ShopEducationScreenState extends State<ShopEducationScreen> {
             children: [
               if (education.isUrgent)
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
+                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
                   decoration: BoxDecoration(
                     color: AppTheme.urgentRed,
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text('🚀', style: TextStyle(fontSize: 12)),
@@ -705,9 +649,9 @@ class _ShopEducationScreenState extends State<ShopEducationScreen> {
                     ],
                   ),
                 ),
-              SizedBox(width: AppTheme.spacing2),
+              const SizedBox(width: AppTheme.spacing2),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
                 decoration: BoxDecoration(
                   color: education.isOnline ? Colors.blue.shade100 : Colors.green.shade100,
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -723,56 +667,56 @@ class _ShopEducationScreenState extends State<ShopEducationScreen> {
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing3),
+          const SizedBox(height: AppTheme.spacing3),
           Text(
             education.title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: AppTheme.textPrimary,
             ),
           ),
-          SizedBox(height: AppTheme.spacing2),
+          const SizedBox(height: AppTheme.spacing2),
           Text(
             education.description,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               color: AppTheme.textSecondary,
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          SizedBox(height: AppTheme.spacing2),
+          const SizedBox(height: AppTheme.spacing2),
           Row(
             children: [
-              Icon(Icons.location_on, size: 16, color: AppTheme.textSecondary),
-              SizedBox(width: 4),
+              const Icon(Icons.location_on, size: 16, color: AppTheme.textSecondary),
+              const SizedBox(width: 4),
               Text(
                 '${education.province}${education.district != null ? ' ${education.district}' : ''}',
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
               ),
-              SizedBox(width: AppTheme.spacing3),
-              Icon(Icons.attach_money, size: 16, color: AppTheme.textSecondary),
-              SizedBox(width: 4),
+              const SizedBox(width: AppTheme.spacing3),
+              const Icon(Icons.attach_money, size: 16, color: AppTheme.textSecondary),
+              const SizedBox(width: 4),
               Text(
                 '${education.price.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}원',
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing2),
+          const SizedBox(height: AppTheme.spacing2),
           Row(
             children: [
-              Icon(Icons.people, size: 16, color: AppTheme.textSecondary),
-              SizedBox(width: 4),
+              const Icon(Icons.people, size: 16, color: AppTheme.textSecondary),
+              const SizedBox(width: 4),
               Text(
                 '신청 ${education.applicants}/${education.maxApplicants}명',
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
               ),
               const Spacer(),
               Text(
                 '마감: ${education.deadline.toString().split(' ')[0]}',
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
               ),
             ],
           ),

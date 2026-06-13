@@ -4,7 +4,6 @@ import 'dart:async';
 import '../../theme/app_theme.dart';
 import '../../services/admin_service.dart';
 import '../../utils/error_handler.dart';
-import '../../widgets/admin_layout.dart';
 import '../../widgets/admin/admin_page_header.dart';
 import '../../widgets/admin/admin_table_card.dart';
 
@@ -118,23 +117,21 @@ class _AdminNoshowScreenState extends State<AdminNoshowScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AdminLayout(
-      currentRoute: '/admin/noshow',
-      child: Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AdminPageHeader(
+          const AdminPageHeader(
             title: '노쇼 관리',
             subtitle: '노쇼 이력을 조회하고 관리할 수 있습니다',
           ),
-          SizedBox(height: AppTheme.spacing6),
+          const SizedBox(height: AppTheme.spacing6),
           SizedBox(
             height: 600,
             child: AdminTableCard(
               child: _isLoading && _history.isEmpty
                   ? const Center(child: CircularProgressIndicator())
                   : _history.isEmpty
-                      ? Center(
+                      ? const Center(
                           child: Padding(
                             padding: EdgeInsets.all(AppTheme.spacing8),
                             child: Text(
@@ -151,7 +148,7 @@ class _AdminNoshowScreenState extends State<AdminNoshowScreen> {
                               height: 580,
                               child: Column(
                               children: [
-                                AdminTableHeader(
+                                const AdminTableHeader(
                                   headers: ['사용자', '공고 정보', '미용실', '노쇼 일시', '등록일'],
                                   flexValues: [1, 2, 1, 1, 1],
                                 ),
@@ -163,13 +160,13 @@ class _AdminNoshowScreenState extends State<AdminNoshowScreen> {
                                   final item = _history[index];
                                   final roleColor = _getRoleBadgeColor(item['energyWallet']?['user']?['role'] ?? '');
                                   return Container(
-                                    padding: EdgeInsets.symmetric(
+                                    padding: const EdgeInsets.symmetric(
                                       horizontal: AppTheme.spacing4,
                                       vertical: AppTheme.spacing3,
                                     ),
                                     decoration: BoxDecoration(
                                       border: Border(
-                                        bottom: BorderSide(color: AppTheme.adminPurple100.withOpacity(0.5)),
+                                        bottom: BorderSide(color: AppTheme.adminPurple100.withValues(alpha: 0.5)),
                                       ),
                                     ),
                                     child: Row(
@@ -181,7 +178,7 @@ class _AdminNoshowScreenState extends State<AdminNoshowScreen> {
                                               Expanded(
                                                 child: Text(
                                                   item['energyWallet']?['user']?['name'] ?? '-',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                     fontSize: 13,
                                                     color: AppTheme.textSecondary,
                                                   ),
@@ -190,12 +187,12 @@ class _AdminNoshowScreenState extends State<AdminNoshowScreen> {
                                                 ),
                                               ),
                                               Container(
-                                                padding: EdgeInsets.symmetric(
+                                                padding: const EdgeInsets.symmetric(
                                                   horizontal: AppTheme.spacing2,
                                                   vertical: 2,
                                                 ),
                                                 decoration: BoxDecoration(
-                                                  color: roleColor.withOpacity(0.1),
+                                                  color: roleColor.withValues(alpha: 0.1),
                                                   borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                                                 ),
                                                 child: Text(
@@ -227,7 +224,7 @@ class _AdminNoshowScreenState extends State<AdminNoshowScreen> {
                                           flex: 1,
                                           child: Text(
                                             item['job']?['shop']?['name'] ?? '-',
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 13,
                                               color: AppTheme.textSecondary,
                                             ),
@@ -252,7 +249,7 @@ class _AdminNoshowScreenState extends State<AdminNoshowScreen> {
                                           flex: 1,
                                           child: Text(
                                             _formatDate(item['createdAt'] ?? ''),
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 12,
                                               color: AppTheme.textSecondary,
                                             ),
@@ -269,18 +266,18 @@ class _AdminNoshowScreenState extends State<AdminNoshowScreen> {
                             // 페이지네이션
                             if (_totalPages > 1)
                               Container(
-                                padding: EdgeInsets.symmetric(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: AppTheme.spacing6,
                                   vertical: AppTheme.spacing4,
                                 ),
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      AppTheme.adminPurple50.withOpacity(0.3),
-                                      AppTheme.adminPink50.withOpacity(0.3),
+                                      AppTheme.adminPurple50.withValues(alpha: 0.3),
+                                      AppTheme.adminPink50.withValues(alpha: 0.3),
                                     ],
                                   ),
-                                  border: Border(
+                                  border: const Border(
                                     top: BorderSide(color: AppTheme.adminPurple100, width: 2),
                                   ),
                                 ),
@@ -289,7 +286,7 @@ class _AdminNoshowScreenState extends State<AdminNoshowScreen> {
                                   children: [
                                     Text(
                                       '총 $_total건 중 ${(_currentPage - 1) * 20 + 1}-${(_currentPage * 20).clamp(0, _total)}건 표시',
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 12,
                                         color: AppTheme.textSecondary,
                                       ),
@@ -307,7 +304,7 @@ class _AdminNoshowScreenState extends State<AdminNoshowScreen> {
                                               : null,
                                           child: const Text('이전'),
                                         ),
-                                        SizedBox(width: AppTheme.spacing2),
+                                        const SizedBox(width: AppTheme.spacing2),
                                         TextButton(
                                           onPressed: _currentPage < _totalPages
                                               ? () {
@@ -332,7 +329,6 @@ class _AdminNoshowScreenState extends State<AdminNoshowScreen> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 }

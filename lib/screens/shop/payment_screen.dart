@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
 import '../../utils/icon_mapper.dart';
-import '../../services/payment_service.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/error_handler.dart';
-import 'home_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
-
 /// Shop 결제 정보 화면
+
+
 class ShopPaymentScreen extends StatefulWidget {
   const ShopPaymentScreen({super.key});
 
@@ -18,10 +15,8 @@ class ShopPaymentScreen extends StatefulWidget {
 }
 
 class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
-  int _currentNavIndex = 1; // 결제 탭
   bool _isLoading = true;
-  final PaymentService _paymentService = PaymentService();
-  
+
   // 구독 정보
   Map<String, dynamic>? _subscription;
   List<Map<String, dynamic>> _paymentHistory = [];
@@ -98,12 +93,12 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
     switch (status) {
       case 'completed':
         return Container(
-          padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
           decoration: BoxDecoration(
-            color: AppTheme.primaryGreen.withOpacity(0.1),
+            color: AppTheme.primaryGreen.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(AppTheme.radiusFull),
           ),
-          child: Row(
+          child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.check_circle, size: 12, color: AppTheme.primaryGreen),
@@ -121,16 +116,16 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
         );
       case 'pending':
         return Container(
-          padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
           decoration: BoxDecoration(
-            color: Colors.yellow.withOpacity(0.1),
+            color: Colors.yellow.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(AppTheme.radiusFull),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.access_time, size: 12, color: Colors.orange.shade700),
-              SizedBox(width: AppTheme.spacing1),
+              const SizedBox(width: AppTheme.spacing1),
               Text(
                 '대기중',
                 style: TextStyle(
@@ -144,12 +139,12 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
         );
       case 'failed':
         return Container(
-          padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
           decoration: BoxDecoration(
-            color: AppTheme.urgentRed.withOpacity(0.1),
+            color: AppTheme.urgentRed.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(AppTheme.radiusFull),
           ),
-          child: Row(
+          child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.cancel, size: 12, color: AppTheme.urgentRed),
@@ -180,25 +175,21 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final canPop = Navigator.canPop(context);
+    final refreshActions = <Widget>[
+      IconButton(
+        icon: IconMapper.icon('refresh', size: 24, color: AppTheme.textSecondary) ??
+            const Icon(Icons.refresh, color: AppTheme.textSecondary),
+        onPressed: _loadPaymentData,
+      ),
+    ];
     if (_isLoading) {
       return Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        appBar: AppBar(
-          backgroundColor: AppTheme.backgroundWhite,
-          elevation: 0,
-          leading: IconButton(
-            icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-                const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: Text(
-            '결제 정보',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textPrimary,
-            ),
-          ),
+        appBar: SharedAppBar(
+          title: '결제 정보',
+          showBackButton: canPop,
+          actions: refreshActions,
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -206,45 +197,26 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '결제 정보',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: IconMapper.icon('refresh', size: 24, color: AppTheme.textSecondary) ??
-                const Icon(Icons.refresh, color: AppTheme.textSecondary),
-            onPressed: _loadPaymentData,
-          ),
-        ],
+      appBar: SharedAppBar(
+        title: '결제 정보',
+        showBackButton: canPop,
+        actions: refreshActions,
       ),
       body: CustomScrollView(
         slivers: [
           // 구독 정보
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.all(AppTheme.spacing4),
+              padding: const EdgeInsets.all(AppTheme.spacing4),
               child: Container(
-                padding: EdgeInsets.all(AppTheme.spacing6),
+                padding: const EdgeInsets.all(AppTheme.spacing6),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                   border: Border.all(color: AppTheme.borderGray),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 2,
                       offset: const Offset(0, 1),
                     ),
@@ -259,16 +231,16 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryPurple.withOpacity(0.1),
+                            color: AppTheme.primaryPurple.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.star,
                             size: 24,
                             color: AppTheme.primaryPurple,
                           ),
                         ),
-                        SizedBox(width: AppTheme.spacing3),
+                        const SizedBox(width: AppTheme.spacing3),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,7 +252,7 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
                                   color: AppTheme.textPrimary,
                                 ),
                               ),
-                              SizedBox(height: AppTheme.spacing1),
+                              const SizedBox(height: AppTheme.spacing1),
                               Text(
                                 '${_subscription?['name'] ?? '무료'} 플랜',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -292,7 +264,7 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: AppTheme.spacing4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -311,7 +283,7 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: AppTheme.spacing3),
+                    const SizedBox(height: AppTheme.spacing3),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -333,7 +305,7 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
                       ],
                     ),
                     if (_subscription?['id'] == 'free') ...[
-                      SizedBox(height: AppTheme.spacing6),
+                      const SizedBox(height: AppTheme.spacing6),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -343,7 +315,7 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.primaryPurple,
                             foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(vertical: AppTheme.spacing3),
+                            padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing3),
                           ),
                           child: const Text('구독 플랜 보기'),
                         ),
@@ -358,7 +330,7 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
           // 결제 내역
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -366,7 +338,7 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
                   border: Border.all(color: AppTheme.borderGray),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 2,
                       offset: const Offset(0, 1),
                     ),
@@ -376,7 +348,7 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: EdgeInsets.all(AppTheme.spacing6),
+                      padding: const EdgeInsets.all(AppTheme.spacing6),
                       child: Text(
                         '결제 내역',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -387,15 +359,15 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
                     ),
                     if (_paymentHistory.isEmpty)
                       Padding(
-                        padding: EdgeInsets.all(AppTheme.spacing12),
+                        padding: const EdgeInsets.all(AppTheme.spacing12),
                         child: Column(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.credit_card,
                               size: 48,
                               color: AppTheme.textTertiary,
                             ),
-                            SizedBox(height: AppTheme.spacing4),
+                            const SizedBox(height: AppTheme.spacing4),
                             Text(
                               '결제 내역이 없습니다',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -410,7 +382,7 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: _paymentHistory.length,
-                        separatorBuilder: (context, index) => Divider(
+                        separatorBuilder: (context, index) => const Divider(
                           height: 1,
                           color: AppTheme.borderGray,
                         ),
@@ -421,7 +393,7 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
                               // TODO: 결제 상세 화면으로 이동
                             },
                             child: Padding(
-                              padding: EdgeInsets.all(AppTheme.spacing6),
+                              padding: const EdgeInsets.all(AppTheme.spacing6),
                               child: Row(
                                 children: [
                                   Expanded(
@@ -439,19 +411,19 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
                                                 ),
                                               ),
                                             ),
-                                            SizedBox(width: AppTheme.spacing2),
+                                            const SizedBox(width: AppTheme.spacing2),
                                             _buildStatusBadge(payment['status'] as String),
                                           ],
                                         ),
-                                        SizedBox(height: AppTheme.spacing2),
+                                        const SizedBox(height: AppTheme.spacing2),
                                         Row(
                                           children: [
-                                            Icon(
+                                            const Icon(
                                               Icons.calendar_today,
                                               size: 16,
                                               color: AppTheme.textSecondary,
                                             ),
-                                            SizedBox(width: AppTheme.spacing1),
+                                            const SizedBox(width: AppTheme.spacing1),
                                             Text(
                                               _formatDate(payment['createdAt'] as DateTime),
                                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -485,16 +457,16 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
           // 결제 수단 관리
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.all(AppTheme.spacing4),
+              padding: const EdgeInsets.all(AppTheme.spacing4),
               child: Container(
-                padding: EdgeInsets.all(AppTheme.spacing6),
+                padding: const EdgeInsets.all(AppTheme.spacing6),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                   border: Border.all(color: AppTheme.borderGray),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 2,
                       offset: const Offset(0, 1),
                     ),
@@ -510,21 +482,21 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
                         color: AppTheme.textPrimary,
                       ),
                     ),
-                    SizedBox(height: AppTheme.spacing4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Container(
-                      padding: EdgeInsets.all(AppTheme.spacing3),
+                      padding: const EdgeInsets.all(AppTheme.spacing3),
                       decoration: BoxDecoration(
                         color: AppTheme.backgroundGray,
                         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                       ),
                       child: Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.credit_card,
                             size: 20,
                             color: AppTheme.textSecondary,
                           ),
-                          SizedBox(width: AppTheme.spacing3),
+                          const SizedBox(width: AppTheme.spacing3),
                           Text(
                             '등록된 결제 수단이 없습니다',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -534,7 +506,7 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: AppTheme.spacing3),
+                    const SizedBox(height: AppTheme.spacing3),
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton(
@@ -542,10 +514,10 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
                           // TODO: 결제 수단 추가 화면으로 이동
                         },
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: AppTheme.primaryPurple, width: 2),
-                          padding: EdgeInsets.symmetric(vertical: AppTheme.spacing2),
+                          side: const BorderSide(color: AppTheme.primaryPurple, width: 2),
+                          padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing2),
                         ),
-                        child: Text(
+                        child: const Text(
                           '결제 수단 추가',
                           style: TextStyle(
                             color: AppTheme.primaryPurple,
@@ -561,42 +533,10 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
           ),
           
           // 하단 여백
-          SliverToBoxAdapter(
+          const SliverToBoxAdapter(
             child: SizedBox(height: 80),
           ),
         ],
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopHomeScreen()),
-              );
-              break;
-            case 1:
-              // 현재 화면
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopFavoritesScreen()),
-              );
-              break;
-            case 3:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }

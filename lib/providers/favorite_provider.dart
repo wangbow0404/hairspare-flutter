@@ -2,10 +2,10 @@ import 'package:flutter/foundation.dart';
 import '../models/job.dart';
 import '../services/favorite_service.dart';
 import '../utils/error_handler.dart';
-import '../utils/app_exception.dart';
-
 class FavoriteProvider with ChangeNotifier {
-  final FavoriteService _favoriteService = FavoriteService();
+  FavoriteProvider(this._favoriteService);
+
+  final FavoriteService _favoriteService;
   List<Job> _favorites = [];
   Set<String> _favoriteJobIds = {};
   bool _isLoading = false;

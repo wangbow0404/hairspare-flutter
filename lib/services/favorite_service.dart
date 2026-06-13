@@ -1,19 +1,19 @@
 import 'package:dio/dio.dart';
 import '../models/job.dart';
-import '../utils/api_client.dart';
 import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
 import '../mocks/mock_spare_data.dart';
+import '../core/di/service_locator.dart';
 
 class FavoriteService {
-  final ApiClient _apiClient = ApiClient();
+  final Dio _dio = sl<Dio>();
 
   /// 찜 목록 조회
   Future<List<Job>> getFavorites() async {
     if (ApiConfig.useMockData) return await MockSpareData.getFavorites();
     try {
-      final response = await _apiClient.dio.get('/api/favorites');
+      final response = await _dio.get('/api/favorites');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -45,9 +45,12 @@ class FavoriteService {
 
   /// 찜 추가
   Future<void> addFavorite(String jobId) async {
-    if (ApiConfig.useMockData) return; // mock: no-op
+    if (ApiConfig.useMockData) {
+      await MockSpareData.addFavorite(jobId);
+      return;
+    }
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/favorites',
         data: {'jobId': jobId},
       );
@@ -67,9 +70,12 @@ class FavoriteService {
 
   /// 찜 삭제
   Future<void> removeFavorite(String jobId) async {
-    if (ApiConfig.useMockData) return; // mock: no-op
+    if (ApiConfig.useMockData) {
+      await MockSpareData.removeFavorite(jobId);
+      return;
+    }
     try {
-      final response = await _apiClient.dio.delete(
+      final response = await _dio.delete(
         '/api/favorites',
         queryParameters: {'jobId': jobId},
       );
@@ -89,9 +95,9 @@ class FavoriteService {
 
   /// 찜 여부 확인
   Future<bool> isFavorite(String jobId) async {
-    if (ApiConfig.useMockData) return jobId == 'job-mock-1'; // mock
+    if (ApiConfig.useMockData) return MockSpareData.isFavorite(jobId);
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/favorites/check',
         data: {'jobIds': [jobId]},
       );
@@ -102,7 +108,7 @@ class FavoriteService {
         return favorites[jobId] == true;
       }
       return false;
-    } on DioException catch (e) {
+    } on DioException catch (_) {
       return false;
     }
   }

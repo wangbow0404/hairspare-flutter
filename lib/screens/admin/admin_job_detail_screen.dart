@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
 import '../../services/admin_service.dart';
 import '../../utils/error_handler.dart';
-import '../../widgets/admin_layout.dart';
+import 'package:go_router/go_router.dart';
 import '../../widgets/admin/admin_table_card.dart';
 
 /// 관리자 공고 상세 화면
@@ -47,7 +47,7 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
       final data = await _adminService.getJobDetail(widget.jobId);
       if (mounted) {
         setState(() {
-          _job = data is Map ? data as Map<String, dynamic>? : null;
+          _job = data as Map<String, dynamic>?;
           _isLoading = false;
         });
       }
@@ -107,20 +107,18 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AdminLayout(
-      currentRoute: '/admin/jobs',
-      child: Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => context.pop(),
                 color: AppTheme.textPrimary,
               ),
-              SizedBox(width: AppTheme.spacing2),
-              Text(
+              const SizedBox(width: AppTheme.spacing2),
+              const Text(
                 '공고 상세',
                 style: TextStyle(
                   fontSize: 24,
@@ -130,26 +128,26 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing6),
+          const SizedBox(height: AppTheme.spacing6),
           if (_isLoading && _job == null)
-            Center(
+            const Center(
               child: Padding(
                 padding: EdgeInsets.all(AppTheme.spacing8),
-                child: const CircularProgressIndicator(),
+                child: CircularProgressIndicator(),
               ),
             )
           else if (_error != null && _job == null)
             Center(
               child: Padding(
-                padding: EdgeInsets.all(AppTheme.spacing8),
+                padding: const EdgeInsets.all(AppTheme.spacing8),
                 child: Column(
                   children: [
                     Text(
                       _error!,
-                      style: TextStyle(color: AppTheme.urgentRed),
+                      style: const TextStyle(color: AppTheme.urgentRed),
                       textAlign: TextAlign.center,
                     ),
-                    SizedBox(height: AppTheme.spacing4),
+                    const SizedBox(height: AppTheme.spacing4),
                     TextButton(
                       onPressed: _loadJob,
                       child: const Text('다시 시도'),
@@ -163,8 +161,7 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
           else
             const SizedBox.shrink(),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildContent() {
@@ -173,7 +170,7 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
 
     return AdminTableCard(
       child: Padding(
-        padding: EdgeInsets.all(AppTheme.spacing6),
+        padding: const EdgeInsets.all(AppTheme.spacing6),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -190,12 +187,12 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: AppTheme.spacing4,
                     vertical: AppTheme.spacing2,
                   ),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.15),
+                    color: statusColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                   ),
                   child: Text(
@@ -208,17 +205,17 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
                   ),
                 ),
                 if (job['isUrgent'] == true) ...[
-                  SizedBox(width: AppTheme.spacing2),
+                  const SizedBox(width: AppTheme.spacing2),
                   Container(
-                    padding: EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: AppTheme.spacing3,
                       vertical: AppTheme.spacing1,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.urgentRed.withOpacity(0.15),
+                      color: AppTheme.urgentRed.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                     ),
-                    child: Text(
+                    child: const Text(
                       '급구',
                       style: TextStyle(
                         fontSize: 12,
@@ -229,17 +226,17 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
                   ),
                 ],
                 if (job['isPremium'] == true) ...[
-                  SizedBox(width: AppTheme.spacing2),
+                  const SizedBox(width: AppTheme.spacing2),
                   Container(
-                    padding: EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: AppTheme.spacing3,
                       vertical: AppTheme.spacing1,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryPurple.withOpacity(0.15),
+                      color: AppTheme.primaryPurple.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                     ),
-                    child: Text(
+                    child: const Text(
                       '프리미엄',
                       style: TextStyle(
                         fontSize: 12,
@@ -251,7 +248,7 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
                 ],
               ],
             ),
-            SizedBox(height: AppTheme.spacing4),
+            const SizedBox(height: AppTheme.spacing4),
             _buildInfoRow('일시', '${_formatDate(job['date'])} ${job['time'] ?? ''}'),
             _buildInfoRow('미용실', job['shop']?['name'] ?? '-'),
             _buildInfoRow('지역', job['region']?['name'] ?? '-'),
@@ -267,7 +264,7 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
 
   Widget _buildInfoRow(String label, String value) {
     return Padding(
-      padding: EdgeInsets.only(bottom: AppTheme.spacing2),
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -275,7 +272,7 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
             width: 80,
             child: Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
                 color: AppTheme.textSecondary,
               ),

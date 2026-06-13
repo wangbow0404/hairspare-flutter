@@ -2,10 +2,10 @@ import 'package:flutter/foundation.dart';
 import '../models/job.dart';
 import '../services/job_service.dart';
 import '../utils/error_handler.dart';
-import '../utils/app_exception.dart';
-
 class JobProvider with ChangeNotifier {
-  final JobService _jobService = JobService();
+  JobProvider(this._jobService);
+
+  final JobService _jobService;
   List<Job> _jobs = [];
   List<Job> _urgentJobs = [];
   List<Job> _normalJobs = [];

@@ -1,20 +1,20 @@
 import 'package:dio/dio.dart';
 import '../models/point_transaction.dart';
-import '../utils/api_client.dart';
 import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
 import '../mocks/mock_spare_data.dart';
+import '../core/di/service_locator.dart';
 
 /// 포인트 서비스
 class PointService {
-  final ApiClient _apiClient = ApiClient();
+  final Dio _dio = sl<Dio>();
 
   /// 포인트 잔액 조회
   Future<int> getBalance() async {
     if (ApiConfig.useMockData) return await MockSpareData.getPointBalance();
     try {
-      final response = await _apiClient.dio.get('/api/points/balance');
+      final response = await _dio.get('/api/points/balance');
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
         final balance = data['balance'] ?? data;
@@ -47,7 +47,7 @@ class PointService {
       };
       if (type != null) queryParams['type'] = type;
 
-      final response = await _apiClient.dio.get(
+      final response = await _dio.get(
         '/api/points/history',
         queryParameters: queryParams,
       );
@@ -79,7 +79,7 @@ class PointService {
       return await MockSpareData.completePointMission(missionId);
     }
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/points/missions/$missionId/complete',
       );
       return response.statusCode == 200 || response.statusCode == 201;

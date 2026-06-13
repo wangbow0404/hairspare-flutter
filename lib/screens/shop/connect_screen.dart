@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 
 /// Shop용 커넥트 화면
 class ShopConnectScreen extends StatefulWidget {
@@ -16,7 +12,6 @@ class ShopConnectScreen extends StatefulWidget {
 }
 
 class _ShopConnectScreenState extends State<ShopConnectScreen> {
-  int _currentNavIndex = 0;
 
   void _showComingSoonModal() {
     showDialog(
@@ -47,24 +42,7 @@ class _ShopConnectScreenState extends State<ShopConnectScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '커넥트',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
-      ),
+      appBar: const SharedAppBar(title: '커넥트'),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -79,14 +57,14 @@ class _ShopConnectScreenState extends State<ShopConnectScreen> {
               child: IconMapper.icon('lightbulb', size: 32, color: AppTheme.textTertiary) ??
                   const Icon(Icons.lightbulb, size: 32, color: AppTheme.textTertiary),
             ),
-            SizedBox(height: AppTheme.spacing4),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               '커넥트 화면',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: AppTheme.textSecondary,
               ),
             ),
-            SizedBox(height: AppTheme.spacing2),
+            const SizedBox(height: AppTheme.spacing2),
             Text(
               '준비 중입니다',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -95,41 +73,6 @@ class _ShopConnectScreenState extends State<ShopConnectScreen> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopHomeScreen()),
-              );
-              break;
-            case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopPaymentScreen()),
-              );
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopFavoritesScreen()),
-              );
-              break;
-            case 3:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }

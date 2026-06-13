@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/notification_service.dart';
 import '../../utils/error_handler.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 
 /// Next.js와 동일한 알림 설정 화면
 class NotificationsSettingsScreen extends StatefulWidget {
@@ -18,7 +14,6 @@ class NotificationsSettingsScreen extends StatefulWidget {
 }
 
 class _NotificationsSettingsScreenState extends State<NotificationsSettingsScreen> {
-  int _currentNavIndex = 0;
   final NotificationService _notificationService = NotificationService();
   bool _isLoading = true;
   bool _isSaving = false;
@@ -109,6 +104,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
       _isSaving = true;
     });
 
+    final messenger = ScaffoldMessenger.of(context);
     try {
       // API 호출하여 설정 저장
       final settings = NotificationSettings(
@@ -153,7 +149,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
             break;
         }
       });
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text('설정 저장에 실패했습니다: ${e.toString()}'),
           backgroundColor: AppTheme.urgentRed,
@@ -169,32 +165,15 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '알림 설정',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
-      ),
+      appBar: const SharedAppBar(title: '알림 설정'),
       body: SingleChildScrollView(
         padding: AppTheme.spacing(AppTheme.spacing6),
         child: Column(
@@ -218,7 +197,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                       color: AppTheme.textPrimary,
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   // 푸시 알림
                   _NotificationToggleItem(
                     icon: IconMapper.icon('bell', size: 20, color: AppTheme.primaryPurple) ??
@@ -228,7 +207,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                     value: _pushEnabled,
                     onToggle: () => _handleToggle('pushEnabled'),
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   // 이메일 알림
                   _NotificationToggleItem(
                     icon: IconMapper.icon('mail', size: 20, color: AppTheme.primaryBlue) ??
@@ -241,7 +220,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                 ],
               ),
             ),
-            SizedBox(height: AppTheme.spacing6),
+            const SizedBox(height: AppTheme.spacing6),
             // 알림 유형별 설정
             Container(
               padding: AppTheme.spacing(AppTheme.spacing4),
@@ -261,7 +240,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                       color: AppTheme.textPrimary,
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   // 공고 알림
                   _NotificationToggleItem(
                     icon: IconMapper.icon('zap', size: 20, color: AppTheme.yellow400) ??
@@ -272,7 +251,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                     enabled: _pushEnabled || _emailEnabled,
                     onToggle: () => _handleToggle('jobAlerts'),
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   // 메시지 알림
                   _NotificationToggleItem(
                     icon: IconMapper.icon('messagecircle', size: 20, color: AppTheme.primaryGreen) ??
@@ -283,7 +262,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                     enabled: _pushEnabled || _emailEnabled,
                     onToggle: () => _handleToggle('messages'),
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   // 스케줄 알림
                   _NotificationToggleItem(
                     icon: IconMapper.icon('calendar', size: 20, color: AppTheme.primaryBlue) ??
@@ -294,7 +273,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                     enabled: _pushEnabled || _emailEnabled,
                     onToggle: () => _handleToggle('scheduleReminders'),
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   // 에너지 알림
                   _NotificationToggleItem(
                     icon: IconMapper.icon('zap', size: 20, color: AppTheme.primaryPurple) ??
@@ -305,7 +284,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                     enabled: _pushEnabled || _emailEnabled,
                     onToggle: () => _handleToggle('energyUpdates'),
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   // 인증 상태 알림
                   _NotificationToggleItem(
                     icon: IconMapper.icon('shield', size: 20, color: AppTheme.primaryPurpleDarker) ??
@@ -316,7 +295,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                     enabled: _pushEnabled || _emailEnabled,
                     onToggle: () => _handleToggle('verificationStatus'),
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   // 챌린지 알림
                   _NotificationToggleItem(
                     icon: IconMapper.icon('video', size: 20, color: AppTheme.primaryPurple) ??
@@ -331,7 +310,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
               ),
             ),
             if (_isSaving) ...[
-              SizedBox(height: AppTheme.spacing4),
+              const SizedBox(height: AppTheme.spacing4),
               Center(
                 child: Text(
                   '저장 중...',
@@ -344,46 +323,6 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
             ],
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          
-          // 네비게이션 처리
-          switch (index) {
-            case 0:
-              // 홈으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              // 결제로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              // 찜으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              // 마이(프로필)로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }
@@ -411,7 +350,7 @@ class _NotificationToggleItem extends StatelessWidget {
     return Row(
       children: [
         icon,
-        SizedBox(width: AppTheme.spacing3),
+        const SizedBox(width: AppTheme.spacing3),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -424,7 +363,7 @@ class _NotificationToggleItem extends StatelessWidget {
                   color: AppTheme.textPrimary,
                 ),
               ),
-              SizedBox(height: AppTheme.spacing1 / 2),
+              const SizedBox(height: AppTheme.spacing1 / 2),
               Text(
                 subtitle,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -438,7 +377,7 @@ class _NotificationToggleItem extends StatelessWidget {
         Switch(
           value: value && enabled,
           onChanged: enabled ? (_) => onToggle() : null,
-          activeColor: AppTheme.primaryBlue,
+          activeThumbColor: AppTheme.primaryBlue,
         ),
       ],
     );

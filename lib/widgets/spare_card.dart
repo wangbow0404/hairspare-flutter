@@ -6,19 +6,21 @@ class SpareCard extends StatelessWidget {
   final SpareProfile spare;
   final VoidCallback? onTap;
   final bool compact;
+  final bool showPopularBadge;
 
   const SpareCard({
     super.key,
     required this.spare,
     this.onTap,
     this.compact = false,
+    this.showPopularBadge = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final padding = compact ? AppTheme.spacing2 : AppTheme.spacing4;
-    final avatarSize = compact ? 48.0 : 60.0;
-    final avatarFontSize = compact ? 18.0 : 24.0;
+    final padding = compact ? AppTheme.spacing3 : AppTheme.spacing4;
+    final avatarSize = compact ? 52.0 : 60.0;
+    final avatarFontSize = compact ? 20.0 : 24.0;
 
     return GestureDetector(
       onTap: onTap,
@@ -37,7 +39,7 @@ class SpareCard extends StatelessWidget {
             Container(
               width: avatarSize,
               height: avatarSize,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -78,7 +80,7 @@ class SpareCard extends StatelessWidget {
                       ),
                     ),
             ),
-            SizedBox(width: compact ? AppTheme.spacing2 : AppTheme.spacing4),
+            SizedBox(width: compact ? AppTheme.spacing3 : AppTheme.spacing4),
             // 정보 영역
             Expanded(
               child: Column(
@@ -91,17 +93,58 @@ class SpareCard extends StatelessWidget {
                         child: Text(
                           spare.name,
                           style: (compact
-                                  ? Theme.of(context).textTheme.titleSmall
+                                  ? Theme.of(context).textTheme.titleMedium
                                   : Theme.of(context).textTheme.titleMedium)
                               ?.copyWith(
+                                fontSize: compact ? 16 : 18,
                                 fontWeight: FontWeight.bold,
                                 color: AppTheme.textPrimary,
+                                height: 1.25,
                               ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (spare.isLicenseVerified)
+                      if (showPopularBadge) ...[
+                        SizedBox(width: compact ? AppTheme.spacing1 : AppTheme.spacing2),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing2,
+                            vertical: AppTheme.spacing1,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                AppTheme.yellow400,
+                                AppTheme.orange500,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                            boxShadow: AppTheme.shadowMd,
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.star,
+                                size: 12,
+                                color: Colors.white,
+                              ),
+                              SizedBox(width: AppTheme.spacing1),
+                              Text(
+                                '인기',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (spare.isLicenseVerified) ...[
+                        if (showPopularBadge) const SizedBox(width: AppTheme.spacing3),
                         Container(
                           padding: EdgeInsets.symmetric(
                             horizontal: compact ? AppTheme.spacing1 : AppTheme.spacing2,
@@ -120,20 +163,22 @@ class SpareCard extends StatelessWidget {
                                 )),
                           ),
                         ),
+                      ],
                     ],
                   ),
-                  SizedBox(height: compact ? AppTheme.spacing1 : AppTheme.spacing2),
+                  SizedBox(height: compact ? AppTheme.spacing2 : AppTheme.spacing2),
                   Text(
                     '경력 ${spare.experience}년 • 완료 ${spare.completedJobs}건',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppTheme.textSecondary,
-                          fontSize: compact ? 11 : null,
+                          fontSize: compact ? 12 : 13,
+                          height: 1.3,
                         ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (spare.specialties.isNotEmpty) ...[
-                    SizedBox(height: compact ? AppTheme.spacing1 : AppTheme.spacing2),
+                    SizedBox(height: compact ? AppTheme.spacing2 : AppTheme.spacing2),
                     Wrap(
                       spacing: AppTheme.spacing1,
                       runSpacing: AppTheme.spacing1,
@@ -164,7 +209,7 @@ class SpareCard extends StatelessWidget {
                     ),
                   ],
                   if (!compact) ...[
-                    SizedBox(height: AppTheme.spacing2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Row(
                       children: [
                         const Icon(
@@ -172,7 +217,7 @@ class SpareCard extends StatelessWidget {
                           size: 14,
                           color: AppTheme.primaryPurple,
                         ),
-                        SizedBox(width: AppTheme.spacing1),
+                        const SizedBox(width: AppTheme.spacing1),
                         Text(
                           '따봉 ${spare.thumbsUpCount}개',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -180,12 +225,12 @@ class SpareCard extends StatelessWidget {
                                 fontWeight: FontWeight.w600,
                               ),
                         ),
-                        SizedBox(width: AppTheme.spacing2),
-                        Text(
+                        const SizedBox(width: AppTheme.spacing2),
+                        const Text(
                           '•',
                           style: TextStyle(color: AppTheme.textSecondary),
                         ),
-                        SizedBox(width: AppTheme.spacing2),
+                        const SizedBox(width: AppTheme.spacing2),
                         Text(
                           '리뷰 ${spare.reviewCount}개',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -193,12 +238,12 @@ class SpareCard extends StatelessWidget {
                               ),
                         ),
                         if (spare.isVerified) ...[
-                          SizedBox(width: AppTheme.spacing2),
-                          Text(
+                          const SizedBox(width: AppTheme.spacing2),
+                          const Text(
                             '•',
                             style: TextStyle(color: AppTheme.textSecondary),
                           ),
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           Text(
                             '본인인증',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -209,11 +254,11 @@ class SpareCard extends StatelessWidget {
                       ],
                     ),
                   ] else ...[
-                    SizedBox(height: AppTheme.spacing1),
+                    const SizedBox(height: AppTheme.spacing1),
                     Row(
                       children: [
-                        Icon(Icons.thumb_up, size: 12, color: AppTheme.primaryPurple),
-                        SizedBox(width: 4),
+                        const Icon(Icons.thumb_up, size: 12, color: AppTheme.primaryPurple),
+                        const SizedBox(width: 4),
                         Text(
                           '따봉 ${spare.thumbsUpCount}',
                           style: Theme.of(context).textTheme.labelSmall?.copyWith(

@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/challenge_service.dart';
 import '../../models/challenge_comment.dart';
 import '../../utils/error_handler.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 
 /// 챌린지 댓글 화면
 class ChallengeCommentsScreen extends StatefulWidget {
@@ -27,7 +22,6 @@ class ChallengeCommentsScreen extends StatefulWidget {
 }
 
 class _ChallengeCommentsScreenState extends State<ChallengeCommentsScreen> {
-  int _currentNavIndex = 0;
   final ChallengeService _challengeService = ChallengeService();
   final TextEditingController _commentController = TextEditingController();
   List<ChallengeComment> _comments = [];
@@ -59,7 +53,7 @@ class _ChallengeCommentsScreenState extends State<ChallengeCommentsScreen> {
       });
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
-      print('댓글 로드 오류: ${appException.toString()}');
+      debugPrint('댓글 로드 오류: ${appException.toString()}');
       // API 실패 시 빈 리스트로 설정
       setState(() {
         _comments = [];
@@ -154,24 +148,7 @@ class _ChallengeCommentsScreenState extends State<ChallengeCommentsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: Colors.white) ??
-              const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          '댓글',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-      ),
+      appBar: const SharedAppBar(title: '댓글'),
       body: Column(
         children: [
           // 댓글 목록
@@ -199,7 +176,7 @@ class _ChallengeCommentsScreenState extends State<ChallengeCommentsScreen> {
                         ),
                       )
                     : ListView.builder(
-                        padding: EdgeInsets.all(AppTheme.spacing4),
+                        padding: const EdgeInsets.all(AppTheme.spacing4),
                         itemCount: _comments.length,
                         itemBuilder: (context, index) {
                           return _CommentItem(
@@ -212,7 +189,7 @@ class _ChallengeCommentsScreenState extends State<ChallengeCommentsScreen> {
           ),
           // 댓글 입력 영역
           Container(
-            padding: EdgeInsets.all(AppTheme.spacing3),
+            padding: const EdgeInsets.all(AppTheme.spacing3),
             decoration: BoxDecoration(
               color: Colors.grey[900],
               border: Border(
@@ -241,14 +218,14 @@ class _ChallengeCommentsScreenState extends State<ChallengeCommentsScreen> {
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide(color: Colors.grey[500]!),
                         ),
-                        contentPadding: EdgeInsets.symmetric(
+                        contentPadding: const EdgeInsets.symmetric(
                           horizontal: AppTheme.spacing3,
                           vertical: AppTheme.spacing2,
                         ),
                       ),
                     ),
                   ),
-                  SizedBox(width: AppTheme.spacing2),
+                  const SizedBox(width: AppTheme.spacing2),
                   IconButton(
                     icon: IconMapper.icon('send', size: 24, color: Colors.white) ??
                         const Icon(Icons.send, size: 24, color: Colors.white),
@@ -259,41 +236,6 @@ class _ChallengeCommentsScreenState extends State<ChallengeCommentsScreen> {
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }
@@ -313,7 +255,7 @@ class _CommentItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: AppTheme.spacing4),
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -335,7 +277,7 @@ class _CommentItem extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(width: AppTheme.spacing2),
+              const SizedBox(width: AppTheme.spacing2),
               // 댓글 내용
               Expanded(
                 child: Column(
@@ -351,7 +293,7 @@ class _CommentItem extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        SizedBox(width: AppTheme.spacing2),
+                        const SizedBox(width: AppTheme.spacing2),
                         Text(
                           formatTime(comment.createdAt),
                           style: TextStyle(
@@ -361,7 +303,7 @@ class _CommentItem extends StatelessWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: AppTheme.spacing1),
+                    const SizedBox(height: AppTheme.spacing1),
                     Text(
                       comment.content,
                       style: const TextStyle(
@@ -369,7 +311,7 @@ class _CommentItem extends StatelessWidget {
                         fontSize: 14,
                       ),
                     ),
-                    SizedBox(height: AppTheme.spacing2),
+                    const SizedBox(height: AppTheme.spacing2),
                     // 좋아요 버튼
                     GestureDetector(
                       onTap: onLike,
@@ -380,7 +322,7 @@ class _CommentItem extends StatelessWidget {
                             size: 16,
                             color: comment.isLiked ? AppTheme.urgentRed : Colors.grey[500],
                           ),
-                          SizedBox(width: AppTheme.spacing1),
+                          const SizedBox(width: AppTheme.spacing1),
                           Text(
                             comment.likes.toString(),
                             style: TextStyle(
@@ -398,13 +340,13 @@ class _CommentItem extends StatelessWidget {
           ),
           // 대댓글
           if (comment.replies.isNotEmpty) ...[
-            SizedBox(height: AppTheme.spacing2),
+            const SizedBox(height: AppTheme.spacing2),
             Padding(
-              padding: EdgeInsets.only(left: 52),
+              padding: const EdgeInsets.only(left: 52),
               child: Column(
                 children: comment.replies.map((reply) {
                   return Container(
-                    margin: EdgeInsets.only(bottom: AppTheme.spacing2),
+                    margin: const EdgeInsets.only(bottom: AppTheme.spacing2),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -422,7 +364,7 @@ class _CommentItem extends StatelessWidget {
                             ),
                           ),
                         ),
-                        SizedBox(width: AppTheme.spacing2),
+                        const SizedBox(width: AppTheme.spacing2),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -437,7 +379,7 @@ class _CommentItem extends StatelessWidget {
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                  SizedBox(width: AppTheme.spacing2),
+                                  const SizedBox(width: AppTheme.spacing2),
                                   Text(
                                     formatTime(reply.createdAt),
                                     style: TextStyle(
@@ -447,7 +389,7 @@ class _CommentItem extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              SizedBox(height: AppTheme.spacing1),
+                              const SizedBox(height: AppTheme.spacing1),
                               Text(
                                 reply.content,
                                 style: const TextStyle(

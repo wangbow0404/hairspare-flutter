@@ -1,3 +1,11 @@
+# Local secrets & environment (never commit real API keys or passwords)
+.env
+.env.*
+!.env.example
+*.pem
+secrets.json
+**/defines.local.json
+
 # Miscellaneous
 *.class
 *.log

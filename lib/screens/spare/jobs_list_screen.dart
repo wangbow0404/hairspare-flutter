@@ -6,10 +6,9 @@ import '../../models/job.dart';
 import '../../models/region.dart';
 import '../../models/space_rental.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/compact_announcement_card.dart';
 import '../../widgets/job_filter_dropdown.dart';
-import '../../widgets/spare_app_bar.dart';
+import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../widgets/date_filter_button.dart';
 import '../../utils/icon_mapper.dart';
 import '../../utils/region_helper.dart';
@@ -17,11 +16,6 @@ import '../spare/job_detail_screen.dart';
 import '../spare/space_rental_detail_screen.dart';
 import '../spare/education_detail_screen.dart';
 import '../spare/education_screen.dart';
-import 'home_screen.dart';
-import 'messages_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 
 /// Next.js와 동일한 공고 목록 화면
 class JobsListScreen extends StatefulWidget {
@@ -35,7 +29,6 @@ class JobsListScreen extends StatefulWidget {
 }
 
 class _JobsListScreenState extends State<JobsListScreen> {
-  int _currentNavIndex = 0;
   String? _activeFilter;
   String _sortBy = 'latest';
   String? _searchQuery;
@@ -109,14 +102,63 @@ class _JobsListScreenState extends State<JobsListScreen> {
     );
   }
 
-  /// 공고별 화면: 공고만 표시 (공간대여·교육 제외)
+  /// 공고별 화면: 공고만 표시 (필터·정렬 순서 유지)
   List<Map<String, dynamic>> _buildCombinedList(List<Job> filteredJobs) {
-    final items = <Map<String, dynamic>>[];
-    for (final job in filteredJobs) {
-      items.add({'type': 'job', 'data': job});
+    return filteredJobs
+        .map((job) => {'type': 'job', 'data': job})
+        .toList();
+  }
+
+  bool _isDeadlineImminent(Job job) {
+    if (job.countdown != null && job.countdown! > 0) {
+      return job.countdown! <= 86400;
     }
-    items.sort((a, b) => (b['data'] as Job).createdAt.compareTo((a['data'] as Job).createdAt));
-    return items;
+    try {
+      final parts = job.time.split(':');
+      final hour = int.parse(parts[0]);
+      final minute = parts.length > 1
+          ? int.parse(parts[1].replaceAll(RegExp(r'[^0-9]'), ''))
+          : 0;
+      final day = DateTime.parse(job.date);
+      final start = DateTime(day.year, day.month, day.day, hour, minute);
+      final hoursLeft = start.difference(DateTime.now()).inHours;
+      return hoursLeft >= 0 && hoursLeft <= 72;
+    } catch (_) {
+      return job.isUrgent;
+    }
+  }
+
+  int _deadlineSortKey(Job job) {
+    if (job.countdown != null && job.countdown! > 0) return job.countdown!;
+    try {
+      final parts = job.time.split(':');
+      final hour = int.parse(parts[0]);
+      final day = DateTime.parse(job.date);
+      final start = DateTime(day.year, day.month, day.day, hour);
+      return start.difference(DateTime.now()).inSeconds;
+    } catch (_) {
+      return job.isUrgent ? 0 : 1 << 30;
+    }
+  }
+
+  void _applySort(List<Job> list) {
+    if (_activeFilter == 'recommended') {
+      list.sort((a, b) {
+        if (a.isPremium != b.isPremium) return a.isPremium ? -1 : 1;
+        if (a.isUrgent != b.isUrgent) return a.isUrgent ? -1 : 1;
+        return b.createdAt.compareTo(a.createdAt);
+      });
+      return;
+    }
+    switch (_sortBy) {
+      case 'amount':
+        list.sort((a, b) => b.amount.compareTo(a.amount));
+      case 'deadline':
+        list.sort((a, b) => _deadlineSortKey(a).compareTo(_deadlineSortKey(b)));
+      case 'latest':
+      default:
+        list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    }
   }
 
   Widget _buildAnnouncementCard(
@@ -206,43 +248,31 @@ class _JobsListScreenState extends State<JobsListScreen> {
       filtered = filtered.where((j) => districtIds.contains(j.regionId)).toList();
     }
 
-    // 기본 필터
-    if (_activeFilter == 'urgent') {
-      filtered = filtered.where((j) => j.isUrgent).toList();
-    } else if (_activeFilter == 'deadline') {
-      filtered = filtered.where((j) => j.isUrgent && (j.countdown ?? 0) < 3600).toList();
-    } else if (_activeFilter == 'latest') {
-      filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    } else if (_activeFilter == 'hourly' || _activeFilter == 'daily') {
-      filtered.sort((a, b) => b.amount.compareTo(a.amount));
-    } else if (_activeFilter == 'recommended') {
-      filtered.sort((a, b) {
-        if (a.isPremium && !b.isPremium) return -1;
-        if (!a.isPremium && b.isPremium) return 1;
-        if (a.isUrgent && !b.isUrgent) return -1;
-        if (!a.isUrgent && b.isUrgent) return 1;
-        return b.createdAt.compareTo(a.createdAt);
-      });
+    // 카테고리 필터 (칩)
+    switch (_activeFilter) {
+      case 'urgent':
+        filtered = filtered.where((j) => j.isUrgent).toList();
+        break;
+      case 'deadline':
+        filtered = filtered.where(_isDeadlineImminent).toList();
+        break;
+      case 'hourly':
+        filtered = filtered.where((j) => j.amount < 80000).toList();
+        break;
+      case 'daily':
+        filtered = filtered.where((j) => j.amount >= 80000).toList();
+        break;
+      case 'recommended':
+        break;
+      default:
+        break;
     }
 
-    // 추가 필터
     if (_isPremium) {
       filtered = filtered.where((j) => j.isPremium).toList();
     }
 
-    // 정렬 적용
-    if (_sortBy == 'latest') {
-      filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    } else if (_sortBy == 'amount') {
-      filtered.sort((a, b) => b.amount.compareTo(a.amount));
-    } else if (_sortBy == 'deadline') {
-      filtered.sort((a, b) {
-        final aCountdown = a.countdown ?? 0;
-        final bCountdown = b.countdown ?? 0;
-        return aCountdown.compareTo(bCountdown);
-      });
-    }
-
+    _applySort(filtered);
     return filtered;
   }
 
@@ -250,7 +280,10 @@ class _JobsListScreenState extends State<JobsListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: const SpareAppBar(),
+      appBar: SpareSubpageAppBar(
+        title: '공고별',
+        showBackButton: Navigator.canPop(context),
+      ),
       body: Consumer<JobProvider>(
         builder: (context, jobProvider, _) {
           if (jobProvider.isLoading) {
@@ -262,11 +295,11 @@ class _JobsListScreenState extends State<JobsListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  const Text(
                     '오류가 발생했습니다',
                     style: TextStyle(color: AppTheme.urgentRed),
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   ElevatedButton(
                     onPressed: () => jobProvider.refreshJobs(),
                     child: const Text('다시 시도'),
@@ -276,7 +309,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
             );
           }
 
-          final allJobs = jobProvider.normalJobs;
+          final allJobs = jobProvider.jobs;
           final filteredJobs = _getFilteredJobs(allJobs);
           final allItems = _buildCombinedList(filteredJobs);
 
@@ -295,7 +328,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
                       children: [
                         Text(
                           '전체 ${allItems.length}개',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                             color: AppTheme.textPrimary,
@@ -310,7 +343,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: AppTheme.spacing3),
+                    const SizedBox(height: AppTheme.spacing3),
                     
                     // 첫 번째 줄: 지역 선택, 정렬
                     SingleChildScrollView(
@@ -345,7 +378,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
                           ),
                           // 상세지역(구/군) 드롭다운 - 지역 선택 시에만 표시
                           if (_selectedProvince != null && _districts.isNotEmpty) ...[
-                            SizedBox(width: AppTheme.spacing2),
+                            const SizedBox(width: AppTheme.spacing2),
                             JobFilterDropdown(
                               label: '상세지역',
                               options: _districts.map((d) => d.name).toList(),
@@ -371,7 +404,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
                               },
                             ),
                           ],
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           // 날짜 선택
                           DateFilterButton(
                             selectedDate: _selectedDateStart,
@@ -386,11 +419,11 @@ class _JobsListScreenState extends State<JobsListScreen> {
                               });
                             },
                           ),
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           // 정렬 드롭다운
                           JobFilterDropdown(
                             label: '정렬',
-                            options: ['최신순', '가격순', '마감순'],
+                            options: const ['최신순', '가격순', '마감순'],
                             selectedValue: _sortBy == 'latest' ? '최신순'
                                 : _sortBy == 'amount' ? '가격순'
                                 : '마감순',
@@ -419,7 +452,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: AppTheme.spacing3),
+                    const SizedBox(height: AppTheme.spacing3),
                     
                     // 두 번째 줄: 필터 버튼들
                     SingleChildScrollView(
@@ -437,7 +470,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
                               });
                             },
                           ),
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           _FilterChip(
                             label: '급구',
                             emoji: '🚀',
@@ -448,18 +481,20 @@ class _JobsListScreenState extends State<JobsListScreen> {
                               });
                             },
                           ),
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           _FilterChip(
                             label: '최신순',
                             emoji: '🕐',
-                            isSelected: _activeFilter == 'latest',
+                            isSelected:
+                                _sortBy == 'latest' && _activeFilter == null,
                             onTap: () {
                               setState(() {
-                                _activeFilter = _activeFilter == 'latest' ? null : 'latest';
+                                _sortBy = 'latest';
+                                _activeFilter = null;
                               });
                             },
                           ),
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           _FilterChip(
                             label: '마감임박',
                             emoji: '⏰',
@@ -470,7 +505,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
                               });
                             },
                           ),
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           _FilterChip(
                             label: '시급',
                             emoji: '💵',
@@ -481,7 +516,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
                               });
                             },
                           ),
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           _FilterChip(
                             label: '일급',
                             emoji: '💰',
@@ -492,7 +527,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
                               });
                             },
                           ),
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           _FilterChip(
                             label: '추천',
                             emoji: '⭐',
@@ -503,7 +538,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
                               });
                             },
                           ),
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           // 프리미엄 필터 (별도 토글)
                           _FilterChip(
                             label: '프리미엄',
@@ -538,7 +573,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
                               children: [
                                 IconMapper.icon('briefcase', size: 48, color: AppTheme.textTertiary) ??
                                     const Icon(Icons.work_outline, size: 48, color: AppTheme.textTertiary),
-                                SizedBox(height: AppTheme.spacing4),
+                                const SizedBox(height: AppTheme.spacing4),
                                 Text(
                                   '목록이 없습니다',
                                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -554,7 +589,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
                             itemBuilder: (context, index) {
                               final item = allItems[index];
                               return Padding(
-                                padding: EdgeInsets.only(bottom: AppTheme.spacing4),
+                                padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
                                 child: _buildAnnouncementCard(
                                   context,
                                   item,
@@ -569,46 +604,6 @@ class _JobsListScreenState extends State<JobsListScreen> {
               ),
             ],
           );
-        },
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          
-          // 네비게이션 처리
-          switch (index) {
-            case 0:
-              // 홈으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              // 결제로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              // 찜으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              // 마이(프로필)로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
         },
       ),
     );
@@ -651,7 +646,7 @@ class _FilterChip extends StatelessWidget {
           boxShadow: isSelected && emoji != null
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -669,7 +664,7 @@ class _FilterChip extends StatelessWidget {
                   height: 1.0,
                 ),
               ),
-              SizedBox(width: AppTheme.spacing1),
+              const SizedBox(width: AppTheme.spacing1),
             ],
             Text(
               label,

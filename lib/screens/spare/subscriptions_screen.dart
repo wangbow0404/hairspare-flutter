@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/subscription_service.dart';
+import '../../utils/count_format.dart';
 import '../../utils/error_handler.dart';
 import '../../models/subscription.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 
 /// 구독한 크리에이터 목록 화면
 class SubscriptionsScreen extends StatefulWidget {
@@ -21,7 +16,6 @@ class SubscriptionsScreen extends StatefulWidget {
 }
 
 class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
-  int _currentNavIndex = 3;
   final SubscriptionService _subscriptionService = SubscriptionService();
   List<Creator> _creators = [];
   bool _isLoading = true;
@@ -44,7 +38,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
       });
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
-      print('구독 목록 로드 오류: ${appException.toString()}');
+      debugPrint('구독 목록 로드 오류: ${appException.toString()}');
       // API 실패 시 빈 리스트 유지
       setState(() {
         _creators = [];
@@ -87,24 +81,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '구독한 크리에이터',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
-      ),
+      appBar: const SharedAppBar(title: '구독한 크리에이터'),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _creators.isEmpty
@@ -114,14 +91,14 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                     children: [
                       IconMapper.icon('users', size: 64, color: AppTheme.textTertiary) ??
                           const Icon(Icons.people_outline, size: 64, color: AppTheme.textTertiary),
-                      SizedBox(height: AppTheme.spacing4),
+                      const SizedBox(height: AppTheme.spacing4),
                       Text(
                         '구독한 크리에이터가 없습니다',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppTheme.textSecondary,
                         ),
                       ),
-                      SizedBox(height: AppTheme.spacing2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         '챌린지에서 관심있는 크리에이터를 구독해보세요!',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -134,7 +111,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
               : RefreshIndicator(
                   onRefresh: _loadSubscriptions,
                   child: ListView.builder(
-                    padding: EdgeInsets.all(AppTheme.spacing3),
+                    padding: const EdgeInsets.all(AppTheme.spacing3),
                     itemCount: _creators.length,
                     itemBuilder: (context, index) {
                       final creator = _creators[index];
@@ -145,41 +122,6 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                     },
                   ),
                 ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
-      ),
     );
   }
 }
@@ -194,19 +136,10 @@ class _CreatorListItem extends StatelessWidget {
     required this.onUnsubscribe,
   });
 
-  String _formatNumber(int num) {
-    if (num >= 10000) {
-      return '${(num / 10000).toStringAsFixed(1)}만';
-    } else if (num >= 1000) {
-      return '${(num / 1000).toStringAsFixed(1)}천';
-    }
-    return num.toString();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: AppTheme.spacing2),
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing2),
       decoration: BoxDecoration(
         color: AppTheme.backgroundWhite,
         borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
@@ -216,7 +149,7 @@ class _CreatorListItem extends StatelessWidget {
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
@@ -256,17 +189,17 @@ class _CreatorListItem extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: AppTheme.spacing1),
+            const SizedBox(height: AppTheme.spacing1),
             Row(
               children: [
                 Text(
-                  '구독자 ${_formatNumber(creator.subscriberCount)}',
+                  '구독자 ${CountFormat.compact(creator.subscriberCount)}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     fontSize: 12,
                     color: AppTheme.textSecondary,
                   ),
                 ),
-                SizedBox(width: AppTheme.spacing2),
+                const SizedBox(width: AppTheme.spacing2),
                 Text(
                   '영상 ${creator.videoCount}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -282,7 +215,7 @@ class _CreatorListItem extends StatelessWidget {
           onPressed: onUnsubscribe,
           style: TextButton.styleFrom(
             foregroundColor: AppTheme.urgentRed,
-            padding: EdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: AppTheme.spacing3,
               vertical: AppTheme.spacing1,
             ),

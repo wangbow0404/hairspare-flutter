@@ -35,7 +35,7 @@ class ReviewsListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: SpareAppBar(showBackButton: true),
+      appBar: const SpareAppBar(showBackButton: true),
       body: SingleChildScrollView(
         padding: AppTheme.spacing(AppTheme.spacing4),
         child: Column(
@@ -43,8 +43,8 @@ class ReviewsListScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.star, size: 24, color: AppTheme.yellow500),
-                SizedBox(width: AppTheme.spacing2),
+                const Icon(Icons.star, size: 24, color: AppTheme.yellow500),
+                const SizedBox(width: AppTheme.spacing2),
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -55,11 +55,11 @@ class ReviewsListScreen extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: AppTheme.spacing2),
+            const SizedBox(height: AppTheme.spacing2),
             Row(
               children: [
-                Icon(Icons.star, size: 20, color: AppTheme.yellow500),
-                SizedBox(width: AppTheme.spacing1),
+                const Icon(Icons.star, size: 20, color: AppTheme.yellow500),
+                const SizedBox(width: AppTheme.spacing1),
                 Text(
                   averageRating.toStringAsFixed(1),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -77,10 +77,10 @@ class ReviewsListScreen extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: AppTheme.spacing6),
+            const SizedBox(height: AppTheme.spacing6),
             ...reviews.map((r) => Container(
                   width: double.infinity,
-                  margin: EdgeInsets.only(bottom: AppTheme.spacing4),
+                  margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
                   padding: AppTheme.spacing(AppTheme.spacing4),
                   decoration: BoxDecoration(
                     color: AppTheme.backgroundWhite,
@@ -97,7 +97,7 @@ class ReviewsListScreen extends StatelessWidget {
                                 size: 18,
                                 color: AppTheme.yellow500,
                               )),
-                          SizedBox(width: AppTheme.spacing3),
+                          const SizedBox(width: AppTheme.spacing3),
                           Text(
                             r.userName,
                             style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -116,7 +116,7 @@ class ReviewsListScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      SizedBox(height: AppTheme.spacing3),
+                      const SizedBox(height: AppTheme.spacing3),
                       Text(
                         r.comment,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(

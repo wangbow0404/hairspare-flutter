@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/job.dart';
 import '../theme/app_theme.dart';
+import '../theme/home_text_styles.dart';
 import 'job_card.dart';
 
 class UrgentJobSection extends StatelessWidget {
@@ -40,32 +41,28 @@ class UrgentJobSection extends StatelessWidget {
                   fontSize: 24, // text-2xl
                 ),
               ),
-              SizedBox(width: AppTheme.spacing2), // gap-2
-              Text(
+              const SizedBox(width: AppTheme.spacing2), // gap-2
+              const Text(
                 '급구 공고',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontSize: 20, // text-xl
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary, // text-gray-900
-                ),
+                style: HomeTextStyles.sectionTitle,
               ),
-              SizedBox(width: AppTheme.spacing2), // gap-2
+              const SizedBox(width: AppTheme.spacing2), // gap-2
               // 정보 아이콘
               Container(
                 padding: AppTheme.spacing(AppTheme.spacing1), // p-1
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppTheme.borderGray300, // bg-gray-200
                   shape: BoxShape.circle, // rounded-full
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.info_outline,
                   size: 16, // w-4 h-4
-                  color: AppTheme.textSecondary,
+                  color: AppTheme.textGray700,
                 ),
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing4), // mb-4
+          const SizedBox(height: AppTheme.spacing4), // mb-4
 
           // 급구 공고 리스트
           Column(

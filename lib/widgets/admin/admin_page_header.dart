@@ -39,10 +39,10 @@ class AdminPageHeader extends StatelessWidget {
                         ),
                   ),
                   if (subtitle != null) ...[
-                    SizedBox(height: AppTheme.spacing2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Text(
                       subtitle!,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         color: AppTheme.textSecondary,
                       ),
@@ -53,7 +53,7 @@ class AdminPageHeader extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(width: AppTheme.spacing2),
+            const SizedBox(width: AppTheme.spacing2),
             Flexible(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -69,7 +69,7 @@ class AdminPageHeader extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                     ),
-                    Flexible(
+                    const Flexible(
                       child: Text(
                         '실시간 업데이트 중',
                         style: TextStyle(
@@ -80,7 +80,7 @@ class AdminPageHeader extends StatelessWidget {
                         maxLines: 1,
                       ),
                     ),
-                    SizedBox(width: AppTheme.spacing2),
+                    const SizedBox(width: AppTheme.spacing2),
                   ],
                   if (trailing != null) trailing!,
                 ],

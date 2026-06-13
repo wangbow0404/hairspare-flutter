@@ -35,7 +35,7 @@ class EducationFilterDropdown extends StatelessWidget {
         }
       },
       child: Container(
-        padding: EdgeInsets.symmetric(
+        padding: const EdgeInsets.symmetric(
           horizontal: AppTheme.spacing3,
           vertical: AppTheme.spacing2,
         ),
@@ -56,7 +56,7 @@ class EducationFilterDropdown extends StatelessWidget {
                 fontSize: 14,
               ),
             ),
-            SizedBox(width: AppTheme.spacing2),
+            const SizedBox(width: AppTheme.spacing2),
             Icon(
               isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
               size: 20,

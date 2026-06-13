@@ -2,10 +2,10 @@ import 'package:flutter/foundation.dart';
 import '../models/schedule.dart';
 import '../services/schedule_service.dart';
 import '../utils/error_handler.dart';
-import '../utils/app_exception.dart';
-
 class ScheduleProvider with ChangeNotifier {
-  final ScheduleService _scheduleService = ScheduleService();
+  ScheduleProvider(this._scheduleService);
+
+  final ScheduleService _scheduleService;
   List<Schedule> _schedules = [];
   bool _isLoading = false;
   String? _error;

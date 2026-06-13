@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
-import '../../utils/icon_mapper.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../providers/auth_provider.dart';
-import 'profile_edit_screen.dart';
 import 'verification_screen.dart';
-import 'login_screen.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
+import '../../core/router/app_navigation.dart';
 
 /// Shop 설정 화면
 class ShopSettingsScreen extends StatefulWidget {
@@ -21,10 +15,10 @@ class ShopSettingsScreen extends StatefulWidget {
 }
 
 class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
-  int _currentNavIndex = 0;
   bool _notificationsEnabled = true;
 
   Future<void> _handleLogout() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -45,15 +39,9 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
     );
 
     if (confirmed == true) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.logout();
-      if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const ShopLoginScreen()),
-          (route) => false,
-        );
-      }
+      if (!mounted) return;
+      AppNavigation.goRoleSelect(context);
     }
   }
 
@@ -91,38 +79,21 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '설정',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
-      ),
+      appBar: const SharedAppBar(title: '설정', showHubActions: true),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(AppTheme.spacing6),
+        padding: const EdgeInsets.all(AppTheme.spacing6),
         child: Column(
           children: [
             // 알림 설정
             Container(
-              padding: EdgeInsets.all(AppTheme.spacing6),
+              padding: const EdgeInsets.all(AppTheme.spacing6),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                 border: Border.all(color: AppTheme.borderGray),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 2,
                     offset: const Offset(0, 1),
                   ),
@@ -138,18 +109,18 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                       color: AppTheme.textPrimary,
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.notifications,
                             size: 20,
                             color: AppTheme.textSecondary,
                           ),
-                          SizedBox(width: AppTheme.spacing3),
+                          const SizedBox(width: AppTheme.spacing3),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -160,7 +131,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                                   color: AppTheme.textPrimary,
                                 ),
                               ),
-                              SizedBox(height: AppTheme.spacing1 / 2),
+                              const SizedBox(height: AppTheme.spacing1 / 2),
                               Text(
                                 '공고 및 지원자 알림 받기',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -179,7 +150,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                             _notificationsEnabled = value;
                           });
                         },
-                        activeColor: AppTheme.primaryPurple,
+                        activeThumbColor: AppTheme.primaryPurple,
                       ),
                     ],
                   ),
@@ -187,7 +158,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
               ),
             ),
             
-            SizedBox(height: AppTheme.spacing4),
+            const SizedBox(height: AppTheme.spacing4),
             
             // 계정 설정
             Container(
@@ -197,7 +168,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                 border: Border.all(color: AppTheme.borderGray),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 2,
                     offset: const Offset(0, 1),
                   ),
@@ -207,7 +178,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.all(AppTheme.spacing6),
+                    padding: const EdgeInsets.all(AppTheme.spacing6),
                     child: Text(
                       '계정 설정',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -216,9 +187,9 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                       ),
                     ),
                   ),
-                  Divider(height: 1, color: AppTheme.borderGray),
+                  const Divider(height: 1, color: AppTheme.borderGray),
                   ListTile(
-                    leading: Icon(
+                    leading: const Icon(
                       Icons.lock,
                       size: 20,
                       color: AppTheme.textSecondary,
@@ -237,7 +208,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                         color: AppTheme.textSecondary,
                       ),
                     ),
-                    trailing: Icon(
+                    trailing: const Icon(
                       Icons.chevron_right,
                       color: AppTheme.textTertiary,
                     ),
@@ -245,9 +216,9 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                       // TODO: 비밀번호 변경 화면으로 이동
                     },
                   ),
-                  Divider(height: 1, color: AppTheme.borderGray),
+                  const Divider(height: 1, color: AppTheme.borderGray),
                   ListTile(
-                    leading: Icon(
+                    leading: const Icon(
                       Icons.shield,
                       size: 20,
                       color: AppTheme.textSecondary,
@@ -266,7 +237,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                         color: AppTheme.textSecondary,
                       ),
                     ),
-                    trailing: Icon(
+                    trailing: const Icon(
                       Icons.chevron_right,
                       color: AppTheme.textTertiary,
                     ),
@@ -283,7 +254,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
               ),
             ),
             
-            SizedBox(height: AppTheme.spacing4),
+            const SizedBox(height: AppTheme.spacing4),
             
             // 고객 지원
             Container(
@@ -293,7 +264,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                 border: Border.all(color: AppTheme.borderGray),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 2,
                     offset: const Offset(0, 1),
                   ),
@@ -303,7 +274,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.all(AppTheme.spacing6),
+                    padding: const EdgeInsets.all(AppTheme.spacing6),
                     child: Text(
                       '고객 지원',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -312,9 +283,9 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                       ),
                     ),
                   ),
-                  Divider(height: 1, color: AppTheme.borderGray),
+                  const Divider(height: 1, color: AppTheme.borderGray),
                   ListTile(
-                    leading: Icon(
+                    leading: const Icon(
                       Icons.help_outline,
                       size: 20,
                       color: AppTheme.textSecondary,
@@ -333,7 +304,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                         color: AppTheme.textSecondary,
                       ),
                     ),
-                    trailing: Icon(
+                    trailing: const Icon(
                       Icons.chevron_right,
                       color: AppTheme.textTertiary,
                     ),
@@ -341,9 +312,9 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                       // TODO: 도움말 화면으로 이동
                     },
                   ),
-                  Divider(height: 1, color: AppTheme.borderGray),
+                  const Divider(height: 1, color: AppTheme.borderGray),
                   ListTile(
-                    leading: Icon(
+                    leading: const Icon(
                       Icons.description,
                       size: 20,
                       color: AppTheme.textSecondary,
@@ -362,7 +333,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                         color: AppTheme.textSecondary,
                       ),
                     ),
-                    trailing: Icon(
+                    trailing: const Icon(
                       Icons.chevron_right,
                       color: AppTheme.textTertiary,
                     ),
@@ -374,7 +345,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
               ),
             ),
             
-            SizedBox(height: AppTheme.spacing4),
+            const SizedBox(height: AppTheme.spacing4),
             
             // 위험한 작업
             Container(
@@ -384,7 +355,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                 border: Border.all(color: AppTheme.red200),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 2,
                     offset: const Offset(0, 1),
                   ),
@@ -394,7 +365,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.all(AppTheme.spacing6),
+                    padding: const EdgeInsets.all(AppTheme.spacing6),
                     child: Text(
                       '위험한 작업',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -403,9 +374,9 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                       ),
                     ),
                   ),
-                  Divider(height: 1, color: AppTheme.red200),
+                  const Divider(height: 1, color: AppTheme.red200),
                   ListTile(
-                    leading: Icon(
+                    leading: const Icon(
                       Icons.delete_outline,
                       size: 20,
                       color: AppTheme.urgentRed,
@@ -421,7 +392,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                       '계정과 모든 데이터가 영구적으로 삭제됩니다',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontSize: 12,
-                        color: AppTheme.urgentRed.withOpacity(0.8),
+                        color: AppTheme.urgentRed.withValues(alpha: 0.8),
                       ),
                     ),
                     onTap: _handleDeleteAccount,
@@ -430,7 +401,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
               ),
             ),
             
-            SizedBox(height: AppTheme.spacing4),
+            const SizedBox(height: AppTheme.spacing4),
             
             // 로그아웃 버튼
             SizedBox(
@@ -450,19 +421,19 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                   backgroundColor: AppTheme.red50,
                   foregroundColor: AppTheme.urgentRed,
                   elevation: 0,
-                  padding: EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: AppTheme.spacing4,
                     vertical: AppTheme.spacing3,
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                    side: BorderSide(color: AppTheme.red200, width: 1),
+                    side: const BorderSide(color: AppTheme.red200, width: 1),
                   ),
                 ),
               ),
             ),
             
-            SizedBox(height: 80),
+            const SizedBox(height: 80),
           ],
         ),
       ),

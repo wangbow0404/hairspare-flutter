@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../utils/navigation_helper.dart';
 import '../../services/verification_service.dart';
@@ -29,8 +30,6 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
   String? _identityPhone;
   String _licenseStatus = 'not_started'; // not_started, pending, approved, rejected, under_review
   String? _licenseNumber;
-  String? _licenseName;
-  DateTime? _licenseSubmittedAt;
   String? _licenseRejectionReason;
   File? _selectedImage;
   String? _previewUrl;
@@ -62,10 +61,6 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
           setState(() {
             _licenseStatus = data['status']?.toString() ?? 'not_started';
             _licenseNumber = data['licenseNumber']?.toString();
-            _licenseName = data['licenseName']?.toString();
-            _licenseSubmittedAt = data['submittedAt'] != null
-                ? DateTime.parse(data['submittedAt'].toString())
-                : null;
             _licenseRejectionReason = data['rejectionReason']?.toString();
           });
         }
@@ -206,22 +201,9 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
     if (_isLoading) {
       return Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        appBar: AppBar(
-          backgroundColor: AppTheme.backgroundWhite,
-          elevation: 0,
-          leading: IconButton(
-            icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-                const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-            onPressed: () => NavigationHelper.safePop(context),
-          ),
-          title: Text(
-            '면허 인증',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textPrimary,
-            ),
-          ),
+        appBar: SharedAppBar(
+          title: '면허 인증',
+          onBackPressed: () => NavigationHelper.safePop(context),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -231,22 +213,9 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
     if (_identityName == null || _identityName!.isEmpty) {
       return Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        appBar: AppBar(
-          backgroundColor: AppTheme.backgroundWhite,
-          elevation: 0,
-          leading: IconButton(
-            icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-                const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-            onPressed: () => NavigationHelper.safePop(context),
-          ),
-          title: Text(
-            '면허 인증',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textPrimary,
-            ),
-          ),
+        appBar: SharedAppBar(
+          title: '면허 인증',
+          onBackPressed: () => NavigationHelper.safePop(context),
         ),
         body: Padding(
           padding: AppTheme.spacing(AppTheme.spacing4),
@@ -265,7 +234,7 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
                   children: [
                     IconMapper.icon('alertcircle', size: 20, color: AppTheme.yellow600) ??
                         const Icon(Icons.warning_amber_rounded, size: 20, color: AppTheme.yellow600),
-                    SizedBox(width: AppTheme.spacing3),
+                    const SizedBox(width: AppTheme.spacing3),
                     Text(
                       '본인인증 필요',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -275,14 +244,14 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: AppTheme.spacing2),
+                const SizedBox(height: AppTheme.spacing2),
                 Text(
                   '면허 인증을 진행하려면 먼저 본인인증을 완료해주세요.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppTheme.yellow800,
                   ),
                 ),
-                SizedBox(height: AppTheme.spacing3),
+                const SizedBox(height: AppTheme.spacing3),
                 ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
@@ -302,22 +271,9 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => NavigationHelper.safePop(context),
-        ),
-        title: Text(
-          '면허 인증',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
+      appBar: SharedAppBar(
+        title: '면허 인증',
+        onBackPressed: () => NavigationHelper.safePop(context),
       ),
       body: SingleChildScrollView(
         padding: AppTheme.spacing(AppTheme.spacing4),
@@ -342,7 +298,7 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
                       color: AppTheme.textPrimary,
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     '이름: $_identityName',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -359,7 +315,7 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
                 ],
               ),
             ),
-            SizedBox(height: AppTheme.spacing6),
+            const SizedBox(height: AppTheme.spacing6),
 
             // 면허 인증 상태
             if (_licenseStatus != 'not_started' && _licenseStatus != 'pending')
@@ -384,7 +340,7 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
                         if (_licenseStatus == 'rejected')
                           IconMapper.icon('xcircle', size: 20, color: AppTheme.urgentRed) ??
                               const Icon(Icons.cancel, size: 20, color: AppTheme.urgentRed),
-                        SizedBox(width: AppTheme.spacing3),
+                        const SizedBox(width: AppTheme.spacing3),
                         Text(
                           _licenseStatus == 'approved'
                               ? '인증 완료'
@@ -399,7 +355,7 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
                       ],
                     ),
                     if (_licenseNumber != null && _licenseNumber!.isNotEmpty) ...[
-                      SizedBox(height: AppTheme.spacing2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         '면허번호: $_licenseNumber',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -408,7 +364,7 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
                       ),
                     ],
                     if (_licenseRejectionReason != null && _licenseRejectionReason!.isNotEmpty) ...[
-                      SizedBox(height: AppTheme.spacing2),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         '거절 사유: $_licenseRejectionReason',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -422,7 +378,7 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
 
             // 면허증 업로드
             if (_licenseStatus == 'not_started' || _licenseStatus == 'rejected') ...[
-              SizedBox(height: AppTheme.spacing6),
+              const SizedBox(height: AppTheme.spacing6),
               Container(
                 padding: AppTheme.spacing(AppTheme.spacing6),
                 decoration: BoxDecoration(
@@ -440,7 +396,7 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
                         color: AppTheme.textPrimary,
                       ),
                     ),
-                    SizedBox(height: AppTheme.spacing4),
+                    const SizedBox(height: AppTheme.spacing4),
                     if (_previewUrl == null)
                       GestureDetector(
                         onTap: _pickImage,
@@ -461,13 +417,13 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
                                 width: 64,
                                 height: 64,
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primaryBlue.withOpacity(0.1),
+                                  color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                                   borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                                 ),
                                 child: IconMapper.icon('camera', size: 32, color: AppTheme.primaryBlue) ??
                                     const Icon(Icons.camera_alt, size: 32, color: AppTheme.primaryBlue),
                               ),
-                              SizedBox(height: AppTheme.spacing3),
+                              const SizedBox(height: AppTheme.spacing3),
                               Text(
                                 '카메라로 촬영',
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -475,7 +431,7 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
                                   color: AppTheme.textPrimary,
                                 ),
                               ),
-                              SizedBox(height: AppTheme.spacing1),
+                              const SizedBox(height: AppTheme.spacing1),
                               Text(
                                 '면허증을 카메라로 직접 촬영해주세요',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -510,7 +466,7 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
                               child: Container(
                                 padding: AppTheme.spacing(AppTheme.spacing2),
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.5),
+                                  color: Colors.black.withValues(alpha: 0.5),
                                   borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                                 ),
                                 child: IconMapper.icon('xcircle', size: 20, color: Colors.white) ??
@@ -520,7 +476,7 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: AppTheme.spacing4),
+                      const SizedBox(height: AppTheme.spacing4),
                       OutlinedButton.icon(
                         onPressed: _pickImage,
                         icon: IconMapper.icon('camera', size: 20, color: AppTheme.textGray700) ??
@@ -528,16 +484,16 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
                         label: const Text('다시 촬영'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppTheme.textGray700,
-                          side: BorderSide(color: AppTheme.borderGray300),
+                          side: const BorderSide(color: AppTheme.borderGray300),
                         ),
                       ),
                     ],
-                    SizedBox(height: AppTheme.spacing4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Container(
                       padding: AppTheme.spacing(AppTheme.spacing3),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryBlue.withOpacity(0.1),
-                        border: Border.all(color: AppTheme.primaryBlue.withOpacity(0.2)),
+                        color: AppTheme.primaryBlue.withValues(alpha: 0.1),
+                        border: Border.all(color: AppTheme.primaryBlue.withValues(alpha: 0.2)),
                         borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                       ),
                       child: Text(
@@ -548,7 +504,7 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
                       ),
                     ),
                     if (_previewUrl != null) ...[
-                      SizedBox(height: AppTheme.spacing4),
+                      const SizedBox(height: AppTheme.spacing4),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -559,7 +515,7 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
                             padding: AppTheme.spacing(AppTheme.spacing4),
                           ),
                           child: _isUploading
-                              ? Row(
+                              ? const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     SizedBox(
@@ -567,11 +523,11 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
                                       height: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                       ),
                                     ),
                                     SizedBox(width: AppTheme.spacing2),
-                                    const Text('업로드 중...'),
+                                    Text('업로드 중...'),
                                   ],
                                 )
                               : Row(
@@ -579,7 +535,7 @@ class _LicenseVerificationScreenState extends State<LicenseVerificationScreen> {
                                   children: [
                                     IconMapper.icon('upload', size: 20, color: Colors.white) ??
                                         const Icon(Icons.upload, size: 20, color: Colors.white),
-                                    SizedBox(width: AppTheme.spacing2),
+                                    const SizedBox(width: AppTheme.spacing2),
                                     const Text('제출하기'),
                                   ],
                                 ),

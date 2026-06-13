@@ -2,22 +2,21 @@ import 'package:dio/dio.dart';
 import 'dart:io';
 import '../models/challenge_profile.dart';
 import '../models/challenge_comment.dart';
-import '../models/user.dart';
-import '../utils/api_client.dart';
+import '../models/challenge_feed.dart';
 import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
-import '../screens/spare/challenge_screen.dart';
 import '../mocks/mock_spare_data.dart';
+import '../core/di/service_locator.dart';
 
 class ChallengeService {
-  final ApiClient _apiClient = ApiClient();
+  final Dio _dio = sl<Dio>();
 
   /// 사용자 챌린지 프로필 조회
   Future<ChallengeProfile> getChallengeProfile(String userId) async {
     if (ApiConfig.useMockData) return await MockSpareData.getChallengeProfile(userId);
     try {
-      final response = await _apiClient.dio.get('/api/users/$userId/challenge-profile');
+      final response = await _dio.get('/api/users/$userId/challenge-profile');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -38,7 +37,7 @@ class ChallengeService {
   /// 챌린지 프로필 업데이트
   Future<ChallengeProfile> updateChallengeProfile(ChallengeProfile profile) async {
     try {
-      final response = await _apiClient.dio.put(
+      final response = await _dio.put(
         '/api/users/${profile.userId}/challenge-profile',
         data: profile.toJson(),
       );
@@ -59,18 +58,158 @@ class ChallengeService {
     }
   }
 
-  /// 내가 업로드한 챌린지 영상 목록 조회
-  Future<List<MyChallenge>> getMyChallenges({
-    String? filter, // 'all', 'public', 'private'
-    String? sortBy, // 'latest', 'popular', 'views'
+  /// 크리에이터 공개 영상 목록
+  Future<List<MyChallenge>> getCreatorPublicVideos(
+    String creatorId, {
+    String? filter,
+    String? sortBy,
   }) async {
-    if (ApiConfig.useMockData) return await MockSpareData.getMyChallenges();
+    if (ApiConfig.useMockData) {
+      return MockSpareData.getCreatorPublicVideos(
+        creatorId,
+        filter: filter,
+        sortBy: sortBy,
+      );
+    }
     try {
       final queryParams = <String, dynamic>{};
       if (filter != null && filter != 'all') queryParams['filter'] = filter;
       if (sortBy != null) queryParams['sortBy'] = sortBy;
 
-      final response = await _apiClient.dio.get(
+      final response = await _dio.get(
+        '/api/challenges/creator/$creatorId/videos',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'] ?? response.data;
+        final List<dynamic> challengesJson = data is List
+            ? data
+            : (data is Map && data['challenges'] != null
+                ? (data['challenges'] as List)
+                : []);
+        return challengesJson
+            .whereType<Map<String, dynamic>>()
+            .map((json) => MyChallenge.fromJson(json))
+            .toList();
+      } else {
+        throw ServerException(
+          '크리에이터 영상 조회 실패: ${response.statusMessage}',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 인기 영상 (프로필 가로 리스트용)
+  Future<List<MyChallenge>> getCreatorFeaturedVideos(String creatorId) async {
+    if (ApiConfig.useMockData) {
+      return MockSpareData.getCreatorFeaturedVideos(creatorId);
+    }
+    final videos = await getCreatorPublicVideos(creatorId, sortBy: 'popular');
+    return videos.take(5).toList();
+  }
+
+  /// 프로필 재생 — 크리에이터 영상만 구성된 피드
+  Future<List<Challenge>> getCreatorChallengeFeed(String creatorId) async {
+    if (ApiConfig.useMockData) {
+      return MockSpareData.getCreatorChallengeFeed(creatorId);
+    }
+    try {
+      final response =
+          await _dio.get('/api/challenges/creator/$creatorId/feed');
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'] ?? response.data;
+        final List<dynamic> json = data is List
+            ? data
+            : (data is Map && data['challenges'] != null
+                ? (data['challenges'] as List)
+                : []);
+        return json
+            .whereType<Map<String, dynamic>>()
+            .map(Challenge.fromJson)
+            .toList();
+      }
+      throw ServerException(
+        '크리에이터 피드 조회 실패: ${response.statusMessage}',
+        statusCode: response.statusCode,
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 크리에이터 영상 이후 유사 추천
+  Future<List<Challenge>> getSimilarChallenges({
+    required String excludeCreatorId,
+    List<String>? referenceTags,
+    List<String> excludeIds = const [],
+  }) async {
+    if (ApiConfig.useMockData) {
+      return MockSpareData.getSimilarChallenges(
+        excludeCreatorId: excludeCreatorId,
+        referenceTags: referenceTags,
+        excludeIds: excludeIds,
+      );
+    }
+    try {
+      final response = await _dio.get(
+        '/api/challenges/recommended',
+        queryParameters: {
+          'excludeCreatorId': excludeCreatorId,
+          if (referenceTags != null && referenceTags.isNotEmpty)
+            'tags': referenceTags.join(','),
+          if (excludeIds.isNotEmpty) 'excludeIds': excludeIds.join(','),
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'] ?? response.data;
+        final List<dynamic> json = data is List
+            ? data
+            : (data is Map && data['challenges'] != null
+                ? (data['challenges'] as List)
+                : []);
+        return json
+            .whereType<Map<String, dynamic>>()
+            .map(Challenge.fromJson)
+            .toList();
+      }
+      throw ServerException(
+        '추천 챌린지 조회 실패: ${response.statusMessage}',
+        statusCode: response.statusCode,
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 내가 업로드한 챌린지 영상 목록 조회
+  Future<List<MyChallenge>> getMyChallenges({
+    String? filter, // 'all', 'public', 'private'
+    String? sortBy, // 'latest', 'popular', 'views'
+  }) async {
+    if (ApiConfig.useMockData) {
+      return MockSpareData.getMyChallenges(
+        filter: filter,
+        sortBy: sortBy,
+      );
+    }
+    try {
+      final queryParams = <String, dynamic>{};
+      if (filter != null && filter != 'all') queryParams['filter'] = filter;
+      if (sortBy != null) queryParams['sortBy'] = sortBy;
+
+      final response = await _dio.get(
         '/api/challenges/my',
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
@@ -103,7 +242,7 @@ class ChallengeService {
   Future<List<Challenge>> getSubscribedChallenges() async {
     if (ApiConfig.useMockData) return await MockSpareData.getSubscribedChallenges();
     try {
-      final response = await _apiClient.dio.get('/api/challenges/subscribed');
+      final response = await _dio.get('/api/challenges/subscribed');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -133,7 +272,7 @@ class ChallengeService {
   Future<List<ChallengeComment>> getChallengeComments(String challengeId) async {
     if (ApiConfig.useMockData) return await MockSpareData.getChallengeComments(challengeId);
     try {
-      final response = await _apiClient.dio.get('/api/challenges/$challengeId/comments');
+      final response = await _dio.get('/api/challenges/$challengeId/comments');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -166,7 +305,7 @@ class ChallengeService {
     String? parentId, // 대댓글인 경우 부모 댓글 ID
   }) async {
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/challenges/$challengeId/comments',
         data: {
           'content': content,
@@ -193,7 +332,7 @@ class ChallengeService {
   /// 챌린지 댓글 좋아요/좋아요 취소
   Future<void> toggleCommentLike(String challengeId, String commentId) async {
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/challenges/$challengeId/comments/$commentId/like',
       );
 
@@ -213,7 +352,7 @@ class ChallengeService {
   /// 챌린지 싫어요/싫어요 취소
   Future<void> toggleChallengeDislike(String challengeId) async {
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/challenges/$challengeId/dislike',
       );
 
@@ -240,7 +379,7 @@ class ChallengeService {
         ),
       });
 
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/challenges/profile-image/upload',
         data: formData,
       );

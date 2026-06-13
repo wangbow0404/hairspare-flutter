@@ -4,12 +4,11 @@ import 'dart:async';
 import '../../theme/app_theme.dart';
 import '../../services/admin_service.dart';
 import '../../utils/error_handler.dart';
-import '../../widgets/admin_layout.dart';
+import '../../core/router/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import '../../widgets/admin/admin_page_header.dart';
 import '../../widgets/admin/admin_search_filter_bar.dart';
 import '../../widgets/admin/admin_table_card.dart';
-import 'admin_user_detail_screen.dart';
-
 /// 관리자 회원 관리 화면 (Next.js와 동일한 스타일)
 class AdminUsersScreen extends StatefulWidget {
   const AdminUsersScreen({super.key});
@@ -134,111 +133,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     }
   }
 
-  Widget _buildSignupMethodBadge(dynamic accounts) {
-    if (accounts == null || (accounts as List).isEmpty) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.email, size: 12, color: AppTheme.textSecondary),
-          SizedBox(width: AppTheme.spacing1),
-          Text(
-            '일반 가입',
-            style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
-          ),
-        ],
-      );
-    }
-
-    final provider = (accounts as List).first['provider'] ?? '';
-    switch (provider) {
-      case 'kakao':
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFEE500),
-                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-              ),
-              child: const Icon(Icons.circle, size: 8, color: Colors.black),
-            ),
-            SizedBox(width: AppTheme.spacing1),
-            Text(
-              '카카오가입',
-              style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
-            ),
-          ],
-        );
-      case 'naver':
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                color: const Color(0xFF03C75A),
-                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-              ),
-              child: const Center(
-                child: Text(
-                  'N',
-                  style: TextStyle(
-                    fontSize: 8,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(width: AppTheme.spacing1),
-            Text(
-              '네이버가입',
-              style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
-            ),
-          ],
-        );
-      case 'google':
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: AppTheme.borderGray),
-                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-              ),
-              child: const Icon(Icons.g_mobiledata, size: 10, color: Colors.blue),
-            ),
-            SizedBox(width: AppTheme.spacing1),
-            Text(
-              '구글이입',
-              style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
-            ),
-          ],
-        );
-      default:
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.email, size: 12, color: AppTheme.textSecondary),
-            SizedBox(width: AppTheme.spacing1),
-            Text(
-              '일반 가입',
-              style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
-            ),
-          ],
-        );
-    }
-  }
-
   String _getSignupLabel(dynamic accounts) {
     if (accounts == null || (accounts as List).isEmpty) return '일반 가입';
-    final provider = (accounts as List).first['provider'] ?? '';
+    final provider = (accounts).first['provider'] ?? '';
     switch (provider) {
       case 'kakao': return '카카오';
       case 'naver': return '네이버';
@@ -249,16 +146,14 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AdminLayout(
-      currentRoute: '/admin/users',
-      child: Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AdminPageHeader(
+          const AdminPageHeader(
             title: '회원 관리',
             subtitle: '전체 회원을 조회하고 관리할 수 있습니다',
           ),
-          SizedBox(height: AppTheme.spacing6),
+          const SizedBox(height: AppTheme.spacing6),
           AdminSearchFilterBar(
             searchController: _searchController,
             filterTabs: const ['전체', '헤어스페어', '카카오', '네이버', '구글'],
@@ -316,10 +211,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 });
                 _loadUsers();
               },
-              style: TextStyle(color: AppTheme.textPrimary),
+              style: const TextStyle(color: AppTheme.textPrimary),
             ),
           ),
-          SizedBox(height: AppTheme.spacing6),
+          const SizedBox(height: AppTheme.spacing6),
           SizedBox(
             height: 600,
             child: AdminTableCard(
@@ -328,13 +223,13 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   : _hasLoadError
                       ? Center(
                           child: Padding(
-                            padding: EdgeInsets.all(AppTheme.spacing8),
+                            padding: const EdgeInsets.all(AppTheme.spacing8),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.cloud_off, size: 64, color: AppTheme.urgentRed),
-                                SizedBox(height: AppTheme.spacing4),
-                                Text(
+                                const Icon(Icons.cloud_off, size: 64, color: AppTheme.urgentRed),
+                                const SizedBox(height: AppTheme.spacing4),
+                                const Text(
                                   '회원 목록을 불러오지 못했습니다',
                                   style: TextStyle(
                                     fontSize: 16,
@@ -342,8 +237,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
-                                SizedBox(height: AppTheme.spacing4),
-                                Text(
+                                const SizedBox(height: AppTheme.spacing4),
+                                const Text(
                                   'API Gateway(localhost:8000)가 실행 중인지 확인해주세요',
                                   style: TextStyle(
                                     fontSize: 12,
@@ -351,7 +246,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
-                                SizedBox(height: AppTheme.spacing6),
+                                const SizedBox(height: AppTheme.spacing6),
                                 FilledButton.icon(
                                   onPressed: () => _loadUsers(),
                                   icon: const Icon(Icons.refresh),
@@ -362,7 +257,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                           ),
                         )
                       : _users.isEmpty
-                          ? Center(
+                          ? const Center(
                               child: Padding(
                                 padding: EdgeInsets.all(AppTheme.spacing8),
                                 child: Column(
@@ -388,7 +283,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                AdminTableHeader(
+                                const AdminTableHeader(
                                   headers: ['회원 정보', '연락처', '역할', '활동', '에너지', '가입일', '관리'],
                                   flexValues: [2, 1, 1, 1, 1, 1, 1],
                                 ),
@@ -406,24 +301,20 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                   return InkWell(
                                     onTap: userId != null
                                         ? () {
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder: (context) => AdminUserDetailScreen(
-                                                  userId: userId,
-                                                  initialData: user,
-                                                ),
-                                              ),
+                                            context.push(
+                                              AppRoutes.adminUserDetail(userId),
+                                              extra: user,
                                             );
                                           }
                                         : null,
                                     child: Container(
-                                      padding: EdgeInsets.symmetric(
+                                      padding: const EdgeInsets.symmetric(
                                         horizontal: AppTheme.spacing4,
                                         vertical: AppTheme.spacing3,
                                       ),
                                       decoration: BoxDecoration(
                                         border: Border(
-                                          bottom: BorderSide(color: AppTheme.adminPurple100.withOpacity(0.5)),
+                                          bottom: BorderSide(color: AppTheme.adminPurple100.withValues(alpha: 0.5)),
                                         ),
                                       ),
                                       child: Row(
@@ -459,7 +350,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                                     ),
                                                   ),
                                                 ),
-                                                SizedBox(width: AppTheme.spacing4),
+                                                const SizedBox(width: AppTheme.spacing4),
                                                 Expanded(
                                                   child: Column(
                                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -475,9 +366,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                                               color: AppTheme.textPrimary,
                                                             ),
                                                           ),
-                                                          SizedBox(width: AppTheme.spacing2),
+                                                          const SizedBox(width: AppTheme.spacing2),
                                                           Container(
-                                                            padding: EdgeInsets.symmetric(
+                                                            padding: const EdgeInsets.symmetric(
                                                               horizontal: AppTheme.spacing2,
                                                               vertical: 2,
                                                             ),
@@ -487,7 +378,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                                             ),
                                                             child: Text(
                                                               _getSignupLabel(user['accounts']),
-                                                              style: TextStyle(
+                                                              style: const TextStyle(
                                                                 fontSize: 10,
                                                                 fontWeight: FontWeight.w600,
                                                                 color: AppTheme.purple700,
@@ -496,15 +387,15 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                                           ),
                                                         ],
                                                       ),
-                                                      SizedBox(height: AppTheme.spacing1),
+                                                      const SizedBox(height: AppTheme.spacing1),
                                                       Row(
                                                         children: [
-                                                          Icon(Icons.email, size: 12, color: AppTheme.textSecondary),
-                                                          SizedBox(width: 4),
+                                                          const Icon(Icons.email, size: 12, color: AppTheme.textSecondary),
+                                                          const SizedBox(width: 4),
                                                           Expanded(
                                                             child: Text(
                                                               user['email'] ?? '',
-                                                              style: TextStyle(
+                                                              style: const TextStyle(
                                                                 fontSize: 12,
                                                                 color: AppTheme.textSecondary,
                                                               ),
@@ -524,12 +415,12 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                             flex: 1,
                                             child: Row(
                                               children: [
-                                                Icon(Icons.phone, size: 14, color: AppTheme.textSecondary),
-                                                SizedBox(width: 4),
+                                                const Icon(Icons.phone, size: 14, color: AppTheme.textSecondary),
+                                                const SizedBox(width: 4),
                                                 Expanded(
                                                   child: Text(
                                                     user['phone'] ?? '-',
-                                                    style: TextStyle(
+                                                    style: const TextStyle(
                                                       fontSize: 12,
                                                       color: AppTheme.textSecondary,
                                                     ),
@@ -543,12 +434,12 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                           Expanded(
                                             flex: 1,
                                             child: Container(
-                                              padding: EdgeInsets.symmetric(
+                                              padding: const EdgeInsets.symmetric(
                                                 horizontal: AppTheme.spacing2,
                                                 vertical: 4,
                                               ),
                                               decoration: BoxDecoration(
-                                                color: roleColor.withOpacity(0.1),
+                                                color: roleColor.withValues(alpha: 0.1),
                                                 borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                                               ),
                                               child: Text(
@@ -566,7 +457,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                             flex: 1,
                                             child: Text(
                                               '공고 $jobs · 지원 $apps · 스케줄 $sched',
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 fontSize: 11,
                                                 color: AppTheme.textSecondary,
                                               ),
@@ -577,25 +468,25 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                           Expanded(
                                             flex: 1,
                                             child: Container(
-                                              padding: EdgeInsets.symmetric(
+                                              padding: const EdgeInsets.symmetric(
                                                 horizontal: AppTheme.spacing2,
                                                 vertical: 4,
                                               ),
                                               decoration: BoxDecoration(
-                                                gradient: LinearGradient(
+                                                gradient: const LinearGradient(
                                                   colors: [
                                                     AppTheme.yellow50,
                                                     AppTheme.orange50,
                                                   ],
                                                 ),
                                                 borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-                                                border: Border.all(color: AppTheme.yellow400.withOpacity(0.5)),
+                                                border: Border.all(color: AppTheme.yellow400.withValues(alpha: 0.5)),
                                               ),
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
-                                                  Icon(Icons.check_circle, size: 14, color: AppTheme.yellow600),
-                                                  SizedBox(width: 4),
+                                                  const Icon(Icons.check_circle, size: 14, color: AppTheme.yellow600),
+                                                  const SizedBox(width: 4),
                                                   Text(
                                                     '${user['energyWallet']?['balance'] ?? 0}개',
                                                     style: const TextStyle(
@@ -612,7 +503,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                             flex: 1,
                                             child: Text(
                                               _formatDate(user['createdAt'] ?? ''),
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 fontSize: 12,
                                                 color: AppTheme.textSecondary,
                                               ),
@@ -624,16 +515,12 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 IconButton(
-                                                  icon: Icon(Icons.visibility, size: 18, color: AppTheme.textSecondary),
+                                                  icon: const Icon(Icons.visibility, size: 18, color: AppTheme.textSecondary),
                                                   onPressed: userId != null
                                                       ? () {
-                                                          Navigator.of(context).push(
-                                                            MaterialPageRoute(
-                                                              builder: (context) => AdminUserDetailScreen(
-                                                                userId: userId,
-                                                                initialData: user,
-                                                              ),
-                                                            ),
+                                                          context.push(
+                                                            AppRoutes.adminUserDetail(userId),
+                                                            extra: user,
                                                           );
                                                         }
                                                       : null,
@@ -643,9 +530,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                                     backgroundColor: AppTheme.adminPurple50,
                                                   ),
                                                 ),
-                                                SizedBox(width: 4),
+                                                const SizedBox(width: 4),
                                                 IconButton(
-                                                  icon: Icon(Icons.more_vert, size: 18, color: AppTheme.textSecondary),
+                                                  icon: const Icon(Icons.more_vert, size: 18, color: AppTheme.textSecondary),
                                                   onPressed: () {},
                                                   padding: EdgeInsets.zero,
                                                   constraints: const BoxConstraints(),
@@ -662,18 +549,18 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                             ),
                             if (_totalPages > 1)
                               Container(
-                                padding: EdgeInsets.symmetric(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: AppTheme.spacing6,
                                   vertical: AppTheme.spacing4,
                                 ),
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      AppTheme.adminPurple50.withOpacity(0.3),
-                                      AppTheme.adminPink50.withOpacity(0.3),
+                                      AppTheme.adminPurple50.withValues(alpha: 0.3),
+                                      AppTheme.adminPink50.withValues(alpha: 0.3),
                                     ],
                                   ),
-                                  border: Border(
+                                  border: const Border(
                                     top: BorderSide(color: AppTheme.adminPurple100, width: 2),
                                   ),
                                 ),
@@ -682,7 +569,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                   children: [
                                     Text(
                                       '총 $_total명 중 ${(_currentPage - 1) * 20 + 1}-${(_currentPage * 20).clamp(0, _total)}명 표시',
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 12,
                                         color: AppTheme.textSecondary,
                                       ),
@@ -700,7 +587,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                               : null,
                                           child: const Text('이전'),
                                         ),
-                                        SizedBox(width: AppTheme.spacing2),
+                                        const SizedBox(width: AppTheme.spacing2),
                                         TextButton(
                                           onPressed: _currentPage < _totalPages
                                               ? () {
@@ -724,47 +611,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildTableSkeleton() {
-    return AdminTableSkeleton(rowCount: 8, columnCount: 7);
-  }
-
-  Widget _buildTableHeader(String text) {
-    return Text(
-      text.toUpperCase(),
-      style: TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
-        color: AppTheme.textSecondary,
-        letterSpacing: 0.5,
-      ),
-    );
-  }
-
-  Widget _buildFilterButton(String label, bool isSelected, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: AppTheme.spacing4,
-          vertical: AppTheme.spacing2,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryPurple : AppTheme.backgroundGray,
-          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : AppTheme.textPrimary,
-          ),
-        ),
-      ),
-    );
+    return const AdminTableSkeleton(rowCount: 8, columnCount: 7);
   }
 }

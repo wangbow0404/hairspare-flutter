@@ -41,12 +41,12 @@ class AdminTableHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.spacing6,
         vertical: AppTheme.spacing4,
       ),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
           colors: [AppTheme.adminPurple50, AppTheme.adminPink50],
@@ -62,7 +62,7 @@ class AdminTableHeader extends StatelessWidget {
             flex: flex,
             child: Text(
               headers[i].toUpperCase(),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: AppTheme.textGray700,
@@ -102,13 +102,13 @@ class AdminTableSkeleton extends StatelessWidget {
             itemCount: rowCount,
             itemBuilder: (context, index) {
               return Container(
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: AppTheme.spacing4,
                   vertical: AppTheme.spacing3,
                 ),
                 decoration: BoxDecoration(
                   border: Border(
-                    bottom: BorderSide(color: AppTheme.adminPurple100.withOpacity(0.3)),
+                    bottom: BorderSide(color: AppTheme.adminPurple100.withValues(alpha: 0.3)),
                   ),
                 ),
                 child: Row(
@@ -118,7 +118,7 @@ class AdminTableSkeleton extends StatelessWidget {
                         height: 16,
                         margin: EdgeInsets.only(right: i < columnCount - 1 ? AppTheme.spacing2 : 0),
                         decoration: BoxDecoration(
-                          color: AppTheme.borderGray.withOpacity(0.5),
+                          color: AppTheme.borderGray.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),

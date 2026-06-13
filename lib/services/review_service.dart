@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
-import '../utils/api_client.dart';
 import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
 import '../mocks/mock_spare_data.dart';
+import '../core/di/service_locator.dart';
 
 class Review {
   final String id;
@@ -35,13 +35,13 @@ class Review {
 }
 
 class ReviewService {
-  final ApiClient _apiClient = ApiClient();
+  final Dio _dio = sl<Dio>();
 
   /// 리뷰 목록 조회
   Future<List<Review>> getReviews() async {
     if (ApiConfig.useMockData) return await MockSpareData.getReviews();
     try {
-      final response = await _apiClient.dio.get('/api/reviews');
+      final response = await _dio.get('/api/reviews');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -70,7 +70,7 @@ class ReviewService {
   /// shopName으로 shopId 찾기
   Future<String?> findShopIdByName(String shopName) async {
     try {
-      final response = await _apiClient.dio.get(
+      final response = await _dio.get(
         '/api/shops/search',
         queryParameters: {'name': shopName},
       );
@@ -85,10 +85,10 @@ class ReviewService {
         }
       }
       return null;
-    } on DioException catch (e) {
+    } on DioException catch (_) {
       // shop을 찾지 못한 경우 null 반환 (새 shop으로 처리)
       return null;
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
@@ -107,7 +107,7 @@ class ReviewService {
         finalShopId = await findShopIdByName(shopName);
       }
 
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/reviews',
         data: {
           'shopName': shopName,
@@ -137,8 +137,12 @@ class ReviewService {
   Future<void> sendThumbsUp({
     required String jobId,
   }) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      return;
+    }
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/reviews/thumbs-up',
         data: {
           'jobId': jobId,

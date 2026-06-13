@@ -1,34 +1,40 @@
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
 
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode, kReleaseMode;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+/// API URL·mock 여부는 [assets/env/app.env] 및 `--dart-define` 으로만 구성합니다.
+/// 릴리스 빌드에서는 mock 데이터가 항상 비활성화됩니다(JWT 필수 플로우).
 class ApiConfig {
-  /// Mock 데이터 사용 여부 (true: 백엔드 없이 UI/UX 검증, false: 실제 API 사용)
-  static const bool useMockData = true;
+  ApiConfig._();
 
-  // Android 에뮬레이터는 10.0.2.2를 사용해야 localhost에 접근 가능
-  // iOS 시뮬레이터와 웹은 localhost 사용 가능
-  // 실제 디바이스는 컴퓨터의 로컬 IP 주소 사용 필요
-  
+  /// `true`일 때만 목 데이터 사용. **release 에서는 항상 false.**
+  static bool get useMockData {
+    if (kReleaseMode) return false;
+    const fromDefine =
+        String.fromEnvironment('USE_MOCK_DATA', defaultValue: '');
+    if (fromDefine.toLowerCase() == 'true' || fromDefine == '1') return true;
+    final v = dotenv.maybeGet('USE_MOCK_DATA')?.toLowerCase() ?? '';
+    return v == 'true' || v == '1';
+  }
+
   static String getBaseUrl() {
-    // FastAPI 백엔드 API Gateway 포트: 8000
-    // 웹 환경에서는 window.location을 사용하거나 localhost 사용
-    if (kIsWeb) {
-      // 웹에서는 현재 호스트를 사용하거나 localhost 사용
-      // 개발 환경: localhost:8000 (FastAPI Gateway)
-      // 프로덕션: 실제 도메인
+    const fromDefine =
+        String.fromEnvironment('API_BASE_URL', defaultValue: '');
+    if (fromDefine.isNotEmpty) return fromDefine;
+
+    final fromDot = dotenv.maybeGet('API_BASE_URL')?.trim();
+    if (fromDot != null && fromDot.isNotEmpty) return fromDot;
+
+    if (kDebugMode) {
+      if (kIsWeb) return 'http://localhost:8000';
+      if (Platform.isAndroid) return 'http://10.0.2.2:8000';
       return 'http://localhost:8000';
     }
-    
-    // 모바일 환경
-    if (Platform.isAndroid) {
-      // Android 에뮬레이터는 10.0.2.2 사용
-      return 'http://10.0.2.2:8000';
-    } else if (Platform.isIOS) {
-      // iOS 시뮬레이터는 localhost 사용 가능
-      return 'http://localhost:8000';
-    }
-    
-    // 기본값
-    return 'http://localhost:8000';
+
+    throw StateError(
+      'API_BASE_URL이 설정되지 않았습니다. '
+      'assets/env/app.env 또는 --dart-define=API_BASE_URL=... 를 설정하세요.',
+    );
   }
 }

@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
+
 import '../../theme/app_theme.dart';
-import '../../widgets/spare_app_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../providers/notification_provider.dart';
 import '../../models/notification.dart' show AppNotification;
-import '../../utils/navigation_helper.dart';
+import '../../models/user.dart';
+import '../../utils/app_bar_navigation.dart';
+import '../../utils/shop_notification_navigation.dart';
+import '../../utils/spare_notification_navigation.dart';
+import '../../widgets/notifications/spare_notification_tile.dart';
 
-/// 전체 알림 목록 화면
+/// 전체 알림 목록 — 확인 필요(상단) / 확인함(하단) 구분.
 class NotificationsListScreen extends StatefulWidget {
   const NotificationsListScreen({super.key});
 
@@ -16,38 +20,33 @@ class NotificationsListScreen extends StatefulWidget {
 }
 
 class _NotificationsListScreenState extends State<NotificationsListScreen> {
+  String _audience(BuildContext context) =>
+      AppBarNavigation.inferAppSectionRole(context) == UserRole.shop
+          ? 'shop'
+          : 'spare';
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<NotificationProvider>(context, listen: false).loadNotifications();
+      if (!mounted) return;
+      Provider.of<NotificationProvider>(context, listen: false)
+          .loadNotifications(audience: _audience(context));
     });
   }
 
-  void _handleNotificationTap(AppNotification notification) {
-    Provider.of<NotificationProvider>(context, listen: false)
-        .markAsRead(notification.id);
-
-    switch (notification.type) {
-      case 'application_received':
-      case 'application_accepted':
-      case 'application_rejected':
-      case 'job_posted':
-      case 'job':
-        if (notification.relatedJobId != null) {
-          NavigationHelper.navigateToJobDetail(context, notification.relatedJobId!);
-        }
-        break;
-      case 'schedule_reminder':
-      case 'schedule_confirmed':
-      case 'schedule_cancelled':
-        NavigationHelper.navigateToSchedule(context);
-        break;
-      case 'message_received':
-        NavigationHelper.navigateToMessages(context);
-        break;
-      default:
-        break;
+  Future<void> _handleNotificationTap(AppNotification notification) async {
+    final provider =
+        Provider.of<NotificationProvider>(context, listen: false);
+    final audience = _audience(context);
+    if (!notification.isRead) {
+      await provider.markAsRead(notification.id, audience: audience);
+    }
+    if (!mounted) return;
+    if (audience == 'shop') {
+      ShopNotificationNavigation.handle(context, notification);
+    } else {
+      SpareNotificationNavigation.handle(context, notification);
     }
   }
 
@@ -55,16 +54,17 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: const SpareAppBar(showBackButton: true),
+      appBar: const SharedAppBar(title: '알림'),
       body: Consumer<NotificationProvider>(
         builder: (context, notificationProvider, _) {
           if (notificationProvider.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final notifications = notificationProvider.notifications;
+          final unread = notificationProvider.unreadNotifications;
+          final read = notificationProvider.readNotifications;
 
-          if (notifications.isEmpty) {
+          if (unread.isEmpty && read.isEmpty) {
             return Center(
               child: Text(
                 '알림이 없습니다',
@@ -76,91 +76,99 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
             );
           }
 
-          return ListView.builder(
+          return ListView(
             padding: AppTheme.spacing(AppTheme.spacing4),
-            itemCount: notifications.length,
-            itemBuilder: (context, index) {
-              final notification = notifications[index];
-              return Dismissible(
-                key: ValueKey(notification.id),
-                direction: DismissDirection.endToStart,
-                onDismissed: (_) {
-                  Provider.of<NotificationProvider>(context, listen: false)
-                      .deleteNotification(notification.id);
-                },
-                background: Container(
-                  color: AppTheme.urgentRed,
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: 24),
-                  child: const Icon(
-                    Icons.delete_outline,
-                    color: Colors.white,
-                    size: 28,
+            children: [
+              if (unread.isNotEmpty) ...[
+                SpareNotificationSectionHeader(
+                  label: '확인 필요',
+                  count: unread.length,
+                ),
+                ...unread.map(
+                  (n) => Dismissible(
+                    key: ValueKey('unread-${n.id}'),
+                    direction: DismissDirection.endToStart,
+                    onDismissed: (_) => notificationProvider.deleteNotification(
+                        n.id,
+                        audience: _audience(context),
+                      ),
+                    background: _deleteBackground(),
+                    child: SpareNotificationTile(
+                      notification: n,
+                      onTap: () => _handleNotificationTap(n),
+                    ),
                   ),
                 ),
-                child: Container(
-                  margin: EdgeInsets.only(bottom: AppTheme.spacing3),
-                  decoration: BoxDecoration(
-                    color: AppTheme.backgroundWhite,
-                    borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
-                    border: Border.all(color: AppTheme.borderGray),
-                  ),
-                  child: ListTile(
-                    contentPadding: AppTheme.spacingSymmetric(
-                      horizontal: AppTheme.spacing4,
-                      vertical: AppTheme.spacing3,
+              ],
+              if (unread.isNotEmpty && read.isNotEmpty) ...[
+                const SizedBox(height: AppTheme.spacing2),
+                _SectionDivider(),
+                const SizedBox(height: AppTheme.spacing2),
+              ],
+              if (read.isNotEmpty) ...[
+                const SpareNotificationSectionHeader(label: '확인함'),
+                ...read.map(
+                  (n) => Dismissible(
+                    key: ValueKey('read-${n.id}'),
+                    direction: DismissDirection.endToStart,
+                    onDismissed: (_) => notificationProvider.deleteNotification(
+                        n.id,
+                        audience: _audience(context),
+                      ),
+                    background: _deleteBackground(),
+                    child: SpareNotificationTile(
+                      notification: n,
+                      onTap: () => _handleNotificationTap(n),
                     ),
-                    title: Text(
-                      notification.title,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: notification.isRead
-                                ? FontWeight.normal
-                                : FontWeight.bold,
-                            color: AppTheme.textPrimary,
-                          ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: AppTheme.spacing2),
-                        Text(
-                          notification.message,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppTheme.textSecondary,
-                                height: 1.4,
-                              ),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: AppTheme.spacing2),
-                        Text(
-                          DateFormat('yyyy.M.d HH:mm', 'ko_KR')
-                              .format(notification.createdAt),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppTheme.textTertiary,
-                                fontSize: 12,
-                              ),
-                        ),
-                      ],
-                    ),
-                    trailing: notification.isRead
-                        ? null
-                        : Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: AppTheme.primaryBlue,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                    onTap: () => _handleNotificationTap(notification),
                   ),
                 ),
-              );
-            },
+              ],
+            ],
           );
         },
       ),
+    );
+  }
+
+  Widget _deleteBackground() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
+      decoration: BoxDecoration(
+        color: AppTheme.urgentRed,
+        borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
+      ),
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: 24),
+      child: const Icon(
+        Icons.delete_outline,
+        color: Colors.white,
+        size: 28,
+      ),
+    );
+  }
+}
+
+class _SectionDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: AppTheme.borderGray.withValues(alpha: 0.8))),
+        Padding(
+          padding: AppTheme.spacingSymmetric(
+            horizontal: AppTheme.spacing3,
+            vertical: 0,
+          ),
+          child: Text(
+            '이전 알림',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.textTertiary,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+        ),
+        Expanded(child: Divider(color: AppTheme.borderGray.withValues(alpha: 0.8))),
+      ],
     );
   }
 }

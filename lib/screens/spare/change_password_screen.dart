@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/auth_service.dart';
 import '../../utils/error_handler.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 
 /// Next.js와 동일한 비밀번호 변경 화면
 class ChangePasswordScreen extends StatefulWidget {
@@ -18,7 +14,6 @@ class ChangePasswordScreen extends StatefulWidget {
 }
 
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
-  int _currentNavIndex = 0;
   final _formKey = GlobalKey<FormState>();
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
@@ -104,24 +99,25 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     });
 
     try {
+      final messenger = ScaffoldMessenger.of(context);
       // API 호출하여 비밀번호 변경
       final authService = AuthService();
       await authService.changePassword(
         currentPassword: _currentPasswordController.text,
         newPassword: _newPasswordController.text,
       );
-      
+
       setState(() {
         _success = true;
       });
-      
-      ScaffoldMessenger.of(context).showSnackBar(
+
+      messenger.showSnackBar(
         const SnackBar(
           content: Text('비밀번호가 변경되었습니다'),
           backgroundColor: AppTheme.primaryGreen,
         ),
       );
-      
+
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
           Navigator.pop(context);
@@ -132,6 +128,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       setState(() {
         _errors['currentPassword'] = ErrorHandler.getUserFriendlyMessage(appException);
       });
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(ErrorHandler.getUserFriendlyMessage(appException)),
@@ -148,9 +145,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -163,14 +160,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             children: [
               IconMapper.icon('checkcircle', size: 64, color: AppTheme.primaryGreen) ??
                   const Icon(Icons.check_circle, size: 64, color: AppTheme.primaryGreen),
-              SizedBox(height: AppTheme.spacing4),
+              const SizedBox(height: AppTheme.spacing4),
               Text(
                 '비밀번호가 변경되었습니다',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: AppTheme.textPrimary,
                 ),
               ),
-              SizedBox(height: AppTheme.spacing2),
+              const SizedBox(height: AppTheme.spacing2),
               Text(
                 '설정 페이지로 이동합니다...',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -185,24 +182,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '비밀번호 변경',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
-      ),
+      appBar: const SharedAppBar(title: '비밀번호 변경'),
       body: SingleChildScrollView(
         padding: AppTheme.spacing(AppTheme.spacing6),
         child: Form(
@@ -243,7 +223,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   return null;
                 },
               ),
-              SizedBox(height: AppTheme.spacing6),
+              const SizedBox(height: AppTheme.spacing6),
               // 새 비밀번호
               TextFormField(
                 controller: _newPasswordController,
@@ -282,7 +262,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   return null;
                 },
               ),
-              SizedBox(height: AppTheme.spacing2),
+              const SizedBox(height: AppTheme.spacing2),
               Container(
                 padding: AppTheme.spacing(AppTheme.spacing2),
                 decoration: BoxDecoration(
@@ -299,13 +279,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         color: AppTheme.textSecondary,
                       ),
                     ),
-                    SizedBox(height: AppTheme.spacing1),
+                    const SizedBox(height: AppTheme.spacing1),
                     ...['최소 8자 이상', '영문자 포함', '숫자 포함', '특수문자 포함'].map((req) {
                       return Padding(
-                        padding: EdgeInsets.only(left: AppTheme.spacing2),
+                        padding: const EdgeInsets.only(left: AppTheme.spacing2),
                         child: Row(
                           children: [
-                            Text(
+                            const Text(
                               '• ',
                               style: TextStyle(color: AppTheme.textSecondary),
                             ),
@@ -323,7 +303,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   ],
                 ),
               ),
-              SizedBox(height: AppTheme.spacing6),
+              const SizedBox(height: AppTheme.spacing6),
               // 새 비밀번호 확인
               TextFormField(
                 controller: _confirmPasswordController,
@@ -364,12 +344,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               if (_confirmPasswordController.text.isNotEmpty &&
                   _confirmPasswordController.text == _newPasswordController.text &&
                   _errors['confirmPassword'] == null) ...[
-                SizedBox(height: AppTheme.spacing2),
+                const SizedBox(height: AppTheme.spacing2),
                 Row(
                   children: [
                     IconMapper.icon('checkcircle', size: 16, color: AppTheme.primaryGreen) ??
                         const Icon(Icons.check_circle, size: 16, color: AppTheme.primaryGreen),
-                    SizedBox(width: AppTheme.spacing1),
+                    const SizedBox(width: AppTheme.spacing1),
                     Text(
                       '비밀번호가 일치합니다',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -380,7 +360,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   ],
                 ),
               ],
-              SizedBox(height: AppTheme.spacing8),
+              const SizedBox(height: AppTheme.spacing8),
               // 제출 버튼
               SizedBox(
                 width: double.infinity,
@@ -405,7 +385,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           children: [
                             IconMapper.icon('lock', size: 20, color: Colors.white) ??
                                 const Icon(Icons.lock, size: 20, color: Colors.white),
-                            SizedBox(width: AppTheme.spacing2),
+                            const SizedBox(width: AppTheme.spacing2),
                             Text(
                               '비밀번호 변경',
                               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -421,46 +401,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          
-          // 네비게이션 처리
-          switch (index) {
-            case 0:
-              // 홈으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              // 결제로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              // 찜으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              // 마이(프로필)로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }

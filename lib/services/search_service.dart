@@ -1,7 +1,7 @@
 import '../models/job.dart';
 import '../models/space_rental.dart';
 import '../screens/spare/education_screen.dart';
-import '../screens/spare/challenge_screen.dart';
+import '../models/challenge_feed.dart';
 import '../utils/api_config.dart';
 import 'job_service.dart';
 import 'space_rental_service.dart';

@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/verification_service.dart';
 import '../../utils/navigation_helper.dart';
 import '../../utils/error_handler.dart';
-import '../../utils/app_exception.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'license_verification_screen.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 
 /// Next.js와 동일한 인증 관리 화면
 class VerificationScreen extends StatefulWidget {
@@ -23,7 +17,6 @@ class VerificationScreen extends StatefulWidget {
 }
 
 class _VerificationScreenState extends State<VerificationScreen> {
-  int _currentNavIndex = 0;
   String _identityStatus = 'not_started'; // not_started, pending, completed
   String _licenseStatus = 'not_started';
   bool _isLoading = true;
@@ -118,31 +111,17 @@ class _VerificationScreenState extends State<VerificationScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => NavigationHelper.safePop(context),
-        ),
-        title: Text(
-          '인증 관리',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
+      appBar: SharedAppBar(
+        title: '인증 관리',
+        onBackPressed: () => NavigationHelper.safePop(context),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -159,7 +138,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                 onTap: _handleIdentityVerification,
                 isVerifying: _isVerifying,
               ),
-              SizedBox(height: AppTheme.spacing4),
+              const SizedBox(height: AppTheme.spacing4),
               // 면허 인증 카드
               _buildVerificationCard(
                 icon: IconMapper.icon('award', size: 32, color: AppTheme.primaryBlue) ??
@@ -173,46 +152,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          
-          // 네비게이션 처리
-          switch (index) {
-            case 0:
-              // 홈으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              // 결제로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              // 찜으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              // 마이(프로필)로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }
@@ -265,12 +204,12 @@ class _VerificationScreenState extends State<VerificationScreen> {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  color: statusColor.withValues(alpha: 0.1),
                   borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                 ),
                 child: icon,
               ),
-              SizedBox(width: AppTheme.spacing4),
+              const SizedBox(width: AppTheme.spacing4),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,7 +222,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                         color: AppTheme.textPrimary,
                       ),
                     ),
-                    SizedBox(height: AppTheme.spacing1 / 2),
+                    const SizedBox(height: AppTheme.spacing1 / 2),
                     Text(
                       description,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -297,7 +236,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
               statusIcon,
             ],
           ),
-          SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing4),
           Row(
             children: [
               Container(
@@ -306,7 +245,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                   vertical: AppTheme.spacing1,
                 ),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  color: statusColor.withValues(alpha: 0.1),
                   borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
                 ),
                 child: Text(

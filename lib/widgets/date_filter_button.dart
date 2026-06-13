@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
-import 'custom_date_picker_dialog.dart';
+import '../utils/app_date_picker.dart';
 
 /// 날짜 필터 버튼 (공간대여, 공고, 교육 목록 공통)
 class DateFilterButton extends StatelessWidget {
@@ -23,7 +23,7 @@ class DateFilterButton extends StatelessWidget {
     return GestureDetector(
       onTap: () async {
         final now = DateTime.now();
-        final date = await CustomDatePickerDialog.show(
+        final date = await showAppDatePicker(
           context,
           initialDate: selectedDate ?? now,
           firstDate: now,
@@ -34,7 +34,7 @@ class DateFilterButton extends StatelessWidget {
         }
       },
       child: Container(
-        padding: EdgeInsets.symmetric(
+        padding: const EdgeInsets.symmetric(
           horizontal: AppTheme.spacing3,
           vertical: AppTheme.spacing2,
         ),
@@ -42,7 +42,7 @@ class DateFilterButton extends StatelessWidget {
           color: AppTheme.backgroundWhite,
           border: Border.all(
             color: selectedDate != null
-                ? AppTheme.primaryBlue.withOpacity(0.5)
+                ? AppTheme.primaryBlue.withValues(alpha: 0.5)
                 : AppTheme.borderGray,
           ),
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -57,7 +57,7 @@ class DateFilterButton extends StatelessWidget {
                   ? AppTheme.primaryBlue
                   : AppTheme.textSecondary,
             ),
-            SizedBox(width: AppTheme.spacing2),
+            const SizedBox(width: AppTheme.spacing2),
             Text(
               label,
               style: TextStyle(
@@ -68,10 +68,10 @@ class DateFilterButton extends StatelessWidget {
               ),
             ),
             if (selectedDate != null) ...[
-              SizedBox(width: AppTheme.spacing2),
+              const SizedBox(width: AppTheme.spacing2),
               GestureDetector(
                 onTap: onClear,
-                child: Icon(
+                child: const Icon(
                   Icons.close,
                   size: 16,
                   color: AppTheme.textSecondary,

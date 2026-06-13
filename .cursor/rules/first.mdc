@@ -1,0 +1,33 @@
+---
+alwaysApply: true
+---
+
+# Role & Tone
+You are an expert Senior Flutter & Dart developer. 
+Always write concise, idiomatic, clean, and maintainable code. Do not write unnecessary explanations unless asked.
+
+# Tech Stack
+- Framework: Flutter (Material 3)
+- State Management: Provider + ChangeNotifier (ViewModel pattern)
+- DI: get_it (`sl<T>()` Service Locator)
+- Routing: go_router
+- Network: Dio + json_serializable
+
+# Architecture & Best Practices (Tailored for MVP Velocity & Stability)
+1. MVVM Pattern: Strictly follow the flow `Screen (UI) -> ViewModel (State) -> Service (Business/Network)`. Do not mix UI logic into Services.
+2. Rapid Mocking: Retain the `if (ApiConfig.useMockData)` pattern inside Services for rapid prototyping. Do NOT over-engineer with abstract interfaces (e.g., `IService`) unless explicitly requested.
+3. Context Independence: NEVER pass `BuildContext` to ViewModels or Services. 
+   - Navigation: Use `appRouter` (from `app_router.dart`).
+   - Alerts: Use `sl<GlobalMessengerService>()`.
+4. State Management Optimization (Provider):
+   - Only call `notifyListeners()` when the state actually changes.
+   - Use `Consumer<T>` or `Selector<T, R>` wrapped tightly around specific widgets to prevent full screen rebuilds.
+5. Clean UI & Performance (Critical): 
+   - Always use trailing commas (`,`) for proper formatting.
+   - Extract complex widget trees into separate `const StatelessWidget` classes. NEVER use private `_buildX()` methods for UI components to ensure 60fps performance.
+6. Code Generation & Safety: 
+   - ALWAYS include `part 'filename.g.dart';` and factory constructors when using `json_serializable`. Assume `build_runner` will be executed.
+   - Handle `DioException` gracefully using the project's global ErrorHandler.
+7. Strict Typing & Imports: 
+   - Avoid `dynamic`. Use strict types and `final` properties where possible.
+   - Prefer `package:hairspare/...` absolute imports for cross-folder dependencies to avoid relative path hell (`../../../`).

@@ -1,16 +1,51 @@
-/// 챌린지 댓글 모델
-class ChallengeComment {
-  final String id;
-  final String userId;
-  final String userName;
-  final String? userAvatar;
-  final String content;
-  int likes;
-  bool isLiked;
-  final DateTime createdAt;
-  final List<ChallengeComment> replies;
-  final String? parentId; // 대댓글인 경우 부모 댓글 ID
+import 'package:json_annotation/json_annotation.dart';
 
+import 'json_converters.dart';
+
+part 'challenge_comment.g.dart';
+
+Object? _commentReadUserName(Map json, String key) {
+  final u = json['userName'];
+  if (u != null) return u;
+  final user = json['user'];
+  if (user is Map) return user['name'];
+  return '';
+}
+
+Object? _commentReadUserAvatar(Map json, String key) {
+  final a = json['userAvatar'];
+  if (a != null) return a;
+  final user = json['user'];
+  if (user is Map) return user['avatar'];
+  return null;
+}
+
+Object? _commentReadContent(Map json, String key) {
+  return json['content'] ?? json['text'] ?? '';
+}
+
+Object? _commentReadCreatedAt(Map json, String key) {
+  return json['createdAt'] ?? json['created_at'];
+}
+
+Object? _commentReadParentId(Map json, String key) {
+  return json['parentId'] ?? json['parent_id'];
+}
+
+List<ChallengeComment> _challengeRepliesFromJson(Object? json) {
+  if (json is! List) return [];
+  return json
+      .map((e) =>
+          ChallengeComment.fromJson(Map<String, dynamic>.from(e as Map)))
+      .toList();
+}
+
+List<Map<String, dynamic>> _challengeRepliesToJson(List<ChallengeComment> list) =>
+    list.map((e) => e.toJson()).toList();
+
+/// 챌린지 댓글 모델
+@JsonSerializable(explicitToJson: true)
+class ChallengeComment {
   ChallengeComment({
     required this.id,
     required this.userId,
@@ -24,58 +59,30 @@ class ChallengeComment {
     this.parentId,
   });
 
-  factory ChallengeComment.fromJson(Map<String, dynamic> json) {
-    return ChallengeComment(
-      id: json['id']?.toString() ?? '',
-      userId: json['userId']?.toString() ?? '',
-      userName: json['userName']?.toString() ?? json['user']?['name']?.toString() ?? '',
-      userAvatar: json['userAvatar']?.toString() ?? json['user']?['avatar']?.toString(),
-      content: json['content']?.toString() ?? json['text']?.toString() ?? '',
-      likes: _parseInt(json['likes']) ?? 0,
-      isLiked: json['isLiked'] as bool? ?? false,
-      createdAt: _parseDateTime(json['createdAt'] ?? json['created_at']),
-      replies: json['replies'] != null
-          ? (json['replies'] as List)
-              .map((e) => ChallengeComment.fromJson(e as Map<String, dynamic>))
-              .toList()
-          : [],
-      parentId: json['parentId']?.toString() ?? json['parent_id']?.toString(),
-    );
-  }
+  factory ChallengeComment.fromJson(Map<String, dynamic> json) =>
+      _$ChallengeCommentFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'userId': userId,
-      'userName': userName,
-      'userAvatar': userAvatar,
-      'content': content,
-      'likes': likes,
-      'isLiked': isLiked,
-      'createdAt': createdAt.toIso8601String(),
-      'replies': replies.map((r) => r.toJson()).toList(),
-      'parentId': parentId,
-    };
-  }
+  @JsonKey(defaultValue: '')
+  final String id;
+  @JsonKey(defaultValue: '')
+  final String userId;
+  @JsonKey(readValue: _commentReadUserName, defaultValue: '')
+  final String userName;
+  @JsonKey(readValue: _commentReadUserAvatar)
+  final String? userAvatar;
+  @JsonKey(readValue: _commentReadContent, defaultValue: '')
+  final String content;
+  @LooseIntAsZeroConverter()
+  int likes;
+  @JsonKey(defaultValue: false)
+  bool isLiked;
+  @JsonKey(readValue: _commentReadCreatedAt)
+  @DateTimeOrNowConverter()
+  final DateTime createdAt;
+  @JsonKey(fromJson: _challengeRepliesFromJson, toJson: _challengeRepliesToJson)
+  final List<ChallengeComment> replies;
+  @JsonKey(readValue: _commentReadParentId)
+  final String? parentId;
 
-  static int? _parseInt(dynamic value) {
-    if (value == null) return null;
-    if (value is int) return value;
-    if (value is String) return int.tryParse(value);
-    if (value is num) return value.toInt();
-    return null;
-  }
-
-  static DateTime _parseDateTime(dynamic value) {
-    if (value == null) return DateTime.now();
-    if (value is DateTime) return value;
-    if (value is String) {
-      try {
-        return DateTime.parse(value);
-      } catch (e) {
-        return DateTime.now();
-      }
-    }
-    return DateTime.now();
-  }
+  Map<String, dynamic> toJson() => _$ChallengeCommentToJson(this);
 }

@@ -2,13 +2,14 @@ import 'package:flutter/foundation.dart';
 import '../models/notification.dart' show AppNotification;
 import '../services/notification_service.dart';
 import '../utils/error_handler.dart';
-import '../utils/app_exception.dart';
-
 class NotificationProvider with ChangeNotifier {
-  final NotificationService _notificationService = NotificationService();
+  NotificationProvider(this._notificationService);
+
+  final NotificationService _notificationService;
   List<AppNotification> _notifications = [];
   bool _isLoading = false;
   String? _error;
+  String _audience = 'spare';
 
   List<AppNotification> get notifications => _notifications;
   bool get isLoading => _isLoading;
@@ -16,14 +17,28 @@ class NotificationProvider with ChangeNotifier {
 
   int get unreadCount => _notifications.where((n) => !n.isRead).length;
 
+  List<AppNotification> get unreadNotifications => _notifications
+      .where((n) => !n.isRead)
+      .toList()
+    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+  List<AppNotification> get readNotifications => _notifications
+      .where((n) => n.isRead)
+      .toList()
+    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
   /// 알림 목록 로드
-  Future<void> loadNotifications() async {
+  /// [audience] `spare` | `shop` — mock·API 모두 역할에 맞는 알림만 조회.
+  Future<void> loadNotifications({String audience = 'spare'}) async {
+    _audience = audience;
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _notifications = await _notificationService.getNotifications();
+      _notifications = await _notificationService.getNotifications(
+        audience: audience,
+      );
       _error = null;
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
@@ -35,18 +50,24 @@ class NotificationProvider with ChangeNotifier {
     }
   }
 
-  /// 알림 읽음 처리
-  Future<void> markAsRead(String notificationId) async {
+  /// 알림 확인 처리 — 읽음 표시(자세히 보기 목록 유지).
+  Future<void> markAsRead(
+    String notificationId, {
+    String? audience,
+  }) async {
+    final role = audience ?? _audience;
     try {
-      await _notificationService.markAsRead(notificationId);
-      
-      // 로컬 상태 업데이트
+      await _notificationService.markAsRead(
+        notificationId,
+        audience: role,
+      );
       final index = _notifications.indexWhere((n) => n.id == notificationId);
-      if (index != -1) {
-        // AppNotification은 불변 객체이므로 새 인스턴스 생성 필요
-        // 하지만 현재 모델에 copyWith가 없으므로, 전체 리스트를 다시 로드
-        await loadNotifications();
+      if (index >= 0) {
+        _notifications[index] =
+            _notifications[index].copyWith(isRead: true);
       }
+      _error = null;
+      notifyListeners();
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
       _error = ErrorHandler.getUserFriendlyMessage(appException);
@@ -55,11 +76,16 @@ class NotificationProvider with ChangeNotifier {
   }
 
   /// 알림 삭제
-  Future<void> deleteNotification(String notificationId) async {
+  Future<void> deleteNotification(
+    String notificationId, {
+    String? audience,
+  }) async {
+    final role = audience ?? _audience;
     try {
-      await _notificationService.deleteNotification(notificationId);
-      
-      // 로컬 상태에서 제거
+      await _notificationService.deleteNotification(
+        notificationId,
+        audience: role,
+      );
       _notifications.removeWhere((n) => n.id == notificationId);
       notifyListeners();
     } catch (e) {
@@ -71,6 +97,6 @@ class NotificationProvider with ChangeNotifier {
 
   /// 알림 새로고침
   Future<void> refreshNotifications() async {
-    await loadNotifications();
+    await loadNotifications(audience: _audience);
   }
 }

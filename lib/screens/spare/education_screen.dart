@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
-import '../../widgets/spare_app_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
+import '../../widgets/common/spare_subpage_app_bar_actions.dart';
 import '../../utils/icon_mapper.dart';
 import '../../widgets/education_filter_dropdown.dart';
 import '../../widgets/date_filter_button.dart';
 import '../../utils/region_helper.dart';
 import '../../models/region.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
+import '../../models/education_material.dart';
 import 'education_detail_screen.dart';
-import 'dart:math';
 
 /// Next.js와 동일한 교육 화면 (복잡한 필터링 시스템)
 class EducationScreen extends StatefulWidget {
@@ -24,7 +20,6 @@ class EducationScreen extends StatefulWidget {
 }
 
 class _EducationScreenState extends State<EducationScreen> {
-  int _currentNavIndex = 0;
   List<Education> _educations = [];
   List<Education> _filteredEducations = [];
   bool _isLoading = true;
@@ -173,6 +168,7 @@ class _EducationScreenState extends State<EducationScreen> {
         district: district?.name,
         regionId: district?.id ?? province.id,
         price: (index + 1) * 10000,
+        energyCost: 2 + (index % 4),
         isUrgent: index % 3 == 0,
         isOnline: isOnline,
         isLive: hasRichContent && isOnline && index == 0, // 첫 번째 온라인만 LIVE
@@ -183,6 +179,27 @@ class _EducationScreenState extends State<EducationScreen> {
         maxApplicants: 20,
         createdAt: now.subtract(Duration(days: index)),
         imageUrl: null,
+        materials: hasRichContent
+            ? [
+                EducationMaterial(
+                  title: '사전 학습 PDF',
+                  url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                ),
+                EducationMaterial(
+                  title: '실습 체크리스트',
+                  url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                  fileType: 'pdf',
+                ),
+              ]
+            : null,
+        venueAddress: !isOnline && hasRichContent
+            ? '${province.name} ${district?.name ?? ''} 테헤란로 123 교육센터 3층'
+            : null,
+        venueLat: !isOnline && hasRichContent ? 37.5012 : null,
+        venueLng: !isOnline && hasRichContent ? 127.0396 : null,
+        meetingUrl: isOnline && hasRichContent
+            ? 'https://example.com/education/live/${index}'
+            : null,
         curriculum: null,
         curriculumSchedule: curriculumSchedule,
         duration: hasRichContent ? '2일 과정 (총 5시간)' : null,
@@ -306,32 +323,39 @@ class _EducationScreenState extends State<EducationScreen> {
     if (_isLoading) {
       return Scaffold(
         backgroundColor: AppTheme.backgroundGray,
+        appBar: SharedAppBar(
+          title: '교육',
+          actions: buildSpareSubpageAppBarActions(context),
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: const SpareAppBar(),
+      appBar: SharedAppBar(
+        title: '교육',
+        actions: buildSpareSubpageAppBarActions(context),
+      ),
       body: Column(
         children: [
           // 필터 섹션
           Container(
             color: AppTheme.backgroundWhite,
-            padding: EdgeInsets.all(AppTheme.spacing3),
+            padding: const EdgeInsets.all(AppTheme.spacing3),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 전체교육 개수
                 Text(
                   '전체교육 총 ${_filteredEducations.length}개',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: AppTheme.textPrimary,
                   ),
                 ),
-                SizedBox(height: AppTheme.spacing3),
+                const SizedBox(height: AppTheme.spacing3),
 
                 // 첫 번째 줄: 새로고침, 지역, 상세지역, 카테고리, 세부카테고리
                 SingleChildScrollView(
@@ -344,21 +368,21 @@ class _EducationScreenState extends State<EducationScreen> {
                             const Icon(Icons.refresh, size: 20, color: AppTheme.textSecondary),
                         onPressed: _handleRefresh,
                       ),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
 
                       // 지역 드롭다운
                       _buildProvinceDropdown(),
                       if (_selectedProvince != null && _districts.isNotEmpty) ...[
-                        SizedBox(width: AppTheme.spacing2),
+                        const SizedBox(width: AppTheme.spacing2),
                         _buildDistrictDropdown(),
                       ],
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       _buildCategoryDropdown(),
                       if (_selectedCategory != null && _availableSubCategories.isNotEmpty) ...[
-                        SizedBox(width: AppTheme.spacing2),
+                        const SizedBox(width: AppTheme.spacing2),
                         _buildSubCategoryDropdown(),
                       ],
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       DateFilterButton(
                         selectedDate: _selectedDateStart,
                         onDateSelected: (date) {
@@ -377,7 +401,7 @@ class _EducationScreenState extends State<EducationScreen> {
                     ],
                   ),
                 ),
-                SizedBox(height: AppTheme.spacing3),
+                const SizedBox(height: AppTheme.spacing3),
 
                 // 두 번째 줄: 정렬, 오프라인/온라인, 필터 버튼들
                 SingleChildScrollView(
@@ -385,34 +409,34 @@ class _EducationScreenState extends State<EducationScreen> {
                   child: Row(
                     children: [
                       _buildSortDropdown(),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       _buildEducationTypeToggle(),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       _buildFilterButton('🚀', '급구', _isUrgent, () {
                         setState(() => _isUrgent = !_isUrgent);
                         _applyFilters();
                       }),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       _buildFilterButton('⭐', '무료교육', _reviewReward, () {
                         setState(() => _reviewReward = !_reviewReward);
                         _applyFilters();
                       }),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       _buildFilterButton('🏠', '우리동네', _myNeighborhood, () {
                         setState(() => _myNeighborhood = !_myNeighborhood);
                         _applyFilters();
                       }),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       _buildFilterButton('👥', '신청자부족', _insufficientApplicants, () {
                         setState(() => _insufficientApplicants = !_insufficientApplicants);
                         _applyFilters();
                       }),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       _buildFilterButton('⏰', '마감임박', _deadlineImminent, () {
                         setState(() => _deadlineImminent = !_deadlineImminent);
                         _applyFilters();
                       }),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       _buildFilterButton('📅', '예약불필요', _noReservation, () {
                         setState(() => _noReservation = !_noReservation);
                         _applyFilters();
@@ -433,7 +457,7 @@ class _EducationScreenState extends State<EducationScreen> {
                       children: [
                         IconMapper.icon('book', size: 64, color: AppTheme.textTertiary) ??
                             const Icon(Icons.book, size: 64, color: AppTheme.textTertiary),
-                        SizedBox(height: AppTheme.spacing4),
+                        const SizedBox(height: AppTheme.spacing4),
                         Text(
                           '교육 목록이 없습니다',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -444,7 +468,7 @@ class _EducationScreenState extends State<EducationScreen> {
                     ),
                   )
                 : ListView.builder(
-                    padding: EdgeInsets.all(AppTheme.spacing4),
+                    padding: const EdgeInsets.all(AppTheme.spacing4),
                     itemCount: _filteredEducations.length,
                     itemBuilder: (context, index) {
                       final education = _filteredEducations[index];
@@ -453,41 +477,6 @@ class _EducationScreenState extends State<EducationScreen> {
                   ),
           ),
         ],
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }
@@ -645,7 +634,7 @@ class _EducationScreenState extends State<EducationScreen> {
 
   Widget _buildEducationTypeToggle() {
     return Container(
-      padding: EdgeInsets.all(2),
+      padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: AppTheme.backgroundGray,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -676,12 +665,12 @@ class _EducationScreenState extends State<EducationScreen> {
         _applyFilters();
       },
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing3, vertical: AppTheme.spacing1),
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing3, vertical: AppTheme.spacing1),
         decoration: BoxDecoration(
           color: isSelected ? AppTheme.backgroundWhite : Colors.transparent,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           boxShadow: isSelected
-              ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 2)]
+              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 2)]
               : null,
         ),
         child: Text(
@@ -700,7 +689,7 @@ class _EducationScreenState extends State<EducationScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing3, vertical: AppTheme.spacing2),
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing3, vertical: AppTheme.spacing2),
         decoration: BoxDecoration(
           color: isActive ? Colors.purple.shade100 : AppTheme.backgroundGray,
           border: Border.all(
@@ -713,7 +702,7 @@ class _EducationScreenState extends State<EducationScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(emoji, style: const TextStyle(fontSize: 16)),
-            SizedBox(width: AppTheme.spacing1),
+            const SizedBox(width: AppTheme.spacing1),
             Text(
               label,
               style: TextStyle(
@@ -739,7 +728,7 @@ class _EducationScreenState extends State<EducationScreen> {
         );
       },
       child: Container(
-        margin: EdgeInsets.only(bottom: AppTheme.spacing4),
+        margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
         decoration: BoxDecoration(
           color: AppTheme.backgroundWhite,
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
@@ -750,13 +739,13 @@ class _EducationScreenState extends State<EducationScreen> {
           children: [
             // 이미지 영역 (imageUrl 있으면 표시, 없으면 그라데이션)
             ClipRRect(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
               child: education.imageUrl != null && education.imageUrl!.isNotEmpty
                   ? _buildEducationImage(education.imageUrl!)
                   : _buildEducationImagePlaceholder(),
             ),
             Padding(
-              padding: EdgeInsets.all(AppTheme.spacing4),
+              padding: const EdgeInsets.all(AppTheme.spacing4),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -764,12 +753,12 @@ class _EducationScreenState extends State<EducationScreen> {
                     children: [
               if (education.isUrgent)
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
+                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
                   decoration: BoxDecoration(
                     color: AppTheme.urgentRed,
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text('🚀', style: TextStyle(fontSize: 12)),
@@ -785,9 +774,9 @@ class _EducationScreenState extends State<EducationScreen> {
                     ],
                   ),
                 ),
-              SizedBox(width: AppTheme.spacing2),
+              const SizedBox(width: AppTheme.spacing2),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
                 decoration: BoxDecoration(
                   color: education.isOnline ? Colors.blue.shade100 : Colors.green.shade100,
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -803,56 +792,56 @@ class _EducationScreenState extends State<EducationScreen> {
               ),
                     ],
                   ),
-                  SizedBox(height: AppTheme.spacing3),
+                  const SizedBox(height: AppTheme.spacing3),
                   Text(
                     education.title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.textPrimary,
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     education.description,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
                       color: AppTheme.textSecondary,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: AppTheme.spacing2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Row(
                     children: [
-                      Icon(Icons.location_on, size: 16, color: AppTheme.textSecondary),
-                      SizedBox(width: 4),
+                      const Icon(Icons.location_on, size: 16, color: AppTheme.textSecondary),
+                      const SizedBox(width: 4),
                       Text(
                         '${education.province}${education.district != null ? ' ${education.district}' : ''}',
-                        style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                       ),
-                      SizedBox(width: AppTheme.spacing3),
-                      Icon(Icons.attach_money, size: 16, color: AppTheme.textSecondary),
-                      SizedBox(width: 4),
+                      const SizedBox(width: AppTheme.spacing3),
+                      const Icon(Icons.attach_money, size: 16, color: AppTheme.textSecondary),
+                      const SizedBox(width: 4),
                       Text(
-                        '${NumberFormat('#,###').format(education.price)}원',
-                        style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        '에너지 ${education.energyCost}개',
+                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                       ),
                     ],
                   ),
-                  SizedBox(height: AppTheme.spacing2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Row(
                     children: [
-                      Icon(Icons.people, size: 16, color: AppTheme.textSecondary),
-                      SizedBox(width: 4),
+                      const Icon(Icons.people, size: 16, color: AppTheme.textSecondary),
+                      const SizedBox(width: 4),
                       Text(
                         '신청 ${education.applicants}/${education.maxApplicants}명',
-                        style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                       ),
                       const Spacer(),
                       Text(
                         '마감: ${DateFormat('yyyy-MM-dd').format(education.deadline)}',
-                        style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                       ),
                     ],
                   ),
@@ -895,13 +884,13 @@ class _EducationScreenState extends State<EducationScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.primaryPurple.withOpacity(0.6),
-            AppTheme.primaryBlue.withOpacity(0.6),
+            AppTheme.primaryPurple.withValues(alpha: 0.6),
+            AppTheme.primaryBlue.withValues(alpha: 0.6),
           ],
         ),
       ),
       child: Center(
-        child: Icon(Icons.school, size: 48, color: Colors.white.withOpacity(0.8)),
+        child: Icon(Icons.school, size: 48, color: Colors.white.withValues(alpha: 0.8)),
       ),
     );
   }
@@ -968,6 +957,8 @@ class Education {
   final String? district;
   final String? regionId;
   final int price;
+  /// 스페어 신청·결제 단위 (개). [`docs/yoram/EDUCATION_ENERGY_PRICING.md`]
+  final int energyCost;
   final bool isUrgent;
   final bool isOnline;
   final bool isLive; // true: 실시간 라이브, false: 녹화/VOD
@@ -988,6 +979,11 @@ class Education {
   final double? averageRating;
   final int? reviewCount;
   final List<EducationReview>? reviews;
+  final List<EducationMaterial>? materials;
+  final String? venueAddress;
+  final double? venueLat;
+  final double? venueLng;
+  final String? meetingUrl;
 
   Education({
     required this.id,
@@ -999,6 +995,7 @@ class Education {
     this.district,
     this.regionId,
     required this.price,
+    required this.energyCost,
     required this.isUrgent,
     required this.isOnline,
     this.isLive = false,
@@ -1019,5 +1016,10 @@ class Education {
     this.averageRating,
     this.reviewCount,
     this.reviews,
+    this.materials,
+    this.venueAddress,
+    this.venueLat,
+    this.venueLng,
+    this.meetingUrl,
   });
 }

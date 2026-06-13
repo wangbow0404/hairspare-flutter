@@ -1,16 +1,21 @@
 import 'package:dio/dio.dart';
+import '../mocks/mock_spare_data.dart';
 import '../models/subscription.dart';
-import '../utils/api_client.dart';
+import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
+import '../core/di/service_locator.dart';
 
 class SubscriptionService {
-  final ApiClient _apiClient = ApiClient();
+  final Dio _dio = sl<Dio>();
 
   /// 구독하기
   Future<void> subscribe(String creatorId) async {
+    if (ApiConfig.useMockData) {
+      return MockSpareData.mockSubscribe(creatorId);
+    }
     try {
-      final response = await _apiClient.dio.post('/api/subscriptions/$creatorId');
+      final response = await _dio.post('/api/subscriptions/$creatorId');
 
       if (response.statusCode != 200 && response.statusCode != 201) {
         throw ServerException(
@@ -27,8 +32,11 @@ class SubscriptionService {
 
   /// 구독 취소
   Future<void> unsubscribe(String creatorId) async {
+    if (ApiConfig.useMockData) {
+      return MockSpareData.mockUnsubscribe(creatorId);
+    }
     try {
-      final response = await _apiClient.dio.delete('/api/subscriptions/$creatorId');
+      final response = await _dio.delete('/api/subscriptions/$creatorId');
 
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw ServerException(
@@ -45,8 +53,11 @@ class SubscriptionService {
 
   /// 구독 상태 확인
   Future<bool> checkSubscriptionStatus(String creatorId) async {
+    if (ApiConfig.useMockData) {
+      return MockSpareData.mockCheckSubscriptionStatus(creatorId);
+    }
     try {
-      final response = await _apiClient.dio.get('/api/users/$creatorId/subscription-status');
+      final response = await _dio.get('/api/users/$creatorId/subscription-status');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -54,10 +65,10 @@ class SubscriptionService {
       } else {
         return false;
       }
-    } on DioException catch (e) {
+    } on DioException catch (_) {
       // 404 등 에러는 구독하지 않은 것으로 처리
       return false;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   }
@@ -65,7 +76,7 @@ class SubscriptionService {
   /// 내가 구독한 크리에이터 목록 조회
   Future<List<Creator>> getMySubscriptions() async {
     try {
-      final response = await _apiClient.dio.get('/api/subscriptions/my');
+      final response = await _dio.get('/api/subscriptions/my');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -94,7 +105,7 @@ class SubscriptionService {
   /// 구독자 목록 조회 (크리에이터용)
   Future<List<Subscription>> getSubscribers(String creatorId) async {
     try {
-      final response = await _apiClient.dio.get('/api/users/$creatorId/subscribers');
+      final response = await _dio.get('/api/users/$creatorId/subscribers');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;

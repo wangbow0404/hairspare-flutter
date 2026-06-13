@@ -1,14 +1,13 @@
-/// 사용자 행동 추적 모델 (챌린지 참여 추적)
-class UserBehavior {
-  final String challengeId;
-  final double watchTime; // 시청 시간 (초)
-  final double watchPercentage; // 시청 비율 (0-100)
-  final bool isLiked;
-  final bool isCommented;
-  final bool isShared;
-  final DateTime watchedAt; // 시청 시간
+import 'package:json_annotation/json_annotation.dart';
 
-  UserBehavior({
+import 'json_converters.dart';
+
+part 'user_behavior.g.dart';
+
+/// 사용자 행동 추적 모델 (챌린지 참여 추적)
+@JsonSerializable()
+class UserBehavior {
+  const UserBehavior({
     required this.challengeId,
     required this.watchTime,
     required this.watchPercentage,
@@ -18,29 +17,25 @@ class UserBehavior {
     required this.watchedAt,
   });
 
-  Map<String, dynamic> toJson() {
-    return {
-      'challengeId': challengeId,
-      'watchTime': watchTime,
-      'watchPercentage': watchPercentage,
-      'isLiked': isLiked,
-      'isCommented': isCommented,
-      'isShared': isShared,
-      'watchedAt': watchedAt.toIso8601String(),
-    };
-  }
+  factory UserBehavior.fromJson(Map<String, dynamic> json) =>
+      _$UserBehaviorFromJson(json);
 
-  factory UserBehavior.fromJson(Map<String, dynamic> json) {
-    return UserBehavior(
-      challengeId: json['challengeId'] as String,
-      watchTime: (json['watchTime'] as num).toDouble(),
-      watchPercentage: (json['watchPercentage'] as num).toDouble(),
-      isLiked: json['isLiked'] as bool? ?? false,
-      isCommented: json['isCommented'] as bool? ?? false,
-      isShared: json['isShared'] as bool? ?? false,
-      watchedAt: DateTime.parse(json['watchedAt'] as String),
-    );
-  }
+  @JsonKey(defaultValue: '')
+  final String challengeId;
+  @LooseDoubleAsZeroConverter()
+  final double watchTime;
+  @LooseDoubleAsZeroConverter()
+  final double watchPercentage;
+  @JsonKey(defaultValue: false)
+  final bool isLiked;
+  @JsonKey(defaultValue: false)
+  final bool isCommented;
+  @JsonKey(defaultValue: false)
+  final bool isShared;
+  @IsoDateTimeOrNowConverter()
+  final DateTime watchedAt;
+
+  Map<String, dynamic> toJson() => _$UserBehaviorToJson(this);
 
   UserBehavior copyWith({
     String? challengeId,

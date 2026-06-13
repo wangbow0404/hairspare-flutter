@@ -4,15 +4,20 @@ import '../models/notification.dart' show AppNotification;
 import '../theme/app_theme.dart';
 import '../providers/notification_provider.dart';
 import '../utils/navigation_helper.dart';
+import '../utils/shop_notification_navigation.dart';
+import '../utils/spare_notification_navigation.dart';
 
 class NotificationBell extends StatefulWidget {
   final String role; // 'spare' | 'shop'
   final Function(AppNotification)? onNotificationTap;
+  /// null이면 [AppTheme.textSecondary].
+  final Color? iconColor;
 
   const NotificationBell({
     super.key,
     required this.role,
     this.onNotificationTap,
+    this.iconColor,
   });
 
   @override
@@ -31,6 +36,10 @@ class _NotificationBellState extends State<NotificationBell> {
   }
 
   void _toggleNotifications() {
+    if (!_showNotifications) {
+      Provider.of<NotificationProvider>(context, listen: false)
+          .loadNotifications(audience: widget.role);
+    }
     if (_showNotifications) {
       _hideOverlay();
     } else {
@@ -86,7 +95,7 @@ class _NotificationBellState extends State<NotificationBell> {
   Widget _buildNotificationPanel(BuildContext context, bool inOverlay) {
     return Consumer<NotificationProvider>(
       builder: (context, notificationProvider, _) {
-        final notifications = notificationProvider.notifications;
+        final notifications = notificationProvider.unreadNotifications;
         final unreadCount = notificationProvider.unreadCount;
 
         return Container(
@@ -101,11 +110,11 @@ class _NotificationBellState extends State<NotificationBell> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: AppTheme.spacing3,
                   vertical: AppTheme.spacing2,
                 ),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   border: Border(
                     bottom: BorderSide(color: AppTheme.borderGray),
                   ),
@@ -121,7 +130,7 @@ class _NotificationBellState extends State<NotificationBell> {
                     ),
                     if (unreadCount > 0)
                       Container(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: AppTheme.spacing2,
                           vertical: AppTheme.spacing1,
                         ),
@@ -143,13 +152,13 @@ class _NotificationBellState extends State<NotificationBell> {
               ),
               Flexible(
                 child: notificationProvider.isLoading
-                    ? Padding(
+                    ? const Padding(
                         padding: EdgeInsets.all(AppTheme.spacing8),
-                        child: const Center(child: CircularProgressIndicator()),
+                        child: Center(child: CircularProgressIndicator()),
                       )
                     : notifications.isEmpty
                         ? Padding(
-                            padding: EdgeInsets.all(AppTheme.spacing8),
+                            padding: const EdgeInsets.all(AppTheme.spacing8),
                             child: Text(
                               '알림이 없습니다',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -171,7 +180,10 @@ class _NotificationBellState extends State<NotificationBell> {
                                   Provider.of<NotificationProvider>(
                                     context,
                                     listen: false,
-                                  ).deleteNotification(notification.id);
+                                  ).deleteNotification(
+                                    notification.id,
+                                    audience: widget.role,
+                                  );
                                 },
                                 background: Container(
                                   color: AppTheme.urgentRed,
@@ -185,7 +197,7 @@ class _NotificationBellState extends State<NotificationBell> {
                                 ),
                                 child: ListTile(
                                   dense: true,
-                                  contentPadding: EdgeInsets.symmetric(
+                                  contentPadding: const EdgeInsets.symmetric(
                                     horizontal: AppTheme.spacing3,
                                     vertical: 2,
                                   ),
@@ -224,11 +236,11 @@ class _NotificationBellState extends State<NotificationBell> {
               ),
               if (inOverlay)
                 Container(
-                  padding: EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: AppTheme.spacing3,
                     vertical: AppTheme.spacing2,
                   ),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     border: Border(
                       top: BorderSide(color: AppTheme.borderGray),
                     ),
@@ -241,7 +253,7 @@ class _NotificationBellState extends State<NotificationBell> {
                         if (mounted) setState(() => _showNotifications = false);
                         NavigationHelper.navigateToNotificationsList(context);
                       },
-                      child: Text(
+                      child: const Text(
                         '전체 보기',
                         style: TextStyle(
                           fontSize: 14,
@@ -262,7 +274,7 @@ class _NotificationBellState extends State<NotificationBell> {
   void _handleNotificationTap(AppNotification notification) {
     // 알림 읽음 처리
     Provider.of<NotificationProvider>(context, listen: false)
-        .markAsRead(notification.id);
+        .markAsRead(notification.id, audience: widget.role);
 
     // 알림 타입에 따라 화면 이동
     if (widget.onNotificationTap != null) {
@@ -280,32 +292,10 @@ class _NotificationBellState extends State<NotificationBell> {
   void _navigateFromNotification(AppNotification notification) {
     final context = this.context;
     if (!mounted) return;
-
-    switch (notification.type) {
-      case 'application_received':
-      case 'application_accepted':
-      case 'application_rejected':
-      case 'job_posted':
-      case 'job':
-        // 공고 관련 알림 (job: 새 공고 등록)
-        if (notification.relatedJobId != null) {
-          NavigationHelper.navigateToJobDetail(context, notification.relatedJobId!);
-        }
-        break;
-      case 'schedule_reminder':
-      case 'schedule_confirmed':
-      case 'schedule_cancelled':
-        // 스케줄 관련 알림
-        NavigationHelper.navigateToSchedule(context);
-        break;
-      case 'message_received':
-        // 메시지 관련 알림 - 일단 메시지 목록으로 이동
-        // TODO: relatedUserId로 채팅방을 찾아서 이동하는 로직 추가 필요
-        NavigationHelper.navigateToMessages(context);
-        break;
-      default:
-        // 기본적으로 알림 화면으로 이동하거나 아무 동작 안 함
-        break;
+    if (widget.role == 'shop') {
+      ShopNotificationNavigation.handle(context, notification);
+    } else {
+      SpareNotificationNavigation.handle(context, notification);
     }
   }
 
@@ -313,7 +303,6 @@ class _NotificationBellState extends State<NotificationBell> {
   Widget build(BuildContext context) {
     return Consumer<NotificationProvider>(
       builder: (context, notificationProvider, _) {
-        final notifications = notificationProvider.notifications;
         final unreadCount = notificationProvider.unreadCount;
 
         return Stack(
@@ -326,11 +315,11 @@ class _NotificationBellState extends State<NotificationBell> {
                 onTap: _toggleNotifications,
                 borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                 child: Container(
-                  padding: EdgeInsets.all(AppTheme.spacing2),
-                  child: const Icon(
+                  padding: const EdgeInsets.all(AppTheme.spacing2),
+                  child: Icon(
                     Icons.notifications_outlined,
                     size: 24,
-                    color: AppTheme.textSecondary,
+                    color: widget.iconColor ?? AppTheme.textSecondary,
                   ),
                 ),
               ),

@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
-import '../../widgets/spare_app_bar.dart';
+import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../utils/icon_mapper.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 import 'point_history_screen.dart';
 
 /// Next.js와 동일한 +포인트 화면
@@ -19,13 +14,12 @@ class PointsScreen extends StatefulWidget {
 }
 
 class _PointsScreenState extends State<PointsScreen> {
-  int _currentNavIndex = 0;
   int _currentPoints = 1250; // 보유 포인트
   bool _attendanceChecked = false; // 출석체크 여부
   bool _showMoreSimple = false;
   bool _showMoreParticipation = false;
   bool _showMorePurchase = false;
-  Set<String> _completedMissionIds = {}; // 완료된 미션 ID 추적
+  final Set<String> _completedMissionIds = {}; // 완료된 미션 ID 추적
 
   // Mock 데이터
   final List<_Mission> _dailyMissions = [
@@ -197,16 +191,16 @@ class _PointsScreenState extends State<PointsScreen> {
     return Container(
       width: 64,
       height: 64,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [AppTheme.green200, AppTheme.blue100],
         ),
       ),
       child: Center(
-        child: IconMapper.icon('briefcase', size: 28, color: Colors.white.withOpacity(0.9)) ??
-            Icon(Icons.work_outline, size: 28, color: Colors.white.withOpacity(0.9)),
+        child: IconMapper.icon('briefcase', size: 28, color: Colors.white.withValues(alpha: 0.9)) ??
+            Icon(Icons.work_outline, size: 28, color: Colors.white.withValues(alpha: 0.9)),
       ),
     );
   }
@@ -215,7 +209,11 @@ class _PointsScreenState extends State<PointsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: const SpareAppBar(),
+      appBar: SpareSubpageAppBar(
+        title: '포인트',
+        gradientStyle: SpareSubpageAppBarGradientStyle.purplePink,
+        showBackButton: Navigator.canPop(context),
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -223,7 +221,7 @@ class _PointsScreenState extends State<PointsScreen> {
                 Container(
                   width: double.infinity,
                   height: 128,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -250,7 +248,7 @@ class _PointsScreenState extends State<PointsScreen> {
                     horizontal: AppTheme.spacing4,
                     vertical: AppTheme.spacing4,
                   ),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppTheme.backgroundWhite,
                     border: Border(
                       bottom: BorderSide(
@@ -267,7 +265,7 @@ class _PointsScreenState extends State<PointsScreen> {
                           Container(
                             width: 32,
                             height: 32,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: AppTheme.yellow400,
                               shape: BoxShape.circle,
                             ),
@@ -282,7 +280,7 @@ class _PointsScreenState extends State<PointsScreen> {
                               ),
                             ),
                           ),
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           Text(
                             '보유 포인트',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -302,14 +300,14 @@ class _PointsScreenState extends State<PointsScreen> {
                               color: AppTheme.textPrimary,
                             ),
                           ),
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           Text(
                             'P',
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               color: AppTheme.textSecondary,
                             ),
                           ),
-                          SizedBox(width: AppTheme.spacing3),
+                          const SizedBox(width: AppTheme.spacing3),
                           TextButton(
                             onPressed: () {
                               Navigator.push(
@@ -346,7 +344,7 @@ class _PointsScreenState extends State<PointsScreen> {
                     horizontal: AppTheme.spacing4,
                     vertical: AppTheme.spacing4,
                   ),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppTheme.backgroundWhite,
                     border: Border(
                       bottom: BorderSide(
@@ -369,7 +367,7 @@ class _PointsScreenState extends State<PointsScreen> {
                               color: AppTheme.textPrimary,
                             ),
                           ),
-                          SizedBox(height: AppTheme.spacing1),
+                          const SizedBox(height: AppTheme.spacing1),
                           Text(
                             '매주 일요일 00시에 초기화돼요',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -379,7 +377,7 @@ class _PointsScreenState extends State<PointsScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: AppTheme.spacing3),
+                      const SizedBox(height: AppTheme.spacing3),
                       ..._dailyMissions.map((mission) {
                         final isCompleted = _isMissionCompleted(mission.id) || 
                             (mission.id == 'daily-1' && _attendanceChecked);
@@ -434,20 +432,20 @@ class _PointsScreenState extends State<PointsScreen> {
                 // 하단 배너 (광고용)
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.only(
+                  padding: const EdgeInsets.only(
                     left: AppTheme.spacing4,
                     right: AppTheme.spacing4,
                     top: AppTheme.spacing6,
                     bottom: AppTheme.spacing2,
                   ),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppTheme.backgroundWhite,
                   ),
                   child: Container(
                     width: double.infinity,
                     height: 128,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
@@ -469,48 +467,9 @@ class _PointsScreenState extends State<PointsScreen> {
                 ),
 
             // 하단 여백 (하단 네비게이션 바 공간)
-            SizedBox(height: 80),
+            const SizedBox(height: 80),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          // 네비게이션 처리
-          switch (index) {
-            case 0:
-              // 홈으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              // 결제로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              // 찜으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              // 마이(프로필)로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }
@@ -529,7 +488,7 @@ class _PointsScreenState extends State<PointsScreen> {
         horizontal: AppTheme.spacing4,
         vertical: AppTheme.spacing4,
       ),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppTheme.backgroundWhite,
         border: Border(
           bottom: BorderSide(
@@ -571,7 +530,7 @@ class _PointsScreenState extends State<PointsScreen> {
                             color: AppTheme.textSecondary,
                           ),
                         ),
-                        SizedBox(width: AppTheme.spacing1),
+                        const SizedBox(width: AppTheme.spacing1),
                         IconMapper.icon(
                           'chevrondown',
                           size: 16,
@@ -592,7 +551,7 @@ class _PointsScreenState extends State<PointsScreen> {
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing3),
+          const SizedBox(height: AppTheme.spacing3),
           ...displayedMissions.map((mission) {
             final isCompleted = _isMissionCompleted(mission.id);
             return _buildMissionItem(
@@ -612,7 +571,7 @@ class _PointsScreenState extends State<PointsScreen> {
     required VoidCallback onTap,
   }) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: AppTheme.spacing2),
+      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing2),
       child: Row(
         children: [
           // 사진 미리보기 영역 (4번 사진 스타일: 정사각형, 라운드, 그라데이션)
@@ -625,7 +584,7 @@ class _PointsScreenState extends State<PointsScreen> {
                   ? LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [AppTheme.purple100, AppTheme.primaryPurple.withOpacity(0.3)],
+                      colors: [AppTheme.purple100, AppTheme.primaryPurple.withValues(alpha: 0.3)],
                     )
                   : const LinearGradient(
                       begin: Alignment.topLeft,
@@ -653,7 +612,7 @@ class _PointsScreenState extends State<PointsScreen> {
                       : _buildMissionPlaceholder(),
             ),
           ),
-          SizedBox(width: AppTheme.spacing3),
+          const SizedBox(width: AppTheme.spacing3),
           // 텍스트 영역
           Expanded(
             child: Column(
@@ -669,7 +628,7 @@ class _PointsScreenState extends State<PointsScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: AppTheme.spacing1 / 2),
+                const SizedBox(height: AppTheme.spacing1 / 2),
                 Text(
                   mission.description,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -682,7 +641,7 @@ class _PointsScreenState extends State<PointsScreen> {
               ],
             ),
           ),
-          SizedBox(width: AppTheme.spacing2),
+          const SizedBox(width: AppTheme.spacing2),
           // 버튼 영역
           ElevatedButton(
             onPressed: isCompleted ? null : onTap,
@@ -707,7 +666,7 @@ class _PointsScreenState extends State<PointsScreen> {
                     children: [
                       IconMapper.icon('check', size: 16, color: AppTheme.textSecondary) ??
                           const Icon(Icons.check, size: 16),
-                      SizedBox(width: AppTheme.spacing1),
+                      const SizedBox(width: AppTheme.spacing1),
                       Text(
                         '완료',
                         style: Theme.of(context).textTheme.labelMedium?.copyWith(

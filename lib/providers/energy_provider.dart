@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import '../services/energy_service.dart';
 import '../utils/error_handler.dart';
-import '../utils/app_exception.dart';
-
 class EnergyProvider with ChangeNotifier {
-  final EnergyService _energyService = EnergyService();
+  EnergyProvider(this._energyService);
+
+  final EnergyService _energyService;
   Map<String, dynamic>? _wallet;
   bool _isLoading = false;
   String? _error;

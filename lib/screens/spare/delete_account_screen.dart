@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/auth_service.dart';
 import '../../utils/error_handler.dart';
-import '../spare/login_screen.dart';
-import '../spare/home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
+import '../../core/router/app_navigation.dart';
 
 /// Next.js와 동일한 계정 삭제 화면
 class DeleteAccountScreen extends StatefulWidget {
@@ -19,11 +15,9 @@ class DeleteAccountScreen extends StatefulWidget {
 }
 
 class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
-  int _currentNavIndex = 0;
   final AuthService _authService = AuthService();
   String _step = 'warning'; // warning, final
   final _passwordController = TextEditingController();
-  bool _showPassword = false;
   bool _isLoading = true;
   bool _isDeleting = false;
   String? _error;
@@ -54,11 +48,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       
       // 로그아웃 후 로그인 화면으로 이동
       if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => SpareLoginScreen()),
-          (route) => false,
-        );
+        AppNavigation.goSpareLogin(context);
       }
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
@@ -81,32 +71,15 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '계정 삭제',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
-      ),
+      appBar: const SharedAppBar(title: '계정 삭제'),
       body: SingleChildScrollView(
         padding: AppTheme.spacing(AppTheme.spacing6),
         child: _step == 'warning'
@@ -118,7 +91,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                     decoration: BoxDecoration(
                       color: AppTheme.urgentRedLight,
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                      border: Border.all(color: AppTheme.urgentRed.withOpacity(0.2)),
+                      border: Border.all(color: AppTheme.urgentRed.withValues(alpha: 0.2)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,7 +100,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                           children: [
                             IconMapper.icon('alerttriangle', size: 24, color: AppTheme.urgentRed) ??
                                 const Icon(Icons.warning, size: 24, color: AppTheme.urgentRed),
-                            SizedBox(width: AppTheme.spacing3),
+                            const SizedBox(width: AppTheme.spacing3),
                             Expanded(
                               child: Text(
                                 '계정 삭제 전 확인사항',
@@ -140,15 +113,15 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                             ),
                           ],
                         ),
-                        SizedBox(height: AppTheme.spacing4),
+                        const SizedBox(height: AppTheme.spacing4),
                         Text(
                           '계정을 삭제하면 다음 정보가 영구적으로 삭제되며 복구할 수 없습니다.',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             fontSize: 14,
-                            color: AppTheme.urgentRed.withOpacity(0.9),
+                            color: AppTheme.urgentRed.withValues(alpha: 0.9),
                           ),
                         ),
-                        SizedBox(height: AppTheme.spacing4),
+                        const SizedBox(height: AppTheme.spacing4),
                         ...[
                           '프로필 정보 및 인증 정보',
                           '에너지 잔액 및 거래 내역',
@@ -157,10 +130,10 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                           '후기 및 평가 내역',
                         ].map((item) {
                           return Padding(
-                            padding: EdgeInsets.only(bottom: AppTheme.spacing2),
+                            padding: const EdgeInsets.only(bottom: AppTheme.spacing2),
                             child: Row(
                               children: [
-                                Text(
+                                const Text(
                                   '• ',
                                   style: TextStyle(
                                     color: AppTheme.urgentRed,
@@ -172,7 +145,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                                     item,
                                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                       fontSize: 14,
-                                      color: AppTheme.urgentRed.withOpacity(0.9),
+                                      color: AppTheme.urgentRed.withValues(alpha: 0.9),
                                     ),
                                   ),
                                 ),
@@ -183,7 +156,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                       ],
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing6),
+                  const SizedBox(height: AppTheme.spacing6),
                   // 안내사항
                   Container(
                     padding: AppTheme.spacing(AppTheme.spacing4),
@@ -203,18 +176,18 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                             color: AppTheme.textPrimary,
                           ),
                         ),
-                        SizedBox(height: AppTheme.spacing4),
+                        const SizedBox(height: AppTheme.spacing4),
                         ...[
                           '진행 중인 스케줄이 있는 경우, 스케줄 완료 후 삭제를 진행해주세요.',
                           '미정산된 에너지가 있는 경우, 정산 완료 후 삭제를 진행해주세요.',
                           '계정 삭제 후 30일 이내에 재가입할 수 없습니다.',
                         ].map((item) {
                           return Padding(
-                            padding: EdgeInsets.only(bottom: AppTheme.spacing2),
+                            padding: const EdgeInsets.only(bottom: AppTheme.spacing2),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                const Text(
                                   '• ',
                                   style: TextStyle(
                                     color: AppTheme.textTertiary,
@@ -237,7 +210,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                       ],
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing6),
+                  const SizedBox(height: AppTheme.spacing6),
                   // 계속하기 버튼
                   SizedBox(
                     width: double.infinity,
@@ -257,7 +230,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                         children: [
                           IconMapper.icon('trash2', size: 20, color: Colors.white) ??
                               const Icon(Icons.delete, size: 20, color: Colors.white),
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           Text(
                             '계속하기',
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -270,14 +243,14 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   // 취소 버튼
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: AppTheme.borderGray),
+                        side: const BorderSide(color: AppTheme.borderGray),
                         padding: AppTheme.spacing(AppTheme.spacing3),
                       ),
                       child: Text(
@@ -300,13 +273,13 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                     decoration: BoxDecoration(
                       color: AppTheme.backgroundWhite,
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                      border: Border.all(color: AppTheme.urgentRed.withOpacity(0.2)),
+                      border: Border.all(color: AppTheme.urgentRed.withValues(alpha: 0.2)),
                     ),
                     child: Column(
                       children: [
                         IconMapper.icon('alerttriangle', size: 64, color: AppTheme.urgentRed) ??
                             const Icon(Icons.warning, size: 64, color: AppTheme.urgentRed),
-                        SizedBox(height: AppTheme.spacing4),
+                        const SizedBox(height: AppTheme.spacing4),
                         Text(
                           '정말 계정을 삭제하시겠습니까?',
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -316,7 +289,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: AppTheme.spacing2),
+                        const SizedBox(height: AppTheme.spacing2),
                         Text(
                           '이 작업은 되돌릴 수 없습니다. 모든 데이터가 영구적으로 삭제됩니다.',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -328,24 +301,24 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                       ],
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing6),
+                  const SizedBox(height: AppTheme.spacing6),
                   if (_error != null)
                     Container(
                       padding: AppTheme.spacing(AppTheme.spacing3),
                       decoration: BoxDecoration(
                         color: AppTheme.urgentRedLight,
                         borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                        border: Border.all(color: AppTheme.urgentRed.withOpacity(0.2)),
+                        border: Border.all(color: AppTheme.urgentRed.withValues(alpha: 0.2)),
                       ),
                       child: Row(
                         children: [
                           IconMapper.icon('xcircle', size: 20, color: AppTheme.urgentRed) ??
                               const Icon(Icons.error, size: 20, color: AppTheme.urgentRed),
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           Expanded(
                             child: Text(
                               _error!,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 14,
                                 color: AppTheme.urgentRed,
                               ),
@@ -354,7 +327,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                         ],
                       ),
                     ),
-                  if (_error != null) SizedBox(height: AppTheme.spacing4),
+                  if (_error != null) const SizedBox(height: AppTheme.spacing4),
                   // 최종 확인 버튼
                   SizedBox(
                     width: double.infinity,
@@ -379,7 +352,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                               children: [
                                 IconMapper.icon('trash2', size: 20, color: Colors.white) ??
                                     const Icon(Icons.delete, size: 20, color: Colors.white),
-                                SizedBox(width: AppTheme.spacing2),
+                                const SizedBox(width: AppTheme.spacing2),
                                 Text(
                                   '확인',
                                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -392,7 +365,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                             ),
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   // 취소 버튼
                   SizedBox(
                     width: double.infinity,
@@ -400,13 +373,10 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                       onPressed: _isDeleting
                           ? null
                           : () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-                              );
+                              AppNavigation.goSpareHome(context);
                             },
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: AppTheme.borderGray),
+                        side: const BorderSide(color: AppTheme.borderGray),
                         padding: AppTheme.spacing(AppTheme.spacing3),
                       ),
                       child: Text(
@@ -421,46 +391,6 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                   ),
                 ],
               ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          
-          // 네비게이션 처리
-          switch (index) {
-            case 0:
-              // 홈으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              // 결제로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              // 찜으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              // 마이(프로필)로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }

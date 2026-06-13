@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/job.dart';
 import '../theme/app_theme.dart';
+import '../theme/home_text_styles.dart';
 import 'job_card.dart';
 
 enum CategoryType {
@@ -40,22 +41,18 @@ class _CategoryJobSectionState extends State<CategoryJobSection> {
         horizontal: AppTheme.spacing4, // px-4
         vertical: AppTheme.spacing6, // py-6
       ),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppTheme.backgroundWhite, // bg-white
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 섹션 타이틀
-          Text(
+          const Text(
             '카테고리별 인기 공고',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontSize: 20, // text-xl
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary, // text-gray-900
-            ),
+            style: HomeTextStyles.sectionTitle,
           ),
-          SizedBox(height: AppTheme.spacing4), // mb-4
+          const SizedBox(height: AppTheme.spacing4), // mb-4
 
           // 탭 버튼들
           SingleChildScrollView(
@@ -68,21 +65,21 @@ class _CategoryJobSectionState extends State<CategoryJobSection> {
                   isSelected: _selectedCategory == CategoryType.region,
                   onTap: () => setState(() => _selectedCategory = CategoryType.region),
                 ),
-                SizedBox(width: AppTheme.spacing2), // gap-2
+                const SizedBox(width: AppTheme.spacing2), // gap-2
                 _CategoryTabButton(
                   label: '시급 BEST',
                   category: CategoryType.hourly,
                   isSelected: _selectedCategory == CategoryType.hourly,
                   onTap: () => setState(() => _selectedCategory = CategoryType.hourly),
                 ),
-                SizedBox(width: AppTheme.spacing2), // gap-2
+                const SizedBox(width: AppTheme.spacing2), // gap-2
                 _CategoryTabButton(
                   label: '일급 BEST',
                   category: CategoryType.daily,
                   isSelected: _selectedCategory == CategoryType.daily,
                   onTap: () => setState(() => _selectedCategory = CategoryType.daily),
                 ),
-                SizedBox(width: AppTheme.spacing2), // gap-2
+                const SizedBox(width: AppTheme.spacing2), // gap-2
                 _CategoryTabButton(
                   label: '추천 BEST',
                   category: CategoryType.recommended,
@@ -93,7 +90,7 @@ class _CategoryJobSectionState extends State<CategoryJobSection> {
               ],
             ),
           ),
-          SizedBox(height: AppTheme.spacing4), // mb-4
+          const SizedBox(height: AppTheme.spacing4), // mb-4
 
           // 선택된 카테고리의 공고 리스트
           selectedJobs.isEmpty

@@ -105,19 +105,19 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> {
                   isActive: _activeStatus == 'all',
                   onTap: () => setState(() => _activeStatus = 'all'),
                 ),
-                SizedBox(width: AppTheme.spacing2),
+                const SizedBox(width: AppTheme.spacing2),
                 _FilterChip(
                   label: '대기중',
                   isActive: _activeStatus == 'pending',
                   onTap: () => setState(() => _activeStatus = 'pending'),
                 ),
-                SizedBox(width: AppTheme.spacing2),
+                const SizedBox(width: AppTheme.spacing2),
                 _FilterChip(
                   label: '승인됨',
                   isActive: _activeStatus == 'approved',
                   onTap: () => setState(() => _activeStatus = 'approved'),
                 ),
-                SizedBox(width: AppTheme.spacing2),
+                const SizedBox(width: AppTheme.spacing2),
                 _FilterChip(
                   label: '거절됨',
                   isActive: _activeStatus == 'rejected',
@@ -142,7 +142,7 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> {
                                   ),
                               textAlign: TextAlign.center,
                             ),
-                            SizedBox(height: AppTheme.spacing4),
+                            const SizedBox(height: AppTheme.spacing4),
                             ElevatedButton(
                               onPressed: _loadApplications,
                               child: const Text('다시 시도'),
@@ -244,7 +244,7 @@ class _ApplicationCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: EdgeInsets.only(bottom: AppTheme.spacing3),
+        margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
         padding: AppTheme.spacing(AppTheme.spacing4),
         decoration: BoxDecoration(
           color: AppTheme.backgroundWhite,
@@ -274,7 +274,7 @@ class _ApplicationCard extends StatelessWidget {
                     vertical: AppTheme.spacing1,
                   ),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.15),
+                    color: statusColor.withValues(alpha: 0.15),
                     borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
                   ),
                   child: Text(
@@ -287,14 +287,14 @@ class _ApplicationCard extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: AppTheme.spacing2),
+            const SizedBox(height: AppTheme.spacing2),
             Text(
               job.shopName,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppTheme.textSecondary,
                   ),
             ),
-            SizedBox(height: AppTheme.spacing2),
+            const SizedBox(height: AppTheme.spacing2),
             Row(
               children: [
                 Text(
@@ -303,7 +303,7 @@ class _ApplicationCard extends StatelessWidget {
                         color: AppTheme.textTertiary,
                       ),
                 ),
-                SizedBox(width: AppTheme.spacing3),
+                const SizedBox(width: AppTheme.spacing3),
                 Text(
                   '${NumberFormat('#,###').format(job.amount)}원',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -313,7 +313,7 @@ class _ApplicationCard extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: AppTheme.spacing2),
+            const SizedBox(height: AppTheme.spacing2),
             Text(
               '지원일: ${DateFormat('yyyy.M.d', 'ko_KR').format(application.createdAt)}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(

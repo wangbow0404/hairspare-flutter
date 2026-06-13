@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/date_filter_button.dart';
 import '../../widgets/space_rental_card.dart';
 import '../../widgets/job_filter_dropdown.dart';
-import '../../widgets/spare_app_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
+import '../../widgets/common/spare_subpage_app_bar_actions.dart';
 import '../../utils/icon_mapper.dart';
 import '../../models/space_rental.dart';
 import '../../models/region.dart';
@@ -14,11 +12,6 @@ import '../../services/space_rental_service.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/region_helper.dart';
 import 'space_rental_detail_screen.dart';
-import 'home_screen.dart';
-import 'messages_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 
 /// 공간대여 목록 화면 (공고 목록 스타일)
 class RegionSelectScreen extends StatefulWidget {
@@ -29,7 +22,6 @@ class RegionSelectScreen extends StatefulWidget {
 }
 
 class _RegionSelectScreenState extends State<RegionSelectScreen> {
-  int _currentNavIndex = 0;
   final TextEditingController _searchController = TextEditingController();
   String? _activeFilter;
   String _sortBy = 'latest';
@@ -54,7 +46,6 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
   
   // 날짜 필터
   DateTime? _selectedDateStart;
-  DateTime? _selectedDateEnd;
   
   // 데이터
   List<SpaceRental> _allSpaces = [];
@@ -229,7 +220,6 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
       _spaceType = null;
       _selectedFacilities = [];
       _selectedDateStart = null;
-      _selectedDateEnd = null;
       _searchController.clear();
     });
     _loadSpaces();
@@ -248,7 +238,10 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: const SpareAppBar(),
+      appBar: SharedAppBar(
+        title: '공간대여',
+        actions: buildSpareSubpageAppBarActions(context),
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -266,7 +259,7 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                         children: [
                           Text(
                             '전체공간 총 ${_allSpaces.length}개',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                               color: AppTheme.textPrimary,
@@ -281,7 +274,7 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: AppTheme.spacing3),
+                      const SizedBox(height: AppTheme.spacing3),
                       // 검색
                       TextField(
                         controller: _searchController,
@@ -292,18 +285,18 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                         },
                         decoration: InputDecoration(
                           hintText: '미용실명 또는 주소 검색',
-                          prefixIcon: Icon(Icons.search, size: 20, color: AppTheme.textSecondary),
+                          prefixIcon: const Icon(Icons.search, size: 20, color: AppTheme.textSecondary),
                           border: OutlineInputBorder(
                             borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                           ),
-                          contentPadding: EdgeInsets.symmetric(
+                          contentPadding: const EdgeInsets.symmetric(
                             horizontal: AppTheme.spacing4,
                             vertical: AppTheme.spacing2,
                           ),
                           isDense: true,
                         ),
                       ),
-                      SizedBox(height: AppTheme.spacing3),
+                      const SizedBox(height: AppTheme.spacing3),
                       
                       // 첫 번째 줄: 지역 선택, 정렬
                       SingleChildScrollView(
@@ -339,7 +332,7 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                             ),
                             // 상세지역(구/군) 드롭다운 - 지역 선택 시에만 표시
                             if (_selectedProvince != null && _districts.isNotEmpty) ...[
-                              SizedBox(width: AppTheme.spacing2),
+                              const SizedBox(width: AppTheme.spacing2),
                               JobFilterDropdown(
                                 label: '상세지역',
                                 options: _districts.map((d) => d.name).toList(),
@@ -366,14 +359,13 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                                 },
                               ),
                             ],
-                            SizedBox(width: AppTheme.spacing2),
+                            const SizedBox(width: AppTheme.spacing2),
                             // 날짜 선택
                             DateFilterButton(
                               selectedDate: _selectedDateStart,
                               onDateSelected: (date) {
                                 setState(() {
                                   _selectedDateStart = date;
-                                  _selectedDateEnd = null;
                                 });
                                 _loadSpaces();
                                 setState(() {
@@ -383,7 +375,6 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                               onClear: () {
                                 setState(() {
                                   _selectedDateStart = null;
-                                  _selectedDateEnd = null;
                                 });
                                 _loadSpaces();
                                 setState(() {
@@ -391,11 +382,11 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                                 });
                               },
                             ),
-                            SizedBox(width: AppTheme.spacing2),
+                            const SizedBox(width: AppTheme.spacing2),
                             // 정렬 드롭다운
                             JobFilterDropdown(
                               label: '정렬',
-                              options: ['최신순', '가격순', '마감순'],
+                              options: const ['최신순', '가격순', '마감순'],
                               selectedValue: _sortBy == 'latest' ? '최신순'
                                   : _sortBy == 'price' ? '가격순'
                                   : '마감순',
@@ -427,7 +418,7 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                           ],
                         ),
                       ),
-                      SizedBox(height: AppTheme.spacing3),
+                      const SizedBox(height: AppTheme.spacing3),
                       
                       // 두 번째 줄: 필터 버튼들
                       SingleChildScrollView(
@@ -448,7 +439,7 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                                 });
                               },
                             ),
-                            SizedBox(width: AppTheme.spacing2),
+                            const SizedBox(width: AppTheme.spacing2),
                             _FilterChip(
                               label: '급구',
                               emoji: '🚀',
@@ -462,7 +453,7 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                                 });
                               },
                             ),
-                            SizedBox(width: AppTheme.spacing2),
+                            const SizedBox(width: AppTheme.spacing2),
                             _FilterChip(
                               label: '최신순',
                               emoji: '🕐',
@@ -477,7 +468,7 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                                 });
                               },
                             ),
-                            SizedBox(width: AppTheme.spacing2),
+                            const SizedBox(width: AppTheme.spacing2),
                             _FilterChip(
                               label: '마감임박',
                               emoji: '⏰',
@@ -491,7 +482,7 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                                 });
                               },
                             ),
-                            SizedBox(width: AppTheme.spacing2),
+                            const SizedBox(width: AppTheme.spacing2),
                             _FilterChip(
                               label: '가격순',
                               emoji: '💵',
@@ -505,7 +496,7 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                                 });
                               },
                             ),
-                            SizedBox(width: AppTheme.spacing2),
+                            const SizedBox(width: AppTheme.spacing2),
                             _FilterChip(
                               label: '의자',
                               emoji: '🪑',
@@ -519,7 +510,7 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                                 });
                               },
                             ),
-                            SizedBox(width: AppTheme.spacing2),
+                            const SizedBox(width: AppTheme.spacing2),
                             _FilterChip(
                               label: '개인실',
                               emoji: '🚪',
@@ -533,7 +524,7 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                                 });
                               },
                             ),
-                            SizedBox(width: AppTheme.spacing2),
+                            const SizedBox(width: AppTheme.spacing2),
                             _FilterChip(
                               label: '샴푸대',
                               emoji: '💧',
@@ -549,7 +540,7 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                                 _loadSpaces();
                               },
                             ),
-                            SizedBox(width: AppTheme.spacing2),
+                            const SizedBox(width: AppTheme.spacing2),
                             _FilterChip(
                               label: '드라이어',
                               emoji: '💨',
@@ -583,12 +574,12 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                                 size: 64,
                                 color: AppTheme.textTertiary,
                               ) ??
-                                  Icon(
+                                  const Icon(
                                     Icons.business_outlined,
                                     size: 64,
                                     color: AppTheme.textTertiary,
                                   ),
-                              SizedBox(height: AppTheme.spacing4),
+                              const SizedBox(height: AppTheme.spacing4),
                               Text(
                                 '공간이 없습니다',
                                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -612,46 +603,6 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                 ),
               ],
             ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          
-          // 네비게이션 처리
-          switch (index) {
-            case 0:
-              // 홈으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              // 결제로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const PaymentScreen()),
-              );
-              break;
-            case 2:
-              // 찜으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const FavoritesScreen()),
-              );
-              break;
-            case 3:
-              // 마이(프로필)로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfileScreen()),
-              );
-              break;
-          }
-        },
-      ),
     );
   }
 }
@@ -692,7 +643,7 @@ class _FilterChip extends StatelessWidget {
           boxShadow: isSelected && emoji != null
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -704,7 +655,7 @@ class _FilterChip extends StatelessWidget {
           children: [
             if (emoji != null) ...[
               Text(emoji!),
-              SizedBox(width: AppTheme.spacing1),
+              const SizedBox(width: AppTheme.spacing1),
             ],
             Text(
               label,

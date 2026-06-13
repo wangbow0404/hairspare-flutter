@@ -1,13 +1,13 @@
 import 'package:dio/dio.dart';
 import '../models/spare_profile.dart';
-import '../utils/api_client.dart';
 import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
 import '../mocks/mock_shop_data.dart';
+import '../core/di/service_locator.dart';
 
 class SpareService {
-  final ApiClient _apiClient = ApiClient();
+  final Dio _dio = sl<Dio>();
 
   /// 스페어 목록 조회
   Future<List<SpareProfile>> getSpares({
@@ -50,7 +50,7 @@ class SpareService {
         queryParams['offset'] = offset;
       }
 
-      final response = await _apiClient.dio.get(
+      final response = await _dio.get(
         '/api/spares',
         queryParameters: queryParams,
       );
@@ -109,7 +109,7 @@ class SpareService {
   Future<SpareProfile> getSpareById(String spareId) async {
     if (ApiConfig.useMockData) return await MockShopData.getSpareById(spareId);
     try {
-      final response = await _apiClient.dio.get('/api/spares/$spareId');
+      final response = await _dio.get('/api/spares/$spareId');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -132,8 +132,11 @@ class SpareService {
 
   /// 스페어에게 따봉 주기 (Shop 전용)
   Future<void> giveThumbsUpToSpare(String spareId) async {
+    if (ApiConfig.useMockData) {
+      return MockShopData.giveThumbsUpToSpare(spareId);
+    }
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/spares/$spareId/thumbs-up',
       );
 
@@ -153,7 +156,7 @@ class SpareService {
   /// 스페어 따봉 취소 (Shop 전용)
   Future<void> removeThumbsUpFromSpare(String spareId) async {
     try {
-      final response = await _apiClient.dio.delete(
+      final response = await _dio.delete(
         '/api/spares/$spareId/thumbs-up',
       );
 
@@ -173,7 +176,7 @@ class SpareService {
   /// 스페어 따봉 상태 확인 (Shop 전용)
   Future<bool> hasThumbsUpForSpare(String spareId) async {
     try {
-      final response = await _apiClient.dio.get(
+      final response = await _dio.get(
         '/api/spares/$spareId/thumbs-up/status',
       );
 
@@ -186,9 +189,9 @@ class SpareService {
       } else {
         return false;
       }
-    } on DioException catch (e) {
+    } on DioException catch (_) {
       return false;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   }

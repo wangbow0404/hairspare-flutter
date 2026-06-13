@@ -1,25 +1,20 @@
-class Job {
-  final String id;
-  final String title;
-  final String shopName;
-  final String date;
-  final String time;
-  final String? endTime;
-  final int amount;
-  final int energy;
-  final int requiredCount;
-  final String regionId;
-  final String? description;
-  final String? requirements;
-  final List<String>? images;
-  final bool isUrgent;
-  final bool isPremium;
-  final int? countdown;
-  final DateTime createdAt;
-  final String? ownerId;
-  final String status; // "published" | "closed" | "draft"
+import 'package:json_annotation/json_annotation.dart';
 
-  Job({
+import 'json_converters.dart';
+
+part 'job.g.dart';
+
+List<String>? _jobImagesFromJson(dynamic json) {
+  if (json == null) return null;
+  if (json is! List) return null;
+  return json.map((e) => e?.toString() ?? '').toList();
+}
+
+dynamic _jobImagesToJson(List<String>? images) => images;
+
+@JsonSerializable()
+class Job {
+  const Job({
     required this.id,
     required this.title,
     required this.shopName,
@@ -39,125 +34,93 @@ class Job {
     required this.createdAt,
     this.ownerId,
     this.status = 'published',
+    this.isHidden = false,
   });
 
-  factory Job.fromJson(Map<String, dynamic> json) {
+  @JsonKey(defaultValue: '')
+  final String id;
+  @JsonKey(defaultValue: '')
+  final String title;
+  @JsonKey(defaultValue: '')
+  final String shopName;
+  @JsonKey(defaultValue: '')
+  final String date;
+  @JsonKey(defaultValue: '')
+  final String time;
+  final String? endTime;
+  @LooseIntAsZeroConverter()
+  final int amount;
+  @LooseIntAsZeroConverter()
+  final int energy;
+  @LooseIntAsOneConverter()
+  final int requiredCount;
+  @JsonKey(defaultValue: '')
+  final String regionId;
+  final String? description;
+  final String? requirements;
+  @JsonKey(fromJson: _jobImagesFromJson, toJson: _jobImagesToJson)
+  final List<String>? images;
+  @JsonKey(defaultValue: false)
+  final bool isUrgent;
+  @JsonKey(defaultValue: false)
+  final bool isPremium;
+  @LooseIntNullableConverter()
+  final int? countdown;
+  @DateTimeOrNowConverter()
+  final DateTime createdAt;
+  final String? ownerId;
+  @JsonKey(defaultValue: 'published')
+  final String status;
+  @JsonKey(defaultValue: false)
+  final bool isHidden;
+
+  factory Job.fromJson(Map<String, dynamic> json) => _$JobFromJson(json);
+
+  Job copyWith({
+    String? id,
+    String? title,
+    String? shopName,
+    String? date,
+    String? time,
+    String? endTime,
+    int? amount,
+    int? energy,
+    int? requiredCount,
+    String? regionId,
+    String? description,
+    String? requirements,
+    List<String>? images,
+    bool? isUrgent,
+    bool? isPremium,
+    int? countdown,
+    DateTime? createdAt,
+    String? ownerId,
+    String? status,
+    bool? isHidden,
+  }) {
     return Job(
-      id: json['id']?.toString() ?? '',
-      title: json['title']?.toString() ?? '',
-      shopName: json['shopName']?.toString() ?? '',
-      date: json['date']?.toString() ?? '',
-      time: json['time']?.toString() ?? '',
-      endTime: json['endTime']?.toString(),
-      amount: _parseInt(json['amount']) ?? 0,
-      energy: _parseInt(json['energy']) ?? 0,
-      requiredCount: _parseInt(json['requiredCount']) ?? 1,
-      regionId: json['regionId']?.toString() ?? '',
-      description: json['description']?.toString(),
-      requirements: json['requirements']?.toString(),
-      images: json['images'] != null
-          ? List<String>.from(
-              (json['images'] as List).map((e) => e?.toString() ?? ''))
-          : null,
-      isUrgent: json['isUrgent'] as bool? ?? false,
-      isPremium: json['isPremium'] as bool? ?? false,
-      countdown: _parseInt(json['countdown']),
-      createdAt: _parseDateTime(json['createdAt']),
-      ownerId: json['ownerId']?.toString(),
-      status: json['status']?.toString() ?? 'published',
+      id: id ?? this.id,
+      title: title ?? this.title,
+      shopName: shopName ?? this.shopName,
+      date: date ?? this.date,
+      time: time ?? this.time,
+      endTime: endTime ?? this.endTime,
+      amount: amount ?? this.amount,
+      energy: energy ?? this.energy,
+      requiredCount: requiredCount ?? this.requiredCount,
+      regionId: regionId ?? this.regionId,
+      description: description ?? this.description,
+      requirements: requirements ?? this.requirements,
+      images: images ?? this.images,
+      isUrgent: isUrgent ?? this.isUrgent,
+      isPremium: isPremium ?? this.isPremium,
+      countdown: countdown ?? this.countdown,
+      createdAt: createdAt ?? this.createdAt,
+      ownerId: ownerId ?? this.ownerId,
+      status: status ?? this.status,
+      isHidden: isHidden ?? this.isHidden,
     );
   }
 
-  static DateTime _parseDateTime(dynamic value) {
-    if (value == null) {
-      return DateTime.now();
-    }
-    
-    // DateTime 객체인 경우
-    if (value is DateTime) {
-      return value;
-    }
-    
-    // String인 경우
-    if (value is String) {
-      if (value.isEmpty) {
-        return DateTime.now();
-      }
-      try {
-        // ISO 8601 형식 파싱
-        return DateTime.parse(value);
-      } catch (e) {
-        // 파싱 실패 시 현재 시간 반환
-        return DateTime.now();
-      }
-    }
-    
-    // Map인 경우 (일부 환경에서 DateTime이 Map으로 직렬화될 수 있음)
-    if (value is Map) {
-      try {
-        // ISO 문자열이 있는지 확인
-        if (value['iso'] != null && value['iso'] is String) {
-          return DateTime.parse(value['iso'] as String);
-        }
-        // 또는 직접 파싱 시도
-        if (value['_value'] != null) {
-          final val = value['_value'];
-          if (val is String) {
-            return DateTime.parse(val);
-          }
-          if (val is int) {
-            return DateTime.fromMillisecondsSinceEpoch(val);
-          }
-        }
-      } catch (e) {
-        // 무시하고 계속
-      }
-    }
-    
-    // 숫자인 경우 (타임스탬프)
-    if (value is int) {
-      try {
-        return DateTime.fromMillisecondsSinceEpoch(value);
-      } catch (e) {
-        return DateTime.now();
-      }
-    }
-    
-    // 모든 파싱 실패 시 현재 시간 반환
-    return DateTime.now();
-  }
-
-  static int? _parseInt(dynamic value) {
-    if (value == null) return null;
-    if (value is int) return value;
-    if (value is double) return value.toInt();
-    if (value is String) {
-      return int.tryParse(value);
-    }
-    return null;
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'shopName': shopName,
-      'date': date,
-      'time': time,
-      'endTime': endTime,
-      'amount': amount,
-      'energy': energy,
-      'requiredCount': requiredCount,
-      'regionId': regionId,
-      'description': description,
-      'requirements': requirements,
-      'images': images,
-      'isUrgent': isUrgent,
-      'isPremium': isPremium,
-      'countdown': countdown,
-      'createdAt': createdAt.toIso8601String(),
-      'ownerId': ownerId,
-      'status': status,
-    };
-  }
+  Map<String, dynamic> toJson() => _$JobToJson(this);
 }

@@ -35,14 +35,28 @@ class JobFilterDropdown extends StatelessWidget {
         }
       },
       child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: AppTheme.spacing3,
-          vertical: AppTheme.spacing2,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing4,
+          vertical: AppTheme.spacing3,
         ),
         decoration: BoxDecoration(
-          color: AppTheme.backgroundWhite,
-          border: Border.all(color: AppTheme.borderGray),
-          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          color: selectedValue != null
+              ? AppTheme.primaryPurpleLight
+              : AppTheme.backgroundWhite,
+          border: Border.all(
+            color: selectedValue != null
+                ? AppTheme.primaryPurple
+                : AppTheme.borderGray,
+            width: selectedValue != null ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -51,16 +65,21 @@ class JobFilterDropdown extends StatelessWidget {
               selectedValue ?? label,
               style: TextStyle(
                 color: selectedValue != null
-                    ? AppTheme.textPrimary
+                    ? AppTheme.primaryPurple
                     : AppTheme.textSecondary,
                 fontSize: 14,
+                fontWeight: selectedValue != null
+                    ? FontWeight.w600
+                    : FontWeight.w500,
               ),
             ),
-            SizedBox(width: AppTheme.spacing2),
+            const SizedBox(width: AppTheme.spacing2),
             Icon(
               isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
               size: 20,
-              color: AppTheme.textSecondary,
+              color: selectedValue != null
+                  ? AppTheme.primaryPurple
+                  : AppTheme.textSecondary,
             ),
           ],
         ),
@@ -100,7 +119,7 @@ class JobFilterDropdown extends StatelessWidget {
             '전체',
             style: TextStyle(
               color: selectedValue == null
-                  ? AppTheme.primaryBlue
+                  ? AppTheme.primaryPurple
                   : AppTheme.textPrimary,
               fontWeight: selectedValue == null ? FontWeight.w600 : FontWeight.normal,
             ),
@@ -123,7 +142,7 @@ class JobFilterDropdown extends StatelessWidget {
               option,
               style: TextStyle(
                 color: isSelected
-                    ? AppTheme.primaryBlue
+                    ? AppTheme.primaryPurple
                     : AppTheme.textPrimary,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),

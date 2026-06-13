@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../widgets/spare_card.dart';
 import '../../widgets/notification_bell.dart';
 import '../../widgets/job_filter_dropdown.dart';
@@ -12,9 +13,9 @@ import '../../services/spare_service.dart';
 import '../../providers/chat_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../utils/error_handler.dart';
+import '../../widgets/shop/shop_screen_safe_area.dart';
 import 'spare_detail_screen.dart';
 import 'messages_screen.dart';
-import 'home_screen.dart';
 
 class ShopSparesListScreen extends StatefulWidget {
   const ShopSparesListScreen({super.key});
@@ -39,6 +40,8 @@ class _ShopSparesListScreenState extends State<ShopSparesListScreen> {
   String? _selectedDistrict;
   String _roleFilter = 'all'; // 'all' | 'step' | 'designer'
   String _sortBy = 'popular'; // 'popular' | 'newest' | 'experience' | 'completed'
+  /// 메뉴 「전체」선택 시 버튼에 전체 표시, 「인기순」선택 시 인기순 표시.
+  bool _sortShowAllLabel = true;
   bool _isLicenseVerifiedOnly = false;
   
   // 드롭다운 상태
@@ -119,12 +122,12 @@ class _ShopSparesListScreenState extends State<ShopSparesListScreen> {
   
   Future<void> _loadNotifications() async {
     final provider = Provider.of<NotificationProvider>(context, listen: false);
-    await provider.loadNotifications();
+    await provider.loadNotifications(audience: 'shop');
   }
   
   Future<void> _loadChats() async {
     final provider = Provider.of<ChatProvider>(context, listen: false);
-    await provider.loadChats();
+    await provider.loadChats(viewerRole: 'shop');
   }
   
   void _applyFilters() {
@@ -162,12 +165,9 @@ class _ShopSparesListScreenState extends State<ShopSparesListScreen> {
     // 정렬
     switch (_sortBy) {
       case 'popular':
-        // 인기순: 따봉 개수 * 완료 건수
-        filtered.sort((a, b) {
-          final aPopularity = a.thumbsUpCount * a.completedJobs;
-          final bPopularity = b.thumbsUpCount * b.completedJobs;
-          return bPopularity.compareTo(aPopularity);
-        });
+        filtered.sort(
+          (a, b) => _popularityScore(b).compareTo(_popularityScore(a)),
+        );
         break;
       case 'newest':
         filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -185,11 +185,16 @@ class _ShopSparesListScreenState extends State<ShopSparesListScreen> {
     });
   }
 
-  // 인기 인력 상위 3명 확인 (인기순 정렬 시)
+  static int _popularityScore(SpareProfile spare) =>
+      spare.thumbsUpCount * spare.completedJobs;
+
+  /// 인기 뱃지 — 정렬과 무관하게 현재 목록 중 인기 상위 3명.
   Set<String> get _topPopularSpareIds {
-    if (_sortBy != 'popular') return {};
-    final sorted = _filteredSpares.take(3).map((s) => s.id).toSet();
-    return sorted;
+    final ranked = List<SpareProfile>.from(_filteredSpares)
+      ..sort(
+        (a, b) => _popularityScore(b).compareTo(_popularityScore(a)),
+      );
+    return ranked.take(3).map((s) => s.id).toSet();
   }
   
   void _resetFilters() {
@@ -199,6 +204,7 @@ class _ShopSparesListScreenState extends State<ShopSparesListScreen> {
       _selectedDistrict = null;
       _roleFilter = 'all';
       _sortBy = 'popular';
+      _sortShowAllLabel = true;
       _isLicenseVerifiedOnly = false;
       _showProvinceDropdown = false;
       _showDistrictDropdown = false;
@@ -214,182 +220,229 @@ class _ShopSparesListScreenState extends State<ShopSparesListScreen> {
         _roleFilter != 'all' ||
         _isLicenseVerifiedOnly;
   }
+
+  String? get _sortDropdownLabel {
+    if (_sortBy == 'popular' && _sortShowAllLabel) return null;
+    return switch (_sortBy) {
+      'popular' => '인기순',
+      'newest' => '최신순',
+      'experience' => '경력순',
+      'completed' => '완료건수순',
+      _ => null,
+    };
+  }
   
   @override
   Widget build(BuildContext context) {
-    final stepCount = _allSpares.where((s) => s.role == 'step').length;
-    final designerCount = _allSpares.where((s) => s.role == 'designer').length;
-    
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      body: CustomScrollView(
+      body: ShopScreenSafeArea(
+        child: CustomScrollView(
         slivers: [
-          // AppBar (스페어 스타일)
-          SliverAppBar(
-            pinned: true,
-            backgroundColor: AppTheme.backgroundWhite,
-            elevation: 0,
-            leading: IconButton(
-              icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-                  const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-              onPressed: () => Navigator.pop(context),
-            ),
-            title: _isSearchOpen
-                ? Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        hintText: '이름, 전문분야, 지역 검색...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                          borderSide: const BorderSide(color: AppTheme.primaryPurple, width: 2),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                          borderSide: const BorderSide(color: AppTheme.primaryPurple, width: 2),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                          borderSide: const BorderSide(color: AppTheme.primaryPurple, width: 2),
-                        ),
-                        contentPadding: EdgeInsets.all(AppTheme.spacing4),
-                        filled: true,
-                        fillColor: AppTheme.backgroundWhite,
-                      ),
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value;
-                        });
-                        _applyFilters();
-                      },
-                      onSubmitted: (value) {
-                        setState(() {
-                          _searchQuery = value;
-                          _isSearchOpen = false;
-                        });
-                        _applyFilters();
-                      },
-                    ),
-                  )
-                : Text(
-                    '인력별',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
-                        ),
+          // 상단 헤더
+          SliverToBoxAdapter(
+            child: Container(
+              height: 44,
+              decoration: const BoxDecoration(
+                color: AppTheme.backgroundWhite,
+                border: Border(
+                  bottom: BorderSide(
+                    color: AppTheme.borderGray,
+                    width: 1,
                   ),
-            centerTitle: false,
-            actions: _isSearchOpen
-                ? [
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing4,
+              ),
+              child: SizedBox(
+                height: 44,
+                child: Row(
+                  children: [
                     IconButton(
-                      icon: const Icon(Icons.close, color: AppTheme.textSecondary),
-                      onPressed: () {
-                        setState(() {
-                          _isSearchOpen = false;
-                          _searchController.clear();
-                          _searchQuery = '';
-                        });
-                        _applyFilters();
-                      },
+                      icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
+                          const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
+                      onPressed: () => Navigator.pop(context),
                     ),
-                  ]
-                : [
-                    IconButton(
-                      icon: const Icon(Icons.search, color: AppTheme.textSecondary),
-                      onPressed: () {
-                        setState(() {
-                          _isSearchOpen = true;
-                        });
-                      },
+                    Text(
+                      '인력별',
+                      style: SharedAppBar.titleTextStyle(context),
                     ),
-                    Consumer<ChatProvider>(
-                      builder: (context, chatProvider, _) {
-                        final unreadCount = chatProvider.totalUnreadCount;
-                        return Stack(
-                          children: [
-                            IconButton(
-                              icon: IconMapper.icon('messagecircle', size: 24, color: AppTheme.textSecondary) ??
-                                  const Icon(Icons.message, color: AppTheme.textSecondary),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const ShopMessagesScreen(),
-                                  ),
-                                );
-                              },
+                    const SizedBox(width: AppTheme.spacing2),
+                    if (_isSearchOpen)
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          autofocus: true,
+                          decoration: InputDecoration(
+                            hintText: '이름, 전문분야, 지역 검색...',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                              borderSide: const BorderSide(color: AppTheme.primaryPurple, width: 2),
                             ),
-                            if (unreadCount > 0)
-                              Positioned(
-                                right: 8,
-                                top: 8,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 16,
-                                    minHeight: 16,
-                                  ),
-                                  child: Text(
-                                    unreadCount > 9 ? '9+' : unreadCount.toString(),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                              borderSide: const BorderSide(color: AppTheme.primaryPurple, width: 2),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                              borderSide: const BorderSide(color: AppTheme.primaryPurple, width: 2),
+                            ),
+                            contentPadding: const EdgeInsets.all(AppTheme.spacing4),
+                            filled: true,
+                            fillColor: AppTheme.backgroundWhite,
+                          ),
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value;
+                            });
+                            _applyFilters();
+                          },
+                          onSubmitted: (value) {
+                            setState(() {
+                              _searchQuery = value;
+                              _isSearchOpen = false;
+                            });
+                            _applyFilters();
+                          },
+                        ),
+                      )
+                    else
+                      const Spacer(),
+                    if (_isSearchOpen)
+                      IconButton(
+                        icon: const Icon(Icons.close, color: AppTheme.textSecondary),
+                        onPressed: () {
+                          setState(() {
+                            _isSearchOpen = false;
+                            _searchController.clear();
+                            _searchQuery = '';
+                          });
+                          _applyFilters();
+                        },
+                      )
+                    else ...[
+                      IconButton(
+                        icon: const Icon(Icons.search, color: AppTheme.textSecondary),
+                        onPressed: () {
+                          setState(() {
+                            _isSearchOpen = true;
+                          });
+                        },
+                      ),
+                      Consumer<ChatProvider>(
+                        builder: (context, chatProvider, _) {
+                          final unreadCount = chatProvider.totalUnreadCount;
+                          return Stack(
+                            children: [
+                              IconButton(
+                                icon: IconMapper.icon('messagecircle', size: 24, color: AppTheme.textSecondary) ??
+                                    const Icon(Icons.message, color: AppTheme.textSecondary),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const ShopMessagesScreen(),
                                     ),
-                                    textAlign: TextAlign.center,
+                                  );
+                                },
+                              ),
+                              if (unreadCount > 0)
+                                Positioned(
+                                  right: 8,
+                                  top: 8,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 16,
+                                      minHeight: 16,
+                                    ),
+                                    child: Text(
+                                      unreadCount > 9 ? '9+' : unreadCount.toString(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
                                   ),
                                 ),
-                              ),
-                          ],
-                        );
-                      },
-                    ),
-                    Consumer<NotificationProvider>(
-                      builder: (context, notificationProvider, _) {
-                        return NotificationBell(role: 'shop');
-                      },
-                    ),
+                            ],
+                          );
+                        },
+                      ),
+                      Consumer<NotificationProvider>(
+                        builder: (context, notificationProvider, _) {
+                          return const NotificationBell(role: 'shop');
+                        },
+                      ),
+                    ],
                   ],
+                ),
+              ),
+            ),
           ),
-          
-          // 필터 및 통계 섹션 (Spare 공고별 스타일)
+
+          // 필터 및 통계 섹션
           SliverToBoxAdapter(
             child: Container(
               color: AppTheme.backgroundWhite,
-              padding: EdgeInsets.all(AppTheme.spacing3),
+              padding: const EdgeInsets.only(
+                top: AppTheme.spacing4,
+                bottom: AppTheme.spacing3,
+                left: AppTheme.spacing4,
+                right: AppTheme.spacing4,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // 페이지 제목 (상단바 밑)
+                  Text(
+                    '인력별',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryPurple,
+                      letterSpacing: -0.5,
+                      height: 1.25,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing4),
                   // 전체 인력 개수 및 새로고침
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
                         '전체 인력 ${_filteredSpares.length}명',
-                        style: TextStyle(
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: AppTheme.textPrimary,
+                          color: AppTheme.textSecondary,
+                          height: 1.3,
                         ),
                       ),
-                      IconButton(
-                        icon: IconMapper.icon('refresh', size: 20, color: AppTheme.textSecondary) ??
-                            const Icon(Icons.refresh, size: 20, color: AppTheme.textSecondary),
-                        onPressed: _loadSpares,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _loadSpares,
+                          borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppTheme.spacing2),
+                            child: IconMapper.icon('refresh', size: 20, color: AppTheme.primaryPurple) ??
+                                const Icon(Icons.refresh, size: 20, color: AppTheme.primaryPurple),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  SizedBox(height: AppTheme.spacing3),
-                  
+                  const SizedBox(height: AppTheme.spacing4),
                   // 첫 번째 줄: 지역 선택, 정렬
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -424,7 +477,7 @@ class _ShopSparesListScreenState extends State<ShopSparesListScreen> {
                         ),
                         // 상세지역(구/군) 드롭다운 - 지역 선택 시에만 표시
                         if (_selectedProvince != null && _districts.isNotEmpty) ...[
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           JobFilterDropdown(
                             label: '상세지역',
                             options: _districts.map((d) => d.name).toList(),
@@ -451,25 +504,29 @@ class _ShopSparesListScreenState extends State<ShopSparesListScreen> {
                             },
                           ),
                         ],
-                        SizedBox(width: AppTheme.spacing2),
-                        // 정렬 드롭다운
+                        const SizedBox(width: AppTheme.spacing2),
+                        // 정렬 드롭다운 (맨 위 「전체」≠ 「인기순」— 정렬은 동일, 라벨만 구분)
                         JobFilterDropdown(
-                          label: '정렬',
-                          options: ['인기순', '최신순', '경력순', '완료건수순'],
-                          selectedValue: _sortBy == 'popular' ? '인기순'
-                              : _sortBy == 'newest' ? '최신순'
-                              : _sortBy == 'experience' ? '경력순'
-                              : '완료건수순',
+                          label: '전체',
+                          options: const ['인기순', '최신순', '경력순', '완료건수순'],
+                          selectedValue: _sortDropdownLabel,
                           onSelected: (value) {
                             setState(() {
-                              if (value == '인기순') {
+                              if (value == null) {
                                 _sortBy = 'popular';
+                                _sortShowAllLabel = true;
+                              } else if (value == '인기순') {
+                                _sortBy = 'popular';
+                                _sortShowAllLabel = false;
                               } else if (value == '최신순') {
                                 _sortBy = 'newest';
+                                _sortShowAllLabel = false;
                               } else if (value == '경력순') {
                                 _sortBy = 'experience';
+                                _sortShowAllLabel = false;
                               } else if (value == '완료건수순') {
                                 _sortBy = 'completed';
+                                _sortShowAllLabel = false;
                               }
                               _showSortDropdown = false;
                             });
@@ -488,8 +545,7 @@ class _ShopSparesListScreenState extends State<ShopSparesListScreen> {
                       ],
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing3),
-                  
+                  const SizedBox(height: AppTheme.spacing3),
                   // 두 번째 줄: 필터 버튼들
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -507,7 +563,7 @@ class _ShopSparesListScreenState extends State<ShopSparesListScreen> {
                             _applyFilters();
                           },
                         ),
-                        SizedBox(width: AppTheme.spacing2),
+                        const SizedBox(width: AppTheme.spacing2),
                         _FilterChip(
                           label: '스텝',
                           emoji: '✂️',
@@ -519,7 +575,7 @@ class _ShopSparesListScreenState extends State<ShopSparesListScreen> {
                             _applyFilters();
                           },
                         ),
-                        SizedBox(width: AppTheme.spacing2),
+                        const SizedBox(width: AppTheme.spacing2),
                         _FilterChip(
                           label: '디자이너',
                           emoji: '💇',
@@ -531,7 +587,7 @@ class _ShopSparesListScreenState extends State<ShopSparesListScreen> {
                             _applyFilters();
                           },
                         ),
-                        SizedBox(width: AppTheme.spacing2),
+                        const SizedBox(width: AppTheme.spacing2),
                         _FilterChip(
                           label: '면허인증',
                           emoji: '✅',
@@ -565,14 +621,14 @@ class _ShopSparesListScreenState extends State<ShopSparesListScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(Icons.error_outline, size: 48, color: AppTheme.textSecondary),
-                    SizedBox(height: AppTheme.spacing4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Text(
                       _error!,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             color: AppTheme.textSecondary,
                           ),
                     ),
-                    SizedBox(height: AppTheme.spacing4),
+                    const SizedBox(height: AppTheme.spacing4),
                     ElevatedButton(
                       onPressed: _loadSpares,
                       child: const Text('다시 시도'),
@@ -588,7 +644,7 @@ class _ShopSparesListScreenState extends State<ShopSparesListScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(Icons.person_outline, size: 64, color: AppTheme.textSecondary),
-                    SizedBox(height: AppTheme.spacing4),
+                    const SizedBox(height: AppTheme.spacing4),
                     Text(
                       _hasActiveFilters
                           ? '조건에 맞는 인력이 없습니다'
@@ -598,7 +654,7 @@ class _ShopSparesListScreenState extends State<ShopSparesListScreen> {
                           ),
                     ),
                     if (_hasActiveFilters) ...[
-                      SizedBox(height: AppTheme.spacing4),
+                      const SizedBox(height: AppTheme.spacing4),
                       ElevatedButton(
                         onPressed: _resetFilters,
                         style: ElevatedButton.styleFrom(
@@ -613,78 +669,39 @@ class _ShopSparesListScreenState extends State<ShopSparesListScreen> {
               ),
             )
           else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final spare = _filteredSpares[index];
-                  final isTopPopular = _topPopularSpareIds.contains(spare.id);
-                  return Padding(
-                    padding: EdgeInsets.symmetric(
+            SliverPadding(
+              padding: const EdgeInsets.only(top: AppTheme.spacing3),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final spare = _filteredSpares[index];
+                    final isTopPopular = _topPopularSpareIds.contains(spare.id);
+                    return Padding(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: AppTheme.spacing4,
                       vertical: AppTheme.spacing2,
                     ),
-                    child: Stack(
-                      children: [
-                        SpareCard(
-                          spare: spare,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ShopSpareDetailScreen(spareId: spare.id),
-                              ),
-                            );
-                          },
-                        ),
-                        // 인기 배지
-                        if (isTopPopular && _sortBy == 'popular')
-                          Positioned(
-                            top: AppTheme.spacing2,
-                            left: AppTheme.spacing2,
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: AppTheme.spacing2,
-                                vertical: AppTheme.spacing1,
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    AppTheme.yellow400,
-                                    AppTheme.orange500,
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                                boxShadow: AppTheme.shadowMd,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.star,
-                                    size: 12,
-                                    color: Colors.white,
-                                  ),
-                                  SizedBox(width: AppTheme.spacing1),
-                                  Text(
-                                    '인기',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                    child: SpareCard(
+                      spare: spare,
+                      compact: true,
+                      showPopularBadge: isTopPopular,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ShopSpareDetailScreen(spareId: spare.id),
                           ),
-                      ],
+                        );
+                      },
                     ),
                   );
                 },
                 childCount: _filteredSpares.length,
               ),
             ),
+            ),
         ],
+        ),
       ),
     );
   }
@@ -708,27 +725,26 @@ class _FilterChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: emoji != null ? AppTheme.spacing3 : AppTheme.spacing4,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing3,
           vertical: AppTheme.spacing2,
         ),
         decoration: BoxDecoration(
-          color: isSelected 
-              ? (emoji != null ? Colors.grey.shade200 : AppTheme.primaryBlue)
+          color: isSelected
+              ? AppTheme.primaryPurpleLight
               : AppTheme.backgroundGray,
-          borderRadius: BorderRadius.circular(20),
-          border: isSelected && emoji != null
-              ? Border.all(
-                  color: Colors.grey.shade400,
-                  width: 1.5,
-                )
-              : null,
-          boxShadow: isSelected && emoji != null
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          border: Border.all(
+            color: isSelected ? AppTheme.primaryPurple : AppTheme.borderGray,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 4,
+                    color: AppTheme.primaryPurple.withValues(alpha: 0.15),
+                    blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ]
@@ -740,22 +756,17 @@ class _FilterChip extends StatelessWidget {
             if (emoji != null) ...[
               Text(
                 emoji!,
-                style: const TextStyle(
-                  fontSize: 16,
-                  height: 1.0,
-                ),
+                style: const TextStyle(fontSize: 14, height: 1.0),
               ),
-              SizedBox(width: AppTheme.spacing1),
+              const SizedBox(width: AppTheme.spacing2),
             ],
             Text(
               label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: isSelected
-                    ? (emoji != null ? AppTheme.textPrimary : Colors.white)
+                    ? AppTheme.primaryPurple
                     : AppTheme.textSecondary,
-                height: 1.2,
               ),
             ),
           ],

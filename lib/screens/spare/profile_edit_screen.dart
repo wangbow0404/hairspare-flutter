@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
 import 'dart:io';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
-import '../../providers/auth_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/verification_service.dart';
 import '../../utils/app_exception.dart';
 import '../../utils/error_handler.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 
 /// Next.js와 동일한 프로필 수정 화면
 class ProfileEditScreen extends StatefulWidget {
@@ -24,7 +18,6 @@ class ProfileEditScreen extends StatefulWidget {
 }
 
 class _ProfileEditScreenState extends State<ProfileEditScreen> {
-  int _currentNavIndex = 0;
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -32,7 +25,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   final _birthYearController = TextEditingController();
   
   String? _gender;
-  List<File> _profileImages = [];
+  final List<File> _profileImages = [];
   bool _isLoading = true;
   bool _isSaving = false;
   String? _error;
@@ -110,7 +103,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         }
       } catch (e) {
         // 인증 정보 조회 실패는 무시 (API가 없을 수 있음)
-        print('인증 정보 조회 실패: $e');
+        debugPrint('인증 정보 조회 실패: $e');
       }
     } catch (e) {
       setState(() {
@@ -155,19 +148,21 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     }
 
     try {
+      final messenger = ScaffoldMessenger.of(context);
       await _verificationService.sendVerificationCode(_phoneController.text);
       setState(() {
         _phoneVerificationSent = true;
         _verificationTimer = 300; // 5분
       });
-      
+
       // 타이머 시작
       _startVerificationTimer();
-      
-      ScaffoldMessenger.of(context).showSnackBar(
+
+      messenger.showSnackBar(
         const SnackBar(content: Text('인증번호가 발송되었습니다.')),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('인증번호 발송 실패: ${e.toString()}')),
       );
@@ -196,25 +191,27 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     }
 
     try {
+      final messenger = ScaffoldMessenger.of(context);
       final verified = await _verificationService.verifyCode(
         _phoneController.text,
         _verificationCodeController.text,
       );
-      
+
       if (verified) {
         setState(() {
           _phoneVerificationVerified = true;
           _verificationTimer = 0;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(content: Text('인증이 완료되었습니다.')),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(content: Text('인증번호가 올바르지 않습니다.')),
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('인증 실패: ${e.toString()}')),
       );
@@ -232,6 +229,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     });
 
     try {
+      final messenger = ScaffoldMessenger.of(context);
       // API 호출하여 프로필 저장
       final authService = AuthService();
       
@@ -269,7 +267,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           }
         } catch (e) {
           final appException = ErrorHandler.handleException(e);
-          ScaffoldMessenger.of(context).showSnackBar(
+          messenger.showSnackBar(
             SnackBar(
               content: Text('이미지 업로드 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}'),
               backgroundColor: AppTheme.urgentRed,
@@ -292,14 +290,14 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       setState(() {
         _success = true;
       });
-      
-      ScaffoldMessenger.of(context).showSnackBar(
+
+      messenger.showSnackBar(
         const SnackBar(
           content: Text('프로필이 저장되었습니다'),
           backgroundColor: Colors.green,
         ),
       );
-      
+
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
           Navigator.pop(context);
@@ -309,6 +307,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       setState(() {
         _error = e.toString();
       });
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('프로필 저장 실패: ${e.toString()}'),
@@ -325,9 +324,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -340,7 +339,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
             children: [
               IconMapper.icon('checkcircle', size: 64, color: AppTheme.primaryGreen) ??
                   const Icon(Icons.check_circle, size: 64, color: AppTheme.primaryGreen),
-              SizedBox(height: AppTheme.spacing4),
+              const SizedBox(height: AppTheme.spacing4),
               Text(
                 '프로필이 수정되었습니다',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -355,23 +354,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '프로필 수정',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
+      appBar: SharedAppBar(
+        title: '프로필 수정',
         actions: [
           TextButton(
             onPressed: _isSaving ? null : _handleSave,
@@ -394,8 +378,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               // 본인인증 정보 안내
               if (_isIdentityVerified)
                 Container(
-                  padding: EdgeInsets.all(AppTheme.spacing3),
-                  margin: EdgeInsets.only(bottom: AppTheme.spacing4),
+                  padding: const EdgeInsets.all(AppTheme.spacing3),
+                  margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
                   decoration: BoxDecoration(
                     color: Colors.blue.shade50,
                     borderRadius: BorderRadius.circular(AppTheme.radiusLg),
@@ -404,7 +388,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   child: Row(
                     children: [
                       Icon(Icons.verified, color: Colors.blue.shade700, size: 20),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       Expanded(
                         child: Text(
                           '본인인증이 완료된 정보입니다.',
@@ -448,12 +432,12 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                               child: GestureDetector(
                                 onTap: () => _removeImage(index),
                                 child: Container(
-                                  padding: EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
                                     color: AppTheme.urgentRed,
                                     shape: BoxShape.circle,
                                   ),
-                                  child: Icon(Icons.close, size: 16, color: Colors.white),
+                                  child: const Icon(Icons.close, size: 16, color: Colors.white),
                                 ),
                               ),
                             ),
@@ -471,14 +455,14 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                               border: Border.all(color: AppTheme.borderGray, style: BorderStyle.solid),
                             ),
-                            child: Icon(Icons.add, size: 32, color: AppTheme.textSecondary),
+                            child: const Icon(Icons.add, size: 32, color: AppTheme.textSecondary),
                           ),
                         ),
                     ],
                   ),
                 ],
               ),
-              SizedBox(height: AppTheme.spacing6),
+              const SizedBox(height: AppTheme.spacing6),
               // 이름
               TextFormField(
                 controller: _nameController,
@@ -494,7 +478,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   return null;
                 },
               ),
-              SizedBox(height: AppTheme.spacing4),
+              const SizedBox(height: AppTheme.spacing4),
               // 이메일
               TextFormField(
                 controller: _emailController,
@@ -514,7 +498,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   return null;
                 },
               ),
-              SizedBox(height: AppTheme.spacing4),
+              const SizedBox(height: AppTheme.spacing4),
               // 전화번호
               TextFormField(
                 controller: _phoneController,
@@ -523,7 +507,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   prefixIcon: IconMapper.icon('phone', size: 20, color: AppTheme.textSecondary) ??
                       const Icon(Icons.phone, size: 20, color: AppTheme.textSecondary),
                   suffixIcon: _isIdentityVerified && _verifiedPhone == _phoneController.text
-                      ? Icon(Icons.verified, color: Colors.blue, size: 20)
+                      ? const Icon(Icons.verified, color: Colors.blue, size: 20)
                       : null,
                 ),
                 keyboardType: TextInputType.phone,
@@ -532,7 +516,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               
               // 휴대폰 인증 섹션
               if (!_phoneVerificationVerified && !(_isIdentityVerified && _verifiedPhone == _phoneController.text)) ...[
-                SizedBox(height: AppTheme.spacing2),
+                const SizedBox(height: AppTheme.spacing2),
                 Row(
                   children: [
                     Expanded(
@@ -545,7 +529,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                         keyboardType: TextInputType.number,
                       ),
                     ),
-                    SizedBox(width: AppTheme.spacing2),
+                    const SizedBox(width: AppTheme.spacing2),
                     ElevatedButton(
                       onPressed: _phoneVerificationSent ? _verifyCode : _sendVerificationCode,
                       style: ElevatedButton.styleFrom(
@@ -558,14 +542,14 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                 ),
                 if (_phoneVerificationSent && _verificationTimer > 0)
                   Padding(
-                    padding: EdgeInsets.only(top: AppTheme.spacing2),
+                    padding: const EdgeInsets.only(top: AppTheme.spacing2),
                     child: Text(
                       '${(_verificationTimer / 60).floor()}:${(_verificationTimer % 60).toString().padLeft(2, '0')}',
-                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                     ),
                   ),
               ],
-              SizedBox(height: AppTheme.spacing4),
+              const SizedBox(height: AppTheme.spacing4),
               // 출생년도
               TextFormField(
                 controller: _birthYearController,
@@ -576,10 +560,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                 ),
                 keyboardType: TextInputType.number,
               ),
-              SizedBox(height: AppTheme.spacing4),
+              const SizedBox(height: AppTheme.spacing4),
               // 성별
               DropdownButtonFormField<String>(
-                value: _gender,
+                initialValue: _gender,
                 decoration: AppTheme.inputDecoration.copyWith(
                   labelText: '성별',
                 ),
@@ -594,7 +578,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                 },
               ),
               if (_error != null) ...[
-                SizedBox(height: AppTheme.spacing4),
+                const SizedBox(height: AppTheme.spacing4),
                 Container(
                   padding: AppTheme.spacing(AppTheme.spacing3),
                   decoration: BoxDecoration(
@@ -605,11 +589,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     children: [
                       IconMapper.icon('xcircle', size: 20, color: AppTheme.urgentRed) ??
                           const Icon(Icons.error, size: 20, color: AppTheme.urgentRed),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       Expanded(
                         child: Text(
                           _error!,
-                          style: TextStyle(color: AppTheme.urgentRed),
+                          style: const TextStyle(color: AppTheme.urgentRed),
                         ),
                       ),
                     ],
@@ -619,46 +603,6 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          
-          // 네비게이션 처리
-          switch (index) {
-            case 0:
-              // 홈으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              // 결제로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              // 찜으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              // 마이(프로필)로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }

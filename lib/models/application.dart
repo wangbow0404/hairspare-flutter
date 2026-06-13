@@ -1,14 +1,22 @@
+import 'package:json_annotation/json_annotation.dart';
+
 import 'job.dart';
+import 'json_converters.dart';
 import 'user.dart';
 
-class Application {
-  final String id;
-  final String status; // "pending" | "approved" | "rejected"
-  final DateTime createdAt;
-  final Job job;
-  final User spare;
+part 'application.g.dart';
 
-  Application({
+Job _applicationJobFromJson(Object? json) => Job.fromJson(
+      json is Map<String, dynamic> ? json : <String, dynamic>{},
+    );
+
+User _applicationSpareFromJson(Object? json) => User.fromJson(
+      json is Map<String, dynamic> ? json : <String, dynamic>{},
+    );
+
+@JsonSerializable(explicitToJson: true)
+class Application {
+  const Application({
     required this.id,
     required this.status,
     required this.createdAt,
@@ -16,54 +24,19 @@ class Application {
     required this.spare,
   });
 
-  factory Application.fromJson(Map<String, dynamic> json) {
-    return Application(
-      id: json['id']?.toString() ?? '',
-      status: json['status']?.toString() ?? 'pending',
-      createdAt: _parseDateTime(json['createdAt']),
-      job: Job.fromJson(json['job'] ?? {}),
-      spare: User.fromJson(json['spare'] ?? {}),
-    );
-  }
+  @JsonKey(defaultValue: '')
+  final String id;
+  @JsonKey(defaultValue: 'pending')
+  final String status;
+  @DateTimeOrNowConverter()
+  final DateTime createdAt;
+  @JsonKey(fromJson: _applicationJobFromJson)
+  final Job job;
+  @JsonKey(fromJson: _applicationSpareFromJson)
+  final User spare;
 
-  static DateTime _parseDateTime(dynamic value) {
-    if (value == null) {
-      return DateTime.now();
-    }
-    
-    if (value is DateTime) {
-      return value;
-    }
-    
-    if (value is String) {
-      if (value.isEmpty) {
-        return DateTime.now();
-      }
-      try {
-        return DateTime.parse(value);
-      } catch (e) {
-        return DateTime.now();
-      }
-    }
-    
-    if (value is int) {
-      try {
-        return DateTime.fromMillisecondsSinceEpoch(value);
-      } catch (e) {
-        return DateTime.now();
-      }
-    }
-    
-    return DateTime.now();
-  }
+  factory Application.fromJson(Map<String, dynamic> json) =>
+      _$ApplicationFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'status': status,
-      'createdAt': createdAt.toIso8601String(),
-      'job': job.toJson(),
-      'spare': spare.toJson(),
-    };
-  }
+  Map<String, dynamic> toJson() => _$ApplicationToJson(this);
 }

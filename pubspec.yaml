@@ -4,7 +4,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.8.0 <4.0.0'
 
 dependencies:
   flutter:
@@ -12,14 +12,19 @@ dependencies:
   
   # 상태 관리
   provider: ^6.1.1
+  get_it: ^8.0.3
+  go_router: ^14.6.2
   
   # HTTP 통신
   http: ^1.1.0
   dio: ^5.4.0
+  flutter_dotenv: ^5.1.0
   
   # 로컬 저장소
   shared_preferences: ^2.2.2
   flutter_secure_storage: ^9.0.0
+  cookie_jar: ^4.0.8
+  dio_cookie_manager: ^3.1.1
   
   # 이미지 처리
   image_picker: ^1.0.5
@@ -33,6 +38,9 @@ dependencies:
   intl: ^0.20.2
   table_calendar: ^3.2.0
   
+  # JSON (런타임 어노테이션)
+  json_annotation: ^4.10.0
+
   # 유틸리티
   uuid: ^4.2.1
   path_provider: ^2.1.1
@@ -41,17 +49,20 @@ dependencies:
   
   # 소셜 로그인 SDK
   kakao_flutter_sdk_user: ^1.7.0
-  flutter_naver_login: ^1.7.0
+  flutter_naver_login: ^2.1.1
   google_sign_in: ^6.2.1
   
   # 로컬라이제이션
   flutter_localizations:
     sdk: flutter
+  kpostal: ^1.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  build_runner: ^2.4.13
+  json_serializable: ^6.8.0
 
 flutter:
   uses-material-design: true
@@ -61,4 +72,7 @@ flutter:
     - assets/images/banners/
     - assets/images/social/
     - assets/images/missions/
+    - assets/video/
+    - assets/videos/
     - assets/fonts/
+    - assets/env/app.env

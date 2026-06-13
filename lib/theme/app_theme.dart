@@ -126,7 +126,7 @@ class AppTheme {
   // 그림자 시스템
   static List<BoxShadow> get shadowSm => [
     BoxShadow(
-      color: Colors.black.withOpacity(0.05),
+      color: Colors.black.withValues(alpha: 0.05),
       blurRadius: 1,
       offset: const Offset(0, 1),
     ),
@@ -134,7 +134,7 @@ class AppTheme {
   
   static List<BoxShadow> get shadowMd => [
     BoxShadow(
-      color: Colors.black.withOpacity(0.1),
+      color: Colors.black.withValues(alpha: 0.1),
       blurRadius: 4,
       offset: const Offset(0, 2),
     ),
@@ -142,7 +142,7 @@ class AppTheme {
   
   static List<BoxShadow> get shadowLg => [
     BoxShadow(
-      color: Colors.black.withOpacity(0.1),
+      color: Colors.black.withValues(alpha: 0.1),
       blurRadius: 10,
       offset: const Offset(0, 4),
     ),
@@ -150,7 +150,7 @@ class AppTheme {
   
   static List<BoxShadow> get shadowXl => [
     BoxShadow(
-      color: Colors.black.withOpacity(0.1),
+      color: Colors.black.withValues(alpha: 0.1),
       blurRadius: 15,
       offset: const Offset(0, 8),
     ),
@@ -158,7 +158,7 @@ class AppTheme {
   
   static List<BoxShadow> shadowHover(Color color) => [
     BoxShadow(
-      color: color.withOpacity(0.3),
+      color: color.withValues(alpha: 0.3),
       blurRadius: 15,
       offset: const Offset(0, 8),
     ),
@@ -173,7 +173,6 @@ class AppTheme {
         primary: primaryBlue,
         secondary: primaryPurple,
         surface: backgroundWhite,
-        background: backgroundGray,
         error: urgentRed,
       ),
       scaffoldBackgroundColor: backgroundGray,

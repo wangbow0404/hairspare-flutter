@@ -1,9 +1,13 @@
 import 'package:dio/dio.dart';
-import '../utils/api_client.dart';
 import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
 import '../mocks/mock_spare_data.dart';
+import '../models/schedule.dart';
+import '../mocks/mock_shop_data.dart';
+import '../utils/contact_violation_policy.dart';
+import '../utils/schedule_cancellation_policy.dart';
+import '../core/di/service_locator.dart';
 
 class Chat {
   final String id;
@@ -73,13 +77,15 @@ class LastMessage {
 }
 
 class ChatService {
-  final ApiClient _apiClient = ApiClient();
+  final Dio _dio = sl<Dio>();
 
   /// 채팅 목록 조회
-  Future<List<Chat>> getChats() async {
-    if (ApiConfig.useMockData) return await MockSpareData.getChats();
+  Future<List<Chat>> getChats({String viewerRole = 'spare'}) async {
+    if (ApiConfig.useMockData) {
+      return await MockSpareData.getChats(viewerRole: viewerRole);
+    }
     try {
-      final response = await _apiClient.dio.get('/api/chats');
+      final response = await _dio.get('/api/chats');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -109,7 +115,7 @@ class ChatService {
   Future<ChatWithMessages> getChatById(String chatId) async {
     if (ApiConfig.useMockData) return await MockSpareData.getChatById(chatId);
     try {
-      final response = await _apiClient.dio.get('/api/chats/$chatId');
+      final response = await _dio.get('/api/chats/$chatId');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -128,9 +134,27 @@ class ChatService {
   }
 
   /// 메시지 전송
-  Future<Message> sendMessage(String chatId, String content) async {
+  Future<Message> sendMessage(
+    String chatId,
+    String content, {
+    String? senderId,
+    String? senderName,
+    String? senderRole,
+  }) async {
+    if (senderRole == 'shop') {
+      MockShopData.assertCanChat();
+    }
+    if (ApiConfig.useMockData) {
+      return MockSpareData.sendMessage(
+        chatId,
+        content,
+        senderId: senderId,
+        senderName: senderName,
+        senderRole: senderRole,
+      );
+    }
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/messages',
         data: {
           'chatId': chatId,
@@ -154,10 +178,68 @@ class ChatService {
     }
   }
 
+  /// 확정 근무 취소 시 상대 채팅방에 시스템 알림.
+  Future<void> sendScheduleCancellationNotice({
+    required Schedule schedule,
+    required CancellationActor actor,
+    String? cancelReason,
+  }) async {
+    if (ApiConfig.useMockData) {
+      return MockSpareData.sendScheduleCancellationNotice(
+        schedule: schedule,
+        actor: actor,
+        cancelReason: cancelReason,
+      );
+    }
+    try {
+      await _dio.post(
+        '/api/schedules/${schedule.id}/cancel-notice',
+        data: {
+          'actor': actor.name,
+          if (cancelReason != null && cancelReason.isNotEmpty)
+            'cancelReason': cancelReason,
+        },
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 채팅방 읽음 처리
+  Future<void> markChatAsRead(
+    String chatId, {
+    String viewerRole = 'spare',
+  }) async {
+    if (ApiConfig.useMockData) {
+      return MockSpareData.markChatAsRead(
+        chatId,
+        viewerRole: viewerRole,
+      );
+    }
+    try {
+      final response = await _dio.post('/api/chats/$chatId/read');
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw ServerException(
+          '읽음 처리 실패: ${response.statusMessage}',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
   /// 채팅 삭제
   Future<void> deleteChat(String chatId) async {
+    if (ApiConfig.useMockData) {
+      return MockSpareData.deleteChat(chatId);
+    }
     try {
-      final response = await _apiClient.dio.delete('/api/chats/$chatId');
+      final response = await _dio.delete('/api/chats/$chatId');
 
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw ServerException(

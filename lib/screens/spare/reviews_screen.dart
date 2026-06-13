@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
-import '../../utils/icon_mapper.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../services/review_service.dart';
 import '../../utils/error_handler.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 
 /// Next.js와 동일한 리뷰 화면
 class ReviewsScreen extends StatefulWidget {
@@ -19,7 +14,6 @@ class ReviewsScreen extends StatefulWidget {
 }
 
 class _ReviewsScreenState extends State<ReviewsScreen> {
-  int _currentNavIndex = 0;
   final ReviewService _reviewService = ReviewService();
   List<_Review> _reviews = [];
   bool _showForm = false;
@@ -87,6 +81,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
     });
 
     try {
+      final messenger = ScaffoldMessenger.of(context);
       // API 호출하여 리뷰 등록 (shopId는 서비스에서 자동으로 찾음)
       final review = await _reviewService.createReview(
         shopName: _shopNameController.text.trim(),
@@ -111,7 +106,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
         _rating = 5;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(
           content: Text('후기가 등록되었습니다.'),
           backgroundColor: AppTheme.primaryBlue,
@@ -119,6 +114,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
       );
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(ErrorHandler.getUserFriendlyMessage(appException)),
@@ -136,23 +132,9 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '후기',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
+      appBar: SharedAppBar(
+        title: '후기',
+        showHubActions: true,
         actions: [
           TextButton(
             onPressed: () {
@@ -162,7 +144,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
             },
             child: Text(
               _showForm ? '취소' : '후기 작성',
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppTheme.primaryBlue,
                 fontWeight: FontWeight.w600,
               ),
@@ -196,7 +178,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                           color: AppTheme.textPrimary,
                         ),
                       ),
-                      SizedBox(height: AppTheme.spacing4),
+                      const SizedBox(height: AppTheme.spacing4),
                       // 미용실명
                       TextFormField(
                         controller: _shopNameController,
@@ -210,10 +192,10 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                           return null;
                         },
                       ),
-                      SizedBox(height: AppTheme.spacing4),
+                      const SizedBox(height: AppTheme.spacing4),
                       // 평점
                       DropdownButtonFormField<int>(
-                        value: _rating,
+                        initialValue: _rating,
                         decoration: AppTheme.inputDecoration.copyWith(
                           labelText: '평점',
                         ),
@@ -231,7 +213,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                           }
                         },
                       ),
-                      SizedBox(height: AppTheme.spacing4),
+                      const SizedBox(height: AppTheme.spacing4),
                       // 후기 내용
                       TextFormField(
                         controller: _commentController,
@@ -246,19 +228,19 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                           return null;
                         },
                       ),
-                      SizedBox(height: AppTheme.spacing4),
+                      const SizedBox(height: AppTheme.spacing4),
                       // 등록하기 버튼
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _handleSubmit,
+                          onPressed: _isLoading ? null : _handleSubmit,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.primaryBlue,
                             foregroundColor: Colors.white,
                             padding: AppTheme.spacing(AppTheme.spacing3),
                           ),
                           child: Text(
-                            '등록하기',
+                            _isLoading ? '등록 중…' : '등록하기',
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -271,12 +253,12 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: AppTheme.spacing4),
+              const SizedBox(height: AppTheme.spacing4),
             ],
             // 리뷰 목록
             ..._reviews.map((review) {
               return Container(
-                margin: EdgeInsets.only(bottom: AppTheme.spacing4),
+                margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
                 padding: AppTheme.spacing(AppTheme.spacing4),
                 decoration: BoxDecoration(
                   color: AppTheme.backgroundWhite,
@@ -299,12 +281,12 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                         ),
                         Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.star,
                               size: 20,
                               color: AppTheme.yellow400,
                             ),
-                            SizedBox(width: AppTheme.spacing1 / 2),
+                            const SizedBox(width: AppTheme.spacing1 / 2),
                             Text(
                               '${review.rating}',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -316,7 +298,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: AppTheme.spacing2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Text(
                       review.comment,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -324,7 +306,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                         color: AppTheme.textPrimary,
                       ),
                     ),
-                    SizedBox(height: AppTheme.spacing2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Text(
                       review.date,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -338,46 +320,6 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
             }),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          
-          // 네비게이션 처리
-          switch (index) {
-            case 0:
-              // 홈으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              // 결제로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              // 찜으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              // 마이(프로필)로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }

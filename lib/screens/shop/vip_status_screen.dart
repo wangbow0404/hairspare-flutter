@@ -1,14 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
-import '../../utils/icon_mapper.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../models/shop_tier.dart';
 import '../../services/schedule_service.dart';
-import '../../utils/error_handler.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 
 /// Shop VIP 현황 화면
 class ShopVipStatusScreen extends StatefulWidget {
@@ -23,7 +17,6 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
   
   ShopTierInfo? _tierInfo;
   bool _isLoading = true;
-  int _currentNavIndex = 0;
 
   @override
   void initState() {
@@ -76,24 +69,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'VIP 현황',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
-      ),
+      appBar: const SharedAppBar(title: 'VIP 현황'),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _tierInfo == null
@@ -101,30 +77,30 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
               : RefreshIndicator(
                   onRefresh: _loadTierInfo,
                   child: SingleChildScrollView(
-                    padding: EdgeInsets.all(AppTheme.spacing4),
+                    padding: const EdgeInsets.all(AppTheme.spacing4),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // 현재 등급 카드
                         _buildCurrentTierCard(),
                         
-                        SizedBox(height: AppTheme.spacing4),
+                        const SizedBox(height: AppTheme.spacing4),
                         
                         // 통계 카드
                         _buildStatsCard(),
                         
-                        SizedBox(height: AppTheme.spacing4),
+                        const SizedBox(height: AppTheme.spacing4),
                         
                         // 등급 진행률 카드
                         if (_tierInfo!.currentTier.getNextTier() != null)
                           _buildProgressCard(),
                         
-                        SizedBox(height: AppTheme.spacing4),
+                        const SizedBox(height: AppTheme.spacing4),
                         
                         // 등급 올리는 방법 안내 카드
                         _buildUpgradeGuideCard(),
                         
-                        SizedBox(height: AppTheme.spacing4),
+                        const SizedBox(height: AppTheme.spacing4),
                         
                         // 모든 등급 안내 카드
                         _buildAllTiersCard(),
@@ -132,59 +108,25 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
                     ),
                   ),
                 ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopHomeScreen()),
-              );
-              break;
-            case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopPaymentScreen()),
-              );
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopFavoritesScreen()),
-              );
-              break;
-            case 3:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopProfileScreen()),
-              );
-              break;
-          }
-        },
-      ),
     );
   }
 
   Widget _buildCurrentTierCard() {
     final tier = _tierInfo!.currentTier;
     return Container(
-      padding: EdgeInsets.all(AppTheme.spacing6),
+      padding: const EdgeInsets.all(AppTheme.spacing6),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(tier.colorValue).withOpacity(0.2),
-            Color(tier.colorValue).withOpacity(0.1),
+            Color(tier.colorValue).withValues(alpha: 0.2),
+            Color(tier.colorValue).withValues(alpha: 0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         border: Border.all(
-          color: Color(tier.colorValue).withOpacity(0.3),
+          color: Color(tier.colorValue).withValues(alpha: 0.3),
           width: 2,
         ),
       ),
@@ -194,7 +136,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
             tier.emoji,
             style: const TextStyle(fontSize: 64),
           ),
-          SizedBox(height: AppTheme.spacing3),
+          const SizedBox(height: AppTheme.spacing3),
           Text(
             '${tier.name} 등급',
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -202,7 +144,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
               color: Color(tier.colorValue),
             ),
           ),
-          SizedBox(height: AppTheme.spacing2),
+          const SizedBox(height: AppTheme.spacing2),
           Text(
             '현재 등급',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -216,7 +158,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
 
   Widget _buildStatsCard() {
     return Container(
-      padding: EdgeInsets.all(AppTheme.spacing4),
+      padding: const EdgeInsets.all(AppTheme.spacing4),
       decoration: BoxDecoration(
         color: AppTheme.backgroundWhite,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
@@ -231,7 +173,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing4),
           Row(
             children: [
               Expanded(
@@ -284,7 +226,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
     return Column(
       children: [
         Icon(icon, color: color, size: 24),
-        SizedBox(height: AppTheme.spacing2),
+        const SizedBox(height: AppTheme.spacing2),
         Text(
           value,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -292,7 +234,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
             color: AppTheme.textPrimary,
           ),
         ),
-        SizedBox(height: AppTheme.spacing1),
+        const SizedBox(height: AppTheme.spacing1),
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -308,7 +250,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
     final progress = _tierInfo!.progressToNextTier;
     
     return Container(
-      padding: EdgeInsets.all(AppTheme.spacing4),
+      padding: const EdgeInsets.all(AppTheme.spacing4),
       decoration: BoxDecoration(
         color: AppTheme.backgroundWhite,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
@@ -335,7 +277,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing3),
+          const SizedBox(height: AppTheme.spacing3),
           // 진행률 바
           Stack(
             children: [
@@ -364,7 +306,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing3),
+          const SizedBox(height: AppTheme.spacing3),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -388,147 +330,9 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
     );
   }
 
-  Widget _buildBenefitsCard() {
-    final tier = _tierInfo!.currentTier;
-    return Container(
-      padding: EdgeInsets.all(AppTheme.spacing4),
-      decoration: BoxDecoration(
-        color: AppTheme.backgroundWhite,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: AppTheme.borderGray),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                tier.emoji,
-                style: const TextStyle(fontSize: 24),
-              ),
-              SizedBox(width: AppTheme.spacing2),
-              Text(
-                '현재 등급 혜택',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: AppTheme.spacing3),
-          ...tier.benefits.map((benefit) {
-            return Padding(
-              padding: EdgeInsets.only(bottom: AppTheme.spacing2),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    size: 20,
-                    color: Color(tier.colorValue),
-                  ),
-                  SizedBox(width: AppTheme.spacing2),
-                  Expanded(
-                    child: Text(
-                      benefit,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNextTierCard() {
-    final nextTier = _tierInfo!.currentTier.getNextTier()!;
-    return Container(
-      padding: EdgeInsets.all(AppTheme.spacing4),
-      decoration: BoxDecoration(
-        color: Color(nextTier.colorValue).withOpacity(0.05),
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(
-          color: Color(nextTier.colorValue).withOpacity(0.3),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                nextTier.emoji,
-                style: const TextStyle(fontSize: 24),
-              ),
-              SizedBox(width: AppTheme.spacing2),
-              Text(
-                '다음 등급: ${nextTier.name}',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Color(nextTier.colorValue),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: AppTheme.spacing3),
-          Text(
-            '필요 조건:',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: AppTheme.spacing2),
-          Text(
-            '• 완료 스케줄 ${nextTier.minCompletedSchedules}개 이상',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          Text(
-            '• 또는 따봉 ${nextTier.minThumbsUp}개 이상',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          SizedBox(height: AppTheme.spacing3),
-          Text(
-            '다음 등급 혜택:',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: AppTheme.spacing2),
-          ...nextTier.benefits.map((benefit) {
-            return Padding(
-              padding: EdgeInsets.only(bottom: AppTheme.spacing1),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.star_outline,
-                    size: 16,
-                    color: Color(nextTier.colorValue),
-                  ),
-                  SizedBox(width: AppTheme.spacing2),
-                  Expanded(
-                    child: Text(
-                      benefit,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
   Widget _buildUpgradeGuideCard() {
     return Container(
-      padding: EdgeInsets.all(AppTheme.spacing5),
+      padding: const EdgeInsets.all(AppTheme.spacing5),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -557,7 +361,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
                 ),
                 child: const Icon(Icons.trending_up, size: 18, color: Colors.white),
               ),
-              SizedBox(width: AppTheme.spacing2),
+              const SizedBox(width: AppTheme.spacing2),
               Text(
                 '등급 올리는 방법',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -566,21 +370,21 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing4),
           _buildGuideItem(
             icon: Icons.check_circle_outline,
             title: '완료 스케줄 달성',
             description: '스케줄을 완료하면 등급 상승에 도움이 됩니다.\n완료한 스케줄 수가 많을수록 높은 등급을 받을 수 있습니다.',
             color: AppTheme.primaryGreen,
           ),
-          SizedBox(height: AppTheme.spacing3),
+          const SizedBox(height: AppTheme.spacing3),
           _buildGuideItem(
             icon: Icons.thumb_up_outlined,
             title: '따봉 받기',
             description: '스페어로부터 따봉을 받으면 등급 상승에 도움이 됩니다.\n서비스 품질을 높여 많은 따봉을 받아보세요.',
             color: AppTheme.primaryPurple,
           ),
-          SizedBox(height: AppTheme.spacing3),
+          const SizedBox(height: AppTheme.spacing3),
           _buildGuideItem(
             icon: Icons.info_outline,
             title: '등급 조건',
@@ -602,14 +406,14 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: EdgeInsets.all(AppTheme.spacing2),
+          padding: const EdgeInsets.all(AppTheme.spacing2),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           ),
           child: Icon(icon, color: color, size: 20),
         ),
-        SizedBox(width: AppTheme.spacing3),
+        const SizedBox(width: AppTheme.spacing3),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -620,7 +424,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              SizedBox(height: AppTheme.spacing1),
+              const SizedBox(height: AppTheme.spacing1),
               Text(
                 description,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -636,7 +440,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
 
   Widget _buildAllTiersCard() {
     return Container(
-      padding: EdgeInsets.all(AppTheme.spacing4),
+      padding: const EdgeInsets.all(AppTheme.spacing4),
       decoration: BoxDecoration(
         color: AppTheme.backgroundWhite,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
@@ -658,7 +462,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
                 ),
                 child: const Icon(Icons.star, size: 18, color: Colors.white),
               ),
-              SizedBox(width: AppTheme.spacing2),
+              const SizedBox(width: AppTheme.spacing2),
               Text(
                 '등급별 상세 안내',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -667,15 +471,15 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing4),
           ...ShopTier.values.map((tier) {
             final isCurrentTier = tier == _tierInfo!.currentTier;
             return Container(
-              margin: EdgeInsets.only(bottom: AppTheme.spacing3),
-              padding: EdgeInsets.all(AppTheme.spacing4),
+              margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
+              padding: const EdgeInsets.all(AppTheme.spacing4),
               decoration: BoxDecoration(
                 color: isCurrentTier
-                    ? Color(tier.colorValue).withOpacity(0.1)
+                    ? Color(tier.colorValue).withValues(alpha: 0.1)
                     : AppTheme.backgroundGray,
                 borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                 border: Border.all(
@@ -694,7 +498,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
                         tier.emoji,
                         style: const TextStyle(fontSize: 24),
                       ),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       Expanded(
                         child: Text(
                           tier.name,
@@ -706,7 +510,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
                       ),
                       if (isCurrentTier)
                         Container(
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: AppTheme.spacing2,
                             vertical: AppTheme.spacing1,
                           ),
@@ -725,14 +529,14 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
                         ),
                     ],
                   ),
-                  SizedBox(height: AppTheme.spacing3),
+                  const SizedBox(height: AppTheme.spacing3),
                   Text(
                     '필요 조건:',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing1),
+                  const SizedBox(height: AppTheme.spacing1),
                   Text(
                     '• 완료 스케줄 ${tier.minCompletedSchedules}개 이상',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -745,17 +549,17 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
                       color: AppTheme.textSecondary,
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     '혜택:',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing1),
+                  const SizedBox(height: AppTheme.spacing1),
                   ...tier.benefits.map((benefit) {
                     return Padding(
-                      padding: EdgeInsets.only(bottom: AppTheme.spacing1),
+                      padding: const EdgeInsets.only(bottom: AppTheme.spacing1),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -764,7 +568,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
                             size: 14,
                             color: Color(tier.colorValue),
                           ),
-                          SizedBox(width: AppTheme.spacing1),
+                          const SizedBox(width: AppTheme.spacing1),
                           Expanded(
                             child: Text(
                               benefit,

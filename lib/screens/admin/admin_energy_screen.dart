@@ -4,7 +4,6 @@ import 'dart:async';
 import '../../theme/app_theme.dart';
 import '../../services/admin_service.dart';
 import '../../utils/error_handler.dart';
-import '../../widgets/admin_layout.dart';
 import '../../widgets/admin/admin_page_header.dart';
 import '../../widgets/admin/admin_search_filter_bar.dart';
 import '../../widgets/admin/admin_table_card.dart';
@@ -157,16 +156,14 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AdminLayout(
-      currentRoute: '/admin/energy',
-      child: Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AdminPageHeader(
+          const AdminPageHeader(
             title: '에너지 관리',
             subtitle: '에너지 거래 내역을 조회하고 관리할 수 있습니다',
           ),
-          SizedBox(height: AppTheme.spacing6),
+          const SizedBox(height: AppTheme.spacing6),
           AdminSearchFilterBar(
             searchController: _searchController,
             searchHint: '사용자, 이메일로 검색...',
@@ -191,19 +188,19 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
                     });
                     _loadTransactions();
                   },
-                  style: TextStyle(color: AppTheme.textPrimary),
+                  style: const TextStyle(color: AppTheme.textPrimary),
                 ),
               ],
             ),
           ),
-          SizedBox(height: AppTheme.spacing6),
+          const SizedBox(height: AppTheme.spacing6),
           SizedBox(
             height: 600,
             child: AdminTableCard(
               child: _isLoading && _transactions.isEmpty
                   ? const Center(child: CircularProgressIndicator())
                   : _transactions.isEmpty
-                      ? Center(
+                      ? const Center(
                           child: Padding(
                             padding: EdgeInsets.all(AppTheme.spacing8),
                             child: Text(
@@ -220,7 +217,7 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
                               height: 580,
                               child: Column(
                               children: [
-                                AdminTableHeader(
+                                const AdminTableHeader(
                                   headers: ['사용자', '유형', '금액', '공고', '상태', '거래일'],
                                   flexValues: [1, 1, 1, 1, 1, 1],
                                 ),
@@ -233,13 +230,13 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
                                   final typeColor = _getTypeColor(transaction['type'] ?? '');
                                   final stateColor = _getStateBadgeColor(transaction['state'] ?? '');
                                   return Container(
-                                    padding: EdgeInsets.symmetric(
+                                    padding: const EdgeInsets.symmetric(
                                       horizontal: AppTheme.spacing4,
                                       vertical: AppTheme.spacing3,
                                     ),
                                     decoration: BoxDecoration(
                                       border: Border(
-                                        bottom: BorderSide(color: AppTheme.adminPurple100.withOpacity(0.5)),
+                                        bottom: BorderSide(color: AppTheme.adminPurple100.withValues(alpha: 0.5)),
                                       ),
                                     ),
                                     child: Row(
@@ -248,7 +245,7 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
                                           flex: 1,
                                           child: Text(
                                             transaction['energyWallet']?['user']?['email'] ?? '-',
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 13,
                                               color: AppTheme.textSecondary,
                                             ),
@@ -286,7 +283,7 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
                                           flex: 1,
                                           child: Text(
                                             transaction['job']?['title'] ?? '-',
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 12,
                                               color: AppTheme.textSecondary,
                                             ),
@@ -297,12 +294,12 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
                                         Expanded(
                                           flex: 1,
                                           child: Container(
-                                            padding: EdgeInsets.symmetric(
+                                            padding: const EdgeInsets.symmetric(
                                               horizontal: AppTheme.spacing2,
                                               vertical: AppTheme.spacing1,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: stateColor.withOpacity(0.1),
+                                              color: stateColor.withValues(alpha: 0.1),
                                               borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                                             ),
                                             child: Text(
@@ -319,7 +316,7 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
                                           flex: 1,
                                           child: Text(
                                             _formatDate(transaction['createdAt'] ?? ''),
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 12,
                                               color: AppTheme.textSecondary,
                                             ),
@@ -336,18 +333,18 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
                             // 페이지네이션
                             if (_totalPages > 1)
                               Container(
-                                padding: EdgeInsets.symmetric(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: AppTheme.spacing6,
                                   vertical: AppTheme.spacing4,
                                 ),
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      AppTheme.adminPurple50.withOpacity(0.3),
-                                      AppTheme.adminPink50.withOpacity(0.3),
+                                      AppTheme.adminPurple50.withValues(alpha: 0.3),
+                                      AppTheme.adminPink50.withValues(alpha: 0.3),
                                     ],
                                   ),
-                                  border: Border(
+                                  border: const Border(
                                     top: BorderSide(color: AppTheme.adminPurple100, width: 2),
                                   ),
                                 ),
@@ -356,7 +353,7 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
                                   children: [
                                     Text(
                                       '총 $_total건 중 ${(_currentPage - 1) * 20 + 1}-${(_currentPage * 20).clamp(0, _total)}건 표시',
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 12,
                                         color: AppTheme.textSecondary,
                                       ),
@@ -374,7 +371,7 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
                                               : null,
                                           child: const Text('이전'),
                                         ),
-                                        SizedBox(width: AppTheme.spacing2),
+                                        const SizedBox(width: AppTheme.spacing2),
                                         TextButton(
                                           onPressed: _currentPage < _totalPages
                                               ? () {
@@ -399,7 +396,6 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 }

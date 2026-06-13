@@ -1,3 +1,9 @@
+import 'package:json_annotation/json_annotation.dart';
+
+import '../utils/json_parse_utils.dart';
+
+part 'shop_tier.g.dart';
+
 /// Shop 등급 시스템 모델
 enum ShopTier {
   bronze,    // 브론즈
@@ -203,8 +209,25 @@ extension ShopTierExtension on ShopTier {
   }
 }
 
+String _shopTierInfoTierToJson(ShopTier value) {
+  switch (value) {
+    case ShopTier.bronze:
+      return '브론즈';
+    case ShopTier.silver:
+      return '실버';
+    case ShopTier.gold:
+      return '골드';
+    case ShopTier.platinum:
+      return '플레티넘';
+    case ShopTier.vip:
+      return 'VIP';
+  }
+}
+
 /// Shop 등급 정보
+@JsonSerializable(createFactory: false, createToJson: true)
 class ShopTierInfo {
+  @JsonKey(toJson: _shopTierInfoTierToJson)
   final ShopTier currentTier;
   final int completedSchedules;
   final int thumbsUpReceived;
@@ -261,43 +284,21 @@ class ShopTierInfo {
   }
 
   factory ShopTierInfo.fromJson(Map<String, dynamic> json) {
-    final completedSchedules = json['completedSchedules'] as int? ?? 0;
-    final thumbsUpReceived = json['thumbsUpReceived'] as int? ?? 0;
-    final tierStr = json['tier']?.toString() ?? 'bronze';
-    
-    ShopTier tier;
-    try {
-      tier = ShopTier.values.firstWhere(
-        (t) => t.name == tierStr,
-        orElse: () => ShopTier.bronze,
-      );
-    } catch (e) {
-      tier = ShopTier.bronze;
-    }
-
-    // 등급 재계산 (서버 데이터가 오래된 경우)
-    tier = calculateTier(completedSchedules, thumbsUpReceived);
-
+    final completedSchedules =
+        JsonParseUtils.intValue(json['completedSchedules']) ?? 0;
+    final thumbsUpReceived =
+        JsonParseUtils.intValue(json['thumbsUpReceived']) ?? 0;
+    final tier = calculateTier(completedSchedules, thumbsUpReceived);
     return ShopTierInfo(
       currentTier: tier,
       completedSchedules: completedSchedules,
       thumbsUpReceived: thumbsUpReceived,
       maxJobPosts: calculateMaxJobPosts(tier),
-      tierUpdatedAt: json['tierUpdatedAt'] != null
-          ? DateTime.parse(json['tierUpdatedAt'].toString())
-          : null,
+      tierUpdatedAt: JsonParseUtils.dateTimeNullable(json['tierUpdatedAt']),
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'tier': currentTier.name,
-      'completedSchedules': completedSchedules,
-      'thumbsUpReceived': thumbsUpReceived,
-      'maxJobPosts': maxJobPosts,
-      'tierUpdatedAt': tierUpdatedAt?.toIso8601String(),
-    };
-  }
+  Map<String, dynamic> toJson() => _$ShopTierInfoToJson(this);
 
   /// 다음 등급까지 진행률
   double get progressToNextTier {

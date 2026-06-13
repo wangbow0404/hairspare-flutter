@@ -4,7 +4,9 @@ import '../services/point_service.dart';
 import '../utils/error_handler.dart';
 
 class PointProvider with ChangeNotifier {
-  final PointService _pointService = PointService();
+  PointProvider(this._pointService);
+
+  final PointService _pointService;
   int _balance = 0;
   List<PointTransaction> _history = [];
   bool _isLoading = false;

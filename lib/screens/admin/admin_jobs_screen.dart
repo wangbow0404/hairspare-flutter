@@ -4,12 +4,11 @@ import 'dart:async';
 import '../../theme/app_theme.dart';
 import '../../services/admin_service.dart';
 import '../../utils/error_handler.dart';
-import '../../widgets/admin_layout.dart';
+import '../../core/router/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import '../../widgets/admin/admin_page_header.dart';
 import '../../widgets/admin/admin_search_filter_bar.dart';
 import '../../widgets/admin/admin_table_card.dart';
-import 'admin_job_detail_screen.dart';
-
 /// 관리자 공고 관리 화면 (Next.js와 동일한 스타일)
 class AdminJobsScreen extends StatefulWidget {
   const AdminJobsScreen({super.key});
@@ -136,16 +135,14 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AdminLayout(
-      currentRoute: '/admin/jobs',
-      child: Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AdminPageHeader(
+          const AdminPageHeader(
             title: '공고 관리',
             subtitle: '전체 공고를 조회하고 관리할 수 있습니다',
           ),
-          SizedBox(height: AppTheme.spacing6),
+          const SizedBox(height: AppTheme.spacing6),
           AdminSearchFilterBar(
             searchController: _searchController,
             searchHint: '공고 제목, 미용실명으로 검색...',
@@ -165,11 +162,11 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                 DropdownButton<String>(
                   value: _statusFilter.isEmpty ? null : _statusFilter,
                   hint: const Text('전체 상태'),
-                  items: [
-                    const DropdownMenuItem(value: '', child: Text('전체 상태')),
-                    const DropdownMenuItem(value: 'published', child: Text('게시중')),
-                    const DropdownMenuItem(value: 'closed', child: Text('마감')),
-                    const DropdownMenuItem(value: 'completed', child: Text('완료')),
+                  items: const [
+                    DropdownMenuItem(value: '', child: Text('전체 상태')),
+                    DropdownMenuItem(value: 'published', child: Text('게시중')),
+                    DropdownMenuItem(value: 'closed', child: Text('마감')),
+                    DropdownMenuItem(value: 'completed', child: Text('완료')),
                   ],
                   onChanged: (value) {
                     setState(() {
@@ -178,16 +175,16 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                     });
                     _loadJobs();
                   },
-                  style: TextStyle(color: AppTheme.textPrimary),
+                  style: const TextStyle(color: AppTheme.textPrimary),
                 ),
-                SizedBox(width: AppTheme.spacing2),
+                const SizedBox(width: AppTheme.spacing2),
                 DropdownButton<String>(
                   value: _urgentFilter.isEmpty ? null : _urgentFilter,
                   hint: const Text('전체'),
-                  items: [
-                    const DropdownMenuItem(value: '', child: Text('전체')),
-                    const DropdownMenuItem(value: 'true', child: Text('급구만')),
-                    const DropdownMenuItem(value: 'false', child: Text('일반만')),
+                  items: const [
+                    DropdownMenuItem(value: '', child: Text('전체')),
+                    DropdownMenuItem(value: 'true', child: Text('급구만')),
+                    DropdownMenuItem(value: 'false', child: Text('일반만')),
                   ],
                   onChanged: (value) {
                     setState(() {
@@ -196,19 +193,19 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                     });
                     _loadJobs();
                   },
-                  style: TextStyle(color: AppTheme.textPrimary),
+                  style: const TextStyle(color: AppTheme.textPrimary),
                 ),
               ],
             ),
           ),
-          SizedBox(height: AppTheme.spacing6),
+          const SizedBox(height: AppTheme.spacing6),
           SizedBox(
             height: 600,
             child: AdminTableCard(
               child: _isLoading && _jobs.isEmpty
                   ? const AdminTableSkeleton(rowCount: 8, columnCount: 7)
                   : _jobs.isEmpty
-                      ? Center(
+                      ? const Center(
                           child: Padding(
                             padding: EdgeInsets.all(AppTheme.spacing8),
                             child: Column(
@@ -230,7 +227,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                             constraints: const BoxConstraints(minWidth: 900),
                             child: Column(
                               children: [
-                                AdminTableHeader(
+                                const AdminTableHeader(
                                   headers: ['공고 정보', '미용실', '지역', '금액', '지원/스케줄', '상태', '등록일'],
                                   flexValues: [2, 1, 1, 1, 1, 1, 1],
                                 ),
@@ -244,24 +241,20 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                                   return InkWell(
                                     onTap: jobId != null
                                         ? () {
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder: (context) => AdminJobDetailScreen(
-                                                  jobId: jobId,
-                                                  initialData: job,
-                                                ),
-                                              ),
+                                            context.push(
+                                              AppRoutes.adminJobDetail(jobId),
+                                              extra: job,
                                             );
                                           }
                                         : null,
                                     child: Container(
-                                    padding: EdgeInsets.symmetric(
+                                    padding: const EdgeInsets.symmetric(
                                       horizontal: AppTheme.spacing4,
                                       vertical: AppTheme.spacing3,
                                     ),
                                     decoration: BoxDecoration(
                                       border: Border(
-                                        bottom: BorderSide(color: AppTheme.adminPurple100.withOpacity(0.5)),
+                                        bottom: BorderSide(color: AppTheme.adminPurple100.withValues(alpha: 0.5)),
                                       ),
                                     ),
                                     child: Row(
@@ -284,14 +277,14 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                                                 ),
                                               ),
                                               if (job['isUrgent'] == true) ...[
-                                                SizedBox(width: AppTheme.spacing1),
+                                                const SizedBox(width: AppTheme.spacing1),
                                                 Container(
-                                                  padding: EdgeInsets.symmetric(
+                                                  padding: const EdgeInsets.symmetric(
                                                     horizontal: AppTheme.spacing2,
                                                     vertical: 2,
                                                   ),
                                                   decoration: BoxDecoration(
-                                                    color: AppTheme.urgentRed.withOpacity(0.1),
+                                                    color: AppTheme.urgentRed.withValues(alpha: 0.1),
                                                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                                                   ),
                                                   child: const Text(
@@ -305,17 +298,17 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                                                 ),
                                               ],
                                               if (job['isPremium'] == true) ...[
-                                                SizedBox(width: AppTheme.spacing1),
+                                                const SizedBox(width: AppTheme.spacing1),
                                                 Container(
-                                                  padding: EdgeInsets.symmetric(
+                                                  padding: const EdgeInsets.symmetric(
                                                     horizontal: AppTheme.spacing2,
                                                     vertical: 2,
                                                   ),
                                                   decoration: BoxDecoration(
-                                                    color: AppTheme.primaryPurple.withOpacity(0.1),
+                                                    color: AppTheme.primaryPurple.withValues(alpha: 0.1),
                                                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                                                   ),
-                                                  child: Text(
+                                                  child: const Text(
                                                     '프리미엄',
                                                     style: TextStyle(
                                                       fontSize: 10,
@@ -332,7 +325,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                                           flex: 1,
                                           child: Text(
                                             job['shop']?['name'] ?? '-',
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 13,
                                               color: AppTheme.textSecondary,
                                             ),
@@ -344,7 +337,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                                           flex: 1,
                                           child: Text(
                                             job['region']?['name'] ?? '-',
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 13,
                                               color: AppTheme.textSecondary,
                                             ),
@@ -369,7 +362,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                                           flex: 1,
                                           child: Text(
                                             '지원 ${job['_count']?['applications'] ?? 0} · 스케줄 ${job['_count']?['schedules'] ?? 0}',
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 12,
                                               color: AppTheme.textSecondary,
                                             ),
@@ -380,12 +373,12 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                                         Expanded(
                                           flex: 1,
                                           child: Container(
-                                            padding: EdgeInsets.symmetric(
+                                            padding: const EdgeInsets.symmetric(
                                               horizontal: AppTheme.spacing2,
                                               vertical: AppTheme.spacing1,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: _getStatusBadgeColor(job['status'] ?? '').withOpacity(0.1),
+                                              color: _getStatusBadgeColor(job['status'] ?? '').withValues(alpha: 0.1),
                                               borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                                             ),
                                             child: Text(
@@ -402,7 +395,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                                           flex: 1,
                                           child: Text(
                                             _formatDate(job['createdAt'] ?? ''),
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 12,
                                               color: AppTheme.textSecondary,
                                             ),
@@ -419,18 +412,18 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                             ),
                             if (_totalPages > 1)
                               Container(
-                                padding: EdgeInsets.symmetric(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: AppTheme.spacing6,
                                   vertical: AppTheme.spacing4,
                                 ),
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      AppTheme.adminPurple50.withOpacity(0.3),
-                                      AppTheme.adminPink50.withOpacity(0.3),
+                                      AppTheme.adminPurple50.withValues(alpha: 0.3),
+                                      AppTheme.adminPink50.withValues(alpha: 0.3),
                                     ],
                                   ),
-                                  border: Border(
+                                  border: const Border(
                                     top: BorderSide(color: AppTheme.adminPurple100, width: 2),
                                   ),
                                 ),
@@ -439,7 +432,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                                   children: [
                                     Text(
                                       '총 $_total개 중 ${(_currentPage - 1) * 20 + 1}-${(_currentPage * 20).clamp(0, _total)}개 표시',
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 12,
                                         color: AppTheme.textSecondary,
                                       ),
@@ -457,7 +450,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                                               : null,
                                           child: const Text('이전'),
                                         ),
-                                        SizedBox(width: AppTheme.spacing2),
+                                        const SizedBox(width: AppTheme.spacing2),
                                         TextButton(
                                           onPressed: _currentPage < _totalPages
                                               ? () {
@@ -481,7 +474,6 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 }

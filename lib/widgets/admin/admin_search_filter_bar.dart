@@ -25,7 +25,7 @@ class AdminSearchFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(AppTheme.spacing6),
+      padding: const EdgeInsets.all(AppTheme.spacing6),
       decoration: AppTheme.adminCardDecoration,
       child: Column(
         children: [
@@ -37,16 +37,16 @@ class AdminSearchFilterBar extends StatelessWidget {
                   onChanged: onSearchChanged,
                   decoration: InputDecoration(
                     hintText: searchHint ?? '이름, 이메일, 전화번호로 검색...',
-                    prefixIcon: Icon(Icons.search, color: AppTheme.textSecondary),
+                    prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
                     filled: true,
                     fillColor: Colors.transparent,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radius2xl),
-                      borderSide: BorderSide(color: AppTheme.adminPurple100, width: 2),
+                      borderSide: const BorderSide(color: AppTheme.adminPurple100, width: 2),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radius2xl),
-                      borderSide: BorderSide(color: AppTheme.adminPurple100, width: 2),
+                      borderSide: const BorderSide(color: AppTheme.adminPurple100, width: 2),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radius2xl),
@@ -55,19 +55,19 @@ class AdminSearchFilterBar extends StatelessWidget {
                         width: 2,
                       ),
                     ),
-                    contentPadding: EdgeInsets.symmetric(
+                    contentPadding: const EdgeInsets.symmetric(
                       horizontal: AppTheme.spacing4,
                       vertical: AppTheme.spacing3,
                     ),
                   ),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     color: AppTheme.textPrimary,
                   ),
                 ),
               ),
               if (filterDropdown != null) ...[
-                SizedBox(width: AppTheme.spacing4),
+                const SizedBox(width: AppTheme.spacing4),
                 Flexible(
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -78,18 +78,18 @@ class AdminSearchFilterBar extends StatelessWidget {
             ],
           ),
           if (filterTabs.isNotEmpty) ...[
-            SizedBox(height: AppTheme.spacing4),
+            const SizedBox(height: AppTheme.spacing4),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: filterTabs.map((tab) {
                   final isSelected = selectedTab == tab;
                   return Padding(
-                    padding: EdgeInsets.only(right: AppTheme.spacing2),
+                    padding: const EdgeInsets.only(right: AppTheme.spacing2),
                     child: GestureDetector(
                       onTap: () => onTabChanged?.call(tab),
                       child: Container(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: AppTheme.spacing4,
                           vertical: AppTheme.spacing2 + 2,
                         ),

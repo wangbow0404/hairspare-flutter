@@ -3,17 +3,19 @@ import '../models/user.dart';
 import '../utils/api_client.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
+import '../core/di/service_locator.dart';
 
 /// 소셜 로그인 서비스
 class SocialAuthService {
   final ApiClient _apiClient = ApiClient();
+  final Dio _dio = sl<Dio>();
 
   /// 카카오 로그인
   /// 
   /// [accessToken] 카카오 액세스 토큰
   Future<User> loginWithKakao(String accessToken) async {
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/auth/social/kakao',
         data: {
           'accessToken': accessToken,
@@ -52,7 +54,7 @@ class SocialAuthService {
   /// [accessToken] 네이버 액세스 토큰
   Future<User> loginWithNaver(String accessToken) async {
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/auth/social/naver',
         data: {
           'accessToken': accessToken,
@@ -91,7 +93,7 @@ class SocialAuthService {
   /// [idToken] 구글 ID 토큰
   Future<User> loginWithGoogle(String idToken) async {
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/auth/social/google',
         data: {
           'idToken': idToken,

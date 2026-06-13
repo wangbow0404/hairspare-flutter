@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../theme/app_theme.dart';
-import '../../utils/icon_mapper.dart';
-import '../../widgets/spare_app_bar.dart';
+import 'package:hairspare/screens/spare/education_energy_checkout_screen.dart';
+import 'package:hairspare/screens/spare/education_enrollment_detail_screen.dart';
+import 'package:hairspare/theme/app_theme.dart';
+import 'package:hairspare/utils/icon_mapper.dart';
+import 'package:hairspare/view_models/education_detail_view_model.dart';
+import 'package:hairspare/widgets/spare_app_bar.dart';
 import 'education_screen.dart';
 import 'reviews_list_screen.dart';
 
@@ -18,16 +22,19 @@ class EducationDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ChangeNotifierProvider(
+      create: (_) =>
+          EducationDetailViewModel(education: education)..loadEnrollmentStatus(),
+      child: Scaffold(
       backgroundColor: AppTheme.backgroundGray,
       appBar: SpareAppBar(
         showBackButton: true,
         actions: [
           IconButton(
             icon: IconMapper.icon('share', size: 22, color: AppTheme.textPrimary) ??
-                Icon(Icons.share, size: 22, color: AppTheme.textPrimary),
+                const Icon(Icons.share, size: 22, color: AppTheme.textPrimary),
             onPressed: () => Share.share(
-              '${education.title}\n참가비: ${NumberFormat('#,###').format(education.price)}원',
+              '${education.title}\n참가비: 에너지 ${education.energyCost}개',
             ),
           ),
         ],
@@ -46,7 +53,7 @@ class EducationDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildTags(context),
-                  SizedBox(height: AppTheme.spacing3),
+                  const SizedBox(height: AppTheme.spacing3),
                   Text(
                     education.title,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -56,19 +63,19 @@ class EducationDetailScreen extends StatelessWidget {
                       height: 1.3,
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   _buildQuickInfoGrid(context),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   _buildDetailBox(context),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   _buildDescriptionBox(context),
                   if ((education.curriculumSchedule != null && education.curriculumSchedule!.isNotEmpty) ||
                       (education.curriculum != null && education.curriculum!.isNotEmpty)) ...[
-                    SizedBox(height: AppTheme.spacing4),
+                    const SizedBox(height: AppTheme.spacing4),
                     _buildCurriculumSection(context),
                   ],
                   if (education.instructorName != null) ...[
-                    SizedBox(height: AppTheme.spacing4),
+                    const SizedBox(height: AppTheme.spacing4),
                     _buildSectionBox(
                       context,
                       title: '강사 소개',
@@ -85,7 +92,7 @@ class EducationDetailScreen extends StatelessWidget {
                             ),
                           ),
                           if (education.instructorBio != null) ...[
-                            SizedBox(height: AppTheme.spacing2),
+                            const SizedBox(height: AppTheme.spacing2),
                             Text(
                               education.instructorBio!,
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -100,7 +107,7 @@ class EducationDetailScreen extends StatelessWidget {
                     ),
                   ],
                   if (education.benefits != null && education.benefits!.isNotEmpty) ...[
-                    SizedBox(height: AppTheme.spacing4),
+                    const SizedBox(height: AppTheme.spacing4),
                     _buildSectionBox(
                       context,
                       title: '이런 점이 좋아요',
@@ -109,13 +116,13 @@ class EducationDetailScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: education.benefits!
                             .map((b) => Padding(
-                                  padding: EdgeInsets.only(bottom: AppTheme.spacing2),
+                                  padding: const EdgeInsets.only(bottom: AppTheme.spacing2),
                                   child: Row(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Icon(Icons.check_circle,
+                                      const Icon(Icons.check_circle,
                                           size: 18, color: AppTheme.primaryGreen),
-                                      SizedBox(width: AppTheme.spacing2),
+                                      const SizedBox(width: AppTheme.spacing2),
                                       Expanded(
                                         child: Text(
                                           b,
@@ -137,7 +144,7 @@ class EducationDetailScreen extends StatelessWidget {
                     ),
                   ],
                   if (education.targetAudience != null) ...[
-                    SizedBox(height: AppTheme.spacing4),
+                    const SizedBox(height: AppTheme.spacing4),
                     _buildSectionBox(
                       context,
                       title: '이런 분들께 추천',
@@ -153,17 +160,18 @@ class EducationDetailScreen extends StatelessWidget {
                     ),
                   ],
                   if (education.reviews != null && education.reviews!.isNotEmpty) ...[
-                    SizedBox(height: AppTheme.spacing4),
+                    const SizedBox(height: AppTheme.spacing4),
                     _buildReviewsSection(context),
                   ],
-                  SizedBox(height: AppTheme.spacing6),
+                  const SizedBox(height: AppTheme.spacing6),
                   _buildApplyButton(context),
-                  SizedBox(height: AppTheme.spacing8),
+                  const SizedBox(height: AppTheme.spacing8),
                 ],
               ),
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -181,8 +189,8 @@ class EducationDetailScreen extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.primaryPurple.withOpacity(0.75),
-            AppTheme.primaryBlue.withOpacity(0.65),
+            AppTheme.primaryPurple.withValues(alpha: 0.75),
+            AppTheme.primaryBlue.withValues(alpha: 0.65),
           ],
         ),
       ),
@@ -213,7 +221,7 @@ class EducationDetailScreen extends StatelessWidget {
       child: Icon(
         Icons.school,
         size: 72,
-        color: Colors.white.withOpacity(0.4),
+        color: Colors.white.withValues(alpha: 0.4),
       ),
     );
   }
@@ -234,7 +242,7 @@ class EducationDetailScreen extends StatelessWidget {
         ),
         _tag(
           education.category,
-          AppTheme.primaryPurple.withOpacity(0.15),
+          AppTheme.primaryPurple.withValues(alpha: 0.15),
           AppTheme.primaryPurple,
         ),
         if (education.duration != null)
@@ -273,13 +281,13 @@ class EducationDetailScreen extends StatelessWidget {
             Expanded(
               child: _buildQuickInfoItem(
                 context,
-                icon: Icons.payments,
+                icon: Icons.flash_on,
                 label: '참가비',
-                value: '${NumberFormat('#,###').format(education.price)}원',
+                value: '에너지 ${education.energyCost}개',
                 valueColor: AppTheme.primaryGreen,
               ),
             ),
-            SizedBox(width: AppTheme.spacing3),
+            const SizedBox(width: AppTheme.spacing3),
             Expanded(
               child: _buildQuickInfoItem(
                 context,
@@ -290,7 +298,7 @@ class EducationDetailScreen extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: AppTheme.spacing3),
+        const SizedBox(height: AppTheme.spacing3),
         Row(
           children: [
             Expanded(
@@ -301,7 +309,7 @@ class EducationDetailScreen extends StatelessWidget {
                 value: '${education.applicants}/${education.maxApplicants}명',
               ),
             ),
-            SizedBox(width: AppTheme.spacing3),
+            const SizedBox(width: AppTheme.spacing3),
             Expanded(
               child: _buildQuickInfoItem(
                 context,
@@ -341,7 +349,7 @@ class EducationDetailScreen extends StatelessWidget {
           Row(
             children: [
               Icon(icon, size: 16, color: AppTheme.textSecondary),
-              SizedBox(width: AppTheme.spacing2),
+              const SizedBox(width: AppTheme.spacing2),
               Text(
                 label,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -352,7 +360,7 @@ class EducationDetailScreen extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing2),
+          const SizedBox(height: AppTheme.spacing2),
           Text(
             value,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -374,20 +382,20 @@ class EducationDetailScreen extends StatelessWidget {
       if (!education.isOnline)
         _buildInfoRow(context, Icons.location_on, '위치',
             '${education.province}${education.district != null ? ' ${education.district}' : ''}'),
-      if (!education.isOnline) SizedBox(height: AppTheme.spacing3),
+      if (!education.isOnline) const SizedBox(height: AppTheme.spacing3),
       if (education.startDate != null) ...[
         _buildInfoRow(context, Icons.event_available, '교육 진행일자',
             education.endDate != null && education.endDate != education.startDate
                 ? '${DateFormat('yyyy년 M월 d일', 'ko_KR').format(education.startDate!)} ~ ${DateFormat('M월 d일', 'ko_KR').format(education.endDate!)}'
                 : DateFormat('yyyy년 M월 d일', 'ko_KR').format(education.startDate!)),
-        SizedBox(height: AppTheme.spacing3),
+        const SizedBox(height: AppTheme.spacing3),
       ],
-      _buildInfoRow(context, Icons.payments, '참가비',
-          '${NumberFormat('#,###').format(education.price)}원'),
-      SizedBox(height: AppTheme.spacing3),
+      _buildInfoRow(context, Icons.flash_on, '참가비',
+          '에너지 ${education.energyCost}개'),
+      const SizedBox(height: AppTheme.spacing3),
       _buildInfoRow(context, Icons.people, '신청 현황',
           '${education.applicants}/${education.maxApplicants}명'),
-      SizedBox(height: AppTheme.spacing3),
+      const SizedBox(height: AppTheme.spacing3),
       _buildInfoRow(context, Icons.calendar_today, '마감일',
           DateFormat('yyyy년 M월 d일', 'ko_KR').format(education.deadline)),
     ];
@@ -411,7 +419,7 @@ class EducationDetailScreen extends StatelessWidget {
               color: AppTheme.textPrimary,
             ),
           ),
-          SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing4),
           ...items,
         ],
       ),
@@ -424,7 +432,7 @@ class EducationDetailScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 18, color: AppTheme.primaryPurple),
-        SizedBox(width: AppTheme.spacing3),
+        const SizedBox(width: AppTheme.spacing3),
         Expanded(
           child: RichText(
             text: TextSpan(
@@ -433,10 +441,10 @@ class EducationDetailScreen extends StatelessWidget {
                 color: AppTheme.textSecondary,
               ),
               children: [
-                TextSpan(text: '$label  ', style: TextStyle(fontWeight: FontWeight.w500)),
+                TextSpan(text: '$label  ', style: const TextStyle(fontWeight: FontWeight.w500)),
                 TextSpan(
                   text: value,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppTheme.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
@@ -469,7 +477,7 @@ class EducationDetailScreen extends StatelessWidget {
               color: AppTheme.textPrimary,
             ),
           ),
-          SizedBox(height: AppTheme.spacing3),
+          const SizedBox(height: AppTheme.spacing3),
           Text(
             education.description,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -503,7 +511,7 @@ class EducationDetailScreen extends StatelessWidget {
           Row(
             children: [
               Icon(icon, size: 18, color: AppTheme.primaryPurple),
-              SizedBox(width: AppTheme.spacing2),
+              const SizedBox(width: AppTheme.spacing2),
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -514,7 +522,7 @@ class EducationDetailScreen extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing4),
           child,
         ],
       ),
@@ -532,19 +540,19 @@ class EducationDetailScreen extends StatelessWidget {
           children: education.curriculumSchedule!.map((day) {
             final dateStr = DateFormat('M월 d일', 'ko_KR').format(day.date);
             return Padding(
-              padding: EdgeInsets.only(bottom: AppTheme.spacing4),
+              padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${day.day}일차 (${dateStr})',
+                    '${day.day}일차 ($dateStr)',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.primaryPurple,
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Text(
                     day.content,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -584,38 +592,78 @@ class EducationDetailScreen extends StatelessWidget {
   }
 
   Widget _buildApplyButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${education.title} 신청이 완료되었습니다.'),
-              backgroundColor: AppTheme.primaryGreen,
-            ),
+    return Consumer<EducationDetailViewModel>(
+      builder: (context, vm, _) {
+        if (vm.isLoadingStatus) {
+          return const SizedBox(
+            height: 52,
+            child: Center(child: CircularProgressIndicator()),
           );
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.primaryBlue,
-          foregroundColor: Colors.white,
-          padding: AppTheme.spacingSymmetric(
-            horizontal: AppTheme.spacing4,
-            vertical: AppTheme.spacing4,
+        }
+
+        final blockReason = vm.applyBlockReason;
+        final enrolled = vm.isEnrolled;
+
+        return SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: enrolled
+                ? () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (context) => EducationEnrollmentDetailScreen(
+                          enrollmentId: vm.enrollment!.id,
+                        ),
+                      ),
+                    );
+                  }
+                : vm.canApply
+                    ? () async {
+                        final result = await Navigator.push<bool>(
+                          context,
+                          MaterialPageRoute<bool>(
+                            builder: (context) => EducationEnergyCheckoutScreen(
+                              education: education,
+                            ),
+                          ),
+                        );
+                        if (result == true && context.mounted) {
+                          await vm.loadEnrollmentStatus();
+                        } else if (context.mounted) {
+                          await vm.loadEnrollmentStatus();
+                        }
+                      }
+                    : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: enrolled
+                  ? AppTheme.primaryGreen
+                  : AppTheme.primaryBlue,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: AppTheme.borderGray,
+              disabledForegroundColor: AppTheme.textTertiary,
+              padding: AppTheme.spacingSymmetric(
+                horizontal: AppTheme.spacing4,
+                vertical: AppTheme.spacing4,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+              ),
+              elevation: 0,
+            ),
+            child: Text(
+              enrolled
+                  ? '신청 내역 보기'
+                  : blockReason ?? '신청하기',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+            ),
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-          ),
-          elevation: 0,
-        ),
-        child: Text(
-          '신청하기',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -659,8 +707,8 @@ class _ExpandableReviewsSectionState extends State<_ExpandableReviewsSection> {
         children: [
           Row(
             children: [
-              Icon(Icons.star, size: 18, color: AppTheme.yellow500),
-              SizedBox(width: AppTheme.spacing2),
+              const Icon(Icons.star, size: 18, color: AppTheme.yellow500),
+              const SizedBox(width: AppTheme.spacing2),
               Text(
                 '리뷰',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -669,7 +717,7 @@ class _ExpandableReviewsSectionState extends State<_ExpandableReviewsSection> {
                   color: AppTheme.textPrimary,
                 ),
               ),
-              SizedBox(width: AppTheme.spacing2),
+              const SizedBox(width: AppTheme.spacing2),
               TextButton(
                 onPressed: () {
                   Navigator.push(
@@ -707,8 +755,8 @@ class _ExpandableReviewsSectionState extends State<_ExpandableReviewsSection> {
               const Spacer(),
               Row(
                 children: [
-                  Icon(Icons.star, size: 18, color: AppTheme.yellow500),
-                  SizedBox(width: AppTheme.spacing1),
+                  const Icon(Icons.star, size: 18, color: AppTheme.yellow500),
+                  const SizedBox(width: AppTheme.spacing1),
                   Text(
                     widget.averageRating.toStringAsFixed(1),
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -728,9 +776,9 @@ class _ExpandableReviewsSectionState extends State<_ExpandableReviewsSection> {
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing4),
           ...displayedReviews.map((r) => Padding(
-                padding: EdgeInsets.only(bottom: AppTheme.spacing4),
+                padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -741,7 +789,7 @@ class _ExpandableReviewsSectionState extends State<_ExpandableReviewsSection> {
                               size: 16,
                               color: AppTheme.yellow500,
                             )),
-                        SizedBox(width: AppTheme.spacing2),
+                        const SizedBox(width: AppTheme.spacing2),
                         Text(
                           r.userName,
                           style: Theme.of(context).textTheme.labelMedium?.copyWith(
@@ -760,7 +808,7 @@ class _ExpandableReviewsSectionState extends State<_ExpandableReviewsSection> {
                         ),
                       ],
                     ),
-                    SizedBox(height: AppTheme.spacing2),
+                    const SizedBox(height: AppTheme.spacing2),
                     Text(
                       r.comment,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(

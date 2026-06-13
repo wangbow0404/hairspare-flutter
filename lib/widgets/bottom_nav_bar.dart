@@ -16,7 +16,7 @@ class BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppTheme.backgroundWhite,
         border: Border(
           top: BorderSide(
@@ -105,7 +105,7 @@ class _NavItem extends StatelessWidget {
                     child: icon,
                   ),
                 ),
-                SizedBox(height: AppTheme.spacing1), // gap-1
+                const SizedBox(height: AppTheme.spacing1), // gap-1
                 Text(
                   label,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(

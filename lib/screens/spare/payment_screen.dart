@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
 import '../../utils/icon_mapper.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../services/payment_service.dart';
-import 'home_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
-
 /// Next.js와 동일한 결제 화면
+
+
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
 
@@ -17,7 +15,6 @@ class PaymentScreen extends StatefulWidget {
 }
 
 class _PaymentScreenState extends State<PaymentScreen> {
-  int _currentNavIndex = 1; // 결제 탭
   List<Payment> _payments = [];
   bool _isLoading = true;
   final PaymentService _paymentService = PaymentService();
@@ -101,26 +98,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final canPop = Navigator.canPop(context);
     if (_isLoading) {
       return Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        appBar: AppBar(
-          backgroundColor: AppTheme.backgroundWhite,
-          elevation: 0,
-          leading: IconButton(
-            icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-                const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: Text(
-            '결제 정보',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-          centerTitle: false,
+        appBar: SharedAppBar(
+          title: '결제 정보',
+          showBackButton: canPop,
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -128,30 +112,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '결제 정보',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
+      appBar: SharedAppBar(
+        title: '결제 정보',
+        showBackButton: canPop,
       ),
       body: SingleChildScrollView(
         padding: AppTheme.spacing(AppTheme.spacing4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: AppTheme.spacing6),
+            const SizedBox(height: AppTheme.spacing6),
             Text(
               '결제 내역',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -160,7 +130,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 color: AppTheme.textPrimary,
               ),
             ),
-            SizedBox(height: AppTheme.spacing4),
+            const SizedBox(height: AppTheme.spacing4),
             Container(
               decoration: BoxDecoration(
                 color: AppTheme.backgroundWhite,
@@ -174,7 +144,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         children: [
                           IconMapper.icon('creditcard', size: 48, color: AppTheme.textTertiary) ??
                               const Icon(Icons.credit_card, size: 48, color: AppTheme.textTertiary),
-                          SizedBox(height: AppTheme.spacing3),
+                          const SizedBox(height: AppTheme.spacing3),
                           Text(
                             '결제 내역이 없습니다',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -190,7 +160,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         final statusInfo = _getStatusInfo(payment.status);
                         return Container(
                           padding: AppTheme.spacing(AppTheme.spacing4),
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             border: Border(
                               bottom: BorderSide(
                                 color: AppTheme.borderGray,
@@ -219,7 +189,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                       color: statusInfo['color'],
                                     ),
                               ),
-                              SizedBox(width: AppTheme.spacing3),
+                              const SizedBox(width: AppTheme.spacing3),
                               // 정보
                               Expanded(
                                 child: Column(
@@ -233,7 +203,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                         color: AppTheme.textPrimary,
                                       ),
                                     ),
-                                    SizedBox(height: AppTheme.spacing1),
+                                    const SizedBox(height: AppTheme.spacing1),
                                     Text(
                                       _formatDate(payment.createdAt),
                                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -256,7 +226,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                       color: AppTheme.textPrimary,
                                     ),
                                   ),
-                                  SizedBox(height: AppTheme.spacing1),
+                                  const SizedBox(height: AppTheme.spacing1),
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -270,7 +240,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                             size: 12,
                                             color: statusInfo['color'],
                                           ),
-                                      SizedBox(width: AppTheme.spacing1),
+                                      const SizedBox(width: AppTheme.spacing1),
                                       Text(
                                         statusInfo['label'],
                                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -290,42 +260,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          
-          // 네비게이션 처리
-          switch (index) {
-            case 0:
-              // 홈으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              // 결제는 현재 화면이므로 아무것도 하지 않음
-              break;
-            case 2:
-              // 찜으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              // 마이로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }

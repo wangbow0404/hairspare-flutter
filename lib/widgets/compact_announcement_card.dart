@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hairspare/widgets/job/urgent_job_card_theme.dart';
 import 'package:intl/intl.dart';
 import '../models/job.dart';
 import '../models/space_rental.dart';
@@ -28,22 +29,14 @@ class CompactAnnouncementCard extends StatelessWidget {
     this.onFavoriteToggle,
   });
 
+  bool get _isUrgentJob =>
+      type == AnnouncementType.job && (job?.isUrgent ?? false);
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: AppTheme.spacing3),
-      decoration: BoxDecoration(
-        color: AppTheme.backgroundWhite,
-        borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-        border: Border.all(color: AppTheme.borderGray),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
+      decoration: UrgentJobCardTheme.cardDecoration(isUrgent: _isUrgentJob),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -52,19 +45,25 @@ class CompactAnnouncementCard extends StatelessWidget {
           child: Stack(
             children: [
               Padding(
-                padding: EdgeInsets.all(AppTheme.spacing4),
+                padding: const EdgeInsets.all(AppTheme.spacing4),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 작은 이미지 (80x80)
                     _buildImage(context),
-                    SizedBox(width: AppTheme.spacing3),
+                    const SizedBox(width: AppTheme.spacing3),
                     Expanded(
                       child: _buildContent(context),
                     ),
                   ],
                 ),
               ),
+              if (_isUrgentJob)
+                const Positioned(
+                  top: AppTheme.spacing2,
+                  right: 56,
+                  child: UrgentJobBadge(),
+                ),
               if (onFavoriteToggle != null)
                 Positioned(
                   top: AppTheme.spacing2,
@@ -75,7 +74,7 @@ class CompactAnnouncementCard extends StatelessWidget {
                       onTap: onFavoriteToggle,
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                       child: Padding(
-                        padding: EdgeInsets.all(AppTheme.spacing2),
+                        padding: const EdgeInsets.all(AppTheme.spacing2),
                         child: IconMapper.icon(
                           'heart',
                           size: 20,
@@ -110,16 +109,16 @@ class CompactAnnouncementCard extends StatelessWidget {
         imageUrl = job?.images != null && job!.images!.isNotEmpty ? job!.images!.first : null;
         break;
       case AnnouncementType.spaceRental:
-        color1 = AppTheme.primaryPurple.withOpacity(0.3);
-        color2 = AppTheme.primaryBlue.withOpacity(0.3);
+        color1 = AppTheme.primaryPurple.withValues(alpha: 0.3);
+        color2 = AppTheme.primaryBlue.withValues(alpha: 0.3);
         icon = Icons.store;
         imageUrl = spaceRental?.imageUrls != null && spaceRental!.imageUrls!.isNotEmpty
             ? spaceRental!.imageUrls!.first
             : null;
         break;
       case AnnouncementType.education:
-        color1 = AppTheme.primaryPurple.withOpacity(0.3);
-        color2 = AppTheme.primaryBlue.withOpacity(0.3);
+        color1 = AppTheme.primaryPurple.withValues(alpha: 0.3);
+        color2 = AppTheme.primaryBlue.withValues(alpha: 0.3);
         icon = Icons.school;
         imageUrl = education?.imageUrl;
         break;
@@ -143,9 +142,9 @@ class CompactAnnouncementCard extends StatelessWidget {
                 width: 80,
                 height: 80,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Icon(icon, size: 32, color: Colors.white.withOpacity(0.8)),
+                errorBuilder: (context, error, stackTrace) => Icon(icon, size: 32, color: Colors.white.withValues(alpha: 0.8)),
               )
-            : Icon(icon, size: 32, color: Colors.white.withOpacity(0.8)),
+            : Icon(icon, size: 32, color: Colors.white.withValues(alpha: 0.8)),
       ),
     );
   }
@@ -177,7 +176,7 @@ class CompactAnnouncementCard extends StatelessWidget {
             _tag(isShortTerm ? '단기' : '장기', isShortTerm ? AppTheme.purple100 : AppTheme.backgroundGray, AppTheme.textSecondary),
           ],
         ),
-        SizedBox(height: AppTheme.spacing1),
+        const SizedBox(height: AppTheme.spacing1),
         // 공고 메인: 제목이 가장 크게
         Text(
           j.title.isNotEmpty ? j.title : '공고',
@@ -189,10 +188,10 @@ class CompactAnnouncementCard extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        if ((j.shopName ?? '').isNotEmpty) ...[
-          SizedBox(height: AppTheme.spacing1),
+        if (j.shopName.isNotEmpty) ...[
+          const SizedBox(height: AppTheme.spacing1),
           Text(
-            j.shopName!,
+            j.shopName,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -202,9 +201,9 @@ class CompactAnnouncementCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ],
-        SizedBox(height: AppTheme.spacing1),
+        const SizedBox(height: AppTheme.spacing1),
         Text(
-          '${j.date} ${j.time ?? ''}',
+          '${j.date} ${j.time}',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             fontSize: 12,
             color: AppTheme.textSecondary,
@@ -212,7 +211,7 @@ class CompactAnnouncementCard extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: AppTheme.spacing1),
+        const SizedBox(height: AppTheme.spacing1),
         Text(
           '금액: ₩${NumberFormat('#,###').format(j.amount)}',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -234,8 +233,8 @@ class CompactAnnouncementCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _tag('공간대여', AppTheme.primaryPurple.withOpacity(0.15), AppTheme.primaryPurple),
-        SizedBox(height: AppTheme.spacing1),
+        _tag('공간대여', AppTheme.primaryPurple.withValues(alpha: 0.15), AppTheme.primaryPurple),
+        const SizedBox(height: AppTheme.spacing1),
         Text(
           s.shopName,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -246,7 +245,7 @@ class CompactAnnouncementCard extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: AppTheme.spacing1),
+        const SizedBox(height: AppTheme.spacing1),
         Text(
           s.fullAddress,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -256,7 +255,7 @@ class CompactAnnouncementCard extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: AppTheme.spacing1),
+        const SizedBox(height: AppTheme.spacing1),
         Text(
           '시간당 ₩${NumberFormat('#,###').format(s.pricePerHour)}',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -296,11 +295,11 @@ class CompactAnnouncementCard extends StatelessWidget {
           spacing: AppTheme.spacing2,
           runSpacing: AppTheme.spacing1,
           children: [
-            if (e.isUrgent == true) _tag('급구', AppTheme.urgentRed.withOpacity(0.2), AppTheme.urgentRed),
+            if (e.isUrgent == true) _tag('급구', AppTheme.urgentRed.withValues(alpha: 0.2), AppTheme.urgentRed),
             _tag(isOnline ? '온라인' : '오프라인', Colors.blue.shade100, Colors.blue.shade700),
           ],
         ),
-        SizedBox(height: AppTheme.spacing1),
+        const SizedBox(height: AppTheme.spacing1),
         Text(
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -311,7 +310,7 @@ class CompactAnnouncementCard extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: AppTheme.spacing1),
+        const SizedBox(height: AppTheme.spacing1),
         if (deadline != null)
           Text(
             '마감: ${DateFormat('yyyy-MM-dd').format(deadline is DateTime ? deadline : DateTime.parse(deadline.toString()))}',
@@ -322,7 +321,7 @@ class CompactAnnouncementCard extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-        SizedBox(height: AppTheme.spacing1),
+        const SizedBox(height: AppTheme.spacing1),
         Text(
           '금액: ₩${NumberFormat('#,###').format(price)}',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -339,7 +338,7 @@ class CompactAnnouncementCard extends StatelessWidget {
 
   Widget _tag(String label, Color bg, Color fg) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),

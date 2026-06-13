@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/energy_service.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
 import 'energy_purchase_screen.dart';
 
 /// Next.js와 동일한 에너지 화면
@@ -19,7 +15,6 @@ class EnergyScreen extends StatefulWidget {
 }
 
 class _EnergyScreenState extends State<EnergyScreen> {
-  int _currentNavIndex = 0;
   int _balance = 0;
   List<EnergyTransaction> _transactions = [];
   bool _isLoading = true;
@@ -73,32 +68,23 @@ class _EnergyScreenState extends State<EnergyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final canPop = Navigator.canPop(context);
     if (_isLoading) {
       return Scaffold(
         backgroundColor: AppTheme.backgroundGray,
+        appBar: SpareSubpageAppBar(
+          title: '내 에너지',
+          showBackButton: canPop,
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        elevation: 0,
-        leading: IconButton(
-          icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-              const Icon(Icons.arrow_back_ios, color: AppTheme.textSecondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          '내 에너지',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        centerTitle: false,
+      appBar: SpareSubpageAppBar(
+        title: '내 에너지',
+        showBackButton: canPop,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -125,13 +111,13 @@ class _EnergyScreenState extends State<EnergyScreen> {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                           ),
                           child: IconMapper.icon('zap', size: 24, color: Colors.white) ??
                               const Icon(Icons.flash_on, size: 24, color: Colors.white),
                         ),
-                        SizedBox(width: AppTheme.spacing3),
+                        const SizedBox(width: AppTheme.spacing3),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -139,7 +125,7 @@ class _EnergyScreenState extends State<EnergyScreen> {
                               '현재 에너지',
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 fontSize: 14,
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                               ),
                             ),
                             Text(
@@ -154,7 +140,7 @@ class _EnergyScreenState extends State<EnergyScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: AppTheme.spacing4),
+                    const SizedBox(height: AppTheme.spacing4),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -206,7 +192,7 @@ class _EnergyScreenState extends State<EnergyScreen> {
                       color: AppTheme.textPrimary,
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   Container(
                     decoration: BoxDecoration(
                       color: AppTheme.backgroundWhite,
@@ -238,7 +224,7 @@ class _EnergyScreenState extends State<EnergyScreen> {
 
                               return Container(
                                 padding: AppTheme.spacing(AppTheme.spacing4),
-                                decoration: BoxDecoration(
+                                decoration: const BoxDecoration(
                                   border: Border(
                                     bottom: BorderSide(
                                       color: AppTheme.borderGray,
@@ -261,7 +247,7 @@ class _EnergyScreenState extends State<EnergyScreen> {
                                         color: color,
                                       ),
                                     ),
-                                    SizedBox(width: AppTheme.spacing3),
+                                    const SizedBox(width: AppTheme.spacing3),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,7 +262,7 @@ class _EnergyScreenState extends State<EnergyScreen> {
                                               color: AppTheme.textPrimary,
                                             ),
                                           ),
-                                          SizedBox(height: AppTheme.spacing1 / 2),
+                                          const SizedBox(height: AppTheme.spacing1 / 2),
                                           Text(
                                             _formatDate(transaction.timestamp),
                                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -306,46 +292,6 @@ class _EnergyScreenState extends State<EnergyScreen> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-          
-          // 네비게이션 처리
-          switch (index) {
-            case 0:
-              // 홈으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-              );
-              break;
-            case 1:
-              // 결제로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => PaymentScreen()),
-              );
-              break;
-            case 2:
-              // 찜으로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => FavoritesScreen()),
-              );
-              break;
-            case 3:
-              // 마이(프로필)로 이동
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }

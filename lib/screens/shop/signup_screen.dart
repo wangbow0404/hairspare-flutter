@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import 'package:provider/provider.dart';
 import '../../models/user.dart';
 import '../../providers/auth_provider.dart';
-import '../shop/home_screen.dart';
+import '../../core/router/app_navigation.dart';
 
 class ShopSignupScreen extends StatefulWidget {
   const ShopSignupScreen({super.key});
@@ -71,23 +72,14 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
         );
       }
     } else if (authProvider.isAuthenticated) {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ShopHomeScreen()),
-        );
-      }
+      if (mounted) AppNavigation.goShopHome(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('미용실 회원가입'),
-        backgroundColor: Colors.purple,
-        foregroundColor: Colors.white,
-      ),
+      appBar: const SharedAppBar(title: '미용실 회원가입'),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),

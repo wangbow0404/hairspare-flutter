@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../widgets/compact_announcement_card.dart';
 import '../../providers/favorite_provider.dart';
 import '../../services/search_service.dart';
 import '../../models/job.dart';
 import '../../models/space_rental.dart';
 import '../../screens/spare/education_screen.dart';
+import '../../models/challenge_feed.dart';
 import '../../screens/spare/challenge_screen.dart';
 import 'job_detail_screen.dart';
 import 'space_rental_detail_screen.dart';
@@ -85,16 +87,13 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: AppBar(
-        backgroundColor: AppTheme.backgroundWhite,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppTheme.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: TextField(
+      appBar: SharedAppBar(
+        title: '',
+        titleWidget: TextField(
           controller: _searchController,
           autofocus: widget.initialQuery == null || widget.initialQuery!.isEmpty,
-          decoration: InputDecoration(
+          style: SharedAppBar.titleTextStyle(context),
+          decoration: const InputDecoration(
             hintText: '공고, 교육, 공간, 챌린지 검색',
             border: InputBorder.none,
             contentPadding: EdgeInsets.zero,
@@ -103,7 +102,7 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.search, color: AppTheme.primaryBlue),
+            icon: const Icon(Icons.search, color: AppTheme.primaryBlue),
             onPressed: _doSearch,
           ),
         ],
@@ -118,13 +117,13 @@ class _SearchScreenState extends State<SearchScreen> {
               child: Row(
                 children: [
                   _TabChip(label: '전체', isActive: _tabIndex == 0, onTap: () => setState(() => _tabIndex = 0)),
-                  SizedBox(width: AppTheme.spacing2),
+                  const SizedBox(width: AppTheme.spacing2),
                   _TabChip(label: '공고', isActive: _tabIndex == 1, onTap: () => setState(() => _tabIndex = 1)),
-                  SizedBox(width: AppTheme.spacing2),
+                  const SizedBox(width: AppTheme.spacing2),
                   _TabChip(label: '교육', isActive: _tabIndex == 2, onTap: () => setState(() => _tabIndex = 2)),
-                  SizedBox(width: AppTheme.spacing2),
+                  const SizedBox(width: AppTheme.spacing2),
                   _TabChip(label: '공간', isActive: _tabIndex == 3, onTap: () => setState(() => _tabIndex = 3)),
-                  SizedBox(width: AppTheme.spacing2),
+                  const SizedBox(width: AppTheme.spacing2),
                   _TabChip(label: '챌린지', isActive: _tabIndex == 4, onTap: () => setState(() => _tabIndex = 4)),
                 ],
               ),
@@ -176,7 +175,7 @@ class _SearchScreenState extends State<SearchScreen> {
             children: [
               if (_showJobs && _jobs.isNotEmpty) ...[
                 _SectionTitle(title: '공고', count: _jobs.length),
-                SizedBox(height: AppTheme.spacing2),
+                const SizedBox(height: AppTheme.spacing2),
                 ..._jobs.map((job) => CompactAnnouncementCard(
                       type: AnnouncementType.job,
                       job: job,
@@ -189,11 +188,11 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                       onFavoriteToggle: () => favProvider.toggleFavorite(job.id),
                     )),
-                SizedBox(height: AppTheme.spacing6),
+                const SizedBox(height: AppTheme.spacing6),
               ],
               if (_showEducations && _educations.isNotEmpty) ...[
                 _SectionTitle(title: '교육', count: _educations.length),
-                SizedBox(height: AppTheme.spacing2),
+                const SizedBox(height: AppTheme.spacing2),
                 ..._educations.map((edu) => CompactAnnouncementCard(
                       type: AnnouncementType.education,
                       education: edu,
@@ -205,11 +204,11 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                       ),
                     )),
-                SizedBox(height: AppTheme.spacing6),
+                const SizedBox(height: AppTheme.spacing6),
               ],
               if (_showSpaces && _spaces.isNotEmpty) ...[
                 _SectionTitle(title: '공간대여', count: _spaces.length),
-                SizedBox(height: AppTheme.spacing2),
+                const SizedBox(height: AppTheme.spacing2),
                 ..._spaces.map((space) => CompactAnnouncementCard(
                       type: AnnouncementType.spaceRental,
                       spaceRental: space,
@@ -221,11 +220,11 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                       ),
                     )),
-                SizedBox(height: AppTheme.spacing6),
+                const SizedBox(height: AppTheme.spacing6),
               ],
               if (_showChallenges && _challenges.isNotEmpty) ...[
                 _SectionTitle(title: '챌린지', count: _challenges.length),
-                SizedBox(height: AppTheme.spacing2),
+                const SizedBox(height: AppTheme.spacing2),
                 ..._challenges.map((c) => _ChallengeSearchCard(
                       challenge: c,
                       onTap: () => Navigator.push(
@@ -302,7 +301,7 @@ class _ChallengeSearchCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: EdgeInsets.only(bottom: AppTheme.spacing3),
+        margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
         padding: AppTheme.spacing(AppTheme.spacing4),
         decoration: BoxDecoration(
           color: AppTheme.backgroundWhite,
@@ -315,12 +314,12 @@ class _ChallengeSearchCard extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: AppTheme.primaryPurple.withOpacity(0.2),
+                color: AppTheme.primaryPurple.withValues(alpha: 0.2),
                 borderRadius: AppTheme.borderRadius(AppTheme.radiusMd),
               ),
-              child: Icon(Icons.video_library, color: AppTheme.primaryPurple, size: 32),
+              child: const Icon(Icons.video_library, color: AppTheme.primaryPurple, size: 32),
             ),
-            SizedBox(width: AppTheme.spacing3),
+            const SizedBox(width: AppTheme.spacing3),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,7 +331,7 @@ class _ChallengeSearchCard extends StatelessWidget {
                           color: AppTheme.textPrimary,
                         ),
                   ),
-                  SizedBox(height: AppTheme.spacing1),
+                  const SizedBox(height: AppTheme.spacing1),
                   Text(
                     challenge.creatorName,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -350,7 +349,7 @@ class _ChallengeSearchCard extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+            const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
           ],
         ),
       ),

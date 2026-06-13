@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/error_handler.dart';
-import 'profile_screen.dart';
 
 /// Shop 프로필 수정 화면
 class ShopProfileEditScreen extends StatefulWidget {
@@ -63,10 +63,7 @@ class _ShopProfileEditScreenState extends State<ShopProfileEditScreen> {
     });
 
     try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      // TODO: 프로필 업데이트 API 호출
-      // await authProvider.updateProfile(...);
-      
+      // TODO: 프로필 업데이트 API 호출 (AuthProvider)
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -101,24 +98,16 @@ class _ShopProfileEditScreenState extends State<ShopProfileEditScreen> {
     final user = authProvider.currentUser;
 
     if (_isLoading) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('프로필 수정'),
-          backgroundColor: AppTheme.primaryPurple,
-          foregroundColor: Colors.white,
-        ),
-        body: const Center(child: CircularProgressIndicator()),
+      return const Scaffold(
+        appBar: SharedAppBar(title: '프로필 수정'),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('프로필 수정'),
-        backgroundColor: AppTheme.primaryPurple,
-        foregroundColor: Colors.white,
-      ),
+      appBar: const SharedAppBar(title: '프로필 수정'),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(AppTheme.spacing4),
+        padding: const EdgeInsets.all(AppTheme.spacing4),
         child: Form(
           key: _formKey,
           child: Column(
@@ -144,7 +133,7 @@ class _ShopProfileEditScreenState extends State<ShopProfileEditScreen> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -174,7 +163,7 @@ class _ShopProfileEditScreenState extends State<ShopProfileEditScreen> {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
+                                  color: Colors.black.withValues(alpha: 0.2),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
@@ -189,7 +178,7 @@ class _ShopProfileEditScreenState extends State<ShopProfileEditScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: AppTheme.spacing2),
+                    const SizedBox(height: AppTheme.spacing2),
                     TextButton(
                       onPressed: () {
                         // TODO: 사진 변경 기능
@@ -203,7 +192,7 @@ class _ShopProfileEditScreenState extends State<ShopProfileEditScreen> {
                 ),
               ),
               
-              SizedBox(height: AppTheme.spacing6),
+              const SizedBox(height: AppTheme.spacing6),
               
               // 이름
               TextFormField(
@@ -221,7 +210,7 @@ class _ShopProfileEditScreenState extends State<ShopProfileEditScreen> {
                 },
               ),
               
-              SizedBox(height: AppTheme.spacing4),
+              const SizedBox(height: AppTheme.spacing4),
               
               // 이메일
               TextFormField(
@@ -243,7 +232,7 @@ class _ShopProfileEditScreenState extends State<ShopProfileEditScreen> {
                 },
               ),
               
-              SizedBox(height: AppTheme.spacing4),
+              const SizedBox(height: AppTheme.spacing4),
               
               // 전화번호
               TextFormField(
@@ -265,7 +254,7 @@ class _ShopProfileEditScreenState extends State<ShopProfileEditScreen> {
                 },
               ),
               
-              SizedBox(height: AppTheme.spacing6),
+              const SizedBox(height: AppTheme.spacing6),
               
               // 저장 버튼
               SizedBox(
@@ -283,12 +272,12 @@ class _ShopProfileEditScreenState extends State<ShopProfileEditScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryPurple,
                     foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: AppTheme.spacing3),
+                    padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing3),
                   ),
                 ),
               ),
               
-              SizedBox(height: AppTheme.spacing4),
+              const SizedBox(height: AppTheme.spacing4),
               
               // 비밀번호 변경 링크
               Center(

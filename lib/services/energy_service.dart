@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
-import '../utils/api_client.dart';
 import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
 import '../mocks/mock_spare_data.dart';
+import '../core/di/service_locator.dart';
 
 class EnergyTransaction {
   final String id;
@@ -38,7 +38,7 @@ class EnergyTransaction {
 }
 
 class EnergyService {
-  final ApiClient _apiClient = ApiClient();
+  final Dio _dio = sl<Dio>();
 
   /// 에너지 지갑 정보 조회
   Future<Map<String, dynamic>> getWallet() async {
@@ -52,7 +52,7 @@ class EnergyService {
       };
     }
     try {
-      final response = await _apiClient.dio.get('/api/energy/wallet');
+      final response = await _dio.get('/api/energy/wallet');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -86,10 +86,45 @@ class EnergyService {
     }
   }
 
+  /// 에너지 사용 (교육 신청 등). 서버가 잔액 검증.
+  Future<void> spendEnergy(
+    int amount, {
+    required String description,
+    required String referenceId,
+  }) async {
+    if (ApiConfig.useMockData) {
+      return MockSpareData.mockSpendEnergy(
+        amount,
+        description: description,
+        referenceId: referenceId,
+      );
+    }
+    try {
+      final response = await _dio.post(
+        '/api/energy/spend',
+        data: {
+          'amount': amount,
+          'description': description,
+          'referenceId': referenceId,
+        },
+      );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw ServerException(
+          '에너지 사용 실패: ${response.statusMessage}',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
   /// 에너지 구매
   Future<void> purchaseEnergy(int amount) async {
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/energy/purchase',
         data: {'amount': amount},
       );

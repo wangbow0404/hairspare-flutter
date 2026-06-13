@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
-import '../utils/api_client.dart';
 import '../utils/api_config.dart';
 import '../mocks/mock_spare_data.dart';
+import '../core/di/service_locator.dart';
 
 class Payment {
   final String id;
@@ -37,13 +37,13 @@ class Payment {
 }
 
 class PaymentService {
-  final ApiClient _apiClient = ApiClient();
+  final Dio _dio = sl<Dio>();
 
   /// 결제 내역 조회
   Future<List<Payment>> getPayments() async {
     if (ApiConfig.useMockData) return await MockSpareData.getPayments();
     try {
-      final response = await _apiClient.dio.get('/api/payments');
+      final response = await _dio.get('/api/payments');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -71,8 +71,23 @@ class PaymentService {
     required String paymentMethod,
     Map<String, dynamic>? metadata,
   }) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      return {
+        'payment': {
+          'id': 'mock-pay-${DateTime.now().millisecondsSinceEpoch}',
+          'type': type,
+          'amount': amount,
+          'status': 'completed',
+          'paymentMethod': paymentMethod,
+          if (metadata != null) 'metadata': metadata,
+        },
+        'paymentUrl': null,
+      };
+    }
+
     try {
-      final response = await _apiClient.dio.post(
+      final response = await _dio.post(
         '/api/payments',
         data: {
           'type': type,

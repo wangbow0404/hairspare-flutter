@@ -103,13 +103,13 @@ class SpaceRentalCard extends StatelessWidget {
     final availableTimeSummary = _getAvailableTimeSummary();
 
     return Container(
-      margin: EdgeInsets.only(bottom: AppTheme.spacing3),
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
       decoration: BoxDecoration(
         color: AppTheme.backgroundWhite,
         borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
         border: Border.all(
           color: isAvailable
-              ? AppTheme.primaryBlue.withOpacity(0.3)
+              ? AppTheme.primaryBlue.withValues(alpha: 0.3)
               : AppTheme.borderGray,
           width: isAvailable ? 2 : 1,
         ),
@@ -125,7 +125,7 @@ class SpaceRentalCard extends StatelessWidget {
             children: [
               // 이미지 영역 (imageUrls 있으면 표시, 없으면 그라데이션 플레이스홀더)
               ClipRRect(
-                borderRadius: BorderRadius.vertical(
+                borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(AppTheme.radiusLg),
                 ),
                 child: _buildImageSection(),
@@ -151,7 +151,7 @@ class SpaceRentalCard extends StatelessWidget {
                               color: AppTheme.textPrimary,
                             ),
                           ),
-                          SizedBox(height: AppTheme.spacing1),
+                          const SizedBox(height: AppTheme.spacing1),
                           // 주소
                           Row(
                             children: [
@@ -160,12 +160,12 @@ class SpaceRentalCard extends StatelessWidget {
                                 size: 14,
                                 color: AppTheme.textSecondary,
                               ) ??
-                                  Icon(
+                                  const Icon(
                                     Icons.location_on,
                                     size: 14,
                                     color: AppTheme.textSecondary,
                                   ),
-                              SizedBox(width: AppTheme.spacing1),
+                              const SizedBox(width: AppTheme.spacing1),
                               Expanded(
                                 child: Text(
                                   spaceRental.fullAddress,
@@ -193,8 +193,8 @@ class SpaceRentalCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: isAvailable
-                            ? AppTheme.primaryGreen.withOpacity(0.1)
-                            : AppTheme.textTertiary.withOpacity(0.1),
+                            ? AppTheme.primaryGreen.withValues(alpha: 0.1)
+                            : AppTheme.textTertiary.withValues(alpha: 0.1),
                         borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
                       ),
                       child: Text(
@@ -210,13 +210,13 @@ class SpaceRentalCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: AppTheme.spacing3),
+                const SizedBox(height: AppTheme.spacing3),
 
                 // 예약 가능 시간대
                 Container(
                   padding: AppTheme.spacing(AppTheme.spacing2),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryBlue.withOpacity(0.05),
+                    color: AppTheme.primaryBlue.withValues(alpha: 0.05),
                     borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
                   ),
                   child: Row(
@@ -226,12 +226,12 @@ class SpaceRentalCard extends StatelessWidget {
                         size: 16,
                         color: AppTheme.primaryBlue,
                       ) ??
-                          Icon(
+                          const Icon(
                             Icons.access_time,
                             size: 16,
                             color: AppTheme.primaryBlue,
                           ),
-                      SizedBox(width: AppTheme.spacing2),
+                      const SizedBox(width: AppTheme.spacing2),
                       Text(
                         availableTimeSummary,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -243,7 +243,7 @@ class SpaceRentalCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(height: AppTheme.spacing3),
+                const SizedBox(height: AppTheme.spacing3),
 
                 // 하단: 가격과 시설
                 Row(
@@ -260,7 +260,7 @@ class SpaceRentalCard extends StatelessWidget {
                             color: AppTheme.textSecondary,
                           ),
                         ),
-                        SizedBox(height: AppTheme.spacing1 / 2),
+                        const SizedBox(height: AppTheme.spacing1 / 2),
                         Text(
                           _formatPrice(spaceRental.pricePerHour),
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -273,7 +273,7 @@ class SpaceRentalCard extends StatelessWidget {
                     ),
                     // 시설 아이콘 (오버플로우 방지: Expanded + SingleChildScrollView)
                     if (spaceRental.facilities.isNotEmpty) ...[
-                      SizedBox(width: AppTheme.spacing3),
+                      const SizedBox(width: AppTheme.spacing3),
                       Expanded(
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
@@ -298,7 +298,7 @@ class SpaceRentalCard extends StatelessWidget {
                                   size: 14,
                                   color: AppTheme.textSecondary,
                                 ),
-                                SizedBox(width: AppTheme.spacing1 / 2),
+                                const SizedBox(width: AppTheme.spacing1 / 2),
                                 Text(
                                   facility,
                                   style: Theme.of(context)
@@ -357,8 +357,8 @@ class SpaceRentalCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.primaryPurple.withOpacity(0.2),
-            AppTheme.primaryBlue.withOpacity(0.2),
+            AppTheme.primaryPurple.withValues(alpha: 0.2),
+            AppTheme.primaryBlue.withValues(alpha: 0.2),
           ],
         ),
       ),
@@ -366,7 +366,7 @@ class SpaceRentalCard extends StatelessWidget {
         child: Icon(
           Icons.store,
           size: 48,
-          color: AppTheme.primaryPurple.withOpacity(0.5),
+          color: AppTheme.primaryPurple.withValues(alpha: 0.5),
         ),
       ),
     );

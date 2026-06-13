@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/job.dart';
 import '../theme/app_theme.dart';
+import '../theme/home_text_styles.dart';
 import '../utils/icon_mapper.dart';
 
 /// 일반 공고 섹션 (페이지네이션 포함)
@@ -86,7 +87,7 @@ class _NormalJobsSectionState extends State<NormalJobsSection> {
     }
 
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border(
           top: BorderSide(
             color: AppTheme.borderGray,
@@ -104,17 +105,13 @@ class _NormalJobsSectionState extends State<NormalJobsSection> {
           // 헤더
           Row(
             children: [
-              Text(
+              const Text(
                 '일반 공고',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
-                ),
+                style: HomeTextStyles.sectionTitle,
               ),
-              SizedBox(width: AppTheme.spacing2),
+              const SizedBox(width: AppTheme.spacing2),
               Container(
-                padding: EdgeInsets.all(AppTheme.spacing1),
+                padding: const EdgeInsets.all(AppTheme.spacing1),
                 decoration: BoxDecoration(
                   color: AppTheme.borderGray300,
                   borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
@@ -132,7 +129,7 @@ class _NormalJobsSectionState extends State<NormalJobsSection> {
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing4),
           // 공고 리스트 (페이지당 10개)
           Column(
             children: _currentPageJobs.map((job) {
@@ -142,14 +139,14 @@ class _NormalJobsSectionState extends State<NormalJobsSection> {
               final timeTag = _getTimeTag(job.time);
 
               return Container(
-                margin: EdgeInsets.only(bottom: AppTheme.spacing3),
+                margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
                 decoration: BoxDecoration(
                   color: AppTheme.backgroundWhite,
                   borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                   border: Border.all(color: AppTheme.borderGray),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -177,13 +174,13 @@ class _NormalJobsSectionState extends State<NormalJobsSection> {
                                     end: Alignment.bottomRight,
                                     colors: [
                                       AppTheme.green200,
-                                      AppTheme.primaryBlue.withOpacity(0.3),
+                                      AppTheme.primaryBlue.withValues(alpha: 0.3),
                                     ],
                                   ),
                                   borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                                 ),
                               ),
-                              SizedBox(width: AppTheme.spacing3),
+                              const SizedBox(width: AppTheme.spacing3),
                               // 내용 영역
                               Expanded(
                                 child: Column(
@@ -236,10 +233,10 @@ class _NormalJobsSectionState extends State<NormalJobsSection> {
                                         ),
                                       ],
                                     ),
-                                    SizedBox(height: AppTheme.spacing2),
+                                    const SizedBox(height: AppTheme.spacing2),
                                     // 매장명
                                     Text(
-                                      job.shopName ?? '매장명 없음',
+                                      job.shopName.isEmpty ? '매장명 없음' : job.shopName,
                                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
@@ -248,7 +245,7 @@ class _NormalJobsSectionState extends State<NormalJobsSection> {
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                    SizedBox(height: AppTheme.spacing1),
+                                    const SizedBox(height: AppTheme.spacing1),
                                     // 날짜, 금액, 설명
                                     Wrap(
                                       spacing: AppTheme.spacing2,
@@ -262,7 +259,7 @@ class _NormalJobsSectionState extends State<NormalJobsSection> {
                                           ),
                                         ),
                                         Text(
-                                          '${_formatAmount(job.amount ?? 0)}원',
+                                          '${_formatAmount(job.amount)}원',
                                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w500,
@@ -278,10 +275,10 @@ class _NormalJobsSectionState extends State<NormalJobsSection> {
                                         ),
                                       ],
                                     ),
-                                    SizedBox(height: AppTheme.spacing1),
+                                    const SizedBox(height: AppTheme.spacing1),
                                     // 신청자 수
                                     Text(
-                                      '신청 0/${job.requiredCount ?? 0}명',
+                                      '신청 0/${job.requiredCount}명',
                                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                         fontSize: 12,
                                         color: AppTheme.textSecondary,
@@ -305,7 +302,7 @@ class _NormalJobsSectionState extends State<NormalJobsSection> {
                               },
                               borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                               child: Container(
-                                padding: EdgeInsets.all(AppTheme.spacing2),
+                                padding: const EdgeInsets.all(AppTheme.spacing2),
                                 child: IconMapper.icon(
                                   'heart',
                                   size: 20,
@@ -331,7 +328,7 @@ class _NormalJobsSectionState extends State<NormalJobsSection> {
               );
             }).toList(),
           ),
-          SizedBox(height: AppTheme.spacing6),
+          const SizedBox(height: AppTheme.spacing6),
           // 페이지네이션
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -352,7 +349,7 @@ class _NormalJobsSectionState extends State<NormalJobsSection> {
                           : null,
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                       child: Container(
-                        padding: EdgeInsets.all(AppTheme.spacing2),
+                        padding: const EdgeInsets.all(AppTheme.spacing2),
                         decoration: BoxDecoration(
                           border: Border.all(color: AppTheme.borderGray300),
                           borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
@@ -374,7 +371,7 @@ class _NormalJobsSectionState extends State<NormalJobsSection> {
                       ),
                     ),
                   ),
-                  SizedBox(width: AppTheme.spacing1),
+                  const SizedBox(width: AppTheme.spacing1),
                   // 페이지 번호 버튼들
                   Row(
                     children: _visiblePageNumbers.map((pageNum) {
@@ -419,7 +416,7 @@ class _NormalJobsSectionState extends State<NormalJobsSection> {
                       );
                     }).toList(),
                   ),
-                  SizedBox(width: AppTheme.spacing1),
+                  const SizedBox(width: AppTheme.spacing1),
                   // 다음 버튼
                   Material(
                     color: Colors.transparent,
@@ -433,7 +430,7 @@ class _NormalJobsSectionState extends State<NormalJobsSection> {
                           : null,
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                       child: Container(
-                        padding: EdgeInsets.all(AppTheme.spacing2),
+                        padding: const EdgeInsets.all(AppTheme.spacing2),
                         decoration: BoxDecoration(
                           border: Border.all(color: AppTheme.borderGray300),
                           borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),

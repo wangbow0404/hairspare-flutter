@@ -1,11 +1,12 @@
 import 'package:flutter/foundation.dart';
+import '../models/login_portal.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
 import '../utils/error_handler.dart';
-import '../utils/app_exception.dart';
-
 class AuthProvider with ChangeNotifier {
-  final AuthService _authService = AuthService();
+  AuthProvider(this._authService);
+
+  final AuthService _authService;
   User? _currentUser;
   bool _isLoading = false;
   String? _error;
@@ -18,7 +19,7 @@ class AuthProvider with ChangeNotifier {
   Future<void> login({
     required String username,
     required String password,
-    required UserRole role,
+    LoginPortal? portal,
   }) async {
     _isLoading = true;
     _error = null;
@@ -28,7 +29,7 @@ class AuthProvider with ChangeNotifier {
       _currentUser = await _authService.login(
         username: username,
         password: password,
-        role: role,
+        portal: portal,
       );
       _error = null;
     } catch (e) {

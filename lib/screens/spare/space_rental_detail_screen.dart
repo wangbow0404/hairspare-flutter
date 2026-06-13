@@ -2,20 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/spare_app_bar.dart';
-import '../../widgets/custom_date_picker_dialog.dart';
 import '../../utils/icon_mapper.dart';
 import '../../models/space_rental.dart';
 import '../../services/space_rental_service.dart';
+import '../../core/di/service_locator.dart';
+import '../../core/services/global_messenger_service.dart';
 import '../../utils/error_handler.dart';
-import 'home_screen.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
+import '../../utils/space_booking_rules.dart';
+import '../../utils/space_hourly_slot_grid.dart';
+import '../../widgets/space_rental/space_booking_confirm_modal.dart';
+import '../../widgets/space_rental/space_rental_time_slot_picker.dart';
 import 'messages_screen.dart';
 import 'reviews_list_screen.dart';
-
 /// 공간대여 상세 화면
 class SpaceRentalDetailScreen extends StatefulWidget {
   final String spaceId;
@@ -30,13 +29,12 @@ class SpaceRentalDetailScreen extends StatefulWidget {
 }
 
 class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
-  int _currentNavIndex = 0;
   SpaceRental? _spaceRental;
   bool _isLoading = true;
   bool _hasBooking = false; // 예약 완료 시 연락하기 활성화
   DateTime? _selectedDate;
-  TimeSlot? _selectedStartSlot;
-  TimeSlot? _selectedEndSlot;
+  HourlySlotCell? _rangeStart;
+  HourlySlotCell? _rangeEnd;
   final SpaceRentalService _spaceRentalService = SpaceRentalService();
 
   @override
@@ -84,36 +82,133 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
     }
   }
 
-  void _selectTimeSlot(TimeSlot slot) {
+  List<HourlySlotCell> _cellsForSelectedDate() {
+    if (_spaceRental == null || _selectedDate == null) return [];
+    return SpaceHourlySlotGrid.buildCells(
+      space: _spaceRental!,
+      date: _selectedDate!,
+      now: DateTime.now(),
+    );
+  }
+
+  void _clearRange() {
+    _rangeStart = null;
+    _rangeEnd = null;
+  }
+
+  bool _isCellInSelectedRange(HourlySlotCell cell) {
+    if (_rangeStart == null || _rangeEnd == null) return false;
+    final inRange = SpaceHourlySlotGrid.cellsInRange(
+      _cellsForSelectedDate(),
+      _rangeStart!,
+      _rangeEnd!,
+    );
+    return inRange.any((c) => c.startTime == cell.startTime);
+  }
+
+  /// 선택 범위 안 재탭: 시작 칸 → 앞만 제거, 끝 칸 → 뒤만 제거, 가운데 → 전체 해제.
+  void _applyDeselectTap(HourlySlotCell cell, List<HourlySlotCell> cells) {
+    final inRange = SpaceHourlySlotGrid.cellsInRange(
+      cells,
+      _rangeStart!,
+      _rangeEnd!,
+    );
+    final isStart = cell.startTime == _rangeStart!.startTime;
+    final isEnd = cell.startTime == _rangeEnd!.startTime;
+    final isSingle = inRange.length == 1;
+    final isMiddle = !isSingle && !isStart && !isEnd;
+
+    if (isMiddle || isSingle) {
+      setState(_clearRange);
+      return;
+    }
+
+    if (isStart) {
+      setState(() {
+        _rangeStart = inRange[1];
+      });
+      return;
+    }
+
+    if (isEnd) {
+      setState(() {
+        _rangeEnd = inRange[inRange.length - 2];
+      });
+    }
+  }
+
+  bool _selectionMeetsMinHours() {
+    if (_rangeStart == null || _rangeEnd == null || _spaceRental == null) {
+      return false;
+    }
+    final hours =
+        SpaceHourlySlotGrid.durationHours(_rangeStart!, _rangeEnd!);
+    return SpaceBookingRules.meetsMinHours(
+      selectedHours: hours,
+      minHours: _spaceRental!.minHours,
+    );
+  }
+
+  void _onHourlyCellTap(HourlySlotCell cell) {
+    if (!cell.isTappable || _spaceRental == null) return;
+
+    final cells = _cellsForSelectedDate();
+    final messenger = sl<GlobalMessengerService>();
+
+    if (_rangeStart == null) {
+      setState(() {
+        _rangeStart = cell;
+        _rangeEnd = cell;
+      });
+      return;
+    }
+
+    if (_isCellInSelectedRange(cell)) {
+      _applyDeselectTap(cell, cells);
+      return;
+    }
+
+    final currentRange = SpaceHourlySlotGrid.cellsInRange(
+      cells,
+      _rangeStart!,
+      _rangeEnd!,
+    );
+    final rangeFirst = currentRange.first;
+    final rangeLast = currentRange.last;
+
+    final HourlySlotCell newStart;
+    final HourlySlotCell newEnd;
+    if (cell.startTime.isBefore(rangeFirst.startTime)) {
+      newStart = cell;
+      newEnd = rangeLast;
+    } else {
+      newStart = rangeFirst;
+      newEnd = cell;
+    }
+
+    if (!SpaceHourlySlotGrid.isContiguousAvailableRange(
+      cells,
+      newStart,
+      newEnd,
+    )) {
+      messenger.showInfo('연속된 예약 가능 시간만 선택할 수 있습니다.');
+      return;
+    }
+
     setState(() {
-      if (_selectedStartSlot == null) {
-        _selectedStartSlot = slot;
-        _selectedEndSlot = slot;
-      } else if (_selectedStartSlot == slot) {
-        // 같은 슬롯 클릭 시 선택 해제
-        _selectedStartSlot = null;
-        _selectedEndSlot = null;
-      } else {
-        // 다른 슬롯 클릭 시 범위 선택
-        if (slot.startTime.isBefore(_selectedStartSlot!.startTime)) {
-          _selectedStartSlot = slot;
-        } else {
-          _selectedEndSlot = slot;
-        }
-      }
+      _rangeStart = newStart;
+      _rangeEnd = newEnd;
     });
   }
 
   int _calculateTotalPrice() {
-    if (_selectedStartSlot == null || _selectedEndSlot == null) {
-      return 0;
-    }
-    final duration = _selectedEndSlot!.endTime.difference(_selectedStartSlot!.startTime).inHours;
-    return duration * (_spaceRental?.pricePerHour ?? 0);
+    if (_rangeStart == null || _rangeEnd == null) return 0;
+    final hours = SpaceHourlySlotGrid.durationHours(_rangeStart!, _rangeEnd!);
+    return hours * (_spaceRental?.pricePerHour ?? 0);
   }
 
   Future<void> _handleBooking() async {
-    if (_selectedStartSlot == null || _selectedEndSlot == null || _spaceRental == null) {
+    if (_rangeStart == null || _rangeEnd == null || _spaceRental == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('예약할 시간대를 선택해주세요.'),
@@ -123,53 +218,39 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
       return;
     }
 
-    // 예약 확인 다이얼로그
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('공간 예약'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('미용실: ${_spaceRental!.shopName}'),
-            const SizedBox(height: 8),
-            Text('예약 시간: ${DateFormat('yyyy년 M월 d일 HH:mm', 'ko_KR').format(_selectedStartSlot!.startTime)} - ${DateFormat('HH:mm', 'ko_KR').format(_selectedEndSlot!.endTime)}'),
-            const SizedBox(height: 8),
-            Text('총 금액: ${NumberFormat('#,###').format(_calculateTotalPrice())}원'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryBlue,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('예약하기'),
-          ),
-        ],
-      ),
+    final hours = SpaceHourlySlotGrid.durationHours(_rangeStart!, _rangeEnd!);
+    if (!SpaceBookingRules.meetsMinHours(
+      selectedHours: hours,
+      minHours: _spaceRental!.minHours,
+    )) {
+      sl<GlobalMessengerService>().showInfo(
+        SpaceBookingRules.belowMinHoursMessage(_spaceRental!.minHours),
+      );
+      return;
+    }
+
+    final confirmed = await showSpaceBookingConfirmModal(
+      context,
+      shopName: _spaceRental!.shopName,
+      startTime: _rangeStart!.startTime,
+      endTime: _rangeEnd!.endTime,
+      totalPrice: _calculateTotalPrice(),
     );
 
-    if (confirmed != true) return;
+    if (!confirmed) return;
 
     try {
       await _spaceRentalService.bookSpace(
         spaceId: _spaceRental!.id,
-        startTime: _selectedStartSlot!.startTime,
-        endTime: _selectedEndSlot!.endTime,
+        startTime: _rangeStart!.startTime,
+        endTime: _rangeEnd!.endTime,
       );
 
       if (mounted) {
         setState(() => _hasBooking = true);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('공간 예약이 완료되었습니다. 연락하기로 미용실과 소통할 수 있습니다.'),
+            content: Text('선결제가 완료되었습니다. 샵 승인 후 채팅방이 열리며 예약이 확정됩니다.'),
             backgroundColor: AppTheme.primaryGreen,
           ),
         );
@@ -191,9 +272,9 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -212,9 +293,8 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
       );
     }
 
-    final availableSlotsForDate = _selectedDate != null
-        ? _spaceRental!.getAvailableSlotsForDate(_selectedDate!)
-        : [];
+    final hourlyCells = _cellsForSelectedDate();
+    final now = DateTime.now();
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
@@ -224,17 +304,20 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
         actions: [
           IconButton(
             icon: IconMapper.icon('share', size: 22, color: AppTheme.textPrimary) ??
-                Icon(Icons.share, size: 22, color: AppTheme.textPrimary),
+                const Icon(Icons.share, size: 22, color: AppTheme.textPrimary),
             onPressed: () => Share.share(
               '${_spaceRental!.shopName}\n${_spaceRental!.fullAddress}\n시간당 ${NumberFormat('#,###').format(_spaceRental!.pricePerHour)}원',
             ),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
             // 공간 사진
             _buildImageSection(),
 
@@ -245,7 +328,7 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildTags(),
-                  SizedBox(height: AppTheme.spacing3),
+                  const SizedBox(height: AppTheme.spacing3),
                   Text(
                     _spaceRental!.shopName,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -254,12 +337,12 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
                       color: AppTheme.textPrimary,
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing2),
+                  const SizedBox(height: AppTheme.spacing2),
                   Row(
                     children: [
                       IconMapper.icon('mappin', size: 16, color: AppTheme.textSecondary) ??
-                          Icon(Icons.location_on, size: 16, color: AppTheme.textSecondary),
-                      SizedBox(width: AppTheme.spacing1),
+                          const Icon(Icons.location_on, size: 16, color: AppTheme.textSecondary),
+                      const SizedBox(width: AppTheme.spacing1),
                       Expanded(
                         child: Text(
                           _spaceRental!.fullAddress,
@@ -271,11 +354,11 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   _buildQuickInfoGrid(),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   _buildDetailInfoBox(),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                 ],
               ),
             ),
@@ -313,184 +396,30 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
                 ),
               ),
 
-            // 예약 가능 시간 박스
             Padding(
-              padding: AppTheme.spacingSymmetric(horizontal: AppTheme.spacing4, vertical: 0),
-              child: Container(
-                width: double.infinity,
-                padding: AppTheme.spacing(AppTheme.spacing4),
-                margin: EdgeInsets.only(bottom: AppTheme.spacing4),
-                decoration: BoxDecoration(
-                  color: AppTheme.backgroundWhite,
-                  borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
-                  border: Border.all(color: AppTheme.borderGray),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '예약 가능 시간',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    SizedBox(height: AppTheme.spacing3),
-                    OutlinedButton.icon(
-                      onPressed: () async {
-                        final now = DateTime.now();
-                        final picked = await CustomDatePickerDialog.show(
-                          context,
-                          initialDate: _selectedDate ?? now,
-                          firstDate: now,
-                          lastDate: now.add(const Duration(days: 30)),
-                        );
-                        if (picked != null) {
-                          setState(() {
-                            _selectedDate = picked;
-                            _selectedStartSlot = null;
-                            _selectedEndSlot = null;
-                          });
-                        }
-                      },
-                      icon: IconMapper.icon('calendar', size: 16, color: AppTheme.textSecondary) ??
-                          const Icon(Icons.calendar_today, size: 16, color: AppTheme.textSecondary),
-                      label: Text(
-                        _selectedDate != null
-                            ? DateFormat('yyyy년 M월 d일 (E)', 'ko_KR').format(_selectedDate!)
-                            : '날짜 선택',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontSize: 14,
-                          color: _selectedDate != null
-                              ? AppTheme.textPrimary
-                              : AppTheme.textSecondary,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: AppTheme.borderGray),
-                        padding: AppTheme.spacing(AppTheme.spacing3),
-                        minimumSize: const Size(double.infinity, 48),
-                      ),
-                    ),
-                    SizedBox(height: AppTheme.spacing4),
-                    if (availableSlotsForDate.isEmpty)
-                      Center(
-                        child: Padding(
-                          padding: AppTheme.spacing(AppTheme.spacing6),
-                          child: Text(
-                            '선택한 날짜에 예약 가능한 시간대가 없습니다.',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontSize: 13,
-                              color: AppTheme.textSecondary,
-                            ),
-                          ),
-                        ),
-                      )
-                    else
-                      Wrap(
-                        spacing: AppTheme.spacing2,
-                        runSpacing: AppTheme.spacing2,
-                        children: availableSlotsForDate.map((slot) {
-                          final isSelected = _selectedStartSlot == slot || _selectedEndSlot == slot;
-                          final isInRange = _selectedStartSlot != null &&
-                              _selectedEndSlot != null &&
-                              slot.startTime.isAfter(_selectedStartSlot!.startTime.subtract(const Duration(seconds: 1))) &&
-                              slot.startTime.isBefore(_selectedEndSlot!.endTime.add(const Duration(seconds: 1)));
-
-                          return GestureDetector(
-                            onTap: () => _selectTimeSlot(slot),
-                            child: Container(
-                              padding: AppTheme.spacingSymmetric(
-                                horizontal: AppTheme.spacing3,
-                                vertical: AppTheme.spacing2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isSelected || isInRange
-                                    ? AppTheme.primaryBlue
-                                    : AppTheme.backgroundGray,
-                                borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
-                                border: Border.all(
-                                  color: isSelected || isInRange
-                                      ? AppTheme.primaryBlue
-                                      : AppTheme.borderGray,
-                                ),
-                              ),
-                              child: Text(
-                                '${DateFormat('HH:mm', 'ko_KR').format(slot.startTime)}-${DateFormat('HH:mm', 'ko_KR').format(slot.endTime)}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontSize: 12,
-                                  fontWeight: isSelected || isInRange ? FontWeight.w600 : FontWeight.normal,
-                                  color: isSelected || isInRange
-                                      ? Colors.white
-                                      : AppTheme.textPrimary,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    if (_selectedStartSlot != null && _selectedEndSlot != null) ...[
-                      SizedBox(height: AppTheme.spacing4),
-                      Container(
-                        padding: AppTheme.spacing(AppTheme.spacing3),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryGreen.withOpacity(0.1),
-                          borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '예약 시간',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontSize: 12,
-                                    color: AppTheme.textSecondary,
-                                  ),
-                                ),
-                                SizedBox(height: AppTheme.spacing1 / 2),
-                                Text(
-                                  '${DateFormat('HH:mm', 'ko_KR').format(_selectedStartSlot!.startTime)} - ${DateFormat('HH:mm', 'ko_KR').format(_selectedEndSlot!.endTime)}',
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textPrimary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  '총 금액',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontSize: 12,
-                                    color: AppTheme.textSecondary,
-                                  ),
-                                ),
-                                SizedBox(height: AppTheme.spacing1 / 2),
-                                Text(
-                                  '${NumberFormat('#,###').format(_calculateTotalPrice())}원',
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.primaryGreen,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+              padding: AppTheme.spacingSymmetric(
+                horizontal: AppTheme.spacing4,
+                vertical: 0,
+              ),
+              child: SpaceRentalTimeSlotPicker(
+                selectedDate: _selectedDate,
+                cells: hourlyCells,
+                rangeStart: _rangeStart,
+                rangeEnd: _rangeEnd,
+                totalPrice: _calculateTotalPrice(),
+                minHours: _spaceRental!.minHours,
+                firstDate: now,
+                lastDate: now.add(const Duration(days: 30)),
+                onDateChanged: (picked) {
+                  setState(() {
+                    _selectedDate = picked;
+                    _clearRange();
+                  });
+                },
+                onCellTap: _onHourlyCellTap,
               ),
             ),
+            const SizedBox(height: AppTheme.spacing4),
 
             if (_spaceRental!.usageNotes != null && _spaceRental!.usageNotes!.isNotEmpty)
               Padding(
@@ -536,84 +465,60 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
                 ),
               ),
 
-            SizedBox(height: 80),
-          ],
-        ),
-      ),
-      // 예약하기 버튼 (하단 고정)
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+                  const SizedBox(height: AppTheme.spacing4),
+                ],
+              ),
+            ),
+          ),
           Container(
             padding: AppTheme.spacing(AppTheme.spacing4),
             decoration: BoxDecoration(
               color: AppTheme.backgroundWhite,
               boxShadow: AppTheme.shadowMd,
             ),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _selectedStartSlot != null && _selectedEndSlot != null
-                    ? _handleBooking
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _selectedStartSlot != null && _selectedEndSlot != null
-                      ? AppTheme.primaryBlue
-                      : AppTheme.borderGray300,
-                  foregroundColor: Colors.white,
-                  padding: AppTheme.spacing(AppTheme.spacing4),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _selectionMeetsMinHours()
+                      ? _handleBooking
+                      : (_rangeStart != null && _rangeEnd != null
+                          ? () {
+                              sl<GlobalMessengerService>().showInfo(
+                                SpaceBookingRules.belowMinHoursMessage(
+                                  _spaceRental!.minHours,
+                                ),
+                              );
+                            }
+                          : null),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _selectionMeetsMinHours()
+                        ? AppTheme.primaryBlue
+                        : (_rangeStart != null && _rangeEnd != null
+                            ? AppTheme.orange500
+                            : AppTheme.borderGray300),
+                    foregroundColor: Colors.white,
+                    padding: AppTheme.spacing(AppTheme.spacing4),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+                    ),
                   ),
-                ),
-                child: Text(
-                  _selectedStartSlot != null && _selectedEndSlot != null
-                      ? '예약하기'
-                      : '시간대를 선택해주세요',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                  child: Text(
+                    _selectionMeetsMinHours()
+                        ? '예약하기'
+                        : (_rangeStart != null && _rangeEnd != null
+                            ? '최소 ${_spaceRental!.minHours}시간 선택'
+                            : '시간대를 선택해주세요'),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          BottomNavBar(
-            currentIndex: _currentNavIndex,
-            onTap: (index) {
-              setState(() {
-                _currentNavIndex = index;
-              });
-              
-              // 네비게이션 처리
-              switch (index) {
-                case 0:
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => SpareHomeScreen()),
-                  );
-                  break;
-                case 1:
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => PaymentScreen()),
-                  );
-                  break;
-                case 2:
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => FavoritesScreen()),
-                  );
-                  break;
-                case 3:
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => ProfileScreen()),
-                  );
-                  break;
-              }
-            },
           ),
         ],
       ),
@@ -630,8 +535,8 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.primaryBlue.withOpacity(0.7),
-            AppTheme.primaryPurple.withOpacity(0.6),
+            AppTheme.primaryBlue.withValues(alpha: 0.7),
+            AppTheme.primaryPurple.withValues(alpha: 0.6),
           ],
         ),
         color: hasImage ? AppTheme.backgroundGray : null,
@@ -651,7 +556,7 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
       child: Icon(
         Icons.store,
         size: 72,
-        color: Colors.white.withOpacity(0.6),
+        color: Colors.white.withValues(alpha: 0.6),
       ),
     );
   }
@@ -663,7 +568,7 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
       children: [
         if (_spaceRental!.isPremium)
           _tag('프리미엄', AppTheme.primaryPurple, Colors.white),
-        _tag('시간당 ${NumberFormat('#,###').format(_spaceRental!.pricePerHour)}원', AppTheme.primaryBlue.withOpacity(0.15), AppTheme.primaryBlue),
+        _tag('시간당 ${NumberFormat('#,###').format(_spaceRental!.pricePerHour)}원', AppTheme.primaryBlue.withValues(alpha: 0.15), AppTheme.primaryBlue),
         _tag('${_spaceRental!.facilities.length}개 시설', AppTheme.backgroundGray, AppTheme.textSecondary),
       ],
     );
@@ -686,7 +591,7 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
         Expanded(
           child: _quickInfoItem(Icons.payments, '시간당', '${NumberFormat('#,###').format(_spaceRental!.pricePerHour)}원', AppTheme.primaryBlue),
         ),
-        SizedBox(width: AppTheme.spacing3),
+        const SizedBox(width: AppTheme.spacing3),
         Expanded(
           child: _quickInfoItem(Icons.apartment, '시설', '${_spaceRental!.facilities.length}개', null),
         ),
@@ -708,11 +613,11 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
           Row(
             children: [
               Icon(icon, size: 16, color: AppTheme.textSecondary),
-              SizedBox(width: AppTheme.spacing2),
-              Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppTheme.textSecondary)),
+              const SizedBox(width: AppTheme.spacing2),
+              Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppTheme.textSecondary)),
             ],
           ),
-          SizedBox(height: AppTheme.spacing2),
+          const SizedBox(height: AppTheme.spacing2),
           Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: valueColor ?? AppTheme.textPrimary)),
         ],
       ),
@@ -724,21 +629,33 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
       width: double.infinity,
       padding: AppTheme.spacing(AppTheme.spacing4),
       decoration: BoxDecoration(
-        color: AppTheme.primaryBlue.withOpacity(0.08),
+        color: AppTheme.primaryBlue.withValues(alpha: 0.08),
         borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
-        border: Border.all(color: AppTheme.primaryBlue.withOpacity(0.2)),
+        border: Border.all(color: AppTheme.primaryBlue.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _infoRow(Icons.location_on, '지역', _spaceRental!.regionName ?? _spaceRental!.address.split(' ').take(2).join(' ')),
           if (_spaceRental!.subwayInfo != null) ...[
-            SizedBox(height: AppTheme.spacing3),
+            const SizedBox(height: AppTheme.spacing3),
             _infoRow(Icons.directions_transit, '교통', _spaceRental!.subwayInfo!),
           ],
-          SizedBox(height: AppTheme.spacing3),
-          _infoRow(Icons.access_time, '최소 이용', '${_spaceRental!.minHours}시간'),
-          SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing3),
+          _infoRow(
+            Icons.access_time,
+            '최소 이용',
+            _spaceRental!.minHours <= 1
+                ? '1시간부터'
+                : '${_spaceRental!.minHours}시간',
+          ),
+          const SizedBox(height: AppTheme.spacing3),
+          _infoRow(
+            Icons.schedule,
+            '운영 시간',
+            _spaceRental!.effectiveOperatingSchedule.displaySummary,
+          ),
+          const SizedBox(height: AppTheme.spacing4),
           _buildContactButton(),
         ],
       ),
@@ -784,14 +701,14 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 18, color: AppTheme.primaryBlue),
-        SizedBox(width: AppTheme.spacing3),
+        const SizedBox(width: AppTheme.spacing3),
         Expanded(
           child: RichText(
             text: TextSpan(
-              style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+              style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
               children: [
-                TextSpan(text: '$label  ', style: TextStyle(fontWeight: FontWeight.w500)),
-                TextSpan(text: value, style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
+                TextSpan(text: '$label  ', style: const TextStyle(fontWeight: FontWeight.w500)),
+                TextSpan(text: value, style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
               ],
             ),
           ),
@@ -804,7 +721,7 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
     return Container(
       width: double.infinity,
       padding: AppTheme.spacing(AppTheme.spacing4),
-      margin: EdgeInsets.only(bottom: AppTheme.spacing4),
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
       decoration: BoxDecoration(
         color: AppTheme.backgroundWhite,
         borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
@@ -816,11 +733,11 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
           Row(
             children: [
               Icon(icon, size: 18, color: AppTheme.primaryPurple),
-              SizedBox(width: AppTheme.spacing2),
-              Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+              const SizedBox(width: AppTheme.spacing2),
+              Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
             ],
           ),
-          SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing4),
           child,
         ],
       ),
@@ -851,7 +768,7 @@ class _SpaceRentalReviewsSectionState extends State<_SpaceRentalReviewsSection> 
     return Container(
       width: double.infinity,
       padding: AppTheme.spacing(AppTheme.spacing4),
-      margin: EdgeInsets.only(bottom: AppTheme.spacing4),
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
       decoration: BoxDecoration(
         color: AppTheme.backgroundWhite,
         borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
@@ -862,10 +779,10 @@ class _SpaceRentalReviewsSectionState extends State<_SpaceRentalReviewsSection> 
         children: [
           Row(
             children: [
-              Icon(Icons.star, size: 18, color: AppTheme.yellow500),
-              SizedBox(width: AppTheme.spacing2),
-              Text('리뷰', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
-              SizedBox(width: AppTheme.spacing2),
+              const Icon(Icons.star, size: 18, color: AppTheme.yellow500),
+              const SizedBox(width: AppTheme.spacing2),
+              const Text('리뷰', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+              const SizedBox(width: AppTheme.spacing2),
               TextButton(
                 onPressed: () {
                   Navigator.push(
@@ -891,35 +808,35 @@ class _SpaceRentalReviewsSectionState extends State<_SpaceRentalReviewsSection> 
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: Text('+더보기', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.primaryBlue)),
+                child: const Text('+더보기', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.primaryBlue)),
               ),
               const Spacer(),
               Row(
                 children: [
-                  Icon(Icons.star, size: 18, color: AppTheme.yellow500),
-                  SizedBox(width: AppTheme.spacing1),
-                  Text('${widget.averageRating.toStringAsFixed(1)} (${widget.reviews.length}개)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+                  const Icon(Icons.star, size: 18, color: AppTheme.yellow500),
+                  const SizedBox(width: AppTheme.spacing1),
+                  Text('${widget.averageRating.toStringAsFixed(1)} (${widget.reviews.length}개)', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                 ],
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing4),
           ...displayed.map((r) => Padding(
-                padding: EdgeInsets.only(bottom: AppTheme.spacing4),
+                padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
                         ...List.generate(5, (i) => Icon(i < r.rating ? Icons.star : Icons.star_border, size: 16, color: AppTheme.yellow500)),
-                        SizedBox(width: AppTheme.spacing2),
-                        Text(r.userName, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                        const SizedBox(width: AppTheme.spacing2),
+                        Text(r.userName, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
                         const Spacer(),
-                        Text(DateFormat('M/d', 'ko_KR').format(r.createdAt), style: TextStyle(fontSize: 12, color: AppTheme.textTertiary)),
+                        Text(DateFormat('M/d', 'ko_KR').format(r.createdAt), style: const TextStyle(fontSize: 12, color: AppTheme.textTertiary)),
                       ],
                     ),
-                    SizedBox(height: AppTheme.spacing2),
-                    Text(r.comment, style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
+                    const SizedBox(height: AppTheme.spacing2),
+                    Text(r.comment, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
                   ],
                 ),
               )),
@@ -927,7 +844,7 @@ class _SpaceRentalReviewsSectionState extends State<_SpaceRentalReviewsSection> 
             Center(
               child: TextButton(
                 onPressed: () => setState(() => _expanded = !_expanded),
-                child: Text(_expanded ? '접기' : '열기', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.primaryBlue)),
+                child: Text(_expanded ? '접기' : '열기', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.primaryBlue)),
               ),
             ),
         ],

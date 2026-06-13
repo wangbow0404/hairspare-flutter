@@ -1,46 +1,46 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import '../utils/api_client.dart';
 import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
 import '../mocks/mock_admin_data.dart';
+import '../core/di/service_locator.dart';
 
 /// 관리자 서비스
 class AdminService {
-  final ApiClient _apiClient = ApiClient();
+  final Dio _dio = sl<Dio>();
 
   /// 대시보드 통계 조회
   Future<Map<String, dynamic>> getDashboardStats() async {
     if (ApiConfig.useMockData) return await MockAdminData.getDashboardStats();
     try {
-      final response = await _apiClient.dio.get('/api/admin/stats');
+      final response = await _dio.get('/api/admin/stats');
 
       if (response.statusCode == 200) {
         final data = response.data;
         // Next.js API 응답 형식 확인: { "stats": {...} } 또는 { "data": { "stats": {...} } }
-        print('[AdminService] Raw response: $data');
+        debugPrint('[AdminService] Raw response: $data');
         
         if (data is Map<String, dynamic>) {
           // Next.js API는 { "stats": {...} } 형식으로 반환
           if (data['stats'] != null) {
-            print('[AdminService] Found stats in response');
+            debugPrint('[AdminService] Found stats in response');
             return data['stats'] as Map<String, dynamic>;
           }
           // 또는 { "data": { "stats": {...} } } 형식
           if (data['data'] != null && data['data'] is Map) {
             final innerData = data['data'] as Map<String, dynamic>;
             if (innerData['stats'] != null) {
-              print('[AdminService] Found stats in data.stats');
+              debugPrint('[AdminService] Found stats in data.stats');
               return innerData['stats'] as Map<String, dynamic>;
             }
             // 또는 data 자체가 stats인 경우
-            print('[AdminService] Using data as stats');
+            debugPrint('[AdminService] Using data as stats');
             return innerData;
           }
         }
         
-        print('[AdminService] Returning raw data');
+        debugPrint('[AdminService] Returning raw data');
         return data as Map<String, dynamic>;
       } else {
         throw ServerException(
@@ -59,7 +59,7 @@ class AdminService {
   Future<Map<String, dynamic>> getRecentActivities() async {
     if (ApiConfig.useMockData) return await MockAdminData.getRecentActivities();
     try {
-      final response = await _apiClient.dio.get('/api/admin/activities');
+      final response = await _dio.get('/api/admin/activities');
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
         return data;
@@ -98,7 +98,7 @@ class AdminService {
 
       debugPrint('[AdminService.getUsers] GET /api/admin/users, params: $queryParams');
 
-      final response = await _apiClient.dio.get(
+      final response = await _dio.get(
         '/api/admin/users',
         queryParameters: queryParams,
       );
@@ -121,7 +121,7 @@ class AdminService {
           usersRaw = null;
         }
         final usersList = usersRaw is List ? usersRaw : (usersRaw != null ? [usersRaw] : []);
-        final usersCount = usersList is List ? usersList.length : 0;
+        final usersCount = usersList.length;
         debugPrint('[AdminService.getUsers] Parsed users count: $usersCount');
 
         final pagination = data is Map
@@ -145,7 +145,7 @@ class AdminService {
   Future<Map<String, dynamic>> getUserDetail(String userId) async {
     if (ApiConfig.useMockData) return await MockAdminData.getUserDetail(userId);
     try {
-      final response = await _apiClient.dio.get('/api/admin/users/$userId');
+      final response = await _dio.get('/api/admin/users/$userId');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
@@ -181,7 +181,7 @@ class AdminService {
       if (isUrgent != null) queryParams['isUrgent'] = isUrgent;
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
 
-      final response = await _apiClient.dio.get(
+      final response = await _dio.get(
         '/api/admin/jobs',
         queryParameters: queryParams,
       );
@@ -206,7 +206,7 @@ class AdminService {
   Future<Map<String, dynamic>> getJobDetail(String jobId) async {
     if (ApiConfig.useMockData) return await MockAdminData.getJobDetail(jobId);
     try {
-      final response = await _apiClient.dio.get('/api/admin/jobs/$jobId');
+      final response = await _dio.get('/api/admin/jobs/$jobId');
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
         return data;
@@ -227,7 +227,7 @@ class AdminService {
   Future<Map<String, dynamic>> getPaymentDetail(String paymentId) async {
     if (ApiConfig.useMockData) return await MockAdminData.getPaymentDetail(paymentId);
     try {
-      final response = await _apiClient.dio.get('/api/admin/payments/$paymentId');
+      final response = await _dio.get('/api/admin/payments/$paymentId');
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
         return data;
@@ -260,7 +260,7 @@ class AdminService {
       if (status != null && status.isNotEmpty) queryParams['status'] = status;
       if (type != null && type.isNotEmpty) queryParams['type'] = type;
 
-      final response = await _apiClient.dio.get(
+      final response = await _dio.get(
         '/api/admin/payments',
         queryParameters: queryParams,
       );
@@ -295,7 +295,7 @@ class AdminService {
       };
       if (type != null && type.isNotEmpty) queryParams['type'] = type;
 
-      final response = await _apiClient.dio.get(
+      final response = await _dio.get(
         '/api/admin/energy',
         queryParameters: queryParams,
       );
@@ -332,7 +332,7 @@ class AdminService {
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
       if (dateFilter != null && dateFilter.isNotEmpty) queryParams['dateFilter'] = dateFilter;
 
-      final response = await _apiClient.dio.get(
+      final response = await _dio.get(
         '/api/admin/schedules',
         queryParameters: queryParams,
       );
@@ -374,7 +374,7 @@ class AdminService {
         'limit': limit,
       };
 
-      final response = await _apiClient.dio.get(
+      final response = await _dio.get(
         '/api/admin/noshow',
         queryParameters: queryParams,
       );

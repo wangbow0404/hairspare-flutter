@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
-import '../screens/admin/admin_dashboard_screen.dart';
-import '../screens/admin/admin_users_screen.dart';
-import '../screens/admin/admin_jobs_screen.dart';
-import '../screens/admin/admin_payments_screen.dart';
-import '../screens/admin/admin_energy_screen.dart';
-import '../screens/admin/admin_noshow_screen.dart';
-import '../screens/admin/admin_checkin_screen.dart';
-import '../screens/common/role_select_screen.dart';
+import 'package:go_router/go_router.dart';
 
+import '../core/di/service_locator.dart';
+import '../core/router/app_navigation.dart';
+import '../providers/auth_provider.dart';
+import '../theme/app_theme.dart';
 /// 관리자 레이아웃 위젯 (사이드바 + 헤더)
 class AdminLayout extends StatefulWidget {
   final Widget child;
@@ -26,49 +22,49 @@ class AdminLayout extends StatefulWidget {
 
 class _AdminLayoutState extends State<AdminLayout> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  
+
+  /// Drawer 등에서 MediaQuery top이 0일 때도 실제 노치/상태바 높이를 쓴다.
+  static double _statusBarTopInset(BuildContext context) {
+    final fromView = MediaQueryData.fromView(View.of(context)).viewPadding.top;
+    final fromQuery = MediaQuery.viewPaddingOf(context).top;
+    return fromView > fromQuery ? fromView : fromQuery;
+  }
+
   final List<AdminNavItem> _navItems = [
     AdminNavItem(
       route: '/admin',
       label: '대시보드',
       icon: Icons.dashboard,
-      screen: const AdminDashboardScreen(),
     ),
     AdminNavItem(
       route: '/admin/users',
       label: '회원 관리',
       icon: Icons.people,
-      screen: const AdminUsersScreen(),
     ),
     AdminNavItem(
       route: '/admin/jobs',
       label: '공고 관리',
       icon: Icons.work,
-      screen: const AdminJobsScreen(),
     ),
     AdminNavItem(
       route: '/admin/payments',
       label: '결제 관리',
       icon: Icons.payment,
-      screen: const AdminPaymentsScreen(),
     ),
     AdminNavItem(
       route: '/admin/energy',
       label: '에너지 관리',
       icon: Icons.bolt,
-      screen: const AdminEnergyScreen(),
     ),
     AdminNavItem(
       route: '/admin/noshow',
       label: '노쇼 관리',
       icon: Icons.warning,
-      screen: const AdminNoshowScreen(),
     ),
     AdminNavItem(
       route: '/admin/checkin',
       label: '체크인 관리',
       icon: Icons.calendar_today,
-      screen: const AdminCheckinScreen(),
     ),
   ];
 
@@ -84,13 +80,11 @@ class _AdminLayoutState extends State<AdminLayout> {
             child: const Text('취소'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const RoleSelectScreen()),
-                (route) => false,
-              );
+              await sl<AuthProvider>().logout();
+              if (!context.mounted) return;
+              AppNavigation.goRoleSelect(context);
             },
             child: const Text('로그아웃'),
           ),
@@ -101,61 +95,62 @@ class _AdminLayoutState extends State<AdminLayout> {
 
   void _navigateToRoute(String route) {
     if (widget.currentRoute == route) return;
-    final item = _navItems.firstWhere((item) => item.route == route);
-    final navigator = Navigator.of(context);
-    if (navigator.mounted) {
-      navigator.pushReplacement(
-        MaterialPageRoute(builder: (context) => item.screen),
-      );
-    }
+    context.go(route);
   }
 
   void _onNavItemTap(AdminNavItem item, bool isMobile) {
-    final navigator = Navigator.of(context);
     if (isMobile) {
-      navigator.pop(); // Drawer 닫기
+      Navigator.of(context).pop();
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (navigator.mounted) {
-          navigator.pushReplacement(
-            MaterialPageRoute(builder: (context) => item.screen),
-          );
-        }
+        if (!context.mounted) return;
+        context.go(item.route);
       });
     } else {
       _navigateToRoute(item.route);
     }
   }
 
-  Widget _buildSidebar(bool isMobile) {
-    final isActive = (String route) {
+  Widget _buildSidebar(
+    BuildContext context,
+    bool isMobile, {
+    double topPadding = 0,
+  }) {
+    bool isActive(String route) {
       if (route == '/admin') {
         return widget.currentRoute == route;
       }
       return widget.currentRoute.startsWith(route);
-    };
+    }
 
     return Container(
-      width: isMobile ? 280 : 288,
+      width: isMobile ? double.infinity : 288,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
-        border: Border(
-          right: BorderSide(color: AppTheme.adminPurple100),
-        ),
-        boxShadow: AppTheme.shadowXl,
+        color: Colors.white.withValues(alpha: isMobile ? 0.98 : 0.95),
+        border: isMobile
+            ? null
+            : const Border(
+                right: BorderSide(color: AppTheme.adminPurple100),
+              ),
+        boxShadow: isMobile ? null : AppTheme.shadowXl,
       ),
       child: ListView(
-        padding: EdgeInsets.all(AppTheme.spacing4),
+        padding: EdgeInsets.fromLTRB(
+          AppTheme.spacing4,
+          topPadding + AppTheme.spacing4,
+          AppTheme.spacing4,
+          AppTheme.spacing4,
+        ),
         children: _navItems.map((item) {
           final active = isActive(item.route);
           return Padding(
-            padding: EdgeInsets.only(bottom: AppTheme.spacing2),
+            padding: const EdgeInsets.only(bottom: AppTheme.spacing2),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: () => _onNavItemTap(item, isMobile),
                 borderRadius: BorderRadius.circular(AppTheme.radius2xl),
                 child: Container(
-                  padding: EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: AppTheme.spacing4,
                     vertical: AppTheme.spacing3 + 2,
                   ),
@@ -183,7 +178,7 @@ class _AdminLayoutState extends State<AdminLayout> {
                             ? Colors.white
                             : AppTheme.textSecondary,
                       ),
-                      SizedBox(width: AppTheme.spacing3),
+                      const SizedBox(width: AppTheme.spacing3),
                       Expanded(
                         child: Text(
                           item.label,
@@ -218,35 +213,60 @@ class _AdminLayoutState extends State<AdminLayout> {
 
     return Scaffold(
       key: _scaffoldKey,
-      drawer: isMobile ? Drawer(child: _buildSidebar(true)) : null,
+      drawer: isMobile
+          ? Drawer(
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              child: Builder(
+                builder: (drawerContext) {
+                  final topInset = _statusBarTopInset(drawerContext);
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(height: topInset),
+                      Expanded(
+                        child: _buildSidebar(
+                          drawerContext,
+                          true,
+                          topPadding: 0,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            )
+          : null,
       body: Container(
         decoration: AppTheme.adminBackgroundGradient,
-        child: SafeArea(
-          top: true,
-          bottom: false,
-          child: Column(
-            children: [
-              // 헤더
-              Container(
-                height: isMobile ? 56 : 80,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.95),
-                  border: Border(
-                    bottom: BorderSide(color: AppTheme.adminPurple100, width: 1),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+        child: Column(
+          children: [
+            // 헤더 — [SpareAppBar]와 동일하게 SafeArea를 내부에 둠
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.95),
+                border: const Border(
+                  bottom: BorderSide(color: AppTheme.adminPurple100, width: 1),
                 ),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isVeryNarrow ? AppTheme.spacing1 : (isMobile ? AppTheme.spacing2 : AppTheme.spacing3),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
-                  child: Row(
+                ],
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: SizedBox(
+                  height: isMobile ? 56 : 80,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isVeryNarrow
+                          ? AppTheme.spacing1
+                          : (isMobile ? AppTheme.spacing2 : AppTheme.spacing3),
+                    ),
+                    child: Row(
                     children: [
                       // 햄버거 메뉴 (모바일)
                       if (isMobile)
@@ -265,8 +285,8 @@ class _AdminLayoutState extends State<AdminLayout> {
                         child: InkWell(
                           onTap: () => _navigateToRoute('/admin'),
                           borderRadius: BorderRadius.circular(AppTheme.radius2xl),
-                          splashColor: AppTheme.primaryPurple500.withOpacity(0.2),
-                          highlightColor: AppTheme.primaryPurple500.withOpacity(0.1),
+                          splashColor: AppTheme.primaryPurple500.withValues(alpha: 0.2),
+                          highlightColor: AppTheme.primaryPurple500.withValues(alpha: 0.1),
                           child: Padding(
                             padding: EdgeInsets.symmetric(
                               horizontal: isVeryNarrow ? AppTheme.spacing1 : AppTheme.spacing2,
@@ -346,12 +366,12 @@ class _AdminLayoutState extends State<AdminLayout> {
                           Flexible(
                             fit: FlexFit.loose,
                             child: Container(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: AppTheme.spacing2,
                                 vertical: AppTheme.spacing1,
                               ),
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(
+                                gradient: const LinearGradient(
                                   colors: [
                                     AppTheme.adminPurple50,
                                     AppTheme.adminPink50,
@@ -370,8 +390,8 @@ class _AdminLayoutState extends State<AdminLayout> {
                                       shape: BoxShape.circle,
                                     ),
                                   ),
-                                  SizedBox(width: AppTheme.spacing1),
-                                  Flexible(
+                                  const SizedBox(width: AppTheme.spacing1),
+                                  const Flexible(
                                     child: Text(
                                       '실시간 업데이트 중',
                                       style: TextStyle(
@@ -397,13 +417,13 @@ class _AdminLayoutState extends State<AdminLayout> {
                             ),
                           ),
                         if (!isMobile && !isNarrow) ...[
-                          SizedBox(width: AppTheme.spacing2),
+                          const SizedBox(width: AppTheme.spacing2),
                           Flexible(
                             fit: FlexFit.loose,
                             child: TextButton.icon(
                               onPressed: () => _navigateToRoute('/admin'),
                               icon: const Icon(Icons.dashboard, size: 18, color: AppTheme.textSecondary),
-                              label: Text(
+                              label: const Text(
                                 '대시보드',
                                 style: TextStyle(
                                   color: AppTheme.textSecondary,
@@ -413,9 +433,9 @@ class _AdminLayoutState extends State<AdminLayout> {
                               ),
                             ),
                           ),
-                          SizedBox(width: AppTheme.spacing1),
+                          const SizedBox(width: AppTheme.spacing1),
                         ],
-                        SizedBox(width: AppTheme.spacing1),
+                        const SizedBox(width: AppTheme.spacing1),
                         isMobile
                             ? IconButton(
                                 icon: const Icon(Icons.logout, size: 20, color: AppTheme.textSecondary),
@@ -428,7 +448,7 @@ class _AdminLayoutState extends State<AdminLayout> {
                             : TextButton.icon(
                                 onPressed: _handleLogout,
                                 icon: const Icon(Icons.logout, size: 16, color: AppTheme.textSecondary),
-                                label: Text(
+                                label: const Text(
                                   '로그아웃',
                                   style: TextStyle(
                                     color: AppTheme.textSecondary,
@@ -443,23 +463,31 @@ class _AdminLayoutState extends State<AdminLayout> {
                 ),
               ),
             ),
-              // 본문
-              Expanded(
+            ),
+            ),
+            // 본문
+            Expanded(
+              child: SafeArea(
+                top: false,
+                left: false,
+                right: false,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (!isMobile) _buildSidebar(false),
+                    if (!isMobile) _buildSidebar(context, false),
                     Expanded(
                       child: SingleChildScrollView(
-                        padding: EdgeInsets.all(isMobile ? AppTheme.spacing3 : AppTheme.spacing4),
+                        padding: EdgeInsets.all(
+                          isMobile ? AppTheme.spacing3 : AppTheme.spacing4,
+                        ),
                         child: widget.child,
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -470,12 +498,10 @@ class AdminNavItem {
   final String route;
   final String label;
   final IconData icon;
-  final Widget screen;
 
   AdminNavItem({
     required this.route,
     required this.label,
     required this.icon,
-    required this.screen,
   });
 }

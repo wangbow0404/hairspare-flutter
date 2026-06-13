@@ -2,13 +2,8 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../services/admin_service.dart';
 import '../../utils/error_handler.dart';
-import '../../widgets/admin_layout.dart';
-import 'admin_users_screen.dart';
-import 'admin_jobs_screen.dart';
-import 'admin_payments_screen.dart';
-import 'admin_energy_screen.dart';
-import 'admin_noshow_screen.dart';
-import 'admin_checkin_screen.dart';
+import '../../core/router/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:async';
 
 /// 관리자 대시보드 화면
@@ -106,9 +101,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AdminLayout(
-      currentRoute: '/admin',
-      child: _isLoading
+    return _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _stats == null
               ? Center(
@@ -132,8 +125,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               : LayoutBuilder(
                   builder: (context, constraints) {
                     final isMobile = constraints.maxWidth < 768;
-                    final isTablet = constraints.maxWidth >= 768 && constraints.maxWidth < 1024;
-                    
+
                     return SingleChildScrollView(
                       padding: EdgeInsets.all(isMobile ? AppTheme.spacing2 : AppTheme.spacing3),
                       child: Column(
@@ -157,7 +149,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                     ),
                                     if (!isMobile) ...[
                                       const SizedBox(height: AppTheme.spacing1),
-                                      Text(
+                                      const Text(
                                         'HairSpare 플랫폼 현황을 한눈에 확인하세요',
                                         style: TextStyle(
                                           fontSize: 12,
@@ -184,7 +176,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                       ),
                                     ),
                                     const SizedBox(width: AppTheme.spacing1),
-                                    Text(
+                                    const Text(
                                       '실시간 업데이트 중',
                                       style: TextStyle(
                                         fontSize: 11,
@@ -209,12 +201,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                   icon: Icons.people,
                                   color: Colors.blue,
                                   onTap: () {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const AdminUsersScreen(),
-                                      ),
-                                    );
+                                    context.go(AppRoutes.adminUsers);
                                   },
                                 ),
                                 _buildStatCard(
@@ -224,12 +211,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                   icon: Icons.work,
                                   color: AppTheme.primaryPurple,
                                   onTap: () {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const AdminJobsScreen(),
-                                      ),
-                                    );
+                                    context.go(AppRoutes.adminJobs);
                                   },
                                 ),
                                 _buildStatCard(
@@ -239,12 +221,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                   icon: Icons.payment,
                                   color: Colors.green,
                                   onTap: () {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const AdminPaymentsScreen(),
-                                      ),
-                                    );
+                                    context.go(AppRoutes.adminPayments);
                                   },
                                 ),
                                 _buildStatCard(
@@ -254,12 +231,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                   icon: Icons.calendar_today,
                                   color: Colors.orange,
                                   onTap: () {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const AdminCheckinScreen(),
-                                      ),
-                                    );
+                                    context.go(AppRoutes.adminCheckin);
                                   },
                                 ),
                                 _buildStatCard(
@@ -269,12 +241,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                   icon: Icons.bolt,
                                   color: Colors.yellow,
                                   onTap: () {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const AdminEnergyScreen(),
-                                      ),
-                                    );
+                                    context.go(AppRoutes.adminEnergy);
                                   },
                                 ),
                                 _buildStatCard(
@@ -284,12 +251,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                   icon: Icons.warning,
                                   color: AppTheme.urgentRed,
                                   onTap: () {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const AdminNoshowScreen(),
-                                      ),
-                                    );
+                                    context.go(AppRoutes.adminNoshow);
                                   },
                                 ),
                               ];
@@ -315,7 +277,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                               offset: const Offset(0, 2),
                             ),
@@ -327,7 +289,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             Row(
                               children: [
                                 Icon(Icons.trending_up, color: AppTheme.textPrimary, size: isMobile ? 16 : 18),
-                                SizedBox(width: AppTheme.spacing2),
+                                const SizedBox(width: AppTheme.spacing2),
                                 Expanded(
                                   child: Text(
                                     '역할별 회원 수',
@@ -367,7 +329,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                                   color: AppTheme.textSecondary,
                                                 ),
                                               ),
-                                              SizedBox(height: AppTheme.spacing1),
+                                              const SizedBox(height: AppTheme.spacing1),
                                               Text(
                                                 '${(_stats!['users']?['byRole']?['spare'] ?? 0)}명',
                                                 style: TextStyle(
@@ -385,7 +347,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                         child: Container(
                                           padding: EdgeInsets.all(isMobile ? AppTheme.spacing2 : AppTheme.spacing3),
                                           decoration: BoxDecoration(
-                                            color: AppTheme.primaryPurple.withOpacity(0.1),
+                                            color: AppTheme.primaryPurple.withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(8),
                                           ),
                                           child: Column(
@@ -398,7 +360,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                                   color: AppTheme.textSecondary,
                                                 ),
                                               ),
-                                              SizedBox(height: AppTheme.spacing1),
+                                              const SizedBox(height: AppTheme.spacing1),
                                               Text(
                                                 '${(_stats!['users']?['byRole']?['shop'] ?? 0)}명',
                                                 style: TextStyle(
@@ -429,7 +391,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                                   color: AppTheme.textSecondary,
                                                 ),
                                               ),
-                                              SizedBox(height: AppTheme.spacing1),
+                                              const SizedBox(height: AppTheme.spacing1),
                                               Text(
                                                 '${(_stats!['users']?['byRole']?['seller'] ?? 0)}명',
                                                 style: TextStyle(
@@ -465,7 +427,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                                 color: AppTheme.textSecondary,
                                               ),
                                             ),
-                                            SizedBox(height: AppTheme.spacing1),
+                                            const SizedBox(height: AppTheme.spacing1),
                                             Text(
                                               '${(_stats!['users']?['byRole']?['spare'] ?? 0)}명',
                                               style: TextStyle(
@@ -482,7 +444,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                         width: double.infinity,
                                         padding: EdgeInsets.all(isMobile ? AppTheme.spacing2 : AppTheme.spacing3),
                                         decoration: BoxDecoration(
-                                          color: AppTheme.primaryPurple.withOpacity(0.1),
+                                          color: AppTheme.primaryPurple.withValues(alpha: 0.1),
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Column(
@@ -495,7 +457,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                                 color: AppTheme.textSecondary,
                                               ),
                                             ),
-                                            SizedBox(height: AppTheme.spacing1),
+                                            const SizedBox(height: AppTheme.spacing1),
                                             Text(
                                               '${(_stats!['users']?['byRole']?['shop'] ?? 0)}명',
                                               style: TextStyle(
@@ -525,7 +487,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                                 color: AppTheme.textSecondary,
                                               ),
                                             ),
-                                            SizedBox(height: AppTheme.spacing1),
+                                            const SizedBox(height: AppTheme.spacing1),
                                             Text(
                                               '${(_stats!['users']?['byRole']?['seller'] ?? 0)}명',
                                               style: TextStyle(
@@ -552,8 +514,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       ),
                     );
                   },
-                ),
-    );
+                );
   }
 
   Color _getActivityColor(String color) {
@@ -575,7 +536,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -590,7 +551,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Row(
                 children: [
                   Icon(Icons.trending_up, color: AppTheme.primaryPurple, size: isMobile ? 18 : 20),
-                  SizedBox(width: AppTheme.spacing2),
+                  const SizedBox(width: AppTheme.spacing2),
                   Text(
                     '최근 활동',
                     style: TextStyle(
@@ -603,7 +564,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
               TextButton(
                 onPressed: () {},
-                child: Text(
+                child: const Text(
                   '전체보기',
                   style: TextStyle(
                     fontSize: 13,
@@ -614,20 +575,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacing3),
-          ...(_activities as List).take(5).map((a) {
+          const SizedBox(height: AppTheme.spacing3),
+          ...(_activities).take(5).map((a) {
             final activity = a as Map<String, dynamic>;
             final dotColor = _getActivityColor(activity['color']?.toString() ?? '');
             return Container(
-              margin: EdgeInsets.only(bottom: AppTheme.spacing2),
-              padding: EdgeInsets.symmetric(
+              margin: const EdgeInsets.only(bottom: AppTheme.spacing2),
+              padding: const EdgeInsets.symmetric(
                 horizontal: AppTheme.spacing3,
                 vertical: AppTheme.spacing2,
               ),
               decoration: BoxDecoration(
-                color: dotColor.withOpacity(0.06),
+                color: dotColor.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: dotColor.withOpacity(0.2)),
+                border: Border.all(color: dotColor.withValues(alpha: 0.2)),
               ),
               child: Row(
                 children: [
@@ -639,11 +600,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  SizedBox(width: AppTheme.spacing3),
+                  const SizedBox(width: AppTheme.spacing3),
                   Expanded(
                     child: Text(
                       '${activity['label'] ?? ''} · ${activity['entity'] ?? ''}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 13,
                         color: AppTheme.textPrimary,
                       ),
@@ -653,7 +614,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   ),
                   Text(
                     activity['ago'] ?? '',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
                       color: AppTheme.textTertiary,
                     ),
@@ -689,7 +650,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           borderRadius: BorderRadius.circular(isMobile ? 8 : 10),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 6,
               offset: const Offset(0, 1),
             ),
@@ -737,7 +698,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ],
               ),
             ),
-            SizedBox(width: AppTheme.spacing2),
+            const SizedBox(width: AppTheme.spacing2),
             Container(
               width: isMobile ? 28 : 36,
               height: isMobile ? 28 : 36,

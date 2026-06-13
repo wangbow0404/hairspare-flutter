@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hairspare/widgets/job/urgent_job_card_theme.dart';
 import '../models/job.dart';
 import '../theme/app_theme.dart';
+import '../theme/home_text_styles.dart';
 
 enum CategoryType {
   region, // 지역 BEST
@@ -15,6 +17,8 @@ class CategoryJobsSection extends StatefulWidget {
   final Map<String, bool> favoriteMap;
   final Function(Job) onJobTap;
   final Function(String, bool) onFavoriteToggle;
+  /// 홈에서 QuickMenu 바로 아래 붙일 때 상단 여백 축소용. null이면 EdgeInsets.all(spacing4)
+  final EdgeInsetsGeometry? sectionPadding;
 
   const CategoryJobsSection({
     super.key,
@@ -23,6 +27,7 @@ class CategoryJobsSection extends StatefulWidget {
     required this.favoriteMap,
     required this.onJobTap,
     required this.onFavoriteToggle,
+    this.sectionPadding,
   });
 
   @override
@@ -150,19 +155,16 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
 
     return Container(
       color: AppTheme.backgroundWhite,
-      padding: EdgeInsets.all(AppTheme.spacing4),
+      padding: widget.sectionPadding ?? const EdgeInsets.all(AppTheme.spacing4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 제목
-          Text(
+          const Text(
             '카테고리별 인기 공고',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
-                ),
+            style: HomeTextStyles.sectionTitle,
           ),
-          SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing4),
 
           // 카테고리 버튼
           SingleChildScrollView(
@@ -170,21 +172,21 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
             child: Row(
               children: [
                 _buildCategoryButton('지역 BEST', CategoryType.region),
-                SizedBox(width: AppTheme.spacing2),
+                const SizedBox(width: AppTheme.spacing2),
                 _buildCategoryButton('시급 BEST', CategoryType.hourly),
-                SizedBox(width: AppTheme.spacing2),
+                const SizedBox(width: AppTheme.spacing2),
                 _buildCategoryButton('일급 BEST', CategoryType.daily),
-                SizedBox(width: AppTheme.spacing2),
+                const SizedBox(width: AppTheme.spacing2),
                 _buildCategoryButton('추천 BEST', CategoryType.recommended),
               ],
             ),
           ),
-          SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing4),
 
           // 카테고리별 공고 리스트
           if (filteredJobs.isEmpty)
             Padding(
-              padding: EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+              padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
               child: Center(
                 child: Text(
                   '공고가 없습니다.',
@@ -210,7 +212,7 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
         });
       },
       child: Container(
-        padding: EdgeInsets.symmetric(
+        padding: const EdgeInsets.symmetric(
           horizontal: AppTheme.spacing4,
           vertical: AppTheme.spacing2,
         ),
@@ -245,19 +247,8 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
         : null;
 
     return Container(
-      margin: EdgeInsets.only(bottom: AppTheme.spacing3),
-      decoration: BoxDecoration(
-        color: AppTheme.backgroundWhite,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: AppTheme.borderGray),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
+      decoration: UrgentJobCardTheme.cardDecoration(isUrgent: job.isUrgent),
       child: Stack(
         children: [
           // 찜 버튼
@@ -269,8 +260,8 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                 widget.onFavoriteToggle(job.id, isFavorite);
               },
               child: Container(
-                padding: EdgeInsets.all(AppTheme.spacing2),
-                decoration: BoxDecoration(
+                padding: const EdgeInsets.all(AppTheme.spacing2),
+                decoration: const BoxDecoration(
                   color: Colors.transparent,
                   shape: BoxShape.circle,
                 ),
@@ -283,41 +274,16 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
             ),
           ),
 
-          // 급구 태그
           if (job.isUrgent)
-            Positioned(
+            const Positioned(
               top: AppTheme.spacing4,
               right: 64,
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: AppTheme.spacing2,
-                  vertical: AppTheme.spacing1,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.urgentRed,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('🚀', style: TextStyle(fontSize: 12)),
-                    SizedBox(width: 4),
-                    Text(
-                      '급구',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              child: UrgentJobBadge(),
             ),
 
           // 공고 내용
           Padding(
-            padding: EdgeInsets.all(AppTheme.spacing4),
+            padding: const EdgeInsets.all(AppTheme.spacing4),
             child: GestureDetector(
               onTap: () => widget.onJobTap(job),
               child: Row(
@@ -339,7 +305,7 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                       borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                     ),
                   ),
-                  SizedBox(width: AppTheme.spacing3),
+                  const SizedBox(width: AppTheme.spacing3),
 
                   // 내용 영역
                   Expanded(
@@ -350,7 +316,7 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                         Row(
                           children: [
                             Container(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: AppTheme.spacing2,
                                 vertical: AppTheme.spacing1,
                               ),
@@ -367,9 +333,9 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                                 ),
                               ),
                             ),
-                            SizedBox(width: AppTheme.spacing2),
+                            const SizedBox(width: AppTheme.spacing2),
                             Container(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: AppTheme.spacing2,
                                 vertical: AppTheme.spacing1,
                               ),
@@ -392,12 +358,12 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                             ),
                           ],
                         ),
-                        SizedBox(height: AppTheme.spacing2),
+                        const SizedBox(height: AppTheme.spacing2),
 
                         // 매장명
                         Text(
                           job.shopName,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                             color: AppTheme.textPrimary,
@@ -405,20 +371,20 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        SizedBox(height: AppTheme.spacing1),
+                        const SizedBox(height: AppTheme.spacing1),
 
                         // 금액 정보
                         Row(
                           children: [
                             Text(
                               '$daysLeft일 남음',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: AppTheme.primaryBlue,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            SizedBox(width: AppTheme.spacing2),
+                            const SizedBox(width: AppTheme.spacing2),
                             if (_selectedCategory == CategoryType.hourly && hourlyRate != null)
                               Text(
                                 '시급 ${formatAmount(hourlyRate.toInt())}',
@@ -431,7 +397,7 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                             else if (_selectedCategory == CategoryType.daily)
                               Text(
                                 '일급 ${formatAmount(job.amount)}',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: AppTheme.primaryBlue,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
@@ -440,7 +406,7 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                             else
                               Text(
                                 formatAmount(job.amount),
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: AppTheme.primaryBlue,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
@@ -448,12 +414,12 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                               ),
                           ],
                         ),
-                        SizedBox(height: AppTheme.spacing1),
+                        const SizedBox(height: AppTheme.spacing1),
 
                         // 신청 정보
                         Text(
                           '신청 0/${job.requiredCount}명',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 12,
                           ),

@@ -2,16 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/bottom_nav_bar.dart';
-import '../../models/user.dart';
 import '../../services/work_check_service.dart';
 import '../../services/schedule_service.dart';
-import '../../utils/error_handler.dart';
-import 'payment_screen.dart';
-import 'favorites_screen.dart';
 import 'vip_status_screen.dart';
 import 'settings_screen.dart';
-import 'home_screen.dart';
 import 'schedule_screen.dart';
 import 'jobs_list_screen.dart';
 import 'applicants_screen.dart';
@@ -19,8 +13,12 @@ import 'verification_screen.dart';
 import 'my_spaces_screen.dart';
 import 'profile_edit_screen.dart';
 import '../../models/shop_tier.dart';
+import '../../core/router/app_navigation.dart';
+import '../../widgets/shop/shop_screen_safe_area.dart';
 
 /// Shop 프로필 화면
+
+
 class ShopProfileScreen extends StatefulWidget {
   const ShopProfileScreen({super.key});
 
@@ -29,7 +27,6 @@ class ShopProfileScreen extends StatefulWidget {
 }
 
 class _ShopProfileScreenState extends State<ShopProfileScreen> {
-  int _currentNavIndex = 3;
   bool _isLoading = true;
   int _vipTotalCompleted = 0;
   String _vipLevel = 'bronze';
@@ -146,15 +143,16 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
     final user = authProvider.currentUser;
 
     if (_isLoading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      body: CustomScrollView(
+      body: ShopScreenSafeArea(
+        child: CustomScrollView(
         slivers: [
           // Sticky 헤더
           SliverAppBar(
@@ -163,8 +161,9 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
             elevation: 0,
             leading: null,
             automaticallyImplyLeading: false,
+            toolbarHeight: 44,
             flexibleSpace: Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppTheme.backgroundWhite,
                 border: Border(
                   bottom: BorderSide(
@@ -173,18 +172,16 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                   ),
                 ),
               ),
-              padding: AppTheme.spacingSymmetric(
+              padding: const EdgeInsets.symmetric(
                 horizontal: AppTheme.spacing4,
-                vertical: AppTheme.spacing3,
               ),
-              child: Row(
+              child: SizedBox(
+                height: 44,
+                child: Row(
                 children: [
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ShopHomeScreen()),
-                      );
+                      AppNavigation.goShopHome(context);
                     },
                     child: Text(
                       'HairSpare',
@@ -207,13 +204,14 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                   ),
                 ],
               ),
+              ),
             ),
           ),
 
           // 프로필 정보 섹션
           SliverToBoxAdapter(
             child: Container(
-              padding: EdgeInsets.all(AppTheme.spacing4),
+              padding: const EdgeInsets.all(AppTheme.spacing4),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 border: Border(
@@ -241,7 +239,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: Colors.black.withValues(alpha: 0.1),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -280,7 +278,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
+                                      color: Colors.black.withValues(alpha: 0.2),
                                       blurRadius: 4,
                                       offset: const Offset(0, 2),
                                     ),
@@ -296,7 +294,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(width: AppTheme.spacing4),
+                      const SizedBox(width: AppTheme.spacing4),
                       // 프로필 정보
                       Expanded(
                         child: Column(
@@ -312,10 +310,10 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                                     color: AppTheme.textPrimary,
                                   ),
                                 ),
-                                SizedBox(width: AppTheme.spacing2),
+                                const SizedBox(width: AppTheme.spacing2),
                                 if (user != null)
                                   Container(
-                                    padding: EdgeInsets.symmetric(
+                                    padding: const EdgeInsets.symmetric(
                                       horizontal: AppTheme.spacing2,
                                       vertical: AppTheme.spacing1,
                                     ),
@@ -334,12 +332,12 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                                   ),
                               ],
                             ),
-                            SizedBox(height: AppTheme.spacing2),
+                            const SizedBox(height: AppTheme.spacing2),
                             if (user?.email != null)
                               Row(
                                 children: [
                                   const Icon(Icons.email, size: 16, color: AppTheme.textSecondary),
-                                  SizedBox(width: AppTheme.spacing1),
+                                  const SizedBox(width: AppTheme.spacing1),
                                   Text(
                                     user!.email!,
                                     style: const TextStyle(
@@ -350,11 +348,11 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                                 ],
                               ),
                             if (user?.phone != null) ...[
-                              SizedBox(height: AppTheme.spacing1),
+                              const SizedBox(height: AppTheme.spacing1),
                               Row(
                                 children: [
                                   const Icon(Icons.phone, size: 16, color: AppTheme.textSecondary),
-                                  SizedBox(width: AppTheme.spacing1),
+                                  const SizedBox(width: AppTheme.spacing1),
                                   Text(
                                     user!.phone!,
                                     style: const TextStyle(
@@ -370,7 +368,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: AppTheme.spacing4),
+                  const SizedBox(height: AppTheme.spacing4),
                   // 프로필 수정 버튼
                   SizedBox(
                     width: double.infinity,
@@ -395,7 +393,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                         backgroundColor: AppTheme.backgroundGray,
                         foregroundColor: AppTheme.textGray700,
                         elevation: 0,
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: AppTheme.spacing4,
                           vertical: AppTheme.spacing2 + AppTheme.spacing1 / 2,
                         ),
@@ -413,7 +411,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
           // 빠른 통계 섹션
           SliverToBoxAdapter(
             child: Container(
-              padding: EdgeInsets.all(AppTheme.spacing4),
+              padding: const EdgeInsets.all(AppTheme.spacing4),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 border: Border(
@@ -429,7 +427,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.star, size: 20, color: Color(ShopTierExtension.parse(_vipLevel).colorValue)),
-                            SizedBox(width: AppTheme.spacing1),
+                            const SizedBox(width: AppTheme.spacing1),
                             Text(
                               ShopTierExtension.parse(_vipLevel).name,
                               style: TextStyle(
@@ -440,7 +438,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                             ),
                           ],
                         ),
-                        SizedBox(height: AppTheme.spacing1),
+                        const SizedBox(height: AppTheme.spacing1),
                         const Text(
                           '등급',
                           style: TextStyle(
@@ -467,7 +465,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                             color: AppTheme.primaryPurple,
                           ),
                         ),
-                        SizedBox(height: AppTheme.spacing1),
+                        const SizedBox(height: AppTheme.spacing1),
                         const Text(
                           '완료 근무',
                           style: TextStyle(
@@ -494,7 +492,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                             color: Colors.green,
                           ),
                         ),
-                        SizedBox(height: AppTheme.spacing1),
+                        const SizedBox(height: AppTheme.spacing1),
                         const Text(
                           '진행중',
                           style: TextStyle(
@@ -512,7 +510,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
 
           // 메뉴 항목
           SliverPadding(
-            padding: EdgeInsets.all(AppTheme.spacing4),
+            padding: const EdgeInsets.all(AppTheme.spacing4),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
@@ -527,7 +525,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
           // 로그아웃 버튼
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.all(AppTheme.spacing4),
+              padding: const EdgeInsets.all(AppTheme.spacing4),
               child: ElevatedButton.icon(
                 onPressed: () async {
                   final confirmed = await showDialog<bool>(
@@ -551,7 +549,8 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
 
                   if (confirmed == true && mounted) {
                     await authProvider.logout();
-                    // TODO: 로그인 화면으로 이동
+                    if (!context.mounted) return;
+                    AppNavigation.goRoleSelect(context);
                   }
                 },
                 icon: const Icon(Icons.logout, size: 20, color: AppTheme.urgentRed),
@@ -567,13 +566,13 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                   backgroundColor: AppTheme.red50,
                   foregroundColor: AppTheme.urgentRed,
                   elevation: 0,
-                  padding: EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: AppTheme.spacing4,
                     vertical: AppTheme.spacing3,
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                    side: BorderSide(color: AppTheme.red200, width: 1),
+                    side: const BorderSide(color: AppTheme.red200, width: 1),
                   ),
                 ),
               ),
@@ -581,56 +580,25 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
           ),
 
           // 하단 여백
-          SliverToBoxAdapter(
+          const SliverToBoxAdapter(
             child: SizedBox(height: 80),
           ),
         ],
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          setState(() {
-            _currentNavIndex = index;
-          });
-
-          switch (index) {
-            case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopHomeScreen()),
-              );
-              break;
-            case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopPaymentScreen()),
-              );
-              break;
-            case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ShopFavoritesScreen()),
-              );
-              break;
-            case 3:
-              // 현재 화면
-              break;
-          }
-        },
+        ),
       ),
     );
   }
 
   Widget _buildMenuItem(_MenuItem item) {
     return Container(
-      margin: EdgeInsets.only(bottom: AppTheme.spacing2),
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing2),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         border: Border.all(color: AppTheme.borderGray),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 2,
             offset: const Offset(0, 1),
           ),
@@ -672,7 +640,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
       label: 'VIP 등급',
       description: '근무 통계 및 VIP 등급 확인',
       color: AppTheme.primaryPurple,
-      bgColor: AppTheme.primaryPurple.withOpacity(0.1),
+      bgColor: AppTheme.primaryPurple.withValues(alpha: 0.1),
       onTap: (context) {
         Navigator.push(
           context,
@@ -685,7 +653,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
       label: '스케줄 관리',
       description: '근무 일정 확인 및 관리',
       color: Colors.blue,
-      bgColor: Colors.blue.withOpacity(0.1),
+      bgColor: Colors.blue.withValues(alpha: 0.1),
       onTap: (context) {
         Navigator.push(
           context,
@@ -698,7 +666,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
       label: '공고 관리',
       description: '등록한 공고 확인 및 관리',
       color: Colors.indigo,
-      bgColor: Colors.indigo.withOpacity(0.1),
+      bgColor: Colors.indigo.withValues(alpha: 0.1),
       onTap: (context) {
         Navigator.push(
           context,
@@ -711,7 +679,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
       label: '내 공간 관리',
       description: '등록한 공간 확인 및 관리',
       color: Colors.teal,
-      bgColor: Colors.teal.withOpacity(0.1),
+      bgColor: Colors.teal.withValues(alpha: 0.1),
       onTap: (context) {
         Navigator.push(
           context,
@@ -724,7 +692,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
       label: '지원자 관리',
       description: '지원자 확인 및 승인/거절',
       color: Colors.blue,
-      bgColor: Colors.blue.withOpacity(0.1),
+      bgColor: Colors.blue.withValues(alpha: 0.1),
       onTap: (context) {
         Navigator.push(
           context,
@@ -737,20 +705,15 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
       label: '결제 정보',
       description: '결제 내역 및 구독 관리',
       color: AppTheme.primaryPurple,
-      bgColor: AppTheme.primaryPurple.withOpacity(0.1),
-      onTap: (context) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ShopPaymentScreen()),
-        );
-      },
+      bgColor: AppTheme.primaryPurple.withValues(alpha: 0.1),
+      onTap: (context) => AppNavigation.goShopMainTab(context, 1),
     ),
     _MenuItem(
       icon: Icons.verified,
       label: '인증 관리',
       description: '사업자·본인·대리인 인증',
       color: Colors.green,
-      bgColor: Colors.green.withOpacity(0.1),
+      bgColor: Colors.green.withValues(alpha: 0.1),
       onTap: (context) {
         Navigator.push(
           context,
@@ -763,7 +726,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
       label: '설정',
       description: '앱 설정 및 계정 관리',
       color: Colors.grey,
-      bgColor: Colors.grey.withOpacity(0.1),
+      bgColor: Colors.grey.withValues(alpha: 0.1),
       onTap: (context) {
         Navigator.push(
           context,

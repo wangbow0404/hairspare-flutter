@@ -62,11 +62,10 @@ class ErrorHandler {
         );
       }
 
-      // 서버 오류
+      // 서버 오류 — 응답 본문을 파싱하지 않음(스택/쿼리 노출 방지, SECURITY_PATCH_GUIDE P2)
       if (statusCode != null && statusCode >= 500) {
-        final message = _extractErrorMessage(responseData) ?? '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
         return ServerException(
-          message,
+          '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
           code: 'SERVER_ERROR',
           statusCode: statusCode,
           originalError: error,
@@ -158,6 +157,25 @@ class ErrorHandler {
     return null;
   }
 
+  /// 스택 트레이스·내부 디버그 문자열로 보이면 사용자에게 노출하지 않음
+  static bool _looksLikeInternalErrorDetail(String? message) {
+    if (message == null || message.isEmpty) return false;
+    if (message.length > 800) return true;
+    final lower = message.toLowerCase();
+    if (lower.contains('traceback') ||
+        lower.contains('stacktrace') ||
+        lower.contains('exception in thread') ||
+        lower.contains('#0      ') ||
+        lower.contains('sqlstate') ||
+        lower.contains('sql error') ||
+        lower.contains('integrityerror') ||
+        lower.contains('django.db') ||
+        lower.contains('fastapi.exception')) {
+      return true;
+    }
+    return false;
+  }
+
   /// 사용자 친화적인 에러 메시지 반환
   static String getUserFriendlyMessage(AppException error) {
     if (error is NetworkException) {
@@ -177,6 +195,9 @@ class ErrorHandler {
     }
 
     if (error is ValidationException) {
+      if (_looksLikeInternalErrorDetail(error.message)) {
+        return '요청을 처리할 수 없습니다. 입력 내용을 확인해주세요.';
+      }
       return error.message;
     }
 
@@ -184,6 +205,9 @@ class ErrorHandler {
       return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
     }
 
+    if (_looksLikeInternalErrorDetail(error.message)) {
+      return '오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    }
     return error.message;
   }
 }

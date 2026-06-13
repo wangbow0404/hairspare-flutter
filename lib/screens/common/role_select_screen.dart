@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../core/router/app_navigation.dart';
 import '../../models/user.dart';
-import '../../screens/spare/login_screen.dart';
-import '../../screens/shop/login_screen.dart' as shop;
 import '../../theme/app_theme.dart';
-
 class RoleSelectScreen extends StatefulWidget {
   const RoleSelectScreen({super.key});
 
@@ -16,16 +14,11 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
   bool _showStoreModal = false;
 
   void _handleRoleSelect(UserRole role) {
-    // 역할에 따라 로그인 화면으로 이동
-    // TODO: 네비게이션 라우터 설정 후 수정
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => role == UserRole.spare
-            ? const SpareLoginScreen()
-            : const shop.ShopLoginScreen(),
-      ),
-    );
+    if (role == UserRole.spare) {
+      AppNavigation.goSpareLogin(context);
+    } else {
+      AppNavigation.goShopLogin(context);
+    }
   }
 
   void _handleStoreClick() {
@@ -90,7 +83,7 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          SizedBox(height: AppTheme.spacing3),
+                          const SizedBox(height: AppTheme.spacing3),
                           Text(
                             '스페어 급구 해결',
                             style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -101,7 +94,7 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: AppTheme.spacing12),
+                      const SizedBox(height: AppTheme.spacing12),
                       // Button Section
                       SizedBox(
                         width: double.infinity,
@@ -113,13 +106,13 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
                               color: AppTheme.primaryBlue,
                               onTap: () => _handleRoleSelect(UserRole.spare),
                             ),
-                            SizedBox(height: AppTheme.spacing4),
+                            const SizedBox(height: AppTheme.spacing4),
                             _RoleButton(
                               label: '미용실로 시작하기',
                               color: AppTheme.primaryPurple,
                               onTap: () => _handleRoleSelect(UserRole.shop),
                             ),
-                            SizedBox(height: AppTheme.spacing4),
+                            const SizedBox(height: AppTheme.spacing4),
                             _RoleButton(
                               label: '스토어로 시작하기',
                               color: AppTheme.primaryGreen,
@@ -128,7 +121,7 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
                           ],
                         ),
                       ),
-                      SizedBox(height: AppTheme.spacing8),
+                      const SizedBox(height: AppTheme.spacing8),
                       // Tagline
                       Text(
                         '미용실 스페어 매칭 플랫폼',
@@ -168,7 +161,7 @@ class _StoreModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.black.withOpacity(0.5), // bg-black bg-opacity-50
+      color: Colors.black.withValues(alpha: 0.5), // bg-black bg-opacity-50
       child: GestureDetector(
         onTap: onClose,
         child: Center(
@@ -209,7 +202,7 @@ class _StoreModal extends StatelessWidget {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: AppTheme.spacing4), // mt-4
+                        const SizedBox(height: AppTheme.spacing4), // mt-4
                         Text(
                           '빠른 시일 내에 만나뵐 수 있도록 준비하겠습니다.',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -218,7 +211,7 @@ class _StoreModal extends StatelessWidget {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: AppTheme.spacing6), // mt-6
+                        const SizedBox(height: AppTheme.spacing6), // mt-6
                         // 확인 버튼
                         SizedBox(
                           width: double.infinity,

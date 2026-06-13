@@ -4,7 +4,6 @@ import 'dart:async';
 import '../../theme/app_theme.dart';
 import '../../services/admin_service.dart';
 import '../../utils/error_handler.dart';
-import '../../widgets/admin_layout.dart';
 import '../../widgets/admin/admin_page_header.dart';
 import '../../widgets/admin/admin_search_filter_bar.dart';
 import '../../widgets/admin/admin_table_card.dart';
@@ -23,8 +22,6 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
   List<dynamic> _schedules = [];
   bool _isLoading = true;
   int _currentPage = 1;
-  int _totalPages = 1;
-  int _total = 0;
   String _dateFilter = 'today'; // today, week, all
   Timer? _updateTimer;
 
@@ -63,8 +60,6 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
       if (mounted) {
         setState(() {
           _schedules = result['schedules'] ?? [];
-          _totalPages = result['pagination']?['totalPages'] ?? 1;
-          _total = result['pagination']?['total'] ?? 0;
           _isLoading = false;
         });
       }
@@ -98,16 +93,14 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AdminLayout(
-      currentRoute: '/admin/checkin',
-      child: Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AdminPageHeader(
+          const AdminPageHeader(
             title: '체크인 관리',
             subtitle: '오늘 체크인 및 전체 스케줄 내역을 조회할 수 있습니다',
           ),
-          SizedBox(height: AppTheme.spacing6),
+          const SizedBox(height: AppTheme.spacing6),
           AdminSearchFilterBar(
             searchController: _searchController,
             searchHint: '사용자, 미용실명으로 검색...',
@@ -129,19 +122,19 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
                       _loadSchedules();
                     });
                   },
-                  style: TextStyle(color: AppTheme.textPrimary),
+                  style: const TextStyle(color: AppTheme.textPrimary),
                 ),
               ],
             ),
           ),
-          SizedBox(height: AppTheme.spacing6),
+          const SizedBox(height: AppTheme.spacing6),
           SizedBox(
             height: 600,
             child: AdminTableCard(
               child: _isLoading && _schedules.isEmpty
                   ? const Center(child: CircularProgressIndicator())
                   : _schedules.isEmpty
-                      ? Center(
+                      ? const Center(
                           child: Padding(
                             padding: EdgeInsets.all(AppTheme.spacing8),
                             child: Column(
@@ -180,7 +173,7 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
                               height: 580,
                               child: Column(
                                 children: [
-                                  AdminTableHeader(
+                                  const AdminTableHeader(
                                     headers: ['스케줄', '스페어', '미용실', '공고', '체크인 일시', '상태'],
                                     flexValues: [1, 1, 1, 2, 1, 1],
                                   ),
@@ -192,14 +185,14 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
                                         final checkInTime = schedule['checkInTime'] ?? schedule['checkIn'];
                                         final state = schedule['state'] ?? schedule['status'] ?? '';
                                         return Container(
-                                          padding: EdgeInsets.symmetric(
+                                          padding: const EdgeInsets.symmetric(
                                             horizontal: AppTheme.spacing4,
                                             vertical: AppTheme.spacing3,
                                           ),
                                           decoration: BoxDecoration(
                                             border: Border(
                                               bottom: BorderSide(
-                                                color: AppTheme.adminPurple100.withOpacity(0.5),
+                                                color: AppTheme.adminPurple100.withValues(alpha: 0.5),
                                               ),
                                             ),
                                           ),
@@ -209,7 +202,7 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
                                                 flex: 1,
                                                 child: Text(
                                                   schedule['id']?.toString() ?? '-',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                     fontSize: 13,
                                                     color: AppTheme.textSecondary,
                                                   ),
@@ -223,7 +216,7 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
                                                       schedule['spare']?['email'] ??
                                                       schedule['energyWallet']?['user']?['email'] ??
                                                       '-',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                     fontSize: 13,
                                                     color: AppTheme.textPrimary,
                                                   ),
@@ -236,7 +229,7 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
                                                   schedule['shop']?['name'] ??
                                                       schedule['job']?['shop']?['name'] ??
                                                       '-',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                     fontSize: 13,
                                                     color: AppTheme.textPrimary,
                                                   ),
@@ -247,7 +240,7 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
                                                 flex: 2,
                                                 child: Text(
                                                   schedule['job']?['title'] ?? '-',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                     fontSize: 13,
                                                     color: AppTheme.textSecondary,
                                                   ),
@@ -258,7 +251,7 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
                                                 flex: 1,
                                                 child: Text(
                                                   _formatDate(checkInTime?.toString()),
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                     fontSize: 13,
                                                     color: AppTheme.textSecondary,
                                                   ),
@@ -268,12 +261,12 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
                                               Expanded(
                                                 flex: 1,
                                                 child: Container(
-                                                  padding: EdgeInsets.symmetric(
+                                                  padding: const EdgeInsets.symmetric(
                                                     horizontal: AppTheme.spacing2,
                                                     vertical: AppTheme.spacing1,
                                                   ),
                                                   decoration: BoxDecoration(
-                                                    color: _getStateColor(state).withOpacity(0.15),
+                                                    color: _getStateColor(state).withValues(alpha: 0.15),
                                                     borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                                                   ),
                                                   child: Text(
@@ -301,8 +294,7 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 
   Color _getStateColor(String state) {
