@@ -69,6 +69,7 @@ flutter:
   
   assets:
     - assets/images/
+    - assets/images/brand/
     - assets/images/banners/
     - assets/images/social/
     - assets/images/missions/

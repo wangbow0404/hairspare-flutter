@@ -12,10 +12,10 @@ import '../../services/chat_service.dart';
 import '../../services/contact_violation_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/contact_blocker.dart';
-import '../../utils/contact_violation_policy.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/icon_mapper.dart';
 import '../../widgets/chat/chat_contact_warning_banner.dart';
+import '../../widgets/chat/contact_violation_blocked_modal.dart';
 import '../../widgets/spare_app_bar.dart';
 
 /// Next.js와 동일한 채팅방 화면
@@ -137,13 +137,14 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     }
   }
 
-  Future<void> _handleContactViolation(String content) async {
+  Future<void> _handleContactViolation() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final currentUser = authProvider.currentUser;
     final chat = _chat;
     if (chat == null || currentUser == null) return;
 
     final myRole = _mySenderRole(currentUser);
+    final isShop = myRole == 'shop';
     final result = await _contactViolationService.recordAttempt(
       chatId: widget.chatId,
       senderId: currentUser.id,
@@ -153,13 +154,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(result.userMessage),
-        backgroundColor: AppTheme.urgentRed,
-        duration: const Duration(seconds: 5),
-      ),
+    await ContactViolationBlockedModal.show(
+      context: context,
+      result: result,
+      isShop: isShop,
     );
+
+    if (!mounted) return;
 
     if (result.accountTerminated) {
       await authProvider.logout();
@@ -208,7 +209,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       content,
       recentOutgoing: _recentOutgoingForContactCheck,
     )) {
-      await _handleContactViolation(content);
+      await _handleContactViolation();
       return;
     }
 
@@ -339,10 +340,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         children: [
           if (isShopChatBlocked)
             ChatShopPenaltyBanner(until: shopChatBlockedUntil),
-          ChatContactWarningBanner(
-            extraLine: isShop ? ContactViolationPolicy.shopPenaltyNotice : null,
-            tint: isShop ? AppTheme.urgentRed : AppTheme.orange500,
-          ),
+          const ChatContactWarningBanner(),
           // 메시지 목록
           Expanded(
             child: _messages.isEmpty
@@ -378,8 +376,11 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                 width: 32,
                                 height: 32,
                                 decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [AppTheme.primaryBlue, AppTheme.primaryBlueDark],
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppTheme.stitchPrimaryContainer,
+                                      AppTheme.stitchPrimary,
+                                    ],
                                   ),
                                   borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                                 ),
@@ -407,7 +408,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                 padding: AppTheme.spacing(AppTheme.spacing3),
                                 decoration: BoxDecoration(
                                   color: isMyMessage
-                                      ? AppTheme.primaryBlue
+                                      ? AppTheme.stitchPrimaryContainer
                                       : AppTheme.backgroundWhite,
                                   borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                                   border: isMyMessage
@@ -514,7 +515,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-                        borderSide: const BorderSide(color: AppTheme.primaryBlue, width: 2),
+                        borderSide: const BorderSide(color: AppTheme.stitchPrimaryContainer, width: 2),
                       ),
                       contentPadding: AppTheme.spacingSymmetric(
                         horizontal: AppTheme.spacing4,
@@ -539,13 +540,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
+                            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.stitchPrimaryContainer),
                           ),
                         )
-                      : IconMapper.icon('send', size: 24, color: AppTheme.primaryBlue) ??
-                          const Icon(Icons.send, size: 24, color: AppTheme.primaryBlue),
+                      : IconMapper.icon('send', size: 24, color: AppTheme.stitchPrimaryContainer) ??
+                          const Icon(Icons.send, size: 24, color: AppTheme.stitchPrimaryContainer),
                   style: IconButton.styleFrom(
-                    backgroundColor: AppTheme.primaryBlue,
+                    backgroundColor: AppTheme.stitchPrimaryContainer,
                     foregroundColor: Colors.white,
                     padding: AppTheme.spacing(AppTheme.spacing2),
                   ),

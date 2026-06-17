@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../widgets/common/shared_app_bar.dart';
 import 'package:provider/provider.dart';
-import 'dart:ui'; // ImageFilter를 위해 import
 import '../../models/user.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/hairspare_brand_assets.dart';
 import '../../core/router/app_navigation.dart';
 
 class SpareSignupScreen extends StatefulWidget {
@@ -94,66 +94,7 @@ class _SpareSignupScreenState extends State<SpareSignupScreen> {
                 // 로고
                 Column(
                   children: [
-                    Stack(
-                      alignment: Alignment.topRight,
-                      children: [
-                        // 그라데이션 박스
-                        Container(
-                          width: 80, // w-20
-                          height: 80, // h-20
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                AppTheme.primaryPurple, // from-purple-600
-                                AppTheme.primaryPurpleDarker, // to-purple-800
-                              ],
-                            ),
-                            borderRadius: AppTheme.borderRadius(AppTheme.radius2xl), // rounded-2xl
-                            boxShadow: AppTheme.shadowLg, // shadow-lg
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'H',
-                              style: TextStyle(
-                                fontSize: 30, // text-3xl (30px)
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                        // 블러 효과 (노란색 오버레이)
-                        Positioned(
-                          top: -4, // -top-1
-                          right: -4, // -right-1
-                          child: Container(
-                            width: 64, // w-16
-                            height: 64, // h-16
-                            decoration: BoxDecoration(
-                              color: AppTheme.yellow400.withValues(alpha: 0.4), // bg-yellow-400/40
-                              borderRadius: AppTheme.borderRadius(AppTheme.radiusXl), // rounded-xl
-                            ),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4), // blur-sm
-                              child: Container(
-                                color: Colors.transparent,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppTheme.spacing4),
-                    Text(
-                      'hairspare',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontSize: 24, // text-2xl
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryPurpleDarker, // text-purple-800
-                      ),
-                    ),
+                    const HairSpareBrandSymbol(),
                     const SizedBox(height: AppTheme.spacing8),
                   ],
                 ),

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hairspare/widgets/job/urgent_job_card_theme.dart';
 import '../models/job.dart';
 import '../theme/app_theme.dart';
-import '../theme/home_text_styles.dart';
+import 'common/job_thumbnail.dart';
+import 'stitch/stitch_section_header.dart';
 
 enum CategoryType {
   region, // 지역 BEST
@@ -160,10 +161,7 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 제목
-          const Text(
-            '카테고리별 인기 공고',
-            style: HomeTextStyles.sectionTitle,
-          ),
+          const StitchSectionHeader(title: '카테고리별 인기 공고'),
           const SizedBox(height: AppTheme.spacing4),
 
           // 카테고리 버튼
@@ -218,18 +216,15 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppTheme.primaryPurple
-              : AppTheme.backgroundGray,
-          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          border: isSelected && category == CategoryType.recommended
-              ? Border.all(color: AppTheme.primaryBlue, width: 2)
-              : null,
+              ? AppTheme.stitchPrimary
+              : AppTheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(AppTheme.radiusFull),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : AppTheme.textPrimary,
-            fontWeight: FontWeight.w500,
+            color: isSelected ? Colors.white : AppTheme.stitchTextSecondary,
+            fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
         ),
@@ -248,7 +243,16 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
-      decoration: UrgentJobCardTheme.cardDecoration(isUrgent: job.isUrgent),
+      decoration: BoxDecoration(
+        color: AppTheme.backgroundWhite,
+        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+        border: Border.all(
+          color: job.isUrgent
+              ? AppTheme.urgentRed.withValues(alpha: 0.4)
+              : AppTheme.borderGray,
+        ),
+        boxShadow: AppTheme.stitchSoftShadow,
+      ),
       child: Stack(
         children: [
           // 찜 버튼
@@ -290,20 +294,11 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // 이미지 영역
-                  Container(
+                  JobThumbnail(
+                    job: job,
                     width: 80,
                     height: 80,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.green.shade200,
-                          Colors.blue.shade200,
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                    ),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                   ),
                   const SizedBox(width: AppTheme.spacing3),
 
@@ -321,13 +316,13 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                                 vertical: AppTheme.spacing1,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.green.shade100,
-                                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                                color: AppTheme.surfaceContainerLow,
+                                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                               ),
                               child: Text(
                                 timeTag,
-                                style: TextStyle(
-                                  color: Colors.green.shade700,
+                                style: const TextStyle(
+                                  color: AppTheme.stitchTextSecondary,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -341,16 +336,16 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                               ),
                               decoration: BoxDecoration(
                                 color: isShortTerm
-                                    ? Colors.purple.shade100
-                                    : AppTheme.backgroundGray,
-                                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                                    ? AppTheme.stitchPrimary.withValues(alpha: 0.1)
+                                    : AppTheme.surfaceContainerLow,
+                                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                               ),
                               child: Text(
                                 isShortTerm ? '단기' : '장기',
                                 style: TextStyle(
                                   color: isShortTerm
-                                      ? Colors.purple.shade700
-                                      : AppTheme.textPrimary,
+                                      ? AppTheme.stitchPrimary
+                                      : AppTheme.stitchTextSecondary,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -379,7 +374,7 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                             Text(
                               '$daysLeft일 남음',
                               style: const TextStyle(
-                                color: AppTheme.primaryBlue,
+                                color: AppTheme.stitchTextSecondary,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -388,8 +383,8 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                             if (_selectedCategory == CategoryType.hourly && hourlyRate != null)
                               Text(
                                 '시급 ${formatAmount(hourlyRate.toInt())}',
-                                style: TextStyle(
-                                  color: Colors.green.shade600,
+                                style: const TextStyle(
+                                  color: AppTheme.stitchPrimary,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -398,18 +393,18 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                               Text(
                                 '일급 ${formatAmount(job.amount)}',
                                 style: const TextStyle(
-                                  color: AppTheme.primaryBlue,
+                                  color: AppTheme.stitchPrimary,
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               )
                             else
                               Text(
                                 formatAmount(job.amount),
                                 style: const TextStyle(
-                                  color: AppTheme.primaryBlue,
+                                  color: AppTheme.stitchPrimary,
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                           ],

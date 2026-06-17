@@ -282,28 +282,6 @@ class VerificationService {
     }
   }
 
-  /// 자격증 인증 상태 확인
-  Future<Map<String, dynamic>> getLicenseVerificationStatus() async {
-    if (ApiConfig.useMockData) return await MockSpareData.getLicenseVerificationStatus();
-    try {
-      final response = await _dio.get('/api/verification/license/status');
-
-      if (response.statusCode == 200) {
-        final data = response.data['data'] ?? response.data;
-        return data as Map<String, dynamic>;
-      } else {
-        throw ServerException(
-          '자격증 인증 상태 조회 실패: ${response.statusMessage}',
-          statusCode: response.statusCode,
-        );
-      }
-    } on DioException catch (e) {
-      throw ErrorHandler.handleDioException(e);
-    } catch (e) {
-      throw ErrorHandler.handleException(e);
-    }
-  }
-
   /// 인증번호 발송
   Future<String> sendVerificationCode(String phone) async {
     try {

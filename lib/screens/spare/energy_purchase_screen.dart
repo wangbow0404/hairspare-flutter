@@ -4,8 +4,9 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/energy_service.dart';
-import '../../services/payment_service.dart';
-import '../../utils/error_handler.dart';
+import '../../utils/energy_purchase_pricing.dart';
+import '../../widgets/energy/energy_purchase_provisional_notice.dart';
+import 'energy_purchase_checkout_screen.dart';
 
 /// Next.js와 동일한 에너지 구매 화면
 class EnergyPurchaseScreen extends StatefulWidget {
@@ -15,46 +16,11 @@ class EnergyPurchaseScreen extends StatefulWidget {
   State<EnergyPurchaseScreen> createState() => _EnergyPurchaseScreenState();
 }
 
-class _EnergyPackage {
-  final String id;
-  final int amount; // 에너지 개수
-  final int price; // 가격 (원)
-  final bool popular; // 인기 상품 표시
-
-  _EnergyPackage({
-    required this.id,
-    required this.amount,
-    required this.price,
-    this.popular = false,
-  });
-}
-
 class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
-  _EnergyPackage? _selectedPackage;
-  bool _isProcessing = false;
+  EnergyPurchasePackage? _selectedPackage;
   int _currentEnergy = 0;
   bool _isLoading = true;
   final EnergyService _energyService = EnergyService();
-  final PaymentService _paymentService = PaymentService();
-
-  final List<_EnergyPackage> _energyPackages = [
-    _EnergyPackage(
-      id: '1',
-      amount: 1,
-      price: 9900,
-    ),
-    _EnergyPackage(
-      id: '3',
-      amount: 3,
-      price: 27000,
-      popular: true, // 3개가 인기 상품
-    ),
-    _EnergyPackage(
-      id: '5',
-      amount: 5,
-      price: 39000,
-    ),
-  ];
 
   @override
   void initState() {
@@ -84,7 +50,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
     }
   }
 
-  Future<void> _handlePurchase() async {
+  Future<void> _goToCheckout() async {
     if (_selectedPackage == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -97,54 +63,21 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
       return;
     }
 
-    setState(() {
-      _isProcessing = true;
-    });
+    final purchased = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EnergyPurchaseCheckoutScreen(
+          energyAmount: _selectedPackage!.energyAmount,
+          cashPrice: _selectedPackage!.cashPriceKrw,
+          packageId: _selectedPackage!.id,
+        ),
+      ),
+    );
 
-    try {
-      // 결제 요청 생성
-      await _paymentService.createPayment(
-        type: 'energy_purchase',
-        amount: _selectedPackage!.price,
-        paymentMethod: 'CARD',
-        metadata: {
-          'energyAmount': _selectedPackage!.amount,
-        },
-      );
-
-      // TODO: 토스페이먼츠 결제 위젯 연동
-      // 현재는 Mock 처리
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('결제가 완료되었습니다. (Mock)'),
-            backgroundColor: AppTheme.primaryGreen,
-          ),
-        );
-        // 에너지 잔액 업데이트
-        await _loadEnergyBalance();
-        // 선택 해제
-        setState(() {
-          _selectedPackage = null;
-        });
-      }
-    } catch (error) {
-      if (mounted) {
-        final appException = ErrorHandler.handleException(error);
-        final userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(appException);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(userFriendlyMessage),
-            backgroundColor: AppTheme.urgentRed,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isProcessing = false;
-        });
-      }
+    if (!mounted) return;
+    if (purchased == true) {
+      await _loadEnergyBalance();
+      setState(() => _selectedPackage = null);
     }
   }
 
@@ -223,6 +156,9 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
             ),
             const SizedBox(height: AppTheme.spacing6),
 
+            const EnergyPurchaseProvisionalNotice(),
+            const SizedBox(height: AppTheme.spacing3),
+
             // 패키지 선택
             Text(
               '에너지 패키지 선택',
@@ -233,7 +169,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
               ),
             ),
             const SizedBox(height: AppTheme.spacing4),
-            ..._energyPackages.map((pkg) {
+            ...kEnergyPurchasePackagesExample.map((pkg) {
               final isSelected = _selectedPackage?.id == pkg.id;
               return Container(
                 margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
@@ -295,7 +231,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                                 Row(
                                   children: [
                                     Text(
-                                      '${pkg.amount}개',
+                                      '${pkg.energyAmount}개',
                                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
@@ -327,7 +263,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                                 ),
                                 const SizedBox(height: AppTheme.spacing1),
                                 Text(
-                                  '₩${_formatPrice(pkg.price)}',
+                                  '₩${_formatPrice(pkg.cashPriceKrw)}',
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     fontSize: 14,
                                     color: AppTheme.textSecondary,
@@ -349,7 +285,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                               ),
                               const SizedBox(height: AppTheme.spacing1),
                               Text(
-                                '₩${_formatPrice((pkg.price / pkg.amount).round())}',
+                                '₩${_formatPrice((pkg.cashPriceKrw / pkg.energyAmount).round())}',
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
@@ -392,14 +328,14 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '에너지 ${_selectedPackage!.amount}개',
+                          '에너지 ${_selectedPackage!.energyAmount}개',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontSize: 14,
                             color: AppTheme.textSecondary,
                           ),
                         ),
                         Text(
-                          '₩${_formatPrice(_selectedPackage!.price)}',
+                          '₩${_formatPrice(_selectedPackage!.cashPriceKrw)}',
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -421,7 +357,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                           ),
                         ),
                         Text(
-                          '₩${_formatPrice(_selectedPackage!.price)}',
+                          '₩${_formatPrice(_selectedPackage!.cashPriceKrw)}',
                           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -439,11 +375,9 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: (_selectedPackage != null && !_isProcessing)
-                    ? _handlePurchase
-                    : null,
+                onPressed: _selectedPackage != null ? _goToCheckout : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _selectedPackage != null && !_isProcessing
+                  backgroundColor: _selectedPackage != null
                       ? null
                       : AppTheme.borderGray300,
                   foregroundColor: Colors.white,
@@ -451,16 +385,16 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
                   ),
-                  elevation: _selectedPackage != null && !_isProcessing ? 4 : 0,
+                  elevation: _selectedPackage != null ? 4 : 0,
                 ).copyWith(
-                  backgroundColor: _selectedPackage != null && !_isProcessing
+                  backgroundColor: _selectedPackage != null
                       ? WidgetStateProperty.all<Color>(
                           AppTheme.orange500,
                         )
                       : null,
                 ),
                 child: Container(
-                  decoration: _selectedPackage != null && !_isProcessing
+                  decoration: _selectedPackage != null
                       ? BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [
@@ -473,7 +407,7 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                       : null,
                   padding: AppTheme.spacing(AppTheme.spacing4),
                   child: Text(
-                    _isProcessing ? '처리 중...' : '구매하기',
+                    '결제하기',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -510,7 +444,8 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
                   Text(
                     '• 에너지는 공고 지원 시 예약금으로 사용됩니다.\n'
                     '• 근무 완료 시 에너지가 반환됩니다.\n'
-                    '• 노쇼 시 에너지는 반환되지 않습니다.',
+                    '• 노쇼 시 에너지는 반환되지 않습니다.\n'
+                    '• 충전 패키지는 1·3·5개만 제공되며, 1회 최대 $kMaxEnergyPurchaseAmount개까지 구매할 수 있습니다.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontSize: 14,
                       color: AppTheme.primaryBlueDark, // blue-800

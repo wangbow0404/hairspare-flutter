@@ -46,8 +46,32 @@ abstract final class ScheduleSpaceRental {
     return DateTime(y, m, d, h, min ?? 0);
   }
 
+  static String bookerName(Schedule schedule) {
+    final name = schedule.spare?.name.trim();
+    if (name != null && name.isNotEmpty) return name;
+    if (schedule.spareId.isNotEmpty) return schedule.spareId;
+    return '예약자';
+  }
+
+  /// `sched-space-{bookingId}` → booking id
+  static String? bookingIdFromSchedule(Schedule schedule) {
+    const prefix = 'sched-space-';
+    if (!schedule.id.startsWith(prefix)) return null;
+    return schedule.id.substring(prefix.length);
+  }
+
+  /// mock·API 공통 chat id 규칙 (`chat-space-{bookingId}`)
+  static String? chatIdFromSchedule(Schedule schedule) {
+    final bookingId = bookingIdFromSchedule(schedule);
+    if (bookingId == null || bookingId.isEmpty) return null;
+    return 'chat-space-$bookingId';
+  }
+
   static String prepaidSummary(Schedule schedule) {
     final amount = NumberFormat('#,###').format(schedule.job?.amount ?? 0);
-    return '${schedule.spare?.name ?? schedule.spareId} | 선결제 $amount원';
+    return '선결제 $amount원';
   }
+
+  static String bookerLine(Schedule schedule) =>
+      '예약자 · ${bookerName(schedule)}';
 }

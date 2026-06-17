@@ -22,6 +22,7 @@ import '../../services/education_service.dart';
 import '../../services/energy_service.dart';
 import '../../services/favorite_service.dart';
 import '../../services/job_service.dart';
+import '../../services/model_match_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/payment_service.dart';
 import '../../services/point_service.dart';
@@ -50,6 +51,7 @@ void configureDependencies() {
 
   sl.registerLazySingleton<AuthService>(() => AuthService());
   sl.registerLazySingleton<JobService>(() => JobService());
+  sl.registerLazySingleton<ModelMatchService>(() => ModelMatchService());
   sl.registerLazySingleton<EducationService>(() => EducationService());
   sl.registerLazySingleton<FavoriteService>(() => FavoriteService());
   sl.registerLazySingleton<ScheduleService>(() => ScheduleService());

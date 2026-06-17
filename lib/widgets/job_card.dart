@@ -23,7 +23,7 @@ class JobCard extends StatelessWidget {
   });
 
   String _formatAmount(int amount) {
-    return '₩${NumberFormat('#,###').format(amount)}';
+    return '${NumberFormat('#,###').format(amount)}원';
   }
 
   String _formatCountdown(int seconds) {
@@ -59,6 +59,22 @@ class JobCard extends StatelessWidget {
     }
   }
 
+  String _formatDateLine(Job job) {
+    final parsed = DateTime.tryParse(job.date);
+    final day = parsed == null
+        ? job.date
+        : '${parsed.month}.${parsed.day} (${_weekdayKo(parsed.weekday)})';
+    final end = job.endTime?.trim();
+    final time = end == null || end.isEmpty ? job.time : '${job.time}~$end';
+    return '$day · $time';
+  }
+
+  String _weekdayKo(int weekday) {
+    const labels = ['월', '화', '수', '목', '금', '토', '일'];
+    if (weekday < 1 || weekday > 7) return '';
+    return labels[weekday - 1];
+  }
+
   @override
   Widget build(BuildContext context) {
     final isUrgentJob = isUrgent || job.isUrgent;
@@ -76,170 +92,136 @@ class JobCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
           child: Padding(
-            padding: AppTheme.spacing(AppTheme.spacing4), // p-4
+            padding: const EdgeInsets.all(AppTheme.spacing4),
             child: Stack(
               children: [
-                // 찜 버튼 - 우측 상단
                 if (onFavoriteToggle != null)
                   Positioned(
-                    top: 0,
-                    right: 0,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: onFavoriteToggle,
-                        borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-                        child: Container(
-                          padding: AppTheme.spacing(AppTheme.spacing2), // p-2
-                          child: IconMapper.icon(
-                            'heart',
-                            size: 20,
-                            color: isFavorite
-                                ? AppTheme.urgentRed // text-red-500 fill-red-500
-                                : AppTheme.textTertiary, // text-gray-400
-                          ) ??
-                              Icon(
-                                isFavorite ? Icons.favorite : Icons.favorite_border,
-                                size: 20, // w-5 h-5
-                                color: isFavorite
-                                    ? AppTheme.urgentRed // text-red-500 fill-red-500
-                                    : AppTheme.textTertiary, // text-gray-400
-                              ),
-                        ),
+                    top: -6,
+                    right: -6,
+                    child: IconButton(
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 40,
+                        minHeight: 40,
                       ),
+                      onPressed: onFavoriteToggle,
+                      icon:
+                          IconMapper.icon(
+                            'heart',
+                            size: 21,
+                            color: isFavorite
+                                ? AppTheme.urgentRed
+                                : AppTheme.textTertiary,
+                          ) ??
+                          Icon(
+                            isFavorite
+                                ? Icons.favorite
+                                : Icons.favorite_border_rounded,
+                            size: 21,
+                            color: isFavorite
+                                ? AppTheme.urgentRed
+                                : AppTheme.textTertiary,
+                          ),
                     ),
                   ),
-
-                // 급구 태그 - 우측 상단 (찜 버튼 왼쪽)
-                if (isUrgentJob)
-                  const Positioned(
-                    top: 0,
-                    right: 64,
-                    child: UrgentJobBadge(fontSize: 12, rocketSize: 16),
-                  ),
-
-                // 메인 콘텐츠
                 Padding(
                   padding: EdgeInsets.only(
-                    right: onFavoriteToggle != null ? 48 : 0, // pr-12 (찜 버튼 공간)
+                    right: onFavoriteToggle != null ? 36 : 0,
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 이미지 영역
-                      Container(
-                        width: 80, // w-20
-                        height: 80, // h-20
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              AppTheme.green200, // from-green-200
-                              AppTheme.blue200, // to-blue-200
-                            ],
-                          ),
-                          borderRadius: AppTheme.borderRadius(AppTheme.radiusLg), // rounded-lg
-                        ),
+                      _JobVisualMark(
+                        shopName: job.shopName,
+                        isUrgent: isUrgentJob,
                       ),
-                      const SizedBox(width: AppTheme.spacing3), // gap-3
-
-                      // 내용 영역
+                      const SizedBox(width: AppTheme.spacing3),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // 태그들
                             Wrap(
-                              spacing: AppTheme.spacing2, // gap-2
+                              spacing: AppTheme.spacing2,
+                              runSpacing: AppTheme.spacing1,
                               children: [
-                                // 시간 태그
-                                Container(
-                                  padding: AppTheme.spacingSymmetric(
-                                    horizontal: AppTheme.spacing2,
-                                    vertical: AppTheme.spacing1,
-                                  ), // px-2 py-1
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.green100, // bg-green-100
-                                    borderRadius: AppTheme.borderRadius(AppTheme.radiusSm), // rounded
+                                if (isUrgentJob)
+                                  const UrgentJobBadge(
+                                    fontSize: 11,
+                                    rocketSize: 12,
                                   ),
-                                  child: Text(
-                                    timeTag,
-                                    style: HomeTextStyles.homeCardTag
-                                        .copyWith(color: AppTheme.green700),
-                                  ),
+                                _JobBadge(
+                                  label: timeTag,
+                                  foreground: AppTheme.green700,
+                                  background: AppTheme.green100,
                                 ),
-                                // 단기/장기 태그
-                                Container(
-                                  padding: AppTheme.spacingSymmetric(
-                                    horizontal: AppTheme.spacing2,
-                                    vertical: AppTheme.spacing1,
-                                  ), // px-2 py-1
-                                  decoration: BoxDecoration(
-                                    color: isShortTermJob
-                                        ? AppTheme.purple100 // bg-purple-100
-                                        : AppTheme.backgroundGray, // bg-gray-100
-                                    borderRadius: AppTheme.borderRadius(AppTheme.radiusSm), // rounded
-                                  ),
-                                  child: Text(
-                                    isShortTermJob ? '단기' : '장기',
-                                    style: HomeTextStyles.homeCardTag.copyWith(
-                                      color: isShortTermJob
-                                          ? AppTheme.purple700
-                                          : AppTheme.textGray700,
-                                    ),
-                                  ),
+                                _JobBadge(
+                                  label: isShortTermJob ? '오늘' : '예약',
+                                  foreground: isShortTermJob
+                                      ? AppTheme.purple700
+                                      : AppTheme.textGray700,
+                                  background: isShortTermJob
+                                      ? AppTheme.purple100
+                                      : AppTheme.backgroundGray,
                                 ),
                               ],
                             ),
-                            const SizedBox(height: AppTheme.spacing2), // mb-2
-
-                            // 미용실 이름 (Next.js에서는 h4로 표시)
+                            const SizedBox(height: AppTheme.spacing2),
                             Text(
                               job.shopName,
-                              style: HomeTextStyles.homeCardTitle,
+                              style: HomeTextStyles.homeCardTitle.copyWith(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                height: 1.25,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: AppTheme.spacing1), // mb-1
-
-                            // 날짜/시간
-                            Text(
-                              '${job.date} ${job.time}',
-                              style: HomeTextStyles.homeCardMeta,
-                            ),
-                            const SizedBox(height: AppTheme.spacing1), // mb-1
-
-                            // 카운트다운 (급구일 때만)
-                            if (isUrgentJob && job.countdown != null) ...[
+                            if (job.title.trim().isNotEmpty) ...[
+                              const SizedBox(height: 2),
                               Text(
-                                _formatCountdown(job.countdown!),
+                                job.title,
                                 style: HomeTextStyles.homeCardMeta.copyWith(
-                                  color: AppTheme.urgentRed,
-                                  fontWeight: FontWeight.w500,
+                                  color: AppTheme.textGray700,
+                                  fontWeight: FontWeight.w600,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: AppTheme.spacing1), // mb-1
                             ],
-
-                            // 금액
-                            Text(
-                              '금액: ${_formatAmount(job.amount)}',
-                              style: HomeTextStyles.homeCardMeta,
+                            const SizedBox(height: AppTheme.spacing2),
+                            _JobMetaLine(
+                              icon: Icons.schedule_rounded,
+                              text: _formatDateLine(job),
                             ),
-                            const SizedBox(height: AppTheme.spacing1), // mb-1
-
-                            // 필요 인원
-                            Text(
-                              '필요 인원: ${job.requiredCount}명',
-                              style: HomeTextStyles.homeCardMeta,
-                            ),
-                            const SizedBox(height: AppTheme.spacing1), // mb-1
-
-                            // 예약금(에너지)
-                            Text(
-                              '예약금(에너지): ${job.energy}개',
-                              style: HomeTextStyles.homeCardMeta,
+                            if (isUrgentJob && job.countdown != null) ...[
+                              const SizedBox(height: AppTheme.spacing1),
+                              _JobMetaLine(
+                                icon: Icons.timer_outlined,
+                                text: _formatCountdown(job.countdown!),
+                                color: AppTheme.urgentRed,
+                              ),
+                            ],
+                            const SizedBox(height: AppTheme.spacing3),
+                            Wrap(
+                              spacing: AppTheme.spacing2,
+                              runSpacing: AppTheme.spacing2,
+                              children: [
+                                _JobInfoPill(
+                                  icon: Icons.payments_outlined,
+                                  label: _formatAmount(job.amount),
+                                  isPrimary: true,
+                                ),
+                                _JobInfoPill(
+                                  icon: Icons.people_alt_outlined,
+                                  label: '${job.requiredCount}명',
+                                ),
+                                _JobInfoPill(
+                                  icon: Icons.bolt_outlined,
+                                  label: '에너지 ${job.energy}',
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -251,6 +233,157 @@ class JobCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _JobVisualMark extends StatelessWidget {
+  const _JobVisualMark({required this.shopName, required this.isUrgent});
+
+  final String shopName;
+  final bool isUrgent;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = shopName.trim().isEmpty ? 'H' : shopName.trim()[0];
+    return Container(
+      width: 68,
+      height: 68,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: isUrgent ? AppTheme.red50 : AppTheme.backgroundGray,
+        borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+        border: Border.all(
+          color: isUrgent
+              ? AppTheme.urgentRed.withValues(alpha: 0.22)
+              : AppTheme.borderGray,
+        ),
+      ),
+      child: Text(
+        initial,
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          color: isUrgent ? AppTheme.urgentRed : AppTheme.stitchPrimary,
+          fontSize: 24,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _JobBadge extends StatelessWidget {
+  const _JobBadge({
+    required this.label,
+    required this.foreground,
+    required this.background,
+  });
+
+  final String label;
+  final Color foreground;
+  final Color background;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing2,
+        vertical: AppTheme.spacing1,
+      ),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
+      ),
+      child: Text(
+        label,
+        style: HomeTextStyles.homeCardTag.copyWith(
+          color: foreground,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _JobMetaLine extends StatelessWidget {
+  const _JobMetaLine({
+    required this.icon,
+    required this.text,
+    this.color = AppTheme.textSecondary,
+  });
+
+  final IconData icon;
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: AppTheme.spacing1),
+        Expanded(
+          child: Text(
+            text,
+            style: HomeTextStyles.homeCardMeta.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _JobInfoPill extends StatelessWidget {
+  const _JobInfoPill({
+    required this.icon,
+    required this.label,
+    this.isPrimary = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool isPrimary;
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = isPrimary
+        ? AppTheme.stitchPrimaryContainer
+        : AppTheme.textGray700;
+    final background = isPrimary ? AppTheme.primaryPurpleLight : AppTheme.backgroundGray;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing2,
+        vertical: AppTheme.spacing1,
+      ),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
+        border: Border.all(
+          color: isPrimary
+              ? AppTheme.stitchPrimaryContainer.withValues(alpha: 0.18)
+              : AppTheme.borderGray,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: foreground),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: HomeTextStyles.homeCardTag.copyWith(
+              color: foreground,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }

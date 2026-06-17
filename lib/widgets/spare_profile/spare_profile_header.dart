@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/router/spare_profile_navigation.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/hairspare_brand_assets.dart';
 import '../../utils/icon_mapper.dart';
 
 /// 로고(홈) · 설정 진입.
@@ -29,14 +30,7 @@ class SpareProfileHeader extends StatelessWidget {
         children: [
           GestureDetector(
             onTap: () => SpareProfileNavigation.openHomeFromLogo(context),
-            child: Text(
-              'HairSpare',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryBlue,
-                  ),
-            ),
+            child: const HairSpareBrandLogo(height: 36),
           ),
           IconButton(
             icon: IconMapper.icon('settings', size: 24, color: AppTheme.textSecondary) ??

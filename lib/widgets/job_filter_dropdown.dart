@@ -45,9 +45,9 @@ class JobFilterDropdown extends StatelessWidget {
               : AppTheme.backgroundWhite,
           border: Border.all(
             color: selectedValue != null
-                ? AppTheme.primaryPurple
+                ? AppTheme.stitchPrimaryContainer
                 : AppTheme.borderGray,
-            width: selectedValue != null ? 2 : 1,
+            width: selectedValue != null ? 1.5 : 1,
           ),
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
           boxShadow: [
@@ -65,8 +65,8 @@ class JobFilterDropdown extends StatelessWidget {
               selectedValue ?? label,
               style: TextStyle(
                 color: selectedValue != null
-                    ? AppTheme.primaryPurple
-                    : AppTheme.textSecondary,
+                    ? AppTheme.stitchPrimary
+                    : AppTheme.stitchTextSecondary,
                 fontSize: 14,
                 fontWeight: selectedValue != null
                     ? FontWeight.w600
@@ -78,8 +78,8 @@ class JobFilterDropdown extends StatelessWidget {
               isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
               size: 20,
               color: selectedValue != null
-                  ? AppTheme.primaryPurple
-                  : AppTheme.textSecondary,
+                  ? AppTheme.stitchPrimary
+                  : AppTheme.stitchTextSecondary,
             ),
           ],
         ),
@@ -119,7 +119,7 @@ class JobFilterDropdown extends StatelessWidget {
             '전체',
             style: TextStyle(
               color: selectedValue == null
-                  ? AppTheme.primaryPurple
+                  ? AppTheme.stitchPrimary
                   : AppTheme.textPrimary,
               fontWeight: selectedValue == null ? FontWeight.w600 : FontWeight.normal,
             ),
@@ -142,7 +142,7 @@ class JobFilterDropdown extends StatelessWidget {
               option,
               style: TextStyle(
                 color: isSelected
-                    ? AppTheme.primaryPurple
+                    ? AppTheme.stitchPrimary
                     : AppTheme.textPrimary,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),

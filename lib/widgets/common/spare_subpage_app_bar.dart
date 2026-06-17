@@ -31,7 +31,7 @@ class SpareSubpageAppBar extends StatelessWidget implements PreferredSizeWidget 
     switch (gradientStyle) {
       case SpareSubpageAppBarGradientStyle.bluePurple:
         return const LinearGradient(
-          colors: [AppTheme.primaryBlue, AppTheme.primaryPurple],
+          colors: [AppTheme.stitchPrimaryContainer, AppTheme.stitchPrimary],
         );
       case SpareSubpageAppBarGradientStyle.purplePink:
         return const LinearGradient(

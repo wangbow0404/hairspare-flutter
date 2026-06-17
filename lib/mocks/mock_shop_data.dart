@@ -4,6 +4,7 @@ import '../models/business_registration_validation.dart';
 import '../models/job.dart';
 import '../models/notification.dart';
 import '../models/spare_profile.dart';
+import '../utils/job_popularity.dart';
 import '../utils/application_status_utils.dart';
 import '../utils/app_exception.dart';
 import '../utils/job_work_date_utils.dart';
@@ -71,7 +72,7 @@ class MockShopData {
         'time': '14:00',
         'endTime': '22:00',
         'amount': 50000,
-        'energy': 50,
+        'energy': 5,
         'requiredCount': 1,
         'regionId': 'seoul-gangnam',
         'isUrgent': true,
@@ -89,7 +90,7 @@ class MockShopData {
         'time': '10:00',
         'endTime': '18:00',
         'amount': 80000,
-        'energy': 80,
+        'energy': 4,
         'requiredCount': 1,
         'regionId': 'seoul-mapo',
         'isUrgent': false,
@@ -107,7 +108,7 @@ class MockShopData {
         'time': '09:00',
         'endTime': '13:00',
         'amount': 45000,
-        'energy': 45,
+        'energy': 2,
         'requiredCount': 2,
         'regionId': 'seoul-gangnam',
         'isUrgent': false,
@@ -143,8 +144,14 @@ class MockShopData {
       (j) => j['id'] == jobId,
       orElse: () => <String, dynamic>{},
     );
-    if (found.isEmpty) return <String, dynamic>{'id': jobId};
-    return Map<String, dynamic>.from(found);
+    if (found.isNotEmpty) {
+      return Map<String, dynamic>.from(found);
+    }
+    final spareOnly = MockSpareData.jobJsonSnapshot(jobId);
+    if (spareOnly != null) {
+      return spareOnly;
+    }
+    return <String, dynamic>{'id': jobId};
   }
 
   /// mock-spare-1(로그인) ↔ spare-mock-1(지원·프로필) 통일.
@@ -342,6 +349,11 @@ class MockShopData {
       }
       final appStatus =
           ApplicationStatusUtils.normalize(raw['status']?.toString() ?? '');
+      if (appStatus == 'cancelled_contact_violation') {
+        throw ValidationException(
+          '연락처 위반으로 취소된 공고입니다. 다시 지원할 수 없습니다.',
+        );
+      }
       return appStatus == 'pending' || appStatus == 'approved';
     });
     if (duplicate) {
@@ -354,6 +366,7 @@ class MockShopData {
         'id': 'app-mock-${DateTime.now().millisecondsSinceEpoch}',
         'status': 'pending',
         'createdAt': DateTime.now().toIso8601String(),
+        'lockedEnergy': _energyFromJobSnapshot(snapshot),
         'job': snapshot,
         'spare': {
           ...spare,
@@ -362,6 +375,87 @@ class MockShopData {
         },
       },
     );
+  }
+
+  static int _energyFromJobSnapshot(Map<String, dynamic> snapshot) {
+    final raw = snapshot['energy'];
+    if (raw is int) return raw;
+    return int.tryParse(raw?.toString() ?? '') ?? 0;
+  }
+
+  /// 연락처 위반 3회 — 스페어 지원 취소. 잠금 에너지 반환값(몰수 기록용).
+  static Future<int> cancelApplicationForContactViolation({
+    required String jobId,
+    required String spareId,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 80));
+    final norm = normalizeSpareId(spareId);
+    final index = _shopApplicationsJson.indexWhere((raw) {
+      final job = raw['job'];
+      final s = raw['spare'];
+      if (job is! Map || s is! Map) return false;
+      if (job['id']?.toString() != jobId) return false;
+      if (normalizeSpareId(s['id']?.toString() ?? '') != norm) return false;
+      final appStatus =
+          ApplicationStatusUtils.normalize(raw['status']?.toString() ?? '');
+      return appStatus == 'pending';
+    });
+    if (index < 0) return 0;
+
+    final raw = Map<String, dynamic>.from(_shopApplicationsJson[index]);
+    final locked = raw['lockedEnergy'] is int
+        ? raw['lockedEnergy'] as int
+        : int.tryParse(raw['lockedEnergy']?.toString() ?? '') ?? 0;
+    _shopApplicationsJson[index] = {
+      ...raw,
+      'status': 'cancelled_contact_violation',
+      'cancelledAt': DateTime.now().toIso8601String(),
+      'cancelReason': 'contact_violation',
+    };
+    return locked;
+  }
+
+  /// 스페어·공고 지원 상태 (없으면 null).
+  static Future<String?> spareApplicationStatusForJob({
+    required String jobId,
+    required String spareId,
+  }) async {
+    final norm = normalizeSpareId(spareId);
+    for (final raw in _shopApplicationsJson) {
+      final job = raw['job'];
+      final s = raw['spare'];
+      if (job is! Map || s is! Map) continue;
+      if (job['id']?.toString() != jobId) continue;
+      if (normalizeSpareId(s['id']?.toString() ?? '') != norm) continue;
+      return ApplicationStatusUtils.normalize(raw['status']?.toString() ?? '');
+    }
+    return null;
+  }
+
+  /// 인기도 산정용 — 지원·조회 집계 (mock).
+  static Map<String, JobPopularityMetrics> popularityMetricsForJobs(
+    Iterable<String> jobIds,
+  ) {
+    final applicationCounts = <String, int>{};
+    for (final raw in _shopApplicationsJson) {
+      final job = raw['job'];
+      if (job is! Map) continue;
+      final id = job['id']?.toString();
+      if (id == null || id.isEmpty) continue;
+      final status =
+          ApplicationStatusUtils.normalize(raw['status']?.toString() ?? '');
+      if (status == 'pending' || status == 'approved') {
+        applicationCounts[id] = (applicationCounts[id] ?? 0) + 1;
+      }
+    }
+
+    return {
+      for (final id in jobIds)
+        id: JobPopularityMetrics(
+          applicationCount: applicationCounts[id] ?? 0,
+          viewCount: MockSpareData.mockViewCountForJob(id),
+        ),
+    };
   }
 
   static Job? _jobRecordForId(String jobId) {
@@ -480,7 +574,7 @@ class MockShopData {
     String? ocrRequestId,
   }) async {
     await Future.delayed(const Duration(milliseconds: 400));
-    return BusinessRegistrationValidation(
+    return const BusinessRegistrationValidation(
       isNumberFormatValid: true,
       requiresNtsCheck: false,
       ntsVerified: true,
@@ -598,7 +692,7 @@ class MockShopData {
     contactViolationRoomCount++;
     final now = DateTime.now();
     final penaltyEnd = now.add(
-      Duration(days: ContactViolationPolicy.shopPenaltyDays),
+      const Duration(days: ContactViolationPolicy.shopPenaltyDays),
     );
     chatBlockedUntil = _later(chatBlockedUntil, penaltyEnd);
     jobPostingSuspendedUntil = _later(jobPostingSuspendedUntil, penaltyEnd);
@@ -606,7 +700,7 @@ class MockShopData {
     if (contactViolationRoomCount >=
         ContactViolationPolicy.maxShopRoomPenaltiesBeforeBan) {
       MockAuthData.terminateShopAccount(shopId);
-      return ContactViolationResult(
+      return const ContactViolationResult(
         attemptCount: ContactViolationPolicy.maxAttemptsPerChat,
         maxAttempts: ContactViolationPolicy.maxAttemptsPerChat,
         outcome: ContactViolationOutcome.shopAccountTerminated,
@@ -628,7 +722,7 @@ class MockShopData {
           '해당 대화방이 삭제되었습니다.\n'
           '${ContactViolationPolicy.shopPenaltyDays}일간 모든 대화와 공고 등록이 '
           '제한됩니다. '
-          '(제재 ${contactViolationRoomCount}/'
+          '(제재 $contactViolationRoomCount/'
           '${ContactViolationPolicy.maxShopRoomPenaltiesBeforeBan}회)',
       chatDeleted: true,
       shopChatBlockedUntil: chatBlockedUntil,
@@ -641,7 +735,7 @@ class MockShopData {
     if (unilateralCancelCount30d >=
         ScheduleCancellationPolicy.shopUnilateralCancelLimit30d) {
       jobPostingSuspendedUntil = DateTime.now().add(
-        Duration(
+        const Duration(
           days: ScheduleCancellationPolicy.shopJobPostingSuspensionDays,
         ),
       );

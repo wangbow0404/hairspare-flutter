@@ -16,6 +16,7 @@ import '../../utils/schedule_work_session.dart';
 import '../../utils/schedule_cancel_flow.dart';
 import '../../utils/schedule_cancellation_policy.dart';
 import '../../widgets/common/glass_modal.dart';
+import '../../widgets/stitch/stitch_empty_state.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../widgets/korean_table_calendar_builders.dart';
 import '../../widgets/schedule/schedule_refined_list_card.dart';
@@ -344,8 +345,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     margin: AppTheme.spacing(AppTheme.spacing4),
                     decoration: BoxDecoration(
                       color: AppTheme.backgroundWhite,
-                      borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXl),
                       border: Border.all(color: AppTheme.borderGray),
+                      boxShadow: AppTheme.stitchSoftShadow,
                     ),
                     child: TableCalendar(
                       firstDay: DateTime.utc(2020, 1, 1),
@@ -383,7 +385,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       },
                       calendarStyle: const CalendarStyle(
                         markerDecoration: BoxDecoration(
-                          color: AppTheme.primaryBlue,
+                          color: AppTheme.stitchPrimaryContainer,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -393,25 +395,19 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     ),
                   ),
                   if (sortedDates.isEmpty)
-                    Padding(
-                      padding: AppTheme.spacing(AppTheme.spacing4),
-                      child: Center(
-                        child: Text(
-                          '확정된 일정이 없습니다.',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: AppTheme.textSecondary),
-                        ),
+                    const Padding(
+                      padding: EdgeInsets.all(AppTheme.spacing4),
+                      child: StitchEmptyState(
+                        message: '확정된 일정이 없습니다',
+                        iconName: 'calendar',
                       ),
                     )
                   else if (datesToShow.isEmpty)
-                    Padding(
-                      padding: AppTheme.spacing(AppTheme.spacing4),
-                      child: Center(
-                        child: Text(
-                          '선택한 날짜에 일정이 없습니다.',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: AppTheme.textSecondary),
-                        ),
+                    const Padding(
+                      padding: EdgeInsets.all(AppTheme.spacing4),
+                      child: StitchEmptyState(
+                        message: '선택한 날짜에 일정이 없습니다',
+                        iconName: 'calendar',
                       ),
                     )
                   else
@@ -438,27 +434,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         ),
                         padding: AppTheme.spacing(AppTheme.spacing4),
                         decoration: BoxDecoration(
-                          borderRadius: AppTheme.borderRadius(
-                            AppTheme.radiusLg,
-                          ),
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Colors.white.withValues(alpha: 0.98),
-                              const Color(0xFFF8FAFC),
-                            ],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.06),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.95),
-                          ),
+                          borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                          color: AppTheme.backgroundWhite,
+                          boxShadow: AppTheme.stitchSoftShadow,
+                          border: Border.all(color: AppTheme.borderGray),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -490,8 +469,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                   ),
                                   decoration: BoxDecoration(
                                     color: isPast
-                                        ? const Color(0xFFE8EDF2)
-                                        : const Color(0xFFE0E7FF),
+                                        ? AppTheme.surfaceContainerLow
+                                        : AppTheme.primaryPurpleLight,
                                     borderRadius: AppTheme.borderRadius(
                                       AppTheme.radiusFull,
                                     ),
@@ -505,8 +484,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                           fontSize: 11,
                                           fontWeight: FontWeight.w700,
                                           color: isPast
-                                              ? const Color(0xFF64748B)
-                                              : const Color(0xFF4338CA),
+                                              ? AppTheme.stitchTextSecondary
+                                              : AppTheme.stitchPrimary,
                                         ),
                                   ),
                                 ),

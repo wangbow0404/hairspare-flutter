@@ -7,10 +7,10 @@ import 'app_theme.dart';
 abstract final class HomeTextStyles {
   /// 섹션 제목 — `fontSize: 20`, bold, `textPrimary`
   static const TextStyle sectionTitle = TextStyle(
-    fontSize: 20,
-    fontWeight: FontWeight.bold,
-    color: AppTheme.textPrimary,
-    height: 1.25,
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    color: AppTheme.stitchTextPrimary,
+    height: 1.3,
   );
 
   /// 카드 내 강조 제목 (JobCard 미용실명 등) — 14, semibold

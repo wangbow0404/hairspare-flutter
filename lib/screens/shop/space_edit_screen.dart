@@ -101,10 +101,10 @@ class _ShopSpaceEditBodyState extends State<_ShopSpaceEditBody> {
     final vm = context.watch<ShopSpaceFormViewModel>();
 
     if (vm.isLoading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        appBar: const ShopJobNewAppBar(title: '공간 수정'),
-        body: const Center(child: CircularProgressIndicator()),
+        appBar: ShopJobNewAppBar(title: '공간 수정'),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 

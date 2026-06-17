@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:hairspare/core/di/service_locator.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../models/schedule.dart';
 import '../../models/shop_tier.dart';
+import '../../services/chat_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/icon_mapper.dart';
 import '../../utils/navigation_helper.dart';
@@ -655,17 +658,48 @@ class ShopScheduleScrollContent extends StatelessWidget {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: AppTheme.spacing1),
-                                  Text(
-                                    isSpaceRental
-                                        ? ScheduleSpaceRental.prepaidSummary(schedule)
-                                        : '${schedule.spare?.name ?? schedule.spareId} | ${NumberFormat('#,###').format(schedule.job?.amount ?? 0)}원',
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      fontSize: 12,
-                                      color: AppTheme.textTertiary,
+                                  if (isSpaceRental) ...[
+                                    Text(
+                                      ScheduleSpaceRental.bookerLine(schedule),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppTheme.textSecondary,
+                                          ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                    const SizedBox(height: AppTheme.spacing1),
+                                    Text(
+                                      ScheduleSpaceRental.prepaidSummary(
+                                        schedule,
+                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            fontSize: 12,
+                                            color: AppTheme.textTertiary,
+                                          ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ] else
+                                    Text(
+                                      '${schedule.spare?.name ?? schedule.spareId} | ${NumberFormat('#,###').format(schedule.job?.amount ?? 0)}원',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            fontSize: 12,
+                                            color: AppTheme.textTertiary,
+                                          ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                 ],
                               ),
                             ),
@@ -740,7 +774,12 @@ class ShopScheduleScrollContent extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: () => NavigationHelper.navigateToMessages(context),
+                    onPressed: vm.selectedSchedule == null
+                        ? null
+                        : () => _openSpaceBookingChat(
+                              context,
+                              vm.selectedSchedule!,
+                            ),
                     child: const Text('채팅방 열기'),
                   ),
                 ),
@@ -940,6 +979,29 @@ class ShopScheduleScrollContent extends StatelessWidget {
         const SizedBox(height: 80),
       ],
     );
+  }
+
+  static Future<void> _openSpaceBookingChat(
+    BuildContext context,
+    Schedule schedule,
+  ) async {
+    final chatService = sl<ChatService>();
+    final chatId = await chatService.findChatIdForSpaceSchedule(schedule);
+    if (!context.mounted) return;
+    if (chatId != null && chatId.isNotEmpty) {
+      NavigationHelper.navigateToChat(context, chatId);
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '${ScheduleSpaceRental.bookerName(schedule)}님과의 채팅방을 찾을 수 없습니다. '
+          '메시지 목록에서 확인해 주세요.',
+        ),
+        backgroundColor: AppTheme.urgentRed,
+      ),
+    );
+    NavigationHelper.navigateToMessages(context);
   }
 }
 

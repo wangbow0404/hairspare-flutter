@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/router/app_navigation.dart';
 import '../../models/job.dart';
 import '../../providers/favorite_provider.dart';
 import '../../providers/job_provider.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/banner_carousel.dart';
+import '../../widgets/stitch/stitch_hero_banner.dart';
 import '../../widgets/category_grid.dart';
 import '../../widgets/category_jobs_section.dart';
 import '../../widgets/customer_service_section.dart';
@@ -15,11 +14,13 @@ import '../../widgets/normal_jobs_section.dart';
 import '../../widgets/popular_jobs_section.dart';
 import '../../widgets/upcoming_shops_section.dart';
 import '../../widgets/urgent_job_section.dart';
+import '../../utils/job_popularity.dart';
 import '../../screens/spare/challenge_screen.dart';
 import '../../screens/spare/education_screen.dart';
 import '../../screens/spare/energy_screen.dart';
 import '../../screens/spare/job_detail_screen.dart';
 import '../../screens/spare/jobs_list_screen.dart';
+import '../../screens/spare/model_match_filter_screen.dart';
 import '../../screens/spare/points_screen.dart';
 import '../../screens/spare/region_select_screen.dart';
 import '../../screens/spare/work_check_screen.dart';
@@ -64,15 +65,12 @@ class SpareHomeScrollView extends StatelessWidget {
         );
         break;
       case 1:
-        AppNavigation.goSpareMainTab(context, 1);
-        break;
-      case 2:
         Navigator.push(
           context,
           MaterialPageRoute<void>(builder: (context) => const EnergyScreen()),
         );
         break;
-      case 3:
+      case 2:
         Navigator.push(
           context,
           MaterialPageRoute<void>(builder: (context) => const EducationScreen()),
@@ -116,26 +114,11 @@ class SpareHomeScrollView extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: SizedBox(
-                    height: 240,
-                    width: double.infinity,
-                    child: BannerCarousel(
-                      height: 240,
-                      bannerImages: const [
-                        'assets/images/banners/banner1.jpg',
-                        'assets/images/banners/banner2.jpg',
-                        'assets/images/banners/banner3.jpg',
-                        'assets/images/banners/banner4.jpg',
-                      ],
-                      onBannerTap: (i) => _onBannerTap(context, i),
-                    ),
-                  ),
-                ),
+              StitchHeroBanner(
+                height: 240,
+                onCtaTap: (index) => _onBannerTap(context, index),
               ),
+              const SizedBox(height: AppTheme.spacing4),
               Consumer<JobProvider>(
                 builder: (context, jobProvider, _) {
                   if (jobProvider.isLoading) {
@@ -174,9 +157,9 @@ class SpareHomeScrollView extends StatelessWidget {
                         padding: const EdgeInsets.only(top: 0, bottom: AppTheme.spacing2),
                         categories: [
                           CategoryItem(
-                            emoji: '📋',
+                            emoji: '',
+                            icon: Icons.work_outline,
                             label: '공고별',
-                            has3DEffect: true,
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -187,7 +170,8 @@ class SpareHomeScrollView extends StatelessWidget {
                             },
                           ),
                           CategoryItem(
-                            emoji: '📅',
+                            emoji: '',
+                            icon: Icons.calendar_month_outlined,
                             label: '스케줄표',
                             onTap: () {
                               Navigator.push<void>(
@@ -200,9 +184,9 @@ class SpareHomeScrollView extends StatelessWidget {
                             },
                           ),
                           CategoryItem(
-                            emoji: '🏪',
+                            emoji: '',
+                            icon: Icons.storefront_outlined,
                             label: '스토어',
-                            has3DEffect: true,
                             onTap: () {
                               showDialog<void>(
                                 context: context,
@@ -220,9 +204,9 @@ class SpareHomeScrollView extends StatelessWidget {
                             },
                           ),
                           CategoryItem(
-                            emoji: '💰',
+                            emoji: '',
+                            icon: Icons.monetization_on_outlined,
                             label: '+포인트',
-                            has3DEffect: true,
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -233,7 +217,8 @@ class SpareHomeScrollView extends StatelessWidget {
                             },
                           ),
                           CategoryItem(
-                            emoji: '🗺️',
+                            emoji: '',
+                            icon: Icons.chair_outlined,
                             label: '공간대여',
                             onTap: () {
                               Navigator.push(
@@ -245,7 +230,8 @@ class SpareHomeScrollView extends StatelessWidget {
                             },
                           ),
                           CategoryItem(
-                            emoji: '📚',
+                            emoji: '',
+                            icon: Icons.school_outlined,
                             label: '교육',
                             onTap: () {
                               Navigator.push(
@@ -257,7 +243,8 @@ class SpareHomeScrollView extends StatelessWidget {
                             },
                           ),
                           CategoryItem(
-                            emoji: '🎯',
+                            emoji: '',
+                            icon: Icons.star_outline_rounded,
                             label: '챌린지참여',
                             onTap: () {
                               Navigator.push(
@@ -269,29 +256,44 @@ class SpareHomeScrollView extends StatelessWidget {
                             },
                           ),
                           CategoryItem(
-                            emoji: '💡',
-                            label: '커넥트',
+                            emoji: '',
+                            icon: Icons.favorite_outline_rounded,
+                            label: '모델매칭',
                             onTap: () {
-                              showDialog<void>(
-                                context: context,
-                                barrierDismissible: true,
-                                builder: (context) => AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(AppTheme.radius2xl),
-                                  ),
-                                  title: const Text('준비 중'),
-                                  content: const Text('커넥트 기능은 준비 중입니다.'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text('확인'),
-                                    ),
-                                  ],
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute<void>(
+                                  builder: (context) =>
+                                      const ModelMatchFilterScreen(),
                                 ),
                               );
                             },
                           ),
                         ],
+                      ),
+                      Consumer<FavoriteProvider>(
+                        builder: (context, favoriteProvider, _) {
+                          final favoriteMap = favoriteProvider.favoriteJobIds.fold<Map<String, bool>>(
+                            {},
+                            (map, jobId) => map..[jobId] = true,
+                          );
+                          return UrgentJobSection(
+                            urgentJobs: jobProvider.urgentJobs,
+                            favoriteMap: favoriteMap,
+                            onJobTap: (job) => _openJobDetail(context, job),
+                            onFavoriteToggle: (jobId, isFav) =>
+                                _toggleFavorite(context, jobId, isFav),
+                            onViewAll: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute<void>(
+                                  builder: (context) =>
+                                      const JobsListScreen(filter: 'urgent'),
+                                ),
+                              );
+                            },
+                          );
+                        },
                       ),
                       Consumer<JobProvider>(
                         builder: (context, jobProvider2, _) {
@@ -324,30 +326,23 @@ class SpareHomeScrollView extends StatelessWidget {
                             {},
                             (map, jobId) => map..[jobId] = true,
                           );
-                          return UrgentJobSection(
-                            urgentJobs: jobProvider.urgentJobs,
-                            favoriteMap: favoriteMap,
-                            onJobTap: (job) => _openJobDetail(context, job),
-                            onFavoriteToggle: (jobId, isFav) => _toggleFavorite(context, jobId, isFav),
-                          );
-                        },
-                      ),
-                      Consumer<FavoriteProvider>(
-                        builder: (context, favoriteProvider, _) {
-                          final favoriteMap = favoriteProvider.favoriteJobIds.fold<Map<String, bool>>(
-                            {},
-                            (map, jobId) => map..[jobId] = true,
-                          );
                           final allJobs = [...jobProvider.urgentJobs, ...jobProvider.normalJobs];
-                          final popularJobs = List<Job>.from(allJobs)
-                            ..sort((a, b) => b.requiredCount.compareTo(a.requiredCount));
-                          final topPopularJobs = popularJobs.take(10).toList();
+                          final topPopularJobs =
+                              JobPopularity.topPopular(allJobs);
 
                           return PopularJobsSection(
                             jobs: topPopularJobs,
                             favoriteMap: favoriteMap,
                             onJobTap: (job) => _openJobDetail(context, job),
                             onFavoriteToggle: (jobId, isFav) => _toggleFavorite(context, jobId, isFav),
+                            onViewAll: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute<void>(
+                                  builder: (context) => const JobsListScreen(),
+                                ),
+                              );
+                            },
                           );
                         },
                       ),
@@ -370,6 +365,14 @@ class SpareHomeScrollView extends StatelessWidget {
                             favoriteMap: favoriteMap,
                             onJobTap: (job) => _openJobDetail(context, job),
                             onFavoriteToggle: (jobId, isFav) => _toggleFavorite(context, jobId, isFav),
+                            onViewAll: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute<void>(
+                                  builder: (context) => const JobsListScreen(),
+                                ),
+                              );
+                            },
                           );
                         },
                       ),
@@ -407,11 +410,22 @@ class SpareHomeScrollView extends StatelessWidget {
                             {},
                             (map, jobId) => map..[jobId] = true,
                           );
+                          final allJobs = [...jobProvider.urgentJobs, ...jobProvider.normalJobs];
+                          final popularJobIds = JobPopularity.popularJobIds(allJobs);
                           return NormalJobsSection(
                             jobs: jobProvider.normalJobs,
                             favoriteMap: favoriteMap,
+                            popularJobIds: popularJobIds,
                             onJobTap: (job) => _openJobDetail(context, job),
                             onFavoriteToggle: (jobId, isFav) => _toggleFavorite(context, jobId, isFav),
+                            onViewAll: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute<void>(
+                                  builder: (context) => const JobsListScreen(),
+                                ),
+                              );
+                            },
                           );
                         },
                       ),

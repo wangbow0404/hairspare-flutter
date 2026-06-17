@@ -158,9 +158,28 @@ class _WorkProposalReviewSheetState extends State<WorkProposalReviewSheet> {
 
   Future<void> _accept(BuildContext context) async {
     final service = sl<ScheduleService>();
+    final messenger = sl<GlobalMessengerService>();
     var conflicts =
         await service.findAcceptProposalConflicts(widget.schedule.id);
     if (!context.mounted) return;
+
+    final otherProposed = conflicts
+        .where(
+          (s) =>
+              s.status == 'proposed' && s.id != widget.schedule.id,
+        )
+        .toList();
+    if (otherProposed.isNotEmpty) {
+      for (final s in otherProposed) {
+        await service.rejectWorkProposal(s.id);
+      }
+      messenger.showInfo('겹치는 제안 ${otherProposed.length}건을 거절했습니다.');
+      widget.onResolved();
+      conflicts =
+          await service.findAcceptProposalConflicts(widget.schedule.id);
+      if (!context.mounted) return;
+    }
+
     if (conflicts.isNotEmpty) {
       final resolved = await ScheduleConflictDialog.show(
         context: context,
@@ -168,14 +187,22 @@ class _WorkProposalReviewSheetState extends State<WorkProposalReviewSheet> {
         conflicts: conflicts,
         onResolved: () async => widget.onResolved(),
       );
-      if (!resolved || !context.mounted) return;
+      if (!resolved || !context.mounted) {
+        messenger.showError('겹치는 근무를 정리해야 수락할 수 있어요.');
+        return;
+      }
       conflicts =
           await service.findAcceptProposalConflicts(widget.schedule.id);
-      if (conflicts.isNotEmpty) return;
+      if (!context.mounted) return;
+      if (conflicts.isNotEmpty) {
+        messenger.showError(
+          '아직 겹치는 근무가 남아 있습니다. 스케줄표에서 확인해 주세요.',
+        );
+        return;
+      }
     }
 
     setState(() => _submitting = true);
-    final messenger = sl<GlobalMessengerService>();
     try {
       await service.acceptWorkProposal(widget.schedule.id);
       if (!context.mounted) return;

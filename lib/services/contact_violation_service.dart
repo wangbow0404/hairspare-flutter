@@ -44,6 +44,8 @@ class ContactViolationService {
         ),
         userMessage: data['userMessage']?.toString() ?? '',
         chatDeleted: data['chatDeleted'] as bool? ?? false,
+        applicationCancelled: data['applicationCancelled'] as bool? ?? false,
+        energyForfeited: data['energyForfeited'] as int? ?? 0,
         accountTerminated: data['accountTerminated'] as bool? ?? false,
       );
     } on DioException catch (e) {

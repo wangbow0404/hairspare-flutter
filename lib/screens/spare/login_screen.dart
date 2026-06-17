@@ -7,6 +7,7 @@ import '../../theme/app_theme.dart';
 import '../../core/router/app_navigation.dart';
 import '../../core/router/app_routes.dart';
 import '../../widgets/social_login_button.dart'; // SocialLoginButton import
+import '../../widgets/common/hairspare_brand_assets.dart';
 import '../../utils/icon_mapper.dart'; // IconMapper import
 import '../../services/social_auth_service.dart';
 import '../../utils/api_config.dart';
@@ -287,45 +288,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
                             Column(
                               children: [
                                 const SizedBox(height: AppTheme.spacing12),
-                                Container(
-                                  width: 80,
-                                  height: 80,
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [Color(0xFF9333EA), Color(0xFF7C3AED)],
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.1),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Center(
-                                    child: Text(
-                                      'H',
-                                      style: TextStyle(
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: AppTheme.spacing4),
-                                const Text(
-                                  'hairspare',
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF7C3AED),
-                                    letterSpacing: -0.5,
-                                  ),
-                                ),
+                                const HairSpareBrandSymbol(),
                               ],
                             ),
 

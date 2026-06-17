@@ -38,18 +38,10 @@ class SpareNotificationTile extends StatelessWidget {
                 : AppTheme.backgroundWhite.withValues(alpha: 0.92),
             borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
             border: Border.all(
-              color: isUnread ? AppTheme.primaryBlue.withValues(alpha: 0.35) : AppTheme.borderGray,
+              color: isUnread ? AppTheme.stitchPrimaryContainer.withValues(alpha: 0.35) : AppTheme.borderGray,
               width: isUnread ? 1.5 : 1,
             ),
-            boxShadow: isUnread
-                ? [
-                    BoxShadow(
-                      color: AppTheme.primaryBlue.withValues(alpha: 0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
+            boxShadow: isUnread ? AppTheme.stitchSoftShadow : null,
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,7 +70,7 @@ class SpareNotificationTile extends StatelessWidget {
                             height: 8,
                             margin: const EdgeInsets.only(left: AppTheme.spacing2),
                             decoration: const BoxDecoration(
-                              color: AppTheme.primaryBlue,
+                              color: AppTheme.stitchPrimaryContainer,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -128,16 +120,16 @@ class _NotificationTypeIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (IconData icon, Color bg) = switch (type) {
-      'work_proposal' => (Icons.work_outline, AppTheme.primaryBlue),
+      'work_proposal' => (Icons.work_outline, AppTheme.stitchPrimaryContainer),
       'application_accepted' => (Icons.check_circle_outline, AppTheme.primaryGreen),
       'application_received' => (Icons.person_add_alt_1_outlined, AppTheme.primaryPurple),
       'job_closing' => (Icons.timer_outlined, AppTheme.orange500),
       'space_booking_request' ||
       'space_booking_confirmed' =>
-        (Icons.meeting_room_outlined, AppTheme.primaryBlue),
+        (Icons.meeting_room_outlined, AppTheme.stitchPrimaryContainer),
       'schedule_reminder' || 'schedule_confirmed' => (
           Icons.calendar_today_outlined,
-          AppTheme.primaryBlue,
+          AppTheme.stitchPrimaryContainer,
         ),
       'message_received' => (Icons.chat_bubble_outline, AppTheme.textSecondary),
       _ => (Icons.notifications_outlined, AppTheme.textSecondary),
@@ -196,13 +188,13 @@ class SpareNotificationSectionHeader extends StatelessWidget {
                 vertical: 2,
               ),
               decoration: BoxDecoration(
-                color: AppTheme.primaryBlue.withValues(alpha: 0.12),
+                color: AppTheme.stitchPrimaryContainer.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppTheme.radiusFull),
               ),
               child: Text(
                 '$count',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppTheme.primaryBlue,
+                      color: AppTheme.stitchPrimaryContainer,
                       fontWeight: FontWeight.w700,
                     ),
               ),

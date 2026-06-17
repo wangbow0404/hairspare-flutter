@@ -334,8 +334,8 @@ class EducationPaymentBreakdownCard extends StatelessWidget {
             iconColor: AppTheme.primaryBlue,
             iconBackground: AppTheme.blue100,
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing3),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppTheme.spacing3),
             child: Divider(
               height: 1,
               color: AppTheme.borderGray,
@@ -467,7 +467,7 @@ class EducationInsufficientEnergyBanner extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '에너지 ${shortfall}개를 더 충전하면 신청할 수 있어요.',
+                      '에너지 $shortfall개를 더 충전하면 신청할 수 있어요.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             fontSize: 13,
                             color: AppTheme.textSecondary,

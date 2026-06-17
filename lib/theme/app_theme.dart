@@ -6,6 +6,13 @@ class AppTheme {
   static const Color primaryBlue = Color(0xFF3B82F6); // blue-500
   static const Color primaryBlueDark = Color(0xFF2563EB); // blue-600
   static const Color primaryPurple500 = Color(0xFFA855F7); // purple-500
+  /// Stitch design system — primary brand purple
+  static const Color stitchPrimary = Color(0xFF7800CE);
+  static const Color stitchPrimaryContainer = Color(0xFF9333EA);
+  static const Color stitchTextPrimary = Color(0xFF191F28);
+  static const Color stitchTextSecondary = Color(0xFF4E5968);
+  static const Color surfaceContainerLow = Color(0xFFF3F4F5);
+
   static const Color primaryPurple = Color(0xFF9333EA); // purple-600
   static const Color primaryPurpleDark = Color(0xFF7E22CE); // purple-700
   static const Color primaryPurpleDarker = Color(0xFF6B21A8); // purple-800
@@ -69,6 +76,7 @@ class AppTheme {
   // 테두리 색상
   static const Color borderGray = Color(0xFFE5E7EB); // gray-200
   static const Color borderGray300 = Color(0xFFD1D5DB); // gray-300
+  static const Color outline = Color(0xFF7E7386); // Stitch outline icons
   
   // 간격 시스템 (8px 단위, Tailwind의 4px 단위 × 2)
   static const double spacing1 = 4.0;   // 0.5 (Tailwind)
@@ -124,6 +132,22 @@ class AppTheme {
       );
   
   // 그림자 시스템
+  /// Stitch hero banner gradient (#9333ea → #7800ce)
+  static const LinearGradient stitchHeroGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [stitchPrimaryContainer, stitchPrimary],
+  );
+
+  /// Subtle card shadow (Stitch soft-shadow)
+  static List<BoxShadow> get stitchSoftShadow => [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.05),
+      blurRadius: 12,
+      offset: const Offset(0, 4),
+    ),
+  ];
+
   static List<BoxShadow> get shadowSm => [
     BoxShadow(
       color: Colors.black.withValues(alpha: 0.05),
@@ -169,8 +193,8 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryBlue,
-        primary: primaryBlue,
+        seedColor: stitchPrimary,
+        primary: stitchPrimary,
         secondary: primaryPurple,
         surface: backgroundWhite,
         error: urgentRed,
@@ -189,7 +213,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryBlue,
+          backgroundColor: stitchPrimaryContainer,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
@@ -282,7 +306,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: primaryBlue, width: 2),
+          borderSide: const BorderSide(color: stitchPrimaryContainer, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
@@ -370,7 +394,7 @@ class AppTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusLg),
-        borderSide: const BorderSide(color: primaryBlue, width: 2),
+        borderSide: const BorderSide(color: stitchPrimaryContainer, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusLg),

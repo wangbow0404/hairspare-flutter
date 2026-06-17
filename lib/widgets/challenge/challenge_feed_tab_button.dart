@@ -50,7 +50,9 @@ class ChallengeFeedTabButton extends StatelessWidget {
                 height: 2,
                 width: isSelected ? 28 : 0,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isSelected
+                      ? AppTheme.stitchPrimaryContainer.withValues(alpha: 0.95)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(1),
                 ),
               ),

@@ -56,7 +56,7 @@ class JobDetailHeader extends StatelessWidget {
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [AppTheme.primaryPurple500, AppTheme.primaryPink],
+                    colors: [AppTheme.stitchPrimaryContainer, AppTheme.stitchPrimary],
                   ),
                   borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                 ),

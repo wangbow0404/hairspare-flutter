@@ -10,6 +10,9 @@ import '../models/job.dart';
 import '../models/schedule.dart';
 import '../models/spare_job_engagement.dart';
 import '../providers/favorite_provider.dart';
+import '../providers/auth_provider.dart';
+import '../mocks/mock_auth_data.dart';
+import '../services/chat_service.dart';
 import '../services/energy_service.dart';
 import '../services/favorite_service.dart';
 import '../services/job_service.dart';
@@ -29,11 +32,13 @@ class JobDetailViewModel extends ChangeNotifier {
     VerificationService? verificationService,
     EnergyService? energyService,
     ScheduleService? scheduleService,
+    ChatService? chatService,
   }) : _jobService = jobService ?? sl<JobService>(),
        _favoriteService = favoriteService ?? sl<FavoriteService>(),
        _verificationService = verificationService ?? sl<VerificationService>(),
        _energyService = energyService ?? sl<EnergyService>(),
-       _scheduleService = scheduleService ?? sl<ScheduleService>();
+       _scheduleService = scheduleService ?? sl<ScheduleService>(),
+       _chatService = chatService ?? sl<ChatService>();
 
   final String jobId;
   final bool shopOwnerMode;
@@ -45,6 +50,7 @@ class JobDetailViewModel extends ChangeNotifier {
   final VerificationService _verificationService;
   final EnergyService _energyService;
   final ScheduleService _scheduleService;
+  final ChatService _chatService;
 
   Job? job;
   Schedule? linkedSchedule;
@@ -60,7 +66,9 @@ class JobDetailViewModel extends ChangeNotifier {
   bool identityVerified = false;
   int energyBalance = 0;
   bool hasApplied = false;
+  bool contactBanned = false;
   bool proposalSubmitting = false;
+  bool showLowEnergySheet = false;
 
   bool get isProposalMode =>
       engagement == SpareJobEngagement.proposed && linkedSchedule != null;
@@ -71,6 +79,7 @@ class JobDetailViewModel extends ChangeNotifier {
     unawaited(_refreshFavorite());
     unawaited(_refreshEnergy());
     await loadJob();
+    await _refreshApplicationState();
     await _refreshEngagement();
   }
 
@@ -90,7 +99,33 @@ class JobDetailViewModel extends ChangeNotifier {
   bool get usesSchedulePrimaryAction =>
       engagement != SpareJobEngagement.open;
 
-  Future<void> _refreshEngagement() async {
+  Future<void> _refreshApplicationState() async {
+    if (shopOwnerMode) return;
+    try {
+      contactBanned = await _jobService.isContactBannedForJob(jobId);
+      final status = await _jobService.getSpareApplicationStatusForJob(jobId);
+      if (contactBanned ||
+          status == 'cancelled_contact_violation') {
+        hasApplied = false;
+        isLocked = false;
+        contactBanned = true;
+      } else if (status == 'pending') {
+        hasApplied = true;
+        isLocked = true;
+      } else if (status == 'approved') {
+        hasApplied = true;
+        isLocked = false;
+      } else {
+        hasApplied = false;
+        isLocked = false;
+      }
+    } catch (_) {
+      // 유지
+    }
+    notifyListeners();
+  }
+
+  Future<void> _refreshEngagement({String? preferredScheduleId}) async {
     try {
       final schedules = await _scheduleService.getSchedules();
       final forJob = schedules.where((s) => s.jobId == jobId).toList();
@@ -100,10 +135,21 @@ class JobDetailViewModel extends ChangeNotifier {
       } else {
         final proposed = forJob.where((s) => s.status == 'proposed').toList();
         if (proposed.isNotEmpty) {
-          linkedSchedule = proposed.first;
+          linkedSchedule = preferredScheduleId == null
+              ? proposed.first
+              : proposed.firstWhere(
+                  (s) => s.id == preferredScheduleId,
+                  orElse: () => proposed.first,
+                );
           engagement = SpareJobEngagement.proposed;
         } else {
-          linkedSchedule = forJob.first;
+          if (preferredScheduleId != null) {
+            final match =
+                forJob.where((s) => s.id == preferredScheduleId).toList();
+            linkedSchedule = match.isNotEmpty ? match.first : forJob.first;
+          } else {
+            linkedSchedule = forJob.first;
+          }
           final now = DateTime.now();
           if (ScheduleWorkSession.isWorkCheckReady(linkedSchedule!, now)) {
             engagement = SpareJobEngagement.workCheckReady;
@@ -191,6 +237,10 @@ class JobDetailViewModel extends ChangeNotifier {
   }
 
   void requestApply() {
+    if (contactBanned) {
+      _m.showError('연락처 위반으로 이 공고 지원이 취소되어 다시 지원할 수 없습니다.');
+      return;
+    }
     if (!identityVerified) {
       showVerificationModal = true;
       notifyListeners();
@@ -198,7 +248,8 @@ class JobDetailViewModel extends ChangeNotifier {
     }
     if (job == null) return;
     if (energyBalance < job!.energy) {
-      _m.showMessage('에너지가 부족합니다');
+      showLowEnergySheet = true;
+      notifyListeners();
       return;
     }
     showConfirmModal = true;
@@ -215,6 +266,20 @@ class JobDetailViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void dismissLowEnergySheet() {
+    showLowEnergySheet = false;
+    notifyListeners();
+  }
+
+  Future<void> refreshJobSnapshot() async {
+    try {
+      job = shopOwnerMode
+          ? await _jobService.getMyJobById(jobId)
+          : await _jobService.getJobById(jobId);
+      notifyListeners();
+    } catch (_) {}
+  }
+
   Future<List<Schedule>> findApplyConflicts() async {
     final j = job;
     if (j == null) return [];
@@ -225,6 +290,28 @@ class JobDetailViewModel extends ChangeNotifier {
     final s = linkedSchedule;
     if (s == null) return [];
     return _scheduleService.findAcceptProposalConflicts(s.id);
+  }
+
+  Future<void> refreshEngagementOnly() async {
+    await _refreshEngagement(preferredScheduleId: linkedSchedule?.id);
+  }
+
+  /// 겹침 해소용 — 현재 화면의 제안이 아닌 다른 `proposed` 일정 거절.
+  Future<int> autoRejectOverlappingProposals(
+    Iterable<Schedule> conflicts,
+  ) async {
+    final currentId = linkedSchedule?.id;
+    var rejected = 0;
+    for (final schedule in conflicts) {
+      if (schedule.status != 'proposed') continue;
+      if (schedule.id == currentId) continue;
+      await _scheduleService.rejectWorkProposal(schedule.id);
+      rejected++;
+    }
+    if (rejected > 0) {
+      await _refreshEngagement(preferredScheduleId: currentId);
+    }
+    return rejected;
   }
 
   Future<void> confirmApply() async {
@@ -243,7 +330,7 @@ class JobDetailViewModel extends ChangeNotifier {
       await _jobService.applyToJob(jobId);
       isLocked = true;
       hasApplied = true;
-      energyBalance -= job!.energy;
+      await _refreshEnergy();
       showConfirmModal = false;
       notifyListeners();
       _m.showSuccess(
@@ -266,7 +353,7 @@ class JobDetailViewModel extends ChangeNotifier {
     try {
       await _scheduleService.acceptWorkProposal(schedule.id);
       _m.showSuccess('근무 제안을 수락했습니다. 스케줄표에 반영되었습니다.');
-      await _refreshEngagement();
+      await _refreshEngagement(preferredScheduleId: schedule.id);
       return true;
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
@@ -310,6 +397,26 @@ class JobDetailViewModel extends ChangeNotifier {
       await Share.share(shareText, subject: j.title);
     } catch (e) {
       _m.showError('공유 실패: $e');
+    }
+  }
+
+  /// 지원 후 매장과 1:1 채팅방 id (없으면 생성).
+  Future<String?> resolveContactChatId() async {
+    final j = job;
+    if (j == null || !hasApplied || contactBanned) return null;
+    try {
+      final user = sl<AuthProvider>().currentUser ?? MockAuthData.spareUser();
+      return await _chatService.ensureChatForJobApplication(
+        jobId: j.id,
+        jobTitle: j.title,
+        shopName: j.shopName,
+        spareId: user.id,
+        spareName: user.name ?? user.username,
+      );
+    } catch (e) {
+      final appException = ErrorHandler.handleException(e);
+      _m.showError(ErrorHandler.getUserFriendlyMessage(appException));
+      return null;
     }
   }
 }

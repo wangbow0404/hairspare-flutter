@@ -238,10 +238,14 @@ class GlassModalBottomSheet extends StatelessWidget {
     super.key,
     required this.child,
     this.maxHeightFactor = 0.88,
+    this.stitchStyle = false,
   });
 
   final Widget child;
   final double maxHeightFactor;
+
+  /// Stitch 리디자인 — 불투명 흰 배경, 절제된 그림자 (글래스 그라데이션 X).
+  final bool stitchStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -252,23 +256,45 @@ class GlassModalBottomSheet extends StatelessWidget {
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          filter: ImageFilter.blur(
+            sigmaX: stitchStyle ? 8 : 20,
+            sigmaY: stitchStyle ? 8 : 20,
+          ),
           child: Container(
             constraints: BoxConstraints(
               maxHeight: MediaQuery.sizeOf(context).height * maxHeightFactor,
             ),
-            decoration: _glassSurfaceDecoration(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(26),
-              ),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x1A111827),
-                  blurRadius: 28,
-                  offset: Offset(0, -6),
-                ),
-              ],
-            ),
+            decoration: stitchStyle
+                ? BoxDecoration(
+                    color: AppTheme.backgroundWhite,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(26),
+                    ),
+                    border: Border(
+                      top: BorderSide(
+                        color: AppTheme.borderGray.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x1A000000),
+                        blurRadius: 24,
+                        offset: Offset(0, -4),
+                      ),
+                    ],
+                  )
+                : _glassSurfaceDecoration(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(26),
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x1A111827),
+                        blurRadius: 28,
+                        offset: Offset(0, -6),
+                      ),
+                    ],
+                  ),
             child: SafeArea(
               top: false,
               child: child,
@@ -282,7 +308,9 @@ class GlassModalBottomSheet extends StatelessWidget {
 
 /// 바텀 시트 상단 드래그 핸들.
 class GlassModalDragHandle extends StatelessWidget {
-  const GlassModalDragHandle({super.key});
+  const GlassModalDragHandle({super.key, this.stitchStyle = false});
+
+  final bool stitchStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -290,14 +318,18 @@ class GlassModalDragHandle extends StatelessWidget {
       padding: const EdgeInsets.only(top: 10, bottom: 6),
       child: Center(
         child: Container(
-          width: 40,
+          width: stitchStyle ? 48 : 40,
           height: 4,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.55),
+            color: stitchStyle
+                ? AppTheme.borderGray
+                : Colors.white.withValues(alpha: 0.55),
             borderRadius: BorderRadius.circular(2),
-            border: Border.all(
-              color: AppTheme.borderGray.withValues(alpha: 0.35),
-            ),
+            border: stitchStyle
+                ? null
+                : Border.all(
+                    color: AppTheme.borderGray.withValues(alpha: 0.35),
+                  ),
           ),
         ),
       ),

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../core/router/app_navigation.dart';
 import '../../models/user.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/hairspare_brand_assets.dart';
 class RoleSelectScreen extends StatefulWidget {
   const RoleSelectScreen({super.key});
 
@@ -73,21 +74,12 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
                       // Header Section
                       Column(
                         children: [
-                          Text(
-                            'HairSpare',
-                            style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                              fontSize: 48, // 모바일: 48px, 데스크탑에서는 64px
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.textPrimary,
-                              letterSpacing: -1.0, // tracking-tight
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
+                          const HairSpareBrandLogo(height: 96),
                           const SizedBox(height: AppTheme.spacing3),
                           Text(
-                            '스페어 급구 해결',
+                            '헤어의 모든 시작, 헤어스페어',
                             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontSize: 20,
+                              fontSize: 18,
                               color: AppTheme.textSecondary,
                             ),
                             textAlign: TextAlign.center,
@@ -102,7 +94,7 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
                           children: [
                             // 스페어 버튼
                             _RoleButton(
-                              label: '스페어로 시작하기',
+                              label: '헤어스페어 시작하기',
                               color: AppTheme.primaryBlue,
                               onTap: () => _handleRoleSelect(UserRole.spare),
                             ),

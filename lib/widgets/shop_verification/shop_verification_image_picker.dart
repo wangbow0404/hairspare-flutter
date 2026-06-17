@@ -11,7 +11,7 @@ Future<void> showShopVerificationPickSource(
 }) async {
   await showModalBottomSheet<void>(
     context: context,
-    shape: RoundedRectangleBorder(
+    shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
         top: Radius.circular(AppTheme.radiusXl),
       ),

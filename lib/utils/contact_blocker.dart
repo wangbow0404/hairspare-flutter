@@ -6,10 +6,13 @@ library;
 class ContactBlocker {
   ContactBlocker._();
 
-  static const String blockedMessage =
+  /// 채팅방 상단 배너용 짧은 안내.
+  static const String bannerMessage =
       '전화번호, 이메일 등 연락처 공유는 이용약관 위반입니다. '
-      'HAIRSPARE 내에서 안전하게 소통해주세요.\n'
-      '연락처 전송시도 3회 적발시 해당 대화방은 자동으로 삭제됩니다.';
+      'HAIRSPARE 내에서 안전하게 소통해주세요.';
+
+  /// 스낵바 등 짧은 차단 안내 (배너와 동일).
+  static const String blockedMessage = bannerMessage;
 
   static const String _hangulDigitChars = '공일이삼사오육칠팔구영륙';
 

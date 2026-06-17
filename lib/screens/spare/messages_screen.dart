@@ -8,7 +8,9 @@ import '../../services/chat_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/icon_mapper.dart';
-import '../../widgets/spare_app_bar.dart';
+import '../../widgets/common/spare_subpage_app_bar.dart';
+import '../../widgets/stitch/stitch_empty_state.dart';
+import '../../widgets/stitch/stitch_segment_tabs.dart';
 import 'chat_room_screen.dart';
 
 /// 스페어 메시지(채팅) 목록 — [ChatProvider]와 동일한 mock/API 데이터 사용.
@@ -80,7 +82,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       messenger.showSnackBar(
         const SnackBar(
           content: Text('채팅방이 삭제되었습니다'),
-          backgroundColor: AppTheme.primaryBlue,
+          backgroundColor: AppTheme.stitchPrimaryContainer,
         ),
       );
     } catch (error) {
@@ -109,32 +111,15 @@ class _MessagesScreenState extends State<MessagesScreen> {
         if (chatProvider.error != null && chatProvider.chats.isEmpty) {
           return Scaffold(
             backgroundColor: AppTheme.backgroundGray,
-            appBar: const SpareAppBar(
-              showBackButton: true,
-              showSearch: false,
-              showTrailingIcons: false,
+            appBar: const SpareSubpageAppBar(
               title: '메시지',
+              showBackButton: true,
             ),
-            body: Center(
-              child: Padding(
-                padding: AppTheme.spacing(AppTheme.spacing4),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      chatProvider.error!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppTheme.urgentRed),
-                    ),
-                    const SizedBox(height: AppTheme.spacing4),
-                    ElevatedButton(
-                      onPressed: () =>
-                          chatProvider.refreshChats(viewerRole: 'spare'),
-                      child: const Text('다시 시도'),
-                    ),
-                  ],
-                ),
-              ),
+            body: StitchEmptyState(
+              message: chatProvider.error!,
+              iconName: 'alertcircle',
+              actionLabel: '다시 시도',
+              onAction: () => chatProvider.refreshChats(viewerRole: 'spare'),
             ),
           );
         }
@@ -145,67 +130,30 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 .toList()
             : chatProvider.chats;
 
+        final tabIndex = _activeTab == 'unread' ? 1 : 0;
+
         return Scaffold(
           backgroundColor: AppTheme.backgroundGray,
-          appBar: const SpareAppBar(
-            showBackButton: true,
-            showSearch: false,
-            showTrailingIcons: false,
+          appBar: SpareSubpageAppBar(
             title: '메시지',
+            showBackButton: Navigator.canPop(context),
           ),
           body: Column(
             children: [
-              Container(
-                color: AppTheme.backgroundWhite,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _TabButton(
-                        label: '전체',
-                        isActive: _activeTab == 'all',
-                        onTap: () => setState(() => _activeTab = 'all'),
-                      ),
-                    ),
-                    Expanded(
-                      child: _TabButton(
-                        label: '안 읽음',
-                        isActive: _activeTab == 'unread',
-                        onTap: () => setState(() => _activeTab = 'unread'),
-                      ),
-                    ),
-                  ],
-                ),
+              StitchSegmentTabs(
+                tabs: const ['전체', '안 읽음'],
+                activeIndex: tabIndex,
+                onChanged: (index) {
+                  setState(() => _activeTab = index == 1 ? 'unread' : 'all');
+                },
               ),
               Expanded(
                 child: filteredChats.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            IconMapper.icon(
-                                  'messagecircle',
-                                  size: 64,
-                                  color: AppTheme.textTertiary,
-                                ) ??
-                                const Icon(
-                                  Icons.chat_bubble_outline,
-                                  size: 64,
-                                  color: AppTheme.textTertiary,
-                                ),
-                            const SizedBox(height: AppTheme.spacing4),
-                            Text(
-                              _activeTab == 'unread'
-                                  ? '읽지 않은 메시지가 없습니다'
-                                  : '메시지가 없습니다',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: AppTheme.textSecondary,
-                                  ),
-                            ),
-                          ],
-                        ),
+                    ? StitchEmptyState(
+                        message: _activeTab == 'unread'
+                            ? '읽지 않은 메시지가 없습니다'
+                            : '메시지가 없습니다',
+                        iconName: 'messagecircle',
                       )
                     : ListView.builder(
                         itemCount: filteredChats.length,
@@ -252,49 +200,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
           ),
         );
       },
-    );
-  }
-}
-
-class _TabButton extends StatelessWidget {
-  const _TabButton({
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: AppTheme.spacing(AppTheme.spacing4),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: isActive ? AppTheme.primaryBlue : Colors.transparent,
-                width: 2,
-              ),
-            ),
-          ),
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontSize: 16,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                  color:
-                      isActive ? AppTheme.primaryBlue : AppTheme.textSecondary,
-                ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
     );
   }
 }
@@ -434,7 +339,7 @@ class _ChatListItemState extends State<_ChatListItem> {
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
-                                          color: AppTheme.textPrimary,
+                                          color: AppTheme.stitchTextPrimary,
                                           height: 1.25,
                                         ),
                                         maxLines: 1,
@@ -448,7 +353,7 @@ class _ChatListItemState extends State<_ChatListItem> {
                                         ),
                                         style: const TextStyle(
                                           fontSize: 12,
-                                          color: AppTheme.textSecondary,
+                                          color: AppTheme.stitchTextSecondary,
                                           height: 1.25,
                                         ),
                                       ),
@@ -502,13 +407,13 @@ class _ChatAvatarLetter extends StatelessWidget {
       height: 48,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: AppTheme.primaryBlue.withValues(alpha: 0.1),
+        color: AppTheme.primaryPurpleLight,
         borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
       ),
       child: Text(
         letter,
         style: const TextStyle(
-          color: AppTheme.primaryBlue,
+          color: AppTheme.stitchPrimary,
           fontWeight: FontWeight.bold,
           fontSize: 18,
           height: 1,

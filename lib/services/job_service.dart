@@ -245,6 +245,24 @@ class JobService {
           'createdAt': user.createdAt.toIso8601String(),
         },
       );
+      final job = await MockSpareData.getJobById(jobId);
+      await MockSpareData.mockSpendEnergy(
+        job.energy,
+        description: '공고 지원 · ${job.title}',
+        referenceId: jobId,
+      );
+      MockSpareData.recordLockedEnergyForJobApplication(
+        jobId: jobId,
+        spareId: user.id,
+        amount: job.energy,
+      );
+      MockSpareData.ensureChatForJobApplication(
+        jobId: jobId,
+        jobTitle: job.title,
+        shopName: job.shopName,
+        spareId: user.id,
+        spareName: user.name ?? user.username,
+      );
       return;
     }
     try {
@@ -406,6 +424,52 @@ class JobService {
           statusCode: response.statusCode,
         );
       }
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 연락처 위반으로 해당 공고 연락·재지원이 차단되었는지.
+  Future<bool> isContactBannedForJob(String jobId) async {
+    if (ApiConfig.useMockData) {
+      final user = sl<AuthProvider>().currentUser ?? MockAuthData.spareUser();
+      return MockSpareData.isContactBannedForJob(
+        jobId: jobId,
+        spareId: user.id,
+      );
+    }
+    try {
+      final response = await _dio.get('/api/jobs/$jobId/contact-ban');
+      if (response.statusCode == 200) {
+        final data = response.data['data'] ?? response.data;
+        return data['banned'] == true;
+      }
+      return false;
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 내 지원 상태 (없으면 null).
+  Future<String?> getSpareApplicationStatusForJob(String jobId) async {
+    if (ApiConfig.useMockData) {
+      final user = sl<AuthProvider>().currentUser ?? MockAuthData.spareUser();
+      return MockShopData.spareApplicationStatusForJob(
+        jobId: jobId,
+        spareId: user.id,
+      );
+    }
+    try {
+      final response = await _dio.get('/api/jobs/$jobId/my-application');
+      if (response.statusCode == 200) {
+        final data = response.data['data'] ?? response.data;
+        return data['status']?.toString();
+      }
+      return null;
     } on DioException catch (e) {
       throw ErrorHandler.handleDioException(e);
     } catch (e) {

@@ -4,16 +4,9 @@ import '../../theme/app_theme.dart';
 import '../../utils/contact_blocker.dart';
 import '../../utils/contact_violation_policy.dart';
 
-/// 채팅방 상단 연락처 공유 경고 배너.
+/// 채팅방 상단 연락처 공유 경고 배너 (짧은 안내만).
 class ChatContactWarningBanner extends StatelessWidget {
-  const ChatContactWarningBanner({
-    super.key,
-    this.extraLine,
-    this.tint = AppTheme.orange500,
-  });
-
-  final String? extraLine;
-  final Color tint;
+  const ChatContactWarningBanner({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +21,9 @@ class ChatContactWarningBanner extends StatelessWidget {
           ],
         ),
         borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-        border: Border(left: BorderSide(color: tint, width: 4)),
+        border: const Border(
+          left: BorderSide(color: AppTheme.orange500, width: 4),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,30 +39,18 @@ class ChatContactWarningBanner extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: tint,
+                        color: AppTheme.orange500,
                       ),
                 ),
                 const SizedBox(height: AppTheme.spacing1 / 2),
                 Text(
-                  ContactBlocker.blockedMessage,
+                  ContactBlocker.bannerMessage,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontSize: 12,
                         height: 1.45,
-                        color: tint.withValues(alpha: 0.95),
+                        color: AppTheme.orange500.withValues(alpha: 0.95),
                       ),
                 ),
-                if (extraLine != null && extraLine!.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    extraLine!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          height: 1.4,
-                          color: AppTheme.urgentRed,
-                        ),
-                  ),
-                ],
               ],
             ),
           ),

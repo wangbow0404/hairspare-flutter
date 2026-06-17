@@ -112,8 +112,8 @@ abstract final class ScheduleCancellationPolicy {
       CancellationActor.shop => [
         '확정된 근무를 취소하면 공고에 사용된 에너지·수수료는 환불되지 않을 수 있습니다.',
         '취소 시 스페어 채팅방에 자동으로 알림이 전송됩니다.',
-        '최근 30일 일방 취소 ${shopUnilateralCancelLimit30d}회 이상 시 '
-        '${shopJobPostingSuspensionDays}일간 신규 공고 등록이 제한됩니다.',
+        '최근 30일 일방 취소 $shopUnilateralCancelLimit30d회 이상 시 '
+        '$shopJobPostingSuspensionDays일간 신규 공고 등록이 제한됩니다.',
         '근무 시작 시각 이후에는 앱에서 취소할 수 없습니다.',
       ],
     };
@@ -150,6 +150,7 @@ abstract final class ScheduleCancellationPolicy {
     }
     return _evaluateV2(
       schedule,
+      context: context,
       actor: actor,
       now: now,
       shopUnilateralCancelCount30d: shopUnilateralCancelCount30d,
@@ -204,6 +205,7 @@ abstract final class ScheduleCancellationPolicy {
 
   static CancellationEligibility _evaluateV2(
     Schedule schedule, {
+    required CancellationContext context,
     required CancellationActor actor,
     DateTime? now,
     required int shopUnilateralCancelCount30d,
@@ -222,6 +224,13 @@ abstract final class ScheduleCancellationPolicy {
       );
     }
     if (schedule.status == 'proposed') {
+      if (context == CancellationContext.overlapResolution &&
+          actor == CancellationActor.spare) {
+        return const CancellationEligibility(
+          status: CancellationEligibilityStatus.allowed,
+          penaltySummary: '제안 대기 중인 근무는 거절 처리됩니다.',
+        );
+      }
       return const CancellationEligibility(
         status: CancellationEligibilityStatus.blockedNotScheduled,
         blockedMessage: '제안 대기 중인 일정은 수락/거절로 처리해 주세요.',
@@ -267,11 +276,11 @@ abstract final class ScheduleCancellationPolicy {
         clock.isBefore(shopJobPostingSuspendedUntil);
     final shopSummary = StringBuffer(
       '공고 에너지·수수료는 환불되지 않을 수 있습니다. '
-      '최근 30일 일방 취소 ${shopUnilateralCancelCount30d}회',
+      '최근 30일 일방 취소 $shopUnilateralCancelCount30d회',
     );
     if (shopUnilateralCancelCount30d + 1 >= shopUnilateralCancelLimit30d) {
       shopSummary.write(
-        ' — 이번 취소 시 ${shopJobPostingSuspensionDays}일간 신규 공고 등록이 제한됩니다.',
+        ' — 이번 취소 시 $shopJobPostingSuspensionDays일간 신규 공고 등록이 제한됩니다.',
       );
     } else {
       shopSummary.write('.');

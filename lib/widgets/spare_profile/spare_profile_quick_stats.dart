@@ -34,7 +34,7 @@ class SpareProfileQuickStats extends StatelessWidget {
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryBlueDark,
+                            color: AppTheme.stitchPrimary,
                           ),
                     ),
                     const SizedBox(height: AppTheme.spacing1),
@@ -61,7 +61,7 @@ class SpareProfileQuickStats extends StatelessWidget {
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryPurple,
+                            color: AppTheme.stitchPrimaryContainer,
                           ),
                     ),
                     const SizedBox(height: AppTheme.spacing1),

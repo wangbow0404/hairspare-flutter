@@ -66,9 +66,9 @@ class _LockedNotice extends StatelessWidget {
     return Container(
       padding: AppTheme.spacing(AppTheme.spacing4),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
+        color: const Color(0xFFF3E8FF),
         borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
-        border: Border.all(color: const Color(0xFFBFDBFE)),
+        border: Border.all(color: AppTheme.stitchPrimaryContainer.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -77,7 +77,7 @@ class _LockedNotice extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF1E3A8A),
+              color: AppTheme.stitchPrimary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -86,7 +86,7 @@ class _LockedNotice extends StatelessWidget {
             '근무 완료 + 정산 완료 시 예약금이 반환됩니다.\n노쇼 시 예약금은 미용실에 귀속됩니다.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontSize: 14,
-              color: const Color(0xFF1E40AF),
+              color: AppTheme.stitchTextSecondary,
               height: 1.5,
             ),
             textAlign: TextAlign.center,
@@ -129,7 +129,7 @@ class _ProposalActions extends StatelessWidget {
           child: ElevatedButton(
             onPressed: isSubmitting ? null : onAccept,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryPurple,
+              backgroundColor: AppTheme.stitchPrimaryContainer,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
@@ -163,36 +163,19 @@ class _PrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          padding: EdgeInsets.zero,
+          backgroundColor: AppTheme.stitchPrimaryContainer,
+          foregroundColor: Colors.white,
+          minimumSize: const Size.fromHeight(48),
+          elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: AppTheme.borderRadius(AppTheme.radius2xl),
+            borderRadius: BorderRadius.circular(AppTheme.radiusXl),
           ),
-        ).copyWith(
-          overlayColor: WidgetStateProperty.all(Colors.transparent),
         ),
-        child: Ink(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [Color(0xFF9333EA), Color(0xFF7E22CE)],
-            ),
-            borderRadius: AppTheme.borderRadius(AppTheme.radius2xl),
-            boxShadow: AppTheme.shadowLg,
-          ),
-          child: Container(
-            padding: AppTheme.spacing(AppTheme.spacing4),
-            alignment: Alignment.center,
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),

@@ -1,0 +1,291 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+import '../../models/job.dart';
+import '../../theme/app_theme.dart';
+import '../../utils/icon_mapper.dart';
+import '../../utils/region_helper.dart';
+import '../common/job_thumbnail.dart';
+
+/// Stitch 홈 가로 스크롤 공고 카드.
+/// 급구 섹션은 [showThumbnail] = false(기본), 인기/신규 섹션은 상단 사진 + 커스텀 배지로 재사용한다.
+class StitchCompactJobCard extends StatelessWidget {
+  const StitchCompactJobCard({
+    super.key,
+    required this.job,
+    required this.isFavorite,
+    this.onTap,
+    this.onFavoriteToggle,
+    this.width = 240,
+    this.showThumbnail = false,
+    this.badgeLabel = '급구',
+    this.badgeColor = AppTheme.urgentRed,
+  });
+
+  final Job job;
+  final bool isFavorite;
+  final VoidCallback? onTap;
+  final VoidCallback? onFavoriteToggle;
+  final double width;
+
+  /// 상단 16:9 사진 노출 여부.
+  final bool showThumbnail;
+
+  /// 상단 배지 텍스트.
+  final String badgeLabel;
+
+  /// 상단 배지 색상(텍스트/연한 배경 베이스).
+  final Color badgeColor;
+
+  String _formatPay(int amount) {
+    return '${NumberFormat('#,###').format(amount)}원';
+  }
+
+  String _formatScheduleLine(Job job) {
+    final parsed = DateTime.tryParse(job.date);
+    final dayLabel = parsed == null ? job.date : _relativeDayLabel(parsed);
+    final end = job.endTime?.trim();
+    final time = end == null || end.isEmpty ? job.time : '${job.time} - $end';
+    final region = RegionHelper.getRegionName(job.regionId).trim();
+    if (region.isNotEmpty && region != job.regionId) {
+      return '$region • $dayLabel, $time';
+    }
+    return '$dayLabel, $time';
+  }
+
+  String _relativeDayLabel(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(date.year, date.month, date.day);
+    final diff = target.difference(today).inDays;
+    if (diff == 0) return '오늘';
+    if (diff == 1) return '내일';
+    return '${date.month}.${date.day}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      child: Material(
+        color: AppTheme.backgroundWhite,
+        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+              border: Border.all(color: AppTheme.borderGray),
+              boxShadow: AppTheme.stitchSoftShadow,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (showThumbnail) _buildThumbnailHeader(),
+                Padding(
+                  padding: const EdgeInsets.all(AppTheme.spacing4),
+                  child: showThumbnail ? _buildBody() : _buildBodyWithStack(),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThumbnailHeader() {
+    return Stack(
+      children: [
+        JobThumbnail(
+          job: job,
+          width: width,
+          height: width * 9 / 16,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(AppTheme.radiusXl),
+            topRight: Radius.circular(AppTheme.radiusXl),
+          ),
+        ),
+        Positioned(
+          top: AppTheme.spacing2,
+          left: AppTheme.spacing2,
+          child: _Badge(label: badgeLabel, color: badgeColor, solid: true),
+        ),
+        if (onFavoriteToggle != null)
+          Positioned(
+            top: AppTheme.spacing1,
+            right: AppTheme.spacing1,
+            child: _FavoriteButton(
+              isFavorite: isFavorite,
+              onPressed: onFavoriteToggle,
+              onImage: true,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildBodyWithStack() {
+    return Stack(
+      children: [
+        if (onFavoriteToggle != null)
+          Positioned(
+            top: 0,
+            right: 0,
+            child: _FavoriteButton(
+              isFavorite: isFavorite,
+              onPressed: onFavoriteToggle,
+            ),
+          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _Badge(label: badgeLabel, color: badgeColor),
+            const SizedBox(height: AppTheme.spacing3),
+            ..._buildInfo(),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBody() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: _buildInfo(),
+    );
+  }
+
+  List<Widget> _buildInfo() {
+    return [
+      Text(
+        job.shopName,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: AppTheme.stitchTextPrimary,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      const SizedBox(height: AppTheme.spacing1),
+      Text(
+        _formatScheduleLine(job),
+        style: const TextStyle(
+          fontSize: 14,
+          color: AppTheme.stitchTextSecondary,
+        ),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      const SizedBox(height: AppTheme.spacing4),
+      const Divider(height: 1, color: AppTheme.borderGray),
+      const SizedBox(height: AppTheme.spacing3),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            '일급',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppTheme.stitchTextSecondary,
+            ),
+          ),
+          Text(
+            _formatPay(job.amount),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.stitchTextPrimary,
+            ),
+          ),
+        ],
+      ),
+    ];
+  }
+}
+
+class _Badge extends StatelessWidget {
+  const _Badge({
+    required this.label,
+    required this.color,
+    this.solid = false,
+  });
+
+  final String label;
+  final Color color;
+  final bool solid;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing2,
+        vertical: AppTheme.spacing1,
+      ),
+      decoration: BoxDecoration(
+        color: solid ? color : color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: solid ? Colors.white : color,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _FavoriteButton extends StatelessWidget {
+  const _FavoriteButton({
+    required this.isFavorite,
+    required this.onPressed,
+    this.onImage = false,
+  });
+
+  final bool isFavorite;
+  final VoidCallback? onPressed;
+  final bool onImage;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = IconMapper.icon(
+          'heart',
+          size: 20,
+          color: isFavorite
+              ? AppTheme.urgentRed
+              : (onImage ? Colors.white : AppTheme.outline),
+        ) ??
+        Icon(
+          isFavorite ? Icons.favorite : Icons.favorite_border,
+          size: 20,
+          color: isFavorite
+              ? AppTheme.urgentRed
+              : (onImage ? Colors.white : AppTheme.outline),
+        );
+
+    final button = IconButton(
+      visualDensity: VisualDensity.compact,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+      onPressed: onPressed,
+      icon: icon,
+    );
+
+    if (!onImage) return button;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.28),
+        shape: BoxShape.circle,
+      ),
+      child: button,
+    );
+  }
+}

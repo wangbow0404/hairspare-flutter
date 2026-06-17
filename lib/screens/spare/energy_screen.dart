@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
-import '../../utils/icon_mapper.dart';
+import '../../widgets/stitch/stitch_energy_hero_card.dart';
+import '../../widgets/stitch/stitch_empty_state.dart';
 import '../../services/energy_service.dart';
 import 'energy_purchase_screen.dart';
 
@@ -89,92 +90,18 @@ class _EnergyScreenState extends State<EnergyScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Balance Card
             Padding(
-              padding: AppTheme.spacing(AppTheme.spacing6),
-              child: Container(
-                padding: AppTheme.spacing(AppTheme.spacing6),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppTheme.yellow400, AppTheme.orange500],
-                  ),
-                  borderRadius: AppTheme.borderRadius(AppTheme.radius2xl),
-                  boxShadow: AppTheme.shadowLg,
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-                          ),
-                          child: IconMapper.icon('zap', size: 24, color: Colors.white) ??
-                              const Icon(Icons.flash_on, size: 24, color: Colors.white),
-                        ),
-                        const SizedBox(width: AppTheme.spacing3),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '현재 에너지',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontSize: 14,
-                                color: Colors.white.withValues(alpha: 0.8),
-                              ),
-                            ),
-                            Text(
-                              '$_balance개',
-                              style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                                fontSize: 30,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+              padding: AppTheme.spacing(AppTheme.spacing4),
+              child: StitchEnergyHeroCard(
+                balance: _balance,
+                onPurchase: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const EnergyPurchaseScreen(),
                     ),
-                    const SizedBox(height: AppTheme.spacing4),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const EnergyPurchaseScreen(),
-                            ),
-                          ).then((_) {
-                            // 구매 화면에서 돌아오면 잔액 새로고침
-                            _loadEnergyData();
-                          });
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppTheme.orange500,
-                          padding: AppTheme.spacing(AppTheme.spacing3),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                          ),
-                        ),
-                        child: Text(
-                          '에너지 구매하기',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.orange500,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ).then((_) => _loadEnergyData());
+                },
               ),
             ),
 
@@ -188,27 +115,24 @@ class _EnergyScreenState extends State<EnergyScreen> {
                     '거래 내역',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.stitchTextPrimary,
                     ),
                   ),
                   const SizedBox(height: AppTheme.spacing4),
                   Container(
                     decoration: BoxDecoration(
                       color: AppTheme.backgroundWhite,
-                      borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXl),
                       border: Border.all(color: AppTheme.borderGray),
+                      boxShadow: AppTheme.stitchSoftShadow,
                     ),
                     child: _transactions.isEmpty
-                        ? Padding(
-                            padding: AppTheme.spacing(AppTheme.spacing8),
-                            child: Center(
-                              child: Text(
-                                '거래 내역이 없습니다',
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: AppTheme.textSecondary,
-                                ),
-                              ),
+                        ? const Padding(
+                            padding: EdgeInsets.all(AppTheme.spacing8),
+                            child: StitchEmptyState(
+                              message: '거래 내역이 없습니다',
+                              iconName: 'zap',
                             ),
                           )
                         : Column(

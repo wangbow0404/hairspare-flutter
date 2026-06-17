@@ -65,7 +65,7 @@ class ScheduleRefinedListCard extends StatelessWidget {
                                 fontWeight: FontWeight.w700,
                                 height: 1.28,
                                 letterSpacing: -0.2,
-                                color: AppTheme.textPrimary,
+                                color: AppTheme.stitchTextPrimary,
                               ),
                         ),
                       ),
@@ -84,7 +84,7 @@ class ScheduleRefinedListCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.textSecondary,
+                      color: AppTheme.stitchTextSecondary,
                       height: 1.25,
                     ),
                   ),

@@ -7,11 +7,15 @@ import '../../models/region.dart';
 import '../../models/space_rental.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/compact_announcement_card.dart';
+import '../../widgets/stitch/stitch_empty_state.dart';
+import '../../widgets/stitch/stitch_filter_bar.dart';
+import '../../widgets/stitch/stitch_filter_chip.dart';
+import '../../widgets/stitch/stitch_list_job_card.dart';
 import '../../widgets/job_filter_dropdown.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../widgets/date_filter_button.dart';
-import '../../utils/icon_mapper.dart';
 import '../../utils/region_helper.dart';
+import '../../utils/job_popularity.dart';
 import '../spare/job_detail_screen.dart';
 import '../spare/space_rental_detail_screen.dart';
 import '../spare/education_detail_screen.dart';
@@ -166,18 +170,20 @@ class _JobsListScreenState extends State<JobsListScreen> {
     Map<String, dynamic> item,
     Map<String, bool> favoriteMap,
     FavoriteProvider favoriteProvider,
+    Set<String> popularJobIds,
   ) {
     final type = item['type'] as String;
     final data = item['data'];
 
     if (type == 'job') {
       final job = data as Job;
-      return CompactAnnouncementCard(
-        type: AnnouncementType.job,
+      return StitchListJobCard(
         job: job,
         isFavorite: favoriteMap[job.id] ?? false,
+        showPopularBadge: JobPopularity.showsPopularBadge(job, popularJobIds),
         onTap: () => _handleJobTap(job),
         onFavoriteToggle: () => favoriteProvider.toggleFavorite(job.id),
+        margin: EdgeInsets.zero,
       );
     }
     if (type == 'spaceRental') {
@@ -291,66 +297,27 @@ class _JobsListScreenState extends State<JobsListScreen> {
           }
 
           if (jobProvider.error != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    '오류가 발생했습니다',
-                    style: TextStyle(color: AppTheme.urgentRed),
-                  ),
-                  const SizedBox(height: AppTheme.spacing4),
-                  ElevatedButton(
-                    onPressed: () => jobProvider.refreshJobs(),
-                    child: const Text('다시 시도'),
-                  ),
-                ],
-              ),
+            return StitchEmptyState(
+              message: '오류가 발생했습니다',
+              iconName: 'alertcircle',
+              actionLabel: '다시 시도',
+              onAction: () => jobProvider.refreshJobs(),
             );
           }
 
           final allJobs = jobProvider.jobs;
+          final popularJobIds = JobPopularity.popularJobIds(allJobs);
           final filteredJobs = _getFilteredJobs(allJobs);
           final allItems = _buildCombinedList(filteredJobs);
 
           return Column(
             children: [
               // 필터 섹션
-              Container(
-                color: AppTheme.backgroundWhite,
-                padding: AppTheme.spacing(AppTheme.spacing3),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              StitchFilterBar(
+                totalCount: allItems.length,
+                onRefresh: _handleRefresh,
+                dropdownRow: Row(
                   children: [
-                    // 전체공고 개수 및 새로고침
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '전체 ${allItems.length}개',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.textPrimary,
-                          ),
-                        ),
-                        IconButton(
-                          icon: IconMapper.icon('refresh', size: 20, color: AppTheme.textSecondary) ??
-                              const Icon(Icons.refresh, size: 20, color: AppTheme.textSecondary),
-                          onPressed: _handleRefresh,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppTheme.spacing3),
-                    
-                    // 첫 번째 줄: 지역 선택, 정렬
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          // 지역(시/도) 드롭다운
                           JobFilterDropdown(
                             label: '지역',
                             options: _provinces.map((p) => p.name).toList(),
@@ -376,7 +343,6 @@ class _JobsListScreenState extends State<JobsListScreen> {
                               });
                             },
                           ),
-                          // 상세지역(구/군) 드롭다운 - 지역 선택 시에만 표시
                           if (_selectedProvince != null && _districts.isNotEmpty) ...[
                             const SizedBox(width: AppTheme.spacing2),
                             JobFilterDropdown(
@@ -405,7 +371,6 @@ class _JobsListScreenState extends State<JobsListScreen> {
                             ),
                           ],
                           const SizedBox(width: AppTheme.spacing2),
-                          // 날짜 선택
                           DateFilterButton(
                             selectedDate: _selectedDateStart,
                             onDateSelected: (date) {
@@ -420,7 +385,6 @@ class _JobsListScreenState extends State<JobsListScreen> {
                             },
                           ),
                           const SizedBox(width: AppTheme.spacing2),
-                          // 정렬 드롭다운
                           JobFilterDropdown(
                             label: '정렬',
                             options: const ['최신순', '가격순', '마감순'],
@@ -450,18 +414,11 @@ class _JobsListScreenState extends State<JobsListScreen> {
                             },
                           ),
                         ],
-                      ),
-                    ),
-                    const SizedBox(height: AppTheme.spacing3),
-                    
-                    // 두 번째 줄: 필터 버튼들
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _FilterChip(
+                ),
+                chipRow: Row(
+                  children: [
+                          StitchFilterChip(
                             label: '전체',
-                            emoji: '📋',
                             isSelected: _activeFilter == null && !_isPremium,
                             onTap: () {
                               setState(() {
@@ -471,9 +428,10 @@ class _JobsListScreenState extends State<JobsListScreen> {
                             },
                           ),
                           const SizedBox(width: AppTheme.spacing2),
-                          _FilterChip(
+                          StitchFilterChip(
                             label: '급구',
                             emoji: '🚀',
+                            urgent: true,
                             isSelected: _activeFilter == 'urgent',
                             onTap: () {
                               setState(() {
@@ -482,9 +440,8 @@ class _JobsListScreenState extends State<JobsListScreen> {
                             },
                           ),
                           const SizedBox(width: AppTheme.spacing2),
-                          _FilterChip(
+                          StitchFilterChip(
                             label: '최신순',
-                            emoji: '🕐',
                             isSelected:
                                 _sortBy == 'latest' && _activeFilter == null,
                             onTap: () {
@@ -495,9 +452,8 @@ class _JobsListScreenState extends State<JobsListScreen> {
                             },
                           ),
                           const SizedBox(width: AppTheme.spacing2),
-                          _FilterChip(
+                          StitchFilterChip(
                             label: '마감임박',
-                            emoji: '⏰',
                             isSelected: _activeFilter == 'deadline',
                             onTap: () {
                               setState(() {
@@ -506,9 +462,8 @@ class _JobsListScreenState extends State<JobsListScreen> {
                             },
                           ),
                           const SizedBox(width: AppTheme.spacing2),
-                          _FilterChip(
+                          StitchFilterChip(
                             label: '시급',
-                            emoji: '💵',
                             isSelected: _activeFilter == 'hourly',
                             onTap: () {
                               setState(() {
@@ -517,9 +472,8 @@ class _JobsListScreenState extends State<JobsListScreen> {
                             },
                           ),
                           const SizedBox(width: AppTheme.spacing2),
-                          _FilterChip(
+                          StitchFilterChip(
                             label: '일급',
-                            emoji: '💰',
                             isSelected: _activeFilter == 'daily',
                             onTap: () {
                               setState(() {
@@ -528,9 +482,8 @@ class _JobsListScreenState extends State<JobsListScreen> {
                             },
                           ),
                           const SizedBox(width: AppTheme.spacing2),
-                          _FilterChip(
+                          StitchFilterChip(
                             label: '추천',
-                            emoji: '⭐',
                             isSelected: _activeFilter == 'recommended',
                             onTap: () {
                               setState(() {
@@ -539,10 +492,8 @@ class _JobsListScreenState extends State<JobsListScreen> {
                             },
                           ),
                           const SizedBox(width: AppTheme.spacing2),
-                          // 프리미엄 필터 (별도 토글)
-                          _FilterChip(
+                          StitchFilterChip(
                             label: '프리미엄',
-                            emoji: '✨',
                             isSelected: _isPremium,
                             onTap: () {
                               setState(() {
@@ -551,9 +502,6 @@ class _JobsListScreenState extends State<JobsListScreen> {
                             },
                           ),
                         ],
-                      ),
-                    ),
-                  ],
                 ),
               ),
               // 공고 목록
@@ -567,35 +515,21 @@ class _JobsListScreenState extends State<JobsListScreen> {
                         );
                     
                     return allItems.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                IconMapper.icon('briefcase', size: 48, color: AppTheme.textTertiary) ??
-                                    const Icon(Icons.work_outline, size: 48, color: AppTheme.textTertiary),
-                                const SizedBox(height: AppTheme.spacing4),
-                                Text(
-                                  '목록이 없습니다',
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: AppTheme.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        ? const StitchEmptyState(
+                            message: '조건에 맞는 공고가 없습니다',
+                            iconName: 'briefcase',
                           )
                         : ListView.builder(
                             padding: AppTheme.spacing(AppTheme.spacing4),
                             itemCount: allItems.length,
                             itemBuilder: (context, index) {
                               final item = allItems[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
-                                child: _buildAnnouncementCard(
-                                  context,
-                                  item,
-                                  favoriteMap,
-                                  favoriteProvider,
-                                ),
+                              return _buildAnnouncementCard(
+                                context,
+                                item,
+                                favoriteMap,
+                                favoriteProvider,
+                                popularJobIds,
                               );
                             },
                           );
@@ -605,80 +539,6 @@ class _JobsListScreenState extends State<JobsListScreen> {
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final String? emoji;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _FilterChip({
-    required this.label,
-    this.emoji,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: emoji != null ? AppTheme.spacing3 : AppTheme.spacing4,
-          vertical: AppTheme.spacing2,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected 
-              ? (emoji != null ? Colors.grey.shade200 : AppTheme.primaryBlue)
-              : AppTheme.backgroundGray,
-          borderRadius: BorderRadius.circular(20),
-          border: isSelected && emoji != null
-              ? Border.all(
-                  color: Colors.grey.shade400,
-                  width: 1.5,
-                )
-              : null,
-          boxShadow: isSelected && emoji != null
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (emoji != null) ...[
-              Text(
-                emoji!,
-                style: const TextStyle(
-                  fontSize: 16,
-                  height: 1.0,
-                ),
-              ),
-              const SizedBox(width: AppTheme.spacing1),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: isSelected
-                    ? (emoji != null ? AppTheme.textPrimary : Colors.white)
-                    : AppTheme.textSecondary,
-                height: 1.2,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../utils/api_config.dart';
+import '../utils/energy_purchase_pricing.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
 import '../mocks/mock_spare_data.dart';
@@ -122,11 +123,30 @@ class EnergyService {
   }
 
   /// 에너지 구매
-  Future<void> purchaseEnergy(int amount) async {
+  Future<void> purchaseEnergy(
+    int amount, {
+    String paymentMethod = 'CARD',
+    int? cashPrice,
+    int? pointCost,
+  }) async {
+    if (ApiConfig.useMockData) {
+      assertValidEnergyPurchaseAmount(amount);
+      return MockSpareData.mockPurchaseEnergy(
+        energyAmount: amount,
+        paymentMethod: paymentMethod,
+        cashPrice: cashPrice,
+        pointCost: pointCost,
+      );
+    }
     try {
       final response = await _dio.post(
         '/api/energy/purchase',
-        data: {'amount': amount},
+        data: {
+          'amount': amount,
+          'paymentMethod': paymentMethod,
+          if (cashPrice != null) 'cashPrice': cashPrice,
+          if (pointCost != null) 'pointCost': pointCost,
+        },
       );
 
       if (response.statusCode != 200 && response.statusCode != 201) {

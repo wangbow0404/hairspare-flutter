@@ -167,7 +167,7 @@ class _EducationEnergyCheckoutScreenState
                       AppTheme.spacing4,
                       AppTheme.spacing4 + MediaQuery.paddingOf(context).bottom,
                     ),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppTheme.backgroundWhite,
                       border: Border(
                         top: BorderSide(color: AppTheme.borderGray),

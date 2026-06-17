@@ -425,7 +425,7 @@ class _ShopMySpacesEmptyState extends StatelessWidget {
             Container(
               width: 96,
               height: 96,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppTheme.primaryPurpleLight,
                 shape: BoxShape.circle,
               ),

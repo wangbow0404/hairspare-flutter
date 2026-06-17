@@ -225,15 +225,25 @@ class _ImmersiveAvatar extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 40,
-        height: 40,
+        width: 44,
+        height: 44,
+        padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 1.8),
-          color: Colors.black26,
+          border: Border.all(
+            color: AppTheme.stitchPrimaryContainer.withValues(alpha: 0.85),
+            width: 2,
+          ),
         ),
-        child: Center(
-          child: Text(emoji ?? '👤', style: const TextStyle(fontSize: 18)),
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 1.5),
+            color: Colors.black26,
+          ),
+          child: Center(
+            child: Text(emoji ?? '👤', style: const TextStyle(fontSize: 18)),
+          ),
         ),
       ),
     );

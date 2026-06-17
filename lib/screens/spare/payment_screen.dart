@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/icon_mapper.dart';
-import '../../widgets/common/shared_app_bar.dart';
+import '../../widgets/common/spare_subpage_app_bar.dart';
+import '../../widgets/stitch/stitch_empty_state.dart';
 import '../../services/payment_service.dart';
 /// Next.js와 동일한 결제 화면
 
@@ -102,7 +103,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     if (_isLoading) {
       return Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        appBar: SharedAppBar(
+        appBar: SpareSubpageAppBar(
           title: '결제 정보',
           showBackButton: canPop,
         ),
@@ -112,7 +113,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: SharedAppBar(
+      appBar: SpareSubpageAppBar(
         title: '결제 정보',
         showBackButton: canPop,
       ),
@@ -126,33 +127,24 @@ class _PaymentScreenState extends State<PaymentScreen> {
               '결제 내역',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.stitchTextPrimary,
               ),
             ),
             const SizedBox(height: AppTheme.spacing4),
             Container(
               decoration: BoxDecoration(
                 color: AppTheme.backgroundWhite,
-                borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXl),
                 border: Border.all(color: AppTheme.borderGray),
+                boxShadow: AppTheme.stitchSoftShadow,
               ),
               child: _payments.isEmpty
-                  ? Padding(
-                      padding: AppTheme.spacing(AppTheme.spacing8),
-                      child: Column(
-                        children: [
-                          IconMapper.icon('creditcard', size: 48, color: AppTheme.textTertiary) ??
-                              const Icon(Icons.credit_card, size: 48, color: AppTheme.textTertiary),
-                          const SizedBox(height: AppTheme.spacing3),
-                          Text(
-                            '결제 내역이 없습니다',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontSize: 14,
-                              color: AppTheme.textSecondary,
-                            ),
-                          ),
-                        ],
+                  ? const Padding(
+                      padding: EdgeInsets.all(AppTheme.spacing8),
+                      child: StitchEmptyState(
+                        message: '결제 내역이 없습니다',
+                        iconName: 'creditcard',
                       ),
                     )
                   : Column(

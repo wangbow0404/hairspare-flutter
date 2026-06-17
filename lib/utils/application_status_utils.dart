@@ -11,6 +11,7 @@ abstract final class ApplicationStatusUtils {
       case 'pending':
       case 'approved':
       case 'rejected':
+      case 'cancelled_contact_violation':
         return raw;
       default:
         return raw;
@@ -25,6 +26,8 @@ abstract final class ApplicationStatusUtils {
         return '승인됨';
       case 'rejected':
         return '거절됨';
+      case 'cancelled_contact_violation':
+        return '위반 취소';
       default:
         return raw;
     }

@@ -31,14 +31,14 @@ class WorkCheckScrollContent extends StatelessWidget {
             vertical: AppTheme.spacing8,
             horizontal: AppTheme.spacing4,
           ),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppTheme.primaryBlueDark,
-                AppTheme.primaryPurple,
-                AppTheme.primaryPink,
+                Color(0xFF7800CE),
+                Color(0xFF9333EA),
+                Color(0xFFEC4899),
               ],
             ),
           ),
@@ -54,7 +54,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryBlue.withValues(alpha: 0.2),
+                        color: AppTheme.stitchPrimaryContainer.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -66,7 +66,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                       width: 96,
                       height: 96,
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryPurple500.withValues(alpha: 0.2),
+                        color: AppTheme.stitchPrimaryContainer.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -205,7 +205,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                                   ?.copyWith(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
-                                    color: AppTheme.primaryBlue,
+                                    color: AppTheme.stitchPrimaryContainer,
                                   ),
                             ),
                           ],
@@ -263,8 +263,8 @@ class WorkCheckScrollContent extends StatelessWidget {
                                     decoration: BoxDecoration(
                                       gradient: const LinearGradient(
                                         colors: [
-                                          AppTheme.primaryBlue,
-                                          AppTheme.primaryPurple500,
+                                          AppTheme.stitchPrimaryContainer,
+                                          AppTheme.stitchPrimaryContainer,
                                         ],
                                       ),
                                       borderRadius: AppTheme.borderRadius(
@@ -290,8 +290,8 @@ class WorkCheckScrollContent extends StatelessWidget {
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                       colors: [
-                                        AppTheme.primaryBlue,
-                                        AppTheme.primaryPurple500,
+                                        AppTheme.stitchPrimaryContainer,
+                                        AppTheme.stitchPrimaryContainer,
                                       ],
                                     ),
                                     shape: BoxShape.circle,
@@ -427,7 +427,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                                 color: isSunday
                                     ? AppTheme.urgentRed
                                     : isSaturday
-                                    ? AppTheme.primaryBlue
+                                    ? AppTheme.stitchPrimaryContainer
                                     : AppTheme.textGray700,
                               ),
                         ),
@@ -487,14 +487,18 @@ class WorkCheckScrollContent extends StatelessWidget {
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: isToday
-                              ? AppTheme.primaryBlue.withValues(alpha: 0.1)
+                          color: isWorkChecked
+                              ? AppTheme.primaryBlue.withValues(alpha: 0.08)
+                              : isToday
+                              ? AppTheme.stitchPrimaryContainer.withValues(alpha: 0.1)
                               : AppTheme.backgroundWhite,
                           border: Border.all(
-                            color: isToday
+                            color: isWorkChecked
                                 ? AppTheme.primaryBlue
+                                : isToday
+                                ? AppTheme.stitchPrimaryContainer
                                 : hasAnyEvent
-                                ? AppTheme.primaryBlue
+                                ? AppTheme.stitchPrimaryContainer
                                 : AppTheme.borderGray,
                             width: isSelectedDate && hasAnyEvent ? 2 : 1,
                           ),
@@ -518,11 +522,11 @@ class WorkCheckScrollContent extends StatelessWidget {
                                             ? FontWeight.bold
                                             : FontWeight.w500,
                                         color: isToday
-                                            ? AppTheme.primaryBlue
+                                            ? AppTheme.stitchPrimaryContainer
                                             : isSunday
                                             ? AppTheme.urgentRed
                                             : isSaturday
-                                            ? AppTheme.primaryBlue
+                                            ? AppTheme.stitchPrimaryContainer
                                             : AppTheme.textGray700,
                                       ),
                                 ),
@@ -566,7 +570,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                                         width: 10,
                                         height: 10,
                                         decoration: const BoxDecoration(
-                                          color: AppTheme.primaryPurple500,
+                                          color: AppTheme.stitchPrimaryContainer,
                                           shape: BoxShape.circle,
                                         ),
                                       ),
@@ -576,10 +580,10 @@ class WorkCheckScrollContent extends StatelessWidget {
                                 padding: EdgeInsets.only(
                                   top: hasWork ? 2 : AppTheme.spacing1,
                                 ),
-                                child: Icon(
+                                child: const Icon(
                                   Icons.school,
                                   size: 12,
-                                  color: AppTheme.primaryPurple,
+                                  color: AppTheme.stitchPrimaryContainer,
                                 ),
                               ),
                           ],
@@ -600,7 +604,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                         width: 16,
                         height: 16,
                         decoration: const BoxDecoration(
-                          color: AppTheme.primaryPurple500,
+                          color: AppTheme.stitchPrimaryContainer,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -649,10 +653,10 @@ class WorkCheckScrollContent extends StatelessWidget {
                   const SizedBox(width: AppTheme.spacing4),
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.school,
                         size: 16,
-                        color: AppTheme.primaryPurple,
+                        color: AppTheme.stitchPrimaryContainer,
                       ),
                       const SizedBox(width: AppTheme.spacing1),
                       Text(
@@ -741,14 +745,21 @@ class WorkCheckScrollContent extends StatelessWidget {
                           child: Container(
                             padding: AppTheme.spacing(AppTheme.spacing4),
                             decoration: BoxDecoration(
-                              color: isSelected && !isScheduleChecked
-                                  ? AppTheme.primaryBlue.withValues(alpha: 0.1)
+                              color: isScheduleChecked
+                                  ? AppTheme.primaryBlue.withValues(alpha: 0.08)
+                                  : isSelected && !isScheduleChecked
+                                  ? AppTheme.stitchPrimaryContainer.withValues(alpha: 0.1)
                                   : AppTheme.backgroundWhite,
                               border: Border.all(
-                                color: isSelected && !isScheduleChecked
+                                color: isScheduleChecked
                                     ? AppTheme.primaryBlue
+                                    : isSelected && !isScheduleChecked
+                                    ? AppTheme.stitchPrimaryContainer
                                     : AppTheme.borderGray,
-                                width: isSelected && !isScheduleChecked ? 2 : 1,
+                                width: isScheduleChecked ||
+                                        (isSelected && !isScheduleChecked)
+                                    ? 2
+                                    : 1,
                               ),
                               borderRadius: AppTheme.borderRadius(
                                 AppTheme.radiusLg,
@@ -922,7 +933,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w500,
                                                 color: isProposed
-                                                    ? AppTheme.primaryPurple
+                                                    ? AppTheme.stitchPrimaryContainer
                                                     : AppTheme.purple700,
                                               ),
                                         ),
@@ -996,7 +1007,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                       ? null
                       : vm.handleCheckIn,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryBlue,
+                    backgroundColor: AppTheme.stitchPrimaryContainer,
                     foregroundColor: Colors.white,
                     disabledBackgroundColor: AppTheme.borderGray300,
                     disabledForegroundColor: AppTheme.textSecondary,
@@ -1228,7 +1239,7 @@ Widget _workCheckInfoItem(BuildContext context, String text) {
         '•',
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           fontSize: 14,
-          color: AppTheme.primaryBlue,
+          color: AppTheme.stitchPrimaryContainer,
         ),
       ),
       const SizedBox(width: AppTheme.spacing2),

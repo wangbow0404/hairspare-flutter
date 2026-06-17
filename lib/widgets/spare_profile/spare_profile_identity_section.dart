@@ -48,7 +48,7 @@ class SpareProfileIdentitySection extends StatelessWidget {
                             end: Alignment.bottomRight,
                             colors: user?.id != null
                                 ? spareProfileAvatarGradient(user!.id)
-                                : [AppTheme.primaryBlue, AppTheme.primaryPurple],
+                                : [AppTheme.stitchPrimaryContainer, AppTheme.stitchPrimary],
                           ),
                           borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                           boxShadow: AppTheme.shadowLg,
@@ -94,7 +94,7 @@ class SpareProfileIdentitySection extends StatelessWidget {
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryBlue,
+                              color: AppTheme.stitchPrimary,
                               borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                               boxShadow: AppTheme.shadowMd,
                             ),

@@ -31,7 +31,7 @@ abstract final class ScheduleConflictDialog {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.45),
+      barrierColor: Colors.black.withValues(alpha: 0.4),
       builder: (ctx) => _ScheduleConflictSheet(
         actionLabel: actionLabel,
         conflicts: conflicts,
@@ -96,15 +96,22 @@ abstract final class ScheduleConflictDialog {
             code: ScheduleCancellationPolicy.cancelBlockedCode,
           );
         }
-        await service.cancelSchedule(
-          s.id,
-          cancelReason: '시간 겹침으로 $actionLabel 전 취소',
-        );
+        if (s.status == 'proposed') {
+          await service.rejectWorkProposal(s.id);
+        } else {
+          await service.cancelSchedule(
+            s.id,
+            cancelReason: '시간 겹침으로 $actionLabel 전 취소',
+          );
+        }
       }
       await onResolved?.call();
       if (context.mounted) {
+        final hasProposal = cancellable.any((s) => s.status == 'proposed');
         messenger.showSuccess(
-          '겹치는 근무를 취소했습니다. 다시 $actionLabel 해 주세요.',
+          hasProposal
+              ? '겹치는 제안을 거절했습니다. 다시 $actionLabel 해 주세요.'
+              : '겹치는 근무를 취소했습니다. 다시 $actionLabel 해 주세요.',
         );
       }
       return true;
@@ -135,349 +142,300 @@ class _ScheduleConflictSheet extends StatelessWidget {
       context: CancellationContext.overlapResolution,
     );
     final canCancelAny = cancellable.isNotEmpty;
-    final allBlocked = !canCancelAny;
 
     return GlassModalBottomSheet(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const GlassModalDragHandle(),
-          Flexible(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      stitchStyle: true,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final screenH = MediaQuery.sizeOf(context).height;
+          final sheetMax = constraints.maxHeight.isFinite
+              ? constraints.maxHeight
+              : screenH * 0.88;
+          final scrollMaxHeight = (sheetMax - 220).clamp(120.0, screenH * 0.55);
+
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const GlassModalDragHandle(stitchStyle: true),
+              ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: scrollMaxHeight),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const GlassModalHeroIcon(
-                        emoji: '⏱️',
-                        size: 56,
-                        gradientColors: [
-                          Color(0xFFFFEDD5),
-                          Color(0xFFE0E7FF),
-                        ],
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '근무 시간이 겹려요',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: AppTheme.textPrimary,
-                                    height: 1.2,
-                                    letterSpacing: -0.3,
-                                  ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              '같은 날 다른 근무와 $actionLabel 시간이 겹칩니다. '
-                              '아래 일정을 정리한 뒤 진행할 수 있어요.',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: AppTheme.textSecondary,
-                                    height: 1.45,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 32,
-                          minHeight: 32,
-                        ),
-                        icon: Icon(
-                          Icons.close_rounded,
-                          size: 22,
-                          color: AppTheme.textTertiary.withValues(alpha: 0.85),
-                        ),
-                        onPressed: () => Navigator.pop(
+                      _ConflictHeader(
+                        actionLabel: actionLabel,
+                        onClose: () => Navigator.pop(
                           context,
                           _ConflictChoice.dismiss,
                         ),
                       ),
+                      const SizedBox(height: AppTheme.spacing6),
+                      _StitchConflictNotice(actionLabel: actionLabel),
+                      const SizedBox(height: AppTheme.spacing8),
+                      const _StitchCancellationPolicySection(),
+                      const SizedBox(height: AppTheme.spacing8),
+                      const Text(
+                        '겹치는 근무',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.stitchTextPrimary,
+                          height: 1.3,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spacing4),
+                      ...conflicts.map(
+                        (s) => _StitchConflictScheduleCard(
+                          schedule: s,
+                          eligibility: ScheduleCancellationPolicy.evaluate(
+                            s,
+                            context: CancellationContext.overlapResolution,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 18),
-                  _OverlapHintBanner(actionLabel: actionLabel),
-                  const SizedBox(height: 12),
-                  const _CancellationPolicySummaryCard(),
-                  if (allBlocked) ...[
-                    const SizedBox(height: 12),
-                    _BlockedContactBanner(),
-                  ],
-                  const SizedBox(height: 16),
-                  Text(
-                    '겹치는 근무',
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textGray700,
-                        ),
-                  ),
-                  const SizedBox(height: 10),
-                  ...conflicts.map(
-                    (s) => _ConflictScheduleCard(
-                      schedule: s,
-                      eligibility: ScheduleCancellationPolicy.evaluate(
-                        s,
-                        context: CancellationContext.overlapResolution,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (canCancelAny)
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(
-                        context,
-                        _ConflictChoice.cancelConflicts,
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6366F1),
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: AppTheme.borderRadius(
-                            AppTheme.radiusXl,
-                          ),
-                        ),
-                      ),
-                      child: Text(
-                        cancellable.length > 1
-                            ? '겹치는 근무 ${cancellable.length}건 취소 후 계속'
-                            : '겹치는 근무 취소 후 계속',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  )
-                else
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 14,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.42),
-                      borderRadius: AppTheme.borderRadius(
-                        AppTheme.radiusLg,
-                      ),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.75),
-                      ),
-                    ),
-                    child: Text(
-                      '근무 시작 시각 이후인 일정은 앱에서 취소할 수 없습니다. '
-                      '매장에 문의해 주세요.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.textSecondary,
-                            height: 1.45,
-                            fontWeight: FontWeight.w500,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(
-                      context,
-                      _ConflictChoice.openSchedule,
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF6366F1),
-                      side: BorderSide(
-                        color: const Color(0xFF6366F1).withValues(alpha: 0.35),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: AppTheme.borderRadius(
-                          AppTheme.radiusXl,
-                        ),
-                      ),
-                    ),
-                    child: const Text(
-                      '스케줄표에서 확인',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
+              _ConflictFooter(
+                canCancelAny: canCancelAny,
+                cancellableCount: cancellable.length,
+                onCancelConflicts: () => Navigator.pop(
+                  context,
+                  _ConflictChoice.cancelConflicts,
                 ),
-                const SizedBox(height: 4),
-                TextButton(
-                  onPressed: () => Navigator.pop(
-                    context,
-                    _ConflictChoice.dismiss,
-                  ),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppTheme.textSecondary,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                  child: const Text(
-                    '나중에 할게요',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                onOpenSchedule: () => Navigator.pop(
+                  context,
+                  _ConflictChoice.openSchedule,
                 ),
-              ],
-            ),
-          ),
-        ],
+                onDismiss: () => Navigator.pop(
+                  context,
+                  _ConflictChoice.dismiss,
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 }
 
-class _OverlapHintBanner extends StatelessWidget {
-  const _OverlapHintBanner({required this.actionLabel});
+class _ConflictHeader extends StatelessWidget {
+  const _ConflictHeader({
+    required this.actionLabel,
+    required this.onClose,
+  });
+
+  final String actionLabel;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: const BoxDecoration(
+            color: Color(0xFFF0DBFF),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.schedule_rounded,
+            size: 24,
+            color: AppTheme.stitchPrimary,
+          ),
+        ),
+        const SizedBox(width: AppTheme.spacing4),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '근무 시간이 겹쳐요',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.stitchTextPrimary,
+                  height: 1.3,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing1),
+              Text(
+                '같은 날 다른 근무와 $actionLabel 시간이 겹칩니다. '
+                '겹치는 근무를 확인해주세요.',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.stitchTextSecondary,
+                  height: 1.45,
+                ),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          icon: const Icon(
+            Icons.close_rounded,
+            size: 22,
+            color: AppTheme.stitchTextSecondary,
+          ),
+          onPressed: onClose,
+        ),
+      ],
+    );
+  }
+}
+
+class _StitchConflictNotice extends StatelessWidget {
+  const _StitchConflictNotice({required this.actionLabel});
 
   final String actionLabel;
 
   @override
   Widget build(BuildContext context) {
+    final noticeBody = actionLabel == '지원'
+        ? '하루에 시간이 겹치는 근무는 등록할 수 없어요. '
+            '기존 스케줄을 취소하거나 조정해야 이 공고에 지원할 수 있습니다.'
+        : '하루에 시간이 겹치는 근무는 등록할 수 없어요. '
+            '기존 스케줄을 취소하거나 조정해야 $actionLabel을(를) 진행할 수 있습니다.';
+
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 12,
-      ),
+      padding: const EdgeInsets.all(AppTheme.spacing4),
       decoration: BoxDecoration(
-        color: AppTheme.orange50.withValues(alpha: 0.55),
-        borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.75),
-        ),
+        color: const Color(0xFFF0DBFF),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        border: Border.all(color: const Color(0xFFE9D5FF)),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.info_outline_rounded,
-            size: 18,
-            color: AppTheme.orange600.withValues(alpha: 0.9),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              '하루에 시간이 겹치는 근무는 등록할 수 없어요. '
-              '취소 가능한 기존 근무를 정리하면 $actionLabel을(를) 이어서 진행할 수 있습니다.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.orange600,
-                    height: 1.45,
-                    fontWeight: FontWeight.w500,
-                  ),
-            ),
-          ),
-        ],
+      child: Text(
+        noticeBody,
+        style: const TextStyle(
+          fontSize: 14,
+          color: Color(0xFF6800B4),
+          height: 1.5,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }
 }
 
-class _CancellationPolicySummaryCard extends StatelessWidget {
-  const _CancellationPolicySummaryCard();
+class _StitchCancellationPolicySection extends StatelessWidget {
+  const _StitchCancellationPolicySection();
+
+  static const List<String> _policyLines = [
+    '근무 시작 24시간 전: 위약금 없이 취소 가능',
+    '근무 시작 24시간 이내: 패널티 부여',
+    '제안 대기 중인 근무는 자유롭게 취소 가능',
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.42),
-        borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.75)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: ScheduleCancellationPolicy.policyBulletLines(
-          actor: CancellationActor.spare,
-        )
-            .take(3)
-            .map(
-              (line) => Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  '· $line',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textGray700,
-                        height: 1.4,
-                      ),
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          children: [
+            Icon(
+              Icons.info_outline_rounded,
+              size: 20,
+              color: AppTheme.stitchTextSecondary,
+            ),
+            SizedBox(width: AppTheme.spacing2),
+            Text(
+              '취소 정책 안내',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.stitchTextPrimary,
               ),
-            )
-            .toList(),
-      ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spacing2),
+        Padding(
+          padding: const EdgeInsets.only(left: AppTheme.spacing1),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: _policyLines
+                .map(
+                  (line) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppTheme.spacing1),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '• ',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.stitchTextSecondary,
+                            height: 1.4,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            line,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.stitchTextSecondary,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _BlockedContactBanner extends StatelessWidget {
+class _StitchChip extends StatelessWidget {
+  const _StitchChip({
+    required this.label,
+    required this.foreground,
+    required this.background,
+  });
+
+  final String label;
+  final Color foreground;
+  final Color background;
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.urgentRedLight.withValues(alpha: 0.28),
-        borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.75),
-        ),
+        color: background,
+        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.storefront_outlined,
-            size: 20,
-            color: AppTheme.urgentRed,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              ScheduleCancellationPolicy.blockedOverlapMessage(),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.urgentRed.withValues(alpha: 0.95),
-                    height: 1.45,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ),
-        ],
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: foreground,
+          height: 1.2,
+        ),
       ),
     );
   }
 }
 
-class _ConflictScheduleCard extends StatelessWidget {
-  const _ConflictScheduleCard({
+class _StitchConflictScheduleCard extends StatelessWidget {
+  const _StitchConflictScheduleCard({
     required this.schedule,
     required this.eligibility,
   });
@@ -492,7 +450,7 @@ class _ConflictScheduleCard extends StatelessWidget {
         ? schedule.startTime
         : '${ScheduleWorkSession.formatHm(window.start)}~'
             '${ScheduleWorkSession.formatHm(window.end)}';
-    String dateLabel = schedule.date;
+    var dateLabel = schedule.date;
     final parsed = DateTime.tryParse(schedule.date);
     if (parsed != null) {
       dateLabel = DateFormat('M월 d일 (E)', 'ko_KR').format(
@@ -500,135 +458,226 @@ class _ConflictScheduleCard extends StatelessWidget {
       );
     }
     final shop = ScheduleConflict.shopLabel(schedule);
-    final statusLabel = schedule.status == 'proposed' ? '제안 대기' : '근무 예정';
-    final statusColor = schedule.status == 'proposed'
-        ? AppTheme.primaryPurple
-        : AppTheme.primaryBlue;
+    final isProposed = schedule.status == 'proposed';
     final canCancel = eligibility.canCancelInApp;
-    final cancelChipColor =
-        canCancel ? AppTheme.primaryGreen : AppTheme.urgentRed;
+
+    final secondLabel = isProposed
+        ? (canCancel ? '거절 가능' : '제안 대기')
+        : eligibility.eligibilityChipLabel;
+    final secondFg = isProposed
+        ? (canCancel ? AppTheme.green600 : AppTheme.stitchPrimary)
+        : canCancel
+        ? AppTheme.green600
+        : AppTheme.urgentRed;
+    final secondBg = isProposed
+        ? (canCancel
+            ? AppTheme.green600.withValues(alpha: 0.1)
+            : const Color(0xFFF0DBFF))
+        : secondFg.withValues(alpha: 0.1);
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
+      padding: const EdgeInsets.all(AppTheme.spacing4),
       decoration: BoxDecoration(
-        color: canCancel
-            ? Colors.white.withValues(alpha: 0.5)
-            : Colors.white.withValues(alpha: 0.32),
-        borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-        border: Border.all(
-          color: canCancel
-              ? const Color(0xFF6366F1).withValues(alpha: 0.28)
-              : Colors.white.withValues(alpha: 0.65),
-          width: 1.5,
-        ),
+        color: AppTheme.backgroundWhite,
+        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+        border: Border.all(color: AppTheme.borderGray),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Wrap(
+            spacing: AppTheme.spacing1,
+            runSpacing: AppTheme.spacing1,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 3,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.urgentRed,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                ),
-                child: const Text(
-                  '겹침',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+              _StitchChip(
+                label: '겹침',
+                foreground: AppTheme.urgentRed,
+                background: AppTheme.urgentRed.withValues(alpha: 0.1),
               ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 3,
-                ),
-                decoration: BoxDecoration(
-                  color: cancelChipColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                ),
-                child: Text(
-                  eligibility.eligibilityChipLabel,
-                  style: TextStyle(
-                    color: cancelChipColor,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                ),
-                child: Text(
-                  statusLabel,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: statusColor,
-                  ),
-                ),
+              _StitchChip(
+                label: secondLabel,
+                foreground: secondFg,
+                background: secondBg,
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppTheme.spacing2),
           Text(
             shop,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
-                ),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.stitchTextPrimary,
+              height: 1.25,
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.spacing1),
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.calendar_today_outlined,
-                size: 15,
-                color: AppTheme.textSecondary.withValues(alpha: 0.9),
+                size: 16,
+                color: AppTheme.stitchTextSecondary,
               ),
-              const SizedBox(width: 6),
-              Text(
-                dateLabel,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondary,
-                      fontWeight: FontWeight.w500,
-                    ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  dateLabel,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppTheme.stitchTextSecondary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              const SizedBox(width: 14),
-              Icon(
+              const SizedBox(width: AppTheme.spacing2),
+              const Text(
+                '·',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.stitchTextSecondary,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing2),
+              const Icon(
                 Icons.schedule_rounded,
                 size: 16,
-                color: AppTheme.textSecondary.withValues(alpha: 0.9),
+                color: AppTheme.stitchTextSecondary,
               ),
-              const SizedBox(width: 6),
-              Text(
-                timeLabel,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  timeLabel,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppTheme.stitchTextSecondary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ConflictFooter extends StatelessWidget {
+  const _ConflictFooter({
+    required this.canCancelAny,
+    required this.cancellableCount,
+    required this.onCancelConflicts,
+    required this.onOpenSchedule,
+    required this.onDismiss,
+  });
+
+  final bool canCancelAny;
+  final int cancellableCount;
+  final VoidCallback onCancelConflicts;
+  final VoidCallback onOpenSchedule;
+  final VoidCallback onDismiss;
+
+  static const double _footerButtonHeight = 52;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppTheme.backgroundWhite,
+          borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+          border: Border.all(color: const Color(0xFFE9D5FF), width: 1.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ElevatedButton(
+              onPressed: canCancelAny ? onCancelConflicts : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.stitchPrimary,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: AppTheme.borderGray300,
+                disabledForegroundColor: AppTheme.stitchTextSecondary,
+                elevation: 0,
+                minimumSize: const Size(double.infinity, _footerButtonHeight),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                ),
+              ),
+              child: Text(
+                cancellableCount > 1
+                    ? '겹치는 근무 $cancellableCount건 취소 후 계속'
+                    : '겹치는 근무 취소 후 계속',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  height: 1.25,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing2),
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: OutlinedButton(
+                    onPressed: onOpenSchedule,
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: AppTheme.backgroundWhite,
+                      foregroundColor: AppTheme.stitchPrimary,
+                      side: const BorderSide(color: AppTheme.stitchPrimary),
+                      minimumSize: const Size(0, _footerButtonHeight),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                      ),
+                    ),
+                    child: const Text(
+                      '스케줄표에서 확인',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        height: 1.25,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacing2),
+                Expanded(
+                  flex: 2,
+                  child: TextButton(
+                    onPressed: onDismiss,
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppTheme.stitchTextSecondary,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      minimumSize: const Size(0, _footerButtonHeight),
+                    ),
+                    child: const Text(
+                      '나중에 할게요',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        height: 1.25,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

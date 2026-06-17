@@ -51,7 +51,7 @@ class WorkCheckEducationCard extends StatelessWidget {
                   ),
                   child: const Icon(
                     Icons.school_outlined,
-                    color: AppTheme.primaryPurple,
+                    color: AppTheme.stitchPrimaryContainer,
                     size: 22,
                   ),
                 ),

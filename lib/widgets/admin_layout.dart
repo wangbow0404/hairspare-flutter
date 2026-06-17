@@ -5,6 +5,7 @@ import '../core/di/service_locator.dart';
 import '../core/router/app_navigation.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
+import 'common/hairspare_brand_assets.dart';
 /// 관리자 레이아웃 위젯 (사이드바 + 헤더)
 class AdminLayout extends StatefulWidget {
   final Widget child;
@@ -296,28 +297,8 @@ class _AdminLayoutState extends State<AdminLayout> {
                               mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Container(
-                                  width: isVeryNarrow ? 28 : (isMobile ? 36 : 40),
-                                  height: isVeryNarrow ? 28 : (isMobile ? 36 : 40),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [AppTheme.primaryPurple500, AppTheme.primaryPink],
-                            ),
-                            borderRadius: BorderRadius.circular(AppTheme.radius2xl),
-                            boxShadow: AppTheme.shadowLg,
-                          ),
-                          child: Center(
-                            child: Text(
-                              'H',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: isVeryNarrow ? 14 : (isMobile ? 16 : 18),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
+                                HairSpareBrandSymbol(
+                          size: isVeryNarrow ? 28 : (isMobile ? 36 : 40),
                         ),
                         if (!isVeryNarrow) ...[
                           SizedBox(width: isMobile ? AppTheme.spacing1 : AppTheme.spacing2),
@@ -330,14 +311,8 @@ class _AdminLayoutState extends State<AdminLayout> {
                                 mainAxisSize: MainAxisSize.min,
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(
-                                    'HairSpare',
-                                    style: TextStyle(
-                                      fontSize: isMobile ? 12 : 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.primaryPurple,
-                                    ),
-                                    maxLines: 1,
+                                  HairSpareBrandLogo(
+                                    height: isMobile ? 18 : 22,
                                   ),
                                   Text(
                                     '관리자',

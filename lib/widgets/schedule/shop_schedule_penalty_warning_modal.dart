@@ -93,8 +93,8 @@ abstract final class ShopSchedulePenaltyWarningModal {
     required ShopCancellationWarningLevel warningLevel,
     DateTime? suspendedUntil,
   }) {
-    final limit = ScheduleCancellationPolicy.shopUnilateralCancelLimit30d;
-    final days = ScheduleCancellationPolicy.shopJobPostingSuspensionDays;
+    const limit = ScheduleCancellationPolicy.shopUnilateralCancelLimit30d;
+    const days = ScheduleCancellationPolicy.shopJobPostingSuspensionDays;
 
     if (warningLevel == ShopCancellationWarningLevel.suspended &&
         suspendedUntil != null) {
@@ -107,12 +107,12 @@ abstract final class ShopSchedulePenaltyWarningModal {
     if (warningLevel == ShopCancellationWarningLevel.suspensionImminent) {
       return '최근 30일 일방 취소 $cancelCount회입니다. '
           '이번 취소 시 누적 $limit회에 도달하여 '
-          '${days}일간 신규 공고 등록이 제한됩니다. '
+          '$days일간 신규 공고 등록이 제한됩니다. '
           '스페어 채팅방에 취소 알림이 자동 전송됩니다.';
     }
 
     return '최근 30일 일방 취소 $cancelCount회입니다. '
-        '누적 $limit회 이상 시 ${days}일간 신규 공고 등록이 제한됩니다. '
+        '누적 $limit회 이상 시 $days일간 신규 공고 등록이 제한됩니다. '
         '취소 시 공고 에너지·수수료는 환불되지 않을 수 있습니다.';
   }
 }

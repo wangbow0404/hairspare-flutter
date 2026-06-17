@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../theme/app_theme.dart';
-import '../../widgets/banner_carousel.dart';
+import '../../theme/home_text_styles.dart';
+import '../../widgets/stitch/stitch_hero_banner.dart';
 import '../../widgets/category_grid.dart';
 import '../../widgets/customer_service_section.dart';
 import '../../screens/shop/applicants_screen.dart';
@@ -15,7 +16,6 @@ import '../../screens/shop/schedule_screen.dart';
 import '../../screens/shop/spares_list_screen.dart';
 import '../../view_models/shop_home_view_model.dart';
 import 'shop_home_app_bar.dart';
-import 'shop_home_cards.dart';
 import 'shop_home_spare_sections.dart';
 
 /// 샵 홈 본문 스크롤(배너·카테고리·대시보드·리스트). 데이터는 [ShopHomeViewModel].
@@ -40,6 +40,60 @@ class ShopHomeScrollView extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
+    Future<void> openJobsList() async {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ShopJobsListScreen()),
+      );
+      if (context.mounted) {
+        await context.read<ShopHomeViewModel>().loadInitial();
+      }
+    }
+
+    Future<void> openApplicants() async {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ShopApplicantsScreen()),
+      );
+      if (context.mounted) {
+        await context.read<ShopHomeViewModel>().loadInitial();
+      }
+    }
+
+    void openSchedule() {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ShopScheduleScreen()),
+      );
+    }
+
+    Widget dashboardCard({
+      required String value,
+      required String label,
+      required Gradient gradient,
+      required VoidCallback onTap,
+    }) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(AppTheme.spacing3),
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+            boxShadow: AppTheme.shadowSm,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(value, style: HomeTextStyles.dashboardValueOnGradient),
+              const SizedBox(height: AppTheme.spacing1),
+              Text(label, style: HomeTextStyles.dashboardLabelOnGradient),
+            ],
+          ),
+        ),
+      );
+    }
+
     return CustomScrollView(
       controller: scrollController,
       slivers: [
@@ -49,10 +103,7 @@ class ShopHomeScrollView extends StatelessWidget {
             decoration: const BoxDecoration(
               color: AppTheme.backgroundWhite,
               border: Border(
-                bottom: BorderSide(
-                  color: AppTheme.borderGray,
-                  width: 1,
-                ),
+                bottom: BorderSide(color: AppTheme.borderGray, width: 1),
               ),
             ),
             padding: EdgeInsets.only(
@@ -71,36 +122,37 @@ class ShopHomeScrollView extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: SizedBox(
-                    height: 240,
-                    width: double.infinity,
-                    child: BannerCarousel(
-                      height: 240,
-                      bannerImages: const [
-                        'assets/images/banners/banner1.jpg',
-                        'assets/images/banners/banner2.jpg',
-                        'assets/images/banners/banner3.jpg',
-                        'assets/images/banners/banner4.jpg',
-                      ],
-                      onBannerTap: (index) {},
-                    ),
-                  ),
-                ),
+              StitchHeroBanner(
+                height: 240,
+                variant: StitchHeroVariant.shop,
+                onCtaTap: (index) {
+                  switch (index) {
+                    case 0:
+                      openJobsList();
+                      break;
+                    case 1:
+                      _openSparesList(context);
+                      break;
+                    case 2:
+                      openSchedule();
+                      break;
+                  }
+                },
               ),
+              const SizedBox(height: AppTheme.spacing4),
               CategoryGrid(
-                padding: const EdgeInsets.only(
-                  top: 0,
-                  bottom: AppTheme.spacing6,
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing4,
+                  0,
+                  AppTheme.spacing4,
+                  AppTheme.spacing6,
                 ),
                 categories: [
                   CategoryItem(
-                    emoji: '👥',
+                    emoji: '',
+                    icon: Icons.groups_2_outlined,
                     label: '인력별',
-                    has3DEffect: true,
+                    color: AppTheme.primaryPurple,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -111,21 +163,17 @@ class ShopHomeScrollView extends StatelessWidget {
                     },
                   ),
                   CategoryItem(
-                    emoji: '📅',
+                    emoji: '',
+                    icon: Icons.event_note_outlined,
                     label: '스케줄표',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ShopScheduleScreen(),
-                        ),
-                      );
-                    },
+                    color: AppTheme.primaryBlue,
+                    onTap: openSchedule,
                   ),
                   CategoryItem(
-                    emoji: '🏪',
+                    emoji: '',
+                    icon: Icons.storefront_outlined,
                     label: '스토어',
-                    has3DEffect: true,
+                    color: AppTheme.primaryGreen,
                     onTap: () {
                       showDialog<void>(
                         context: context,
@@ -143,9 +191,10 @@ class ShopHomeScrollView extends StatelessWidget {
                     },
                   ),
                   CategoryItem(
-                    emoji: '💰',
+                    emoji: '',
+                    icon: Icons.add_card_outlined,
                     label: '+포인트',
-                    has3DEffect: true,
+                    color: AppTheme.orange500,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -156,8 +205,10 @@ class ShopHomeScrollView extends StatelessWidget {
                     },
                   ),
                   CategoryItem(
-                    emoji: '🗺️',
+                    emoji: '',
+                    icon: Icons.meeting_room_outlined,
                     label: '공간대여',
+                    color: AppTheme.primaryPink,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -168,8 +219,10 @@ class ShopHomeScrollView extends StatelessWidget {
                     },
                   ),
                   CategoryItem(
-                    emoji: '📚',
+                    emoji: '',
+                    icon: Icons.school_outlined,
                     label: '교육',
+                    color: AppTheme.primaryPurple,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -180,8 +233,10 @@ class ShopHomeScrollView extends StatelessWidget {
                     },
                   ),
                   CategoryItem(
-                    emoji: '🎯',
-                    label: '챌린지참여',
+                    emoji: '',
+                    icon: Icons.workspace_premium_outlined,
+                    label: '챌린지',
+                    color: AppTheme.primaryBlueDark,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -192,16 +247,19 @@ class ShopHomeScrollView extends StatelessWidget {
                     },
                   ),
                   CategoryItem(
-                    emoji: '💡',
+                    emoji: '',
+                    icon: Icons.lightbulb_outline,
                     label: '커넥트',
+                    color: AppTheme.yellow600,
                     onTap: () {
                       showDialog<void>(
                         context: context,
                         barrierDismissible: true,
                         builder: (ctx) => AlertDialog(
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radius2xl),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius2xl,
+                            ),
                           ),
                           title: const Text('준비 중'),
                           content: const Text('커넥트 기능은 준비 중입니다.'),
@@ -237,62 +295,35 @@ class ShopHomeScrollView extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: buildShopHomeDashboardCard(
+                  child: dashboardCard(
                     value: '${vm.activeJobCount}',
                     label: '활성 공고',
                     gradient: const LinearGradient(
                       colors: [Color(0xFF9333EA), Color(0xFFEC4899)],
                     ),
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ShopJobsListScreen(),
-                        ),
-                      );
-                      if (context.mounted) {
-                        await context.read<ShopHomeViewModel>().loadInitial();
-                      }
-                    },
+                    onTap: openJobsList,
                   ),
                 ),
                 const SizedBox(width: AppTheme.spacing3),
                 Expanded(
-                  child: buildShopHomeDashboardCard(
+                  child: dashboardCard(
                     value: '${vm.pendingApplicantsCount}',
                     label: '대기 지원자',
                     gradient: const LinearGradient(
                       colors: [Color(0xFF3B82F6), Color(0xFF06B6D4)],
                     ),
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ShopApplicantsScreen(),
-                        ),
-                      );
-                      if (context.mounted) {
-                        await context.read<ShopHomeViewModel>().loadInitial();
-                      }
-                    },
+                    onTap: openApplicants,
                   ),
                 ),
                 const SizedBox(width: AppTheme.spacing3),
                 Expanded(
-                  child: buildShopHomeDashboardCard(
+                  child: dashboardCard(
                     value: '${vm.todayScheduleCount}',
                     label: '오늘 일정',
                     gradient: const LinearGradient(
                       colors: [Color(0xFF10B981), Color(0xFF059669)],
                     ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ShopScheduleScreen(),
-                        ),
-                      );
-                    },
+                    onTap: openSchedule,
                   ),
                 ),
               ],

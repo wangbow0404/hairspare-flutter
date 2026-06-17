@@ -14,6 +14,7 @@ import 'my_spaces_screen.dart';
 import 'profile_edit_screen.dart';
 import '../../models/shop_tier.dart';
 import '../../core/router/app_navigation.dart';
+import '../../widgets/common/hairspare_brand_assets.dart';
 import '../../widgets/shop/shop_screen_safe_area.dart';
 
 /// Shop 프로필 화면
@@ -183,14 +184,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                     onTap: () {
                       AppNavigation.goShopHome(context);
                     },
-                    child: Text(
-                      'HairSpare',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryPurple,
-                          ),
-                    ),
+                    child: const HairSpareBrandLogo(height: 36),
                   ),
                   const Spacer(),
                   IconButton(

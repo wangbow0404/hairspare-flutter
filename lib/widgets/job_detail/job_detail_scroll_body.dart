@@ -3,12 +3,12 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/job.dart';
-import '../../screens/spare/messages_screen.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/icon_mapper.dart';
 import '../../utils/navigation_helper.dart';
 import '../../utils/schedule_work_session.dart';
 import '../../view_models/job_detail_view_model.dart';
+import '../common/job_thumbnail.dart';
 import 'job_detail_formatters.dart';
 import 'job_detail_header.dart';
 import 'job_detail_hero_favorite_button.dart';
@@ -80,7 +80,7 @@ class JobDetailScrollBody extends StatelessWidget {
                 _buildQuickInfoGrid(context),
                 if (!forShopOwner) _buildHowToApplySection(context),
                 _buildDetailSection(context),
-                const SizedBox(height: 100),
+                SizedBox(height: _scrollBottomPadding(context, vm)),
               ],
             ),
           ),
@@ -89,33 +89,40 @@ class JobDetailScrollBody extends StatelessWidget {
     );
   }
 
+  /// 하단 고정 [JobDetailBottomBar] 높이만큼 스크롤 여백.
+  double _scrollBottomPadding(BuildContext context, JobDetailViewModel vm) {
+    if (forShopOwner) return AppTheme.spacing6;
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
+    if (vm.isLocked) return 220 + safeBottom;
+    if (vm.isProposalMode) return 120 + safeBottom;
+    return 100 + safeBottom;
+  }
+
   Widget _buildHeroSection(BuildContext context, JobDetailViewModel vm) {
-    return Container(
-      height: 400,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppTheme.green200, AppTheme.blue200],
-        ),
-      ),
+    return SizedBox(
+      height: 288,
       child: Stack(
+        fit: StackFit.expand,
         children: [
-          // 그라데이션 오버레이
+          JobThumbnail(
+            job: job,
+            width: double.infinity,
+            height: 288,
+            borderRadius: BorderRadius.zero,
+          ),
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withValues(alpha: 0.6),
-                  Colors.black.withValues(alpha: 0.2),
+                  Colors.black.withValues(alpha: 0.55),
+                  Colors.black.withValues(alpha: 0.15),
                   Colors.transparent,
                 ],
               ),
             ),
           ),
-          // 태그들
           Positioned(
             top: AppTheme.spacing4,
             left: AppTheme.spacing4,
@@ -132,7 +139,7 @@ class JobDetailScrollBody extends StatelessWidget {
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                     ),
                     child: Text(
-                      '🚀 급구',
+                      '급구',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -149,7 +156,7 @@ class JobDetailScrollBody extends StatelessWidget {
                       vertical: AppTheme.spacing2 - 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryPurple,
+                      color: AppTheme.stitchPrimaryContainer,
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                     ),
                     child: Text(
@@ -442,12 +449,12 @@ class JobDetailScrollBody extends StatelessWidget {
                 IconMapper.icon(
                   'mappin',
                   size: 16,
-                  color: AppTheme.primaryBlue,
+                  color: AppTheme.stitchPrimaryContainer,
                 ) ??
                 const Icon(
                   Icons.location_on,
                   size: 16,
-                  color: AppTheme.primaryBlue,
+                  color: AppTheme.stitchPrimaryContainer,
                 ),
             label: '근무 지역',
             value: jobDetailRegionName(job.regionId),
@@ -458,12 +465,12 @@ class JobDetailScrollBody extends StatelessWidget {
                 IconMapper.icon(
                   'clock',
                   size: 16,
-                  color: AppTheme.primaryPurple,
+                  color: AppTheme.stitchPrimaryContainer,
                 ) ??
                 const Icon(
                   Icons.access_time,
                   size: 16,
-                  color: AppTheme.primaryPurple,
+                  color: AppTheme.stitchPrimaryContainer,
                 ),
             label: '근무 시간',
             value:
@@ -631,7 +638,7 @@ class JobDetailScrollBody extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppTheme.primaryPurple,
+              color: AppTheme.stitchPrimaryContainer,
               borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
             ),
             child: Center(
@@ -874,7 +881,7 @@ class JobDetailScrollBody extends StatelessWidget {
                       context,
                       '최신 시설',
                       AppTheme.blue200.withValues(alpha: 0.3),
-                      AppTheme.primaryBlue,
+                      AppTheme.stitchPrimaryContainer,
                     ),
                     _buildTag(
                       context,
@@ -899,12 +906,12 @@ class JobDetailScrollBody extends StatelessWidget {
         IconMapper.icon(
               'checkcircle2',
               size: 18,
-              color: AppTheme.primaryPurple,
+              color: AppTheme.stitchPrimaryContainer,
             ) ??
             const Icon(
               Icons.check_circle,
               size: 18,
-              color: AppTheme.primaryPurple,
+              color: AppTheme.stitchPrimaryContainer,
             ),
         const SizedBox(width: AppTheme.spacing2),
         Expanded(
@@ -937,36 +944,38 @@ class JobDetailScrollBody extends StatelessWidget {
   }
 
   Widget _buildContactButton(BuildContext context) {
-    final canContact = hasApplied;
+    final vm = context.read<JobDetailViewModel>();
+    final canContact = hasApplied && !vm.contactBanned;
+    final label = vm.contactBanned
+        ? '연락처 위반으로 지원 취소됨'
+        : (canContact ? '연락하기' : '지원 후 연락 가능');
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton.icon(
         onPressed: canContact
-            ? () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const MessagesScreen(),
-                  ),
-                );
+            ? () async {
+                final chatId = await vm.resolveContactChatId();
+                if (chatId != null && context.mounted) {
+                  NavigationHelper.navigateToChat(context, chatId);
+                }
               }
             : null,
         icon: Icon(
           Icons.chat_bubble_outline,
           size: 18,
-          color: canContact ? AppTheme.primaryBlue : AppTheme.textTertiary,
+          color: canContact ? AppTheme.stitchPrimaryContainer : AppTheme.textTertiary,
         ),
         label: Text(
-          canContact ? '연락하기' : '지원 후 연락 가능',
+          label,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: canContact ? AppTheme.primaryBlue : AppTheme.textTertiary,
+            color: canContact ? AppTheme.stitchPrimaryContainer : AppTheme.textTertiary,
           ),
         ),
         style: OutlinedButton.styleFrom(
           side: BorderSide(
-            color: canContact ? AppTheme.primaryBlue : AppTheme.borderGray,
+            color: canContact ? AppTheme.stitchPrimaryContainer : AppTheme.borderGray,
           ),
           padding: AppTheme.spacingSymmetric(
             horizontal: AppTheme.spacing4,

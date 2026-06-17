@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../theme/app_theme.dart';
-import '../../widgets/common/shared_app_bar.dart';
+import '../../widgets/common/spare_subpage_app_bar.dart';
+import '../../widgets/stitch/stitch_empty_state.dart';
 import '../../providers/notification_provider.dart';
 import '../../models/notification.dart' show AppNotification;
 import '../../models/user.dart';
@@ -54,7 +55,10 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: const SharedAppBar(title: '알림'),
+      appBar: SpareSubpageAppBar(
+        title: '알림',
+        showBackButton: Navigator.canPop(context),
+      ),
       body: Consumer<NotificationProvider>(
         builder: (context, notificationProvider, _) {
           if (notificationProvider.isLoading) {
@@ -65,14 +69,9 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
           final read = notificationProvider.readNotifications;
 
           if (unread.isEmpty && read.isEmpty) {
-            return Center(
-              child: Text(
-                '알림이 없습니다',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppTheme.textSecondary,
-                    ),
-                textAlign: TextAlign.center,
-              ),
+            return const StitchEmptyState(
+              message: '알림이 없습니다',
+              iconName: 'bell',
             );
           }
 

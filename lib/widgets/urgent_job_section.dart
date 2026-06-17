@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
-import '../models/job.dart';
-import '../theme/app_theme.dart';
-import '../theme/home_text_styles.dart';
-import 'job_card.dart';
 
+import '../../models/job.dart';
+import '../../theme/app_theme.dart';
+import 'stitch/stitch_compact_job_card.dart';
+import 'stitch/stitch_section_header.dart';
+
+/// Stitch 스타일 급구 공고 섹션 — 가로 스크롤 카드.
 class UrgentJobSection extends StatelessWidget {
-  final List<Job> urgentJobs;
-  final Function(Job)? onJobTap;
-  final Function(String, bool)? onFavoriteToggle;
-  final Map<String, bool> favoriteMap;
-
   const UrgentJobSection({
     super.key,
     required this.urgentJobs,
     this.onJobTap,
     this.onFavoriteToggle,
     this.favoriteMap = const {},
+    this.onViewAll,
   });
+
+  final List<Job> urgentJobs;
+  final void Function(Job)? onJobTap;
+  final void Function(String, bool)? onFavoriteToggle;
+  final Map<String, bool> favoriteMap;
+  final VoidCallback? onViewAll;
 
   @override
   Widget build(BuildContext context) {
@@ -24,59 +28,52 @@ class UrgentJobSection extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Container(
-      padding: AppTheme.spacingSymmetric(
-        horizontal: AppTheme.spacing4, // px-4
-        vertical: AppTheme.spacing6, // py-6
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: AppTheme.spacing4,
+        bottom: AppTheme.spacing2,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 섹션 헤더
-          Row(
-            children: [
-              Text(
-                '🚀',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontSize: 24, // text-2xl
-                ),
-              ),
-              const SizedBox(width: AppTheme.spacing2), // gap-2
-              const Text(
-                '급구 공고',
-                style: HomeTextStyles.sectionTitle,
-              ),
-              const SizedBox(width: AppTheme.spacing2), // gap-2
-              // 정보 아이콘
-              Container(
-                padding: AppTheme.spacing(AppTheme.spacing1), // p-1
-                decoration: const BoxDecoration(
-                  color: AppTheme.borderGray300, // bg-gray-200
-                  shape: BoxShape.circle, // rounded-full
-                ),
-                child: const Icon(
-                  Icons.info_outline,
-                  size: 16, // w-4 h-4
-                  color: AppTheme.textGray700,
-                ),
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacing4,
+            ),
+            child: StitchSectionHeader(
+              title: '놓치면 아쉬운 ',
+              titleHighlight: '급구 공고 ⏰',
+              subtitle: '지금 당장 스페어가 필요해요!',
+              onViewAll: onViewAll,
+            ),
           ),
-          const SizedBox(height: AppTheme.spacing4), // mb-4
-
-          // 급구 공고 리스트
-          Column(
-            children: urgentJobs.take(5).map((job) {
-              return JobCard(
-                job: job,
-                isUrgent: true,
-                isFavorite: favoriteMap[job.id] ?? false,
-                onTap: () => onJobTap?.call(job),
-                onFavoriteToggle: onFavoriteToggle != null
-                    ? () => onFavoriteToggle!(job.id, !(favoriteMap[job.id] ?? false))
-                    : null,
-              );
-            }).toList(),
+          const SizedBox(height: AppTheme.spacing4),
+          SizedBox(
+            height: 188,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing4,
+              ),
+              itemCount: urgentJobs.length.clamp(0, 10),
+              separatorBuilder: (_, __) =>
+                  const SizedBox(width: AppTheme.spacing4),
+              itemBuilder: (context, index) {
+                final job = urgentJobs[index];
+                final isFavorite = favoriteMap[job.id] ?? false;
+                return StitchCompactJobCard(
+                  job: job,
+                  isFavorite: isFavorite,
+                  onTap: () => onJobTap?.call(job),
+                  onFavoriteToggle: onFavoriteToggle != null
+                      ? () => onFavoriteToggle!(
+                            job.id,
+                            !isFavorite,
+                          )
+                      : null,
+                );
+              },
+            ),
           ),
         ],
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/common/hairspare_brand_assets.dart';
 import '../utils/app_bar_navigation.dart';
 import '../utils/icon_mapper.dart';
 import '../utils/navigation_helper.dart';
@@ -131,7 +132,7 @@ class SpareAppBar extends StatelessWidget implements PreferredSizeWidget {
                       horizontal: AppTheme.spacing1,
                       vertical: AppTheme.spacing2,
                     ),
-                    child: _SpareLogoText(),
+                    child: const HairSpareBrandLogo(height: 36),
                   ),
                 ),
               ),
@@ -208,28 +209,6 @@ class SpareAppBar extends StatelessWidget implements PreferredSizeWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _SpareLogoText extends StatelessWidget {
-  const _SpareLogoText();
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      'HairSpare',
-      strutStyle: const StrutStyle(
-        fontSize: 20,
-        height: 1.15,
-        forceStrutHeight: true,
-      ),
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 20,
-            height: 1.15,
-            fontWeight: FontWeight.bold,
-            color: AppTheme.primaryBlue,
-          ),
     );
   }
 }

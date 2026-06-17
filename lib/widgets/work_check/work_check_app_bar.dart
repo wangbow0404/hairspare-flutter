@@ -59,21 +59,21 @@ class WorkCheckSliverAppBar extends StatelessWidget {
                     border: OutlineInputBorder(
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                       borderSide: const BorderSide(
-                        color: AppTheme.primaryBlue,
+                        color: AppTheme.stitchPrimaryContainer,
                         width: 2,
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                       borderSide: const BorderSide(
-                        color: AppTheme.primaryBlue,
+                        color: AppTheme.stitchPrimaryContainer,
                         width: 2,
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                       borderSide: const BorderSide(
-                        color: AppTheme.primaryBlue,
+                        color: AppTheme.stitchPrimaryContainer,
                         width: 2,
                       ),
                     ),

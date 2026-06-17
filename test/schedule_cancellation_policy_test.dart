@@ -81,6 +81,22 @@ void main() {
       expect(e.status, CancellationEligibilityStatus.blockedNotScheduled);
     });
 
+    test('allows proposed rejection in overlap resolution', () {
+      final s = _schedule(
+        date: '2030-06-15',
+        startTime: '14:00',
+        status: 'proposed',
+      );
+
+      final e = ScheduleCancellationPolicy.evaluate(
+        s,
+        context: CancellationContext.overlapResolution,
+      );
+
+      expect(e.canCancelInApp, isTrue);
+      expect(e.penaltySummary, contains('거절'));
+    });
+
     test('shop warning level from cancel count', () {
       expect(
         ScheduleCancellationPolicy.shopWarningLevelForCount(0),

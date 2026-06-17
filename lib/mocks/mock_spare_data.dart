@@ -21,7 +21,9 @@ import '../utils/contact_violation_policy.dart';
 import '../utils/schedule_cancellation_policy.dart';
 import '../utils/schedule_work_session.dart';
 import '../utils/app_exception.dart';
+import '../utils/energy_purchase_pricing.dart';
 import '../utils/schedule_space_rental.dart';
+import '../utils/job_work_date_utils.dart';
 import '../models/region.dart';
 import 'mock_shop_data.dart';
 
@@ -30,19 +32,104 @@ class MockSpareData {
   static String _ymd(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
+  /// 겹침 모달 QA용 — [overlapDemoDateYmd] 10:00~18:00 확정 근무와 15:00~21:00 공고.
+  static const String overlapDemoJobId = 'job-mock-overlap-demo';
+  static const String overlapDemoBlockerScheduleId = 'sched-mock-overlap-blocker';
+
+  static String get overlapDemoDateYmd =>
+      _ymd(DateTime.now().add(const Duration(days: 1)));
+
+  static Map<String, dynamic> _overlapDemoJobJson(String dateYmd) => {
+        'id': overlapDemoJobId,
+        'images': ['https://picsum.photos/seed/hairspare-overlap-demo/400/300'],
+        'title': '[겹침테스트] 저녁 스텝 모집',
+        'shopName': '홍대 트렌디 헤어',
+        'date': dateYmd,
+        'time': '15:00',
+        'endTime': '21:00',
+        'amount': 55000,
+        'energy': 3,
+        'requiredCount': 1,
+        'regionId': 'seoul-mapo',
+        'isUrgent': true,
+        'isPremium': false,
+        'status': 'published',
+        'createdAt': DateTime.now().toIso8601String(),
+      };
+
+  static Job _overlapDemoJob() =>
+      Job.fromJson(_overlapDemoJobJson(overlapDemoDateYmd));
+
+  static Map<String, dynamic> _overlapDemoBlockerScheduleJson(String dateYmd) => {
+        'id': overlapDemoBlockerScheduleId,
+        'jobId': 'job-mock-overlap-blocker-ref',
+        'spareId': 'spare-mock-1',
+        'shopId': 'mock-shop-1',
+        'date': dateYmd,
+        'startTime': '10:00',
+        'endTime': '18:00',
+        'status': 'scheduled',
+        'createdAt': DateTime.now().toIso8601String(),
+        'updatedAt': DateTime.now().toIso8601String(),
+        'job': {
+          'id': 'job-mock-overlap-blocker-ref',
+          'title': '오전~오후 스텝',
+          'shopName': '청담 하이엔드 살롱',
+          'date': dateYmd,
+          'time': '10:00',
+          'endTime': '18:00',
+          'amount': 70000,
+          'energy': 5,
+          'requiredCount': 1,
+          'regionId': 'seoul-gangnam',
+          'isUrgent': false,
+          'isPremium': false,
+          'createdAt': DateTime.now().toIso8601String(),
+        },
+        'spare': {'id': 'spare-mock-1', 'name': '김디자이너'},
+      };
+
   /// 세션 내 찜 ID (mock 전용).
   static final Set<String> _favoriteJobIds = {'job-mock-1'};
+
+  /// 시드 공고 근무일 — 오늘 기준 N일 후 (0=오늘, 1=내일).
+  static const Map<String, int> _seedJobDayOffsets = {
+    'job-mock-1': 4,
+    'job-mock-2': 3,
+    'job-mock-3': 1,
+    'job-mock-4': 2,
+    'job-mock-5': 5,
+    'job-mock-6': 4,
+    'job-mock-7': 3,
+    'job-mock-8': 6,
+    'job-mock-9': 7,
+    'job-mock-10': 1,
+  };
+
+  static void _refreshSeedJobWorkDates() {
+    final today = DateTime.now();
+    for (var i = 0; i < _jobsJson.length; i++) {
+      final id = _jobsJson[i]['id']?.toString();
+      final offset = _seedJobDayOffsets[id];
+      if (offset == null) continue;
+      _jobsJson[i] = {
+        ...Map<String, dynamic>.from(_jobsJson[i]),
+        'date': _ymd(today.add(Duration(days: offset))),
+      };
+    }
+  }
 
   static final List<Map<String, dynamic>> _jobsJson = [
     {
       'id': 'job-mock-1',
+      'images': ['https://picsum.photos/seed/hairspare-job1/400/300'],
       'title': '오후 스텝 급구',
       'shopName': '빌라드블랑 강남점',
       'date': '2026-06-01',
       'time': '14:00',
       'endTime': '22:00',
       'amount': 50000,
-      'energy': 50,
+      'energy': 5,
       'requiredCount': 1,
       'regionId': 'seoul-gangnam',
       'isUrgent': true,
@@ -52,13 +139,14 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-2',
+      'images': ['https://picsum.photos/seed/hairspare-job2/400/300'],
       'title': '주말 디자이너 대타',
       'shopName': '헤어스튜디오 A',
       'date': '2026-06-02',
       'time': '10:00',
       'endTime': '18:00',
       'amount': 80000,
-      'energy': 80,
+      'energy': 4,
       'requiredCount': 1,
       'regionId': 'seoul-mapo',
       'isUrgent': false,
@@ -68,13 +156,14 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-3',
+      'images': ['https://picsum.photos/seed/hairspare-job3/400/300'],
       'title': '평일 오전 스텝 (초보 가능)',
       'shopName': '이미용실',
       'date': '2026-06-03',
       'time': '09:00',
       'endTime': '15:00',
       'amount': 45000,
-      'energy': 45,
+      'energy': 2,
       'requiredCount': 2,
       'regionId': 'seoul-gangnam',
       'isUrgent': false,
@@ -84,13 +173,14 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-4',
+      'images': ['https://picsum.photos/seed/hairspare-job4/400/300'],
       'title': '금요 야간 디자이너',
       'shopName': '이미용실',
       'date': '2026-06-04',
       'time': '18:00',
       'endTime': '23:00',
       'amount': 95000,
-      'energy': 95,
+      'energy': 5,
       'requiredCount': 1,
       'regionId': 'seoul-gangnam',
       'isUrgent': true,
@@ -100,13 +190,14 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-5',
+      'images': ['https://picsum.photos/seed/hairspare-job5/400/300'],
       'title': '토요일 샴푸담당 스텝',
       'shopName': '이미용실',
       'date': '2026-06-07',
       'time': '11:00',
       'endTime': '19:00',
       'amount': 52000,
-      'energy': 52,
+      'energy': 3,
       'requiredCount': 1,
       'regionId': 'seoul-seocho',
       'isUrgent': false,
@@ -116,13 +207,14 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-6',
+      'images': ['https://picsum.photos/seed/hairspare-job6/400/300'],
       'title': '[급구] 내일 오전 컷 모델',
       'shopName': '빌라드블랑 강남점',
       'date': '2026-06-08',
       'time': '10:00',
       'endTime': '14:00',
       'amount': 60000,
-      'energy': 60,
+      'energy': 5,
       'requiredCount': 1,
       'regionId': 'seoul-gangnam',
       'isUrgent': true,
@@ -132,13 +224,14 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-7',
+      'images': ['https://picsum.photos/seed/hairspare-job7/400/300'],
       'title': '일요일 휴무 대체 디자이너',
       'shopName': '헤어살롱 B',
       'date': '2026-06-09',
       'time': '12:00',
       'endTime': '20:00',
       'amount': 88000,
-      'energy': 88,
+      'energy': 4,
       'requiredCount': 1,
       'regionId': 'seoul-mapo',
       'isUrgent': false,
@@ -148,13 +241,14 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-8',
+      'images': ['https://picsum.photos/seed/hairspare-job8/400/300'],
       'title': '드라이·스타일링 보조',
       'shopName': '이미용실',
       'date': '2026-06-10',
       'time': '13:00',
       'endTime': '21:00',
       'amount': 48000,
-      'energy': 48,
+      'energy': 1,
       'requiredCount': 1,
       'regionId': 'seoul-gangnam',
       'isUrgent': false,
@@ -164,13 +258,14 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-9',
+      'images': ['https://picsum.photos/seed/hairspare-job9/400/300'],
       'title': '(임시저장) 봄 시즌 이벤트 스텝',
       'shopName': '이미용실',
       'date': '2026-06-15',
       'time': '10:00',
       'endTime': '18:00',
       'amount': 55000,
-      'energy': 55,
+      'energy': 3,
       'requiredCount': 2,
       'regionId': 'seoul-gangnam',
       'isUrgent': false,
@@ -180,13 +275,14 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-10',
+      'images': ['https://picsum.photos/seed/hairspare-job10/400/300'],
       'title': '저녁 타임 스텝 (월수금)',
       'shopName': '이미용실',
       'date': '2026-06-11',
       'time': '17:00',
       'endTime': '22:00',
       'amount': 62000,
-      'energy': 62,
+      'energy': 2,
       'requiredCount': 1,
       'regionId': 'seoul-gangnam',
       'isUrgent': false,
@@ -214,10 +310,14 @@ class MockSpareData {
 
   static Future<List<Job>> getJobs({String? searchQuery}) async {
     await Future.delayed(const Duration(milliseconds: 300));
-    var jobs = _jobsJson
-        .map((j) => Job.fromJson(j))
-        .where((j) => !j.isHidden && j.status == 'published')
-        .toList();
+    _refreshSeedJobWorkDates();
+    var jobs = [
+      _overlapDemoJob(),
+      ..._jobsJson.map((j) => Job.fromJson(j)),
+    ].where((j) {
+      if (j.isHidden || j.status != 'published') return false;
+      return !JobWorkDateUtils.isWorkDatePast(j.date);
+    }).toList();
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
       final q = searchQuery.trim().toLowerCase();
       jobs = jobs.where((j) {
@@ -231,6 +331,10 @@ class MockSpareData {
 
   static Future<Job> getJobById(String jobId) async {
     await Future.delayed(const Duration(milliseconds: 200));
+    _refreshSeedJobWorkDates();
+    if (jobId == overlapDemoJobId) {
+      return _overlapDemoJob();
+    }
     final found = _jobsJson.firstWhere(
       (j) => j['id'] == jobId,
       orElse: () => _jobsJson.first,
@@ -238,8 +342,25 @@ class MockSpareData {
     return Job.fromJson(Map<String, dynamic>.from(found));
   }
 
+  /// 샵 지원 mock 등 sync 스냅샷용 — [getJobById]와 동일 소스.
+  static Map<String, dynamic>? jobJsonSnapshot(String jobId) {
+    _refreshSeedJobWorkDates();
+    if (jobId == overlapDemoJobId) {
+      return Map<String, dynamic>.from(
+        _overlapDemoJobJson(overlapDemoDateYmd),
+      );
+    }
+    for (final raw in _jobsJson) {
+      if (raw['id'] == jobId) {
+        return Map<String, dynamic>.from(raw);
+      }
+    }
+    return null;
+  }
+
   static Future<List<Job>> getFavorites() async {
     await Future.delayed(const Duration(milliseconds: 200));
+    _refreshSeedJobWorkDates();
     final jobs = <Job>[];
     for (final id in _favoriteJobIds) {
       for (final json in _jobsJson) {
@@ -263,6 +384,16 @@ class MockSpareData {
   }
 
   static bool isFavorite(String jobId) => _favoriteJobIds.contains(jobId);
+
+  /// mock 조회수 — 지원·찜·일급 기반 추정 (인기도 보조 지표).
+  static int mockViewCountForJob(String jobId) {
+    var views = 12;
+    if (_favoriteJobIds.contains(jobId)) views += 18;
+    if (jobId.hashCode.abs() % 17 != 0) {
+      views += jobId.hashCode.abs() % 40;
+    }
+    return views;
+  }
 
   static final Set<String> _rejectedScheduleIds = {};
   static final Map<String, String> _scheduleStatusOverrides = {};
@@ -437,6 +568,111 @@ class MockSpareData {
     }
   }
 
+  static String? findChatIdForJob(String jobId) {
+    for (final c in _chatsJson) {
+      if (c['jobId']?.toString() == jobId) {
+        return c['id']?.toString();
+      }
+    }
+    return null;
+  }
+
+  /// 공고 지원 후 스페어·매장 1:1 채팅방 (없으면 생성).
+  static String ensureChatForJobApplication({
+    required String jobId,
+    required String jobTitle,
+    required String shopName,
+    required String spareId,
+    required String spareName,
+    String shopId = 'mock-shop-1',
+  }) {
+    if (isContactBannedForJob(jobId: jobId, spareId: spareId)) {
+      throw ValidationException(
+        '연락처 위반으로 이 공고 지원이 취소되어 연락할 수 없습니다.',
+      );
+    }
+
+    final existing = findChatIdForJob(jobId);
+    if (existing != null) return existing;
+
+    final chatId = 'chat-job-$jobId';
+    final now = DateTime.now();
+    const welcome =
+        '지원이 접수되었습니다. 근무 관련 문의는 이 채팅으로 남겨 주세요.';
+    _chatsJson.insert(0, {
+      'id': chatId,
+      'shopId': shopId,
+      'shopName': shopName,
+      'spareId': spareId,
+      'spareName': spareName,
+      'jobId': jobId,
+      'jobTitle': jobTitle,
+      'lastMessage': {
+        'content': welcome,
+        'createdAt': now.toIso8601String(),
+      },
+      'unreadCount': 0,
+    });
+    _chatMessages[chatId] = [
+      {
+        'id': 'msg-$chatId-welcome',
+        'chatId': chatId,
+        'senderId': shopId,
+        'senderRole': 'shop',
+        'senderName': shopName,
+        'content': welcome,
+        'createdAt': now.toIso8601String(),
+        'isRead': false,
+      },
+    ];
+    return chatId;
+  }
+
+  /// 모델 매칭 성공 시 모델과 1:1 채팅방 생성 (없으면).
+  static String ensureChatForModel({
+    required String modelId,
+    required String modelName,
+    required String spareId,
+    required String spareName,
+  }) {
+    final chatId = 'chat-model-$modelId';
+    final existing = _chatsJson.firstWhere(
+      (c) => c['id']?.toString() == chatId,
+      orElse: () => <String, dynamic>{},
+    );
+    if (existing.isNotEmpty) return chatId;
+
+    final now = DateTime.now();
+    const welcome = '모델 매칭이 성사되었어요! 촬영·시술 일정을 편하게 나눠 보세요.';
+    _chatsJson.insert(0, {
+      'id': chatId,
+      'shopId': modelId,
+      'shopName': modelName,
+      'spareId': spareId,
+      'spareName': spareName,
+      'jobId': null,
+      'jobTitle': '모델 매칭',
+      'lastMessage': {
+        'content': welcome,
+        'createdAt': now.toIso8601String(),
+      },
+      'unreadCount': 0,
+    });
+    _chatMessages[chatId] = [
+      {
+        'id': 'msg-$chatId-welcome',
+        'chatId': chatId,
+        'senderId': modelId,
+        'senderRole': 'shop',
+        'senderName': modelName,
+        'content': welcome,
+        'createdAt': now.toIso8601String(),
+        'isRead': false,
+      },
+    ];
+    return chatId;
+  }
+
   static Future<void> rejectWorkProposal(String scheduleId) async {
     await Future.delayed(const Duration(milliseconds: 220));
     _rejectedScheduleIds.add(scheduleId);
@@ -501,7 +737,7 @@ class MockSpareData {
 
     final chatId = 'chat-space-${booking.id}';
     final now = DateTime.now();
-    final welcome =
+    const welcome =
         '공간 예약이 확정되었습니다. 이용 시간과 준비물은 이 채팅으로 문의해 주세요.';
     _chatsJson.insert(0, {
       'id': chatId,
@@ -530,6 +766,24 @@ class MockSpareData {
       },
     ];
     return chatId;
+  }
+
+  /// 공간 대여 스케줄에 연결된 채팅방 id (없으면 null).
+  static String? findChatIdForSpaceSchedule(Schedule schedule) {
+    final derived = ScheduleSpaceRental.chatIdFromSchedule(schedule);
+    if (derived != null &&
+        _chatsJson.any((c) => c['id']?.toString() == derived)) {
+      return derived;
+    }
+    for (final chat in _chatsJson) {
+      if (chat['shopId']?.toString() != schedule.shopId) continue;
+      if (chat['spareId']?.toString() != schedule.spareId) continue;
+      final jobId = chat['jobId']?.toString() ?? '';
+      if (jobId.startsWith('space-')) {
+        return chat['id']?.toString();
+      }
+    }
+    return null;
   }
 
   /// 샵 지원 승인 시 근무 스케줄 생성 (mock).
@@ -573,13 +827,17 @@ class MockSpareData {
     String? ownerId,
   }) async {
     await Future.delayed(const Duration(milliseconds: 300));
+    _refreshSeedJobWorkDates();
     final today = DateTime.now();
     final todayStr = _ymd(today);
     final tomorrowStr = _ymd(today.add(const Duration(days: 1)));
     final plus2Str = _ymd(today.add(const Duration(days: 2)));
+    final plus3Str = _ymd(today.add(const Duration(days: 3)));
     final pastStr = _ymd(today.subtract(const Duration(days: 5)));
+    final overlapDay = overlapDemoDateYmd;
 
     final base = [
+      Schedule.fromJson(_overlapDemoBlockerScheduleJson(overlapDay)),
       Schedule.fromJson({
         'id': 'sched-mock-1',
         'jobId': 'job-mock-1',
@@ -627,7 +885,7 @@ class MockSpareData {
         'jobId': 'job-mock-3',
         'spareId': 'spare-mock-1',
         'shopId': 'mock-shop-1',
-        'date': plus2Str,
+        'date': plus3Str,
         'startTime': '09:00',
         'endTime': '17:00',
         'status': 'proposed',
@@ -658,7 +916,12 @@ class MockSpareData {
         .toList();
 
     if (ownerId == 'me') {
-      list = list.where((s) => s.shopId == _mockShopOwnerId).toList();
+      list = list
+          .where(
+            (s) =>
+                s.spareId == 'spare-mock-1' || s.spareId == 'mock-spare-1',
+          )
+          .toList();
     }
     if (dateFrom != null) {
       list = list.where((s) => s.date.compareTo(dateFrom) >= 0).toList();
@@ -1036,12 +1299,111 @@ class MockSpareData {
     await Future.delayed(const Duration(milliseconds: 100));
     _chatsJson.removeWhere((c) => c['id'] == chatId);
     _chatMessages.remove(chatId);
-    _contactAttemptCounts.removeWhere((k, _) => k.startsWith('$chatId:'));
   }
 
   static final Map<String, int> _contactAttemptCounts = {};
+  static final Set<String> _contactBannedJobKeys = {};
 
-  /// 연락처 전송 시도 1회 기록. 3회 시 대화방 삭제·(샵) 패널티.
+  static String _jobSpareKey(String jobId, String spareId) =>
+      '$jobId:${MockShopData.normalizeSpareId(spareId)}';
+
+  static bool isContactBannedForJob({
+    required String jobId,
+    required String spareId,
+  }) {
+    return _contactBannedJobKeys.contains(_jobSpareKey(jobId, spareId));
+  }
+
+  static void _markContactBannedForJob({
+    required String jobId,
+    required String spareId,
+  }) {
+    _contactBannedJobKeys.add(_jobSpareKey(jobId, spareId));
+  }
+
+  static Map<String, dynamic>? _chatRecord(String chatId) {
+    for (final c in _chatsJson) {
+      if (c['id']?.toString() == chatId) {
+        return c;
+      }
+    }
+    return null;
+  }
+
+  static void resetContactViolationEnforcementState() {
+    _contactAttemptCounts.clear();
+    _contactBannedJobKeys.clear();
+  }
+
+  /// 테스트용 채팅방 등록 (jobId 없으면 지원 취소 집행 제외).
+  static void registerTestChat({
+    required String chatId,
+    String? jobId,
+    String spareId = 'mock-spare-1',
+    String shopId = 'mock-shop-1',
+    String shopName = '테스트 샵',
+  }) {
+    if (_chatsJson.any((c) => c['id']?.toString() == chatId)) return;
+    _chatsJson.add({
+      'id': chatId,
+      'shopId': shopId,
+      'shopName': shopName,
+      'spareId': spareId,
+      'spareName': '테스트 스페어',
+      if (jobId != null) 'jobId': jobId,
+      'lastMessage': {
+        'content': 'test',
+        'createdAt': DateTime.now().toIso8601String(),
+      },
+      'unreadCount': 0,
+    });
+    _chatMessages.putIfAbsent(chatId, () => []);
+  }
+
+  static String? _jobIdFromChat(String chatId) =>
+      _chatRecord(chatId)?['jobId']?.toString();
+
+  static String? _spareIdFromChat(String chatId) =>
+      _chatRecord(chatId)?['spareId']?.toString();
+
+  /// 지원 시 잠금 에너지 (몰수·환불 추적용).
+  static void recordLockedEnergyForJobApplication({
+    required String jobId,
+    required String spareId,
+    required int amount,
+  }) {
+    if (amount <= 0) return;
+    _lockedEnergyByJobSpare[_jobSpareKey(jobId, spareId)] = amount;
+  }
+
+  static final Map<String, int> _lockedEnergyByJobSpare = {};
+
+  /// 잠금 에너지 몰수 — 잔액 환불·매장 이전 없음.
+  static int forfeitLockedEnergyForJobApplication({
+    required String jobId,
+    required String spareId,
+    String? jobTitle,
+  }) {
+    final amount =
+        _lockedEnergyByJobSpare.remove(_jobSpareKey(jobId, spareId)) ?? 0;
+    if (amount <= 0) return 0;
+    _energyTransactions.insert(
+      0,
+      {
+        'id': 'tx-forfeit-${DateTime.now().millisecondsSinceEpoch}',
+        'type': 'forfeit',
+        'amount': -amount,
+        'description': jobTitle != null && jobTitle.isNotEmpty
+            ? '연락처 위반 · $jobTitle 지원 취소 (에너지 몰수)'
+            : '연락처 위반 · 지원 취소 (에너지 몰수)',
+        'referenceId': jobId,
+        'createdAt': DateTime.now().toIso8601String(),
+      },
+    );
+    return amount;
+  }
+
+  /// 연락처 전송 시도 1회 기록. 3회 시 대화방 삭제·(샵) 패널티·(스페어) 지원 취소.
   static Future<ContactViolationResult> recordContactViolationAttempt({
     required String chatId,
     required String senderId,
@@ -1049,10 +1411,13 @@ class MockSpareData {
     required String shopId,
   }) async {
     await Future.delayed(const Duration(milliseconds: 80));
-    final max = ContactViolationPolicy.maxAttemptsPerChat;
-    final key = '$chatId:$senderId';
-    final count = (_contactAttemptCounts[key] ?? 0) + 1;
-    _contactAttemptCounts[key] = count;
+    const max = ContactViolationPolicy.maxAttemptsPerChat;
+    final jobId = _jobIdFromChat(chatId);
+    final countKey = jobId != null && jobId.isNotEmpty
+        ? 'job:$jobId:$senderId'
+        : '$chatId:$senderId';
+    final count = (_contactAttemptCounts[countKey] ?? 0) + 1;
+    _contactAttemptCounts[countKey] = count;
 
     if (count < max) {
       return ContactViolationResult(
@@ -1063,8 +1428,34 @@ class MockSpareData {
           attemptCount: count,
           maxAttempts: max,
           chatDeleted: false,
+          isShop: senderRole == 'shop',
         ),
       );
+    }
+
+    final spareId = _spareIdFromChat(chatId);
+    var applicationCancelled = false;
+    var energyForfeited = 0;
+
+    if (senderRole == 'spare' && jobId != null && jobId.isNotEmpty) {
+      final locked = await MockShopData.cancelApplicationForContactViolation(
+        jobId: jobId,
+        spareId: spareId ?? senderId,
+      );
+      final job = await getJobById(jobId);
+      energyForfeited = forfeitLockedEnergyForJobApplication(
+        jobId: jobId,
+        spareId: spareId ?? senderId,
+        jobTitle: job.title,
+      );
+      if (energyForfeited <= 0 && locked > 0) {
+        energyForfeited = locked;
+      }
+      _markContactBannedForJob(
+        jobId: jobId,
+        spareId: spareId ?? senderId,
+      );
+      applicationCancelled = true;
     }
 
     await deleteChat(chatId);
@@ -1077,13 +1468,18 @@ class MockSpareData {
     return ContactViolationResult(
       attemptCount: count,
       maxAttempts: max,
-      outcome: ContactViolationOutcome.chatDeleted,
+      outcome: applicationCancelled
+          ? ContactViolationOutcome.applicationCancelled
+          : ContactViolationOutcome.chatDeleted,
       userMessage: ContactViolationPolicy.attemptMessage(
         attemptCount: count,
         maxAttempts: max,
         chatDeleted: true,
+        isShop: false,
       ),
       chatDeleted: true,
+      applicationCancelled: applicationCancelled,
+      energyForfeited: energyForfeited,
     );
   }
 
@@ -1101,8 +1497,8 @@ class MockSpareData {
     {
       'id': 'tx-1',
       'type': 'purchase',
-      'amount': 10,
-      'description': '에너지 10개 충전',
+      'amount': 3,
+      'description': '에너지 3개 충전',
       'createdAt': DateTime.now().subtract(const Duration(days: 2)).toIso8601String(),
     },
   ];
@@ -1114,7 +1510,7 @@ class MockSpareData {
   }) async {
     await Future.delayed(const Duration(milliseconds: 120));
     if (mockEnergyBalance < amount) {
-      throw ValidationException('에너지가 부족합니다. (필요: ${amount}개, 보유: $mockEnergyBalance개)');
+      throw ValidationException('에너지가 부족합니다. (필요: $amount개, 보유: $mockEnergyBalance개)');
     }
     mockEnergyBalance -= amount;
     _energyTransactions.insert(
@@ -1261,7 +1657,7 @@ class MockSpareData {
           createdAt: now,
           materials: hasRich
               ? [
-                  EducationMaterial(
+                  const EducationMaterial(
                     title: '사전 학습 PDF',
                     url:
                         'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
@@ -1286,10 +1682,10 @@ class MockSpareData {
       Payment.fromJson({
         'id': 'pay-1',
         'type': 'energy_purchase',
-        'amount': 50000,
+        'amount': 39000,
         'status': 'success',
         'createdAt': DateTime.now().toIso8601String(),
-        'description': '에너지 100개 구매',
+        'description': '에너지 5개 구매',
       }),
     ];
   }
@@ -1640,18 +2036,13 @@ class MockSpareData {
   static Future<Map<String, dynamic>> getVerificationStatus() async {
     await Future.delayed(const Duration(milliseconds: 100));
     return {
-      'identityVerified': false,
-      'identityName': null,
-      'identityPhone': null,
+      'identityVerified': true,
+      'identityName': '김디자이너',
+      'identityPhone': '01012345678',
     };
   }
 
   static Future<Map<String, dynamic>> getPassVerificationStatus() async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    return {'verified': false};
-  }
-
-  static Future<Map<String, dynamic>> getLicenseVerificationStatus() async {
     await Future.delayed(const Duration(milliseconds: 100));
     return {'verified': false};
   }
@@ -2512,7 +2903,43 @@ class MockSpareData {
 
   static Future<int> getPointBalance() async {
     await Future.delayed(const Duration(milliseconds: 150));
-    return 1250;
+    return mockPointBalance;
+  }
+
+  /// mock 포인트 잔액 (에너지 포인트 결제 등 차감).
+  static int mockPointBalance = 1250;
+
+  static Future<void> mockPurchaseEnergy({
+    required int energyAmount,
+    required String paymentMethod,
+    int? cashPrice,
+    int? pointCost,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    assertValidEnergyPurchaseAmount(energyAmount);
+    if (paymentMethod == 'POINTS') {
+      final cost = pointCost ?? 0;
+      if (mockPointBalance < cost) {
+        throw ValidationException(
+          '포인트가 부족합니다. (필요: ${cost}P, 보유: ${mockPointBalance}P)',
+        );
+      }
+      mockPointBalance -= cost;
+    }
+
+    mockEnergyBalance += energyAmount;
+    _energyTransactions.insert(
+      0,
+      {
+        'id': 'tx-purchase-${DateTime.now().millisecondsSinceEpoch}',
+        'type': 'purchase',
+        'amount': energyAmount,
+        'description': paymentMethod == 'POINTS'
+            ? '포인트로 에너지 $energyAmount개 충전'
+            : '에너지 $energyAmount개 충전 (₩${cashPrice ?? 0})',
+        'createdAt': DateTime.now().toIso8601String(),
+      },
+    );
   }
 
   static Future<List<PointTransaction>> getPointHistory({

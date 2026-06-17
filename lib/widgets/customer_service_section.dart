@@ -213,7 +213,7 @@ class _CustomerServiceSectionState extends State<CustomerServiceSection> {
                     '이용약관',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontSize: 14, // text-sm
-                      color: AppTheme.primaryBlue, // text-blue-600
+                      color: AppTheme.stitchPrimary,
                       height: 1.2, // leading-tight
                     ),
                   ),
@@ -247,7 +247,7 @@ class _CustomerServiceSectionState extends State<CustomerServiceSection> {
                     '개인정보 처리방침',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontSize: 14, // text-sm
-                      color: AppTheme.primaryBlue, // text-blue-600
+                      color: AppTheme.stitchPrimary,
                       height: 1.2, // leading-tight
                     ),
                   ),

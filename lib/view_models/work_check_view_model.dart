@@ -164,7 +164,7 @@ class WorkCheckViewModel extends ChangeNotifier {
       schedules = list;
       final completedDates = <String>{};
       for (final schedule in list) {
-        if (schedule.status == 'completed' && schedule.checkInTime != null) {
+        if (schedule.status == 'completed') {
           completedDates.add(schedule.date);
         }
       }
@@ -282,7 +282,10 @@ class WorkCheckViewModel extends ChangeNotifier {
 
   bool isChecked(DateTime date) {
     final dateStr = DateFormat('yyyy-MM-dd').format(date);
-    return checkedDays.contains(dateStr);
+    return checkedDays.contains(dateStr) ||
+        schedules.any(
+          (s) => s.date == dateStr && s.status == 'completed',
+        );
   }
 
   List<Schedule> getSchedulesForDate(DateTime date) {

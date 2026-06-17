@@ -68,142 +68,153 @@ class _ScheduleCancelConfirmBodyState extends State<_ScheduleCancelConfirmBody> 
 
   @override
   Widget build(BuildContext context) {
+    final maxH = MediaQuery.sizeOf(context).height * 0.88;
+
     return GlassModalBottomSheet(
-      maxHeightFactor: 0.85,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const GlassModalDragHandle(),
-          Flexible(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: GlassModalHeroIcon(
-                      emoji: '⚠️',
-                      size: 64,
-                      gradientColors: const [
-                        Color(0xFFFEE2E2),
-                        Color(0xFFFFF7ED),
+      stitchStyle: true,
+      maxHeightFactor: 0.88,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxH),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 8, bottom: 4),
+              child: GlassModalDragHandle(stitchStyle: true),
+            ),
+            Flexible(
+              fit: FlexFit.loose,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: AppTheme.orange50,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppTheme.orange100),
+                          ),
+                          child: const Icon(
+                            Icons.warning_amber_rounded,
+                            size: 22,
+                            color: AppTheme.orange600,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.title,
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppTheme.stitchTextPrimary,
+                                  height: 1.3,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                '아래 안내를 확인한 뒤 취소를 진행해 주세요.',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AppTheme.stitchTextSecondary,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    widget.title,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.3,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '아래 안내를 확인한 뒤 취소를 진행해 주세요.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textSecondary,
-                          height: 1.45,
-                        ),
-                  ),
-                  const SizedBox(height: 16),
-                  _PolicyBulletCard(actor: widget.actor),
-                  if (widget.eligibility.penaltySummary != null) ...[
-                    const SizedBox(height: 10),
-                    _PenaltySummaryCard(
-                      summary: widget.eligibility.penaltySummary!,
-                      energyForfeit: widget.eligibility.energyForfeit,
-                    ),
+                    const SizedBox(height: 14),
+                    _PolicyBulletCard(actor: widget.actor),
+                    if (widget.eligibility.penaltySummary != null) ...[
+                      const SizedBox(height: 10),
+                      _PenaltySummaryCard(
+                        summary: widget.eligibility.penaltySummary!,
+                        energyForfeit: widget.eligibility.energyForfeit,
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    ...widget.schedules.map(_CancelTargetRow.new),
                   ],
-                  const SizedBox(height: 14),
-                  Text(
-                    '취소할 근무',
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textGray700,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  ...widget.schedules.map(_CancelTargetRow.new),
-                  const SizedBox(height: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.45),
-                      borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.75),
-                      ),
-                    ),
-                    child: CheckboxListTile(
-                      value: _consentChecked,
-                      onChanged: (v) =>
-                          setState(() => _consentChecked = v ?? false),
-                      title: Text(
-                        ScheduleCancellationPolicy.consentCheckboxLabel,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              height: 1.45,
-                              fontWeight: FontWeight.w500,
-                            ),
-                      ),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      activeColor: const Color(0xFF6366F1),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _ConsentCheckboxRow(
+                    checked: _consentChecked,
+                    onChanged: (v) =>
+                        setState(() => _consentChecked = v ?? false),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
                     onPressed: _consentChecked
                         ? () => Navigator.pop(context, true)
                         : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.urgentRed,
-                      disabledBackgroundColor:
-                          AppTheme.borderGray.withValues(alpha: 0.5),
+                      disabledBackgroundColor: AppTheme.borderGray300,
+                      disabledForegroundColor: AppTheme.stitchTextSecondary,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      elevation: 0,
+                      elevation: _consentChecked ? 1 : 0,
+                      minimumSize: const Size(double.infinity, 50),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: AppTheme.borderRadius(
-                          AppTheme.radiusXl,
-                        ),
+                        borderRadius:
+                            BorderRadius.circular(AppTheme.radiusXl),
                       ),
                     ),
                     child: Text(
                       widget.schedules.length > 1
                           ? '${widget.schedules.length}건 취소하기'
                           : '취소하기',
+                      textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
+                        height: 1.2,
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('돌아가기'),
-                ),
-              ],
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppTheme.stitchPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      minimumSize: const Size(0, 36),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text(
+                      '돌아가기',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -217,58 +228,44 @@ class _PolicyBulletCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
       decoration: BoxDecoration(
-        color: AppTheme.urgentRedLight.withValues(alpha: 0.28),
-        borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.7),
-        ),
+        color: AppTheme.red50,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.red200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(
                 Icons.warning_amber_rounded,
-                size: 18,
-                color: AppTheme.urgentRed.withValues(alpha: 0.9),
+                size: 16,
+                color: AppTheme.red600,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 6),
               Text(
                 '취소·패널티 안내',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.urgentRed,
-                    ),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.red600,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
           ...ScheduleCancellationPolicy.policyBulletLines(actor: actor).map(
             (line) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '• ',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textGray700,
-                          height: 1.45,
-                        ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      line,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppTheme.textGray700,
-                            height: 1.45,
-                          ),
-                    ),
-                  ),
-                ],
+              padding: const EdgeInsets.only(bottom: 3),
+              child: Text(
+                '• $line',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.stitchTextPrimary,
+                  height: 1.4,
+                ),
               ),
             ),
           ),
@@ -290,29 +287,42 @@ class _PenaltySummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFEEF2FF).withValues(alpha: 0.55),
-        borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.75)),
+        color: AppTheme.orange50,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.orange100),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            energyForfeit > 0 ? '예상 패널티 · ${energyForfeit}E' : '패널티 안내',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF4338CA),
+          const Icon(Icons.bolt_rounded, size: 18, color: AppTheme.orange600),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  energyForfeit > 0
+                      ? '예상 패널티 · ${energyForfeit}E'
+                      : '패널티 안내',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.orange600,
+                  ),
                 ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            summary,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textGray700,
-                  height: 1.45,
+                const SizedBox(height: 2),
+                Text(
+                  summary,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.stitchTextPrimary,
+                    height: 1.4,
+                  ),
                 ),
+              ],
+            ),
           ),
         ],
       ),
@@ -341,30 +351,129 @@ class _CancelTargetRow extends StatelessWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.42),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.75)),
-        borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+        color: AppTheme.primaryPurpleLight,
+        border: Border.all(
+          color: AppTheme.stitchPrimary.withValues(alpha: 0.15),
+        ),
+        borderRadius: BorderRadius.circular(14),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            ScheduleConflict.shopLabel(schedule),
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.storefront_rounded,
+              size: 18,
+              color: AppTheme.stitchPrimary,
+            ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            '$dateLabel · $timeLabel',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textSecondary,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '취소할 근무',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.stitchTextSecondary,
+                  ),
                 ),
+                const SizedBox(height: 2),
+                Text(
+                  ScheduleConflict.shopLabel(schedule),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.stitchTextPrimary,
+                    height: 1.25,
+                  ),
+                ),
+                Text(
+                  '$dateLabel · $timeLabel',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.stitchTextSecondary,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ConsentCheckboxRow extends StatelessWidget {
+  const _ConsentCheckboxRow({
+    required this.checked,
+    required this.onChanged,
+  });
+
+  final bool checked;
+  final ValueChanged<bool?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: checked ? AppTheme.red50 : AppTheme.backgroundGray,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: () => onChanged(!checked),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(8, 8, 10, 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: checked ? AppTheme.red200 : AppTheme.borderGray,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 22,
+                height: 22,
+                child: Checkbox(
+                  value: checked,
+                  onChanged: onChanged,
+                  activeColor: AppTheme.urgentRed,
+                  side: const BorderSide(
+                    color: AppTheme.borderGray300,
+                    width: 1.5,
+                  ),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  ScheduleCancellationPolicy.consentCheckboxLabel,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: checked
+                        ? AppTheme.stitchTextPrimary
+                        : AppTheme.stitchTextSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

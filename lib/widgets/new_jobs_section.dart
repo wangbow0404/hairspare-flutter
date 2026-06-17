@@ -3,16 +3,16 @@ import 'package:flutter/material.dart';
 import '../models/job.dart';
 import '../theme/app_theme.dart';
 import '../theme/home_layout_metrics.dart';
-import '../theme/home_text_styles.dart';
-import '../utils/icon_mapper.dart';
-import 'package:intl/intl.dart';
+import 'stitch/stitch_compact_job_card.dart';
+import 'stitch/stitch_section_header.dart';
 
-/// 신규 공고 섹션 (가로 스크롤, 무한 스크롤, 자동 스크롤, AD 배지)
+/// 신규 공고 섹션 (가로 스크롤, 무한 스크롤, 자동 스크롤)
 class NewJobsSection extends StatefulWidget {
   final List<Job> jobs;
   final Function(Job)? onJobTap;
   final Function(String, bool)? onFavoriteToggle;
   final Map<String, bool> favoriteMap;
+  final VoidCallback? onViewAll;
 
   const NewJobsSection({
     super.key,
@@ -20,44 +20,38 @@ class NewJobsSection extends StatefulWidget {
     this.onJobTap,
     this.onFavoriteToggle,
     required this.favoriteMap,
+    this.onViewAll,
   });
 
   @override
   State<NewJobsSection> createState() => _NewJobsSectionState();
 }
 
-class _NewJobsSectionState extends State<NewJobsSection>
-    with SingleTickerProviderStateMixin {
+class _NewJobsSectionState extends State<NewJobsSection> {
   final ScrollController _scrollController = ScrollController();
   bool _isScrolling = false;
   Timer? _autoScrollTimer;
-  late AnimationController _animationController;
   double _scrollPosition = 0.0;
+
+  static const double _cardWidth = HomeLayoutMetrics.horizontalCardWidth;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(days: 1), // 무한 스크롤을 위한 긴 duration
-    );
     _startAutoScroll();
   }
 
   @override
   void dispose() {
     _autoScrollTimer?.cancel();
-    _animationController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-  // 자동 스크롤 시작 (0.3px/frame, 60fps 기준)
   void _startAutoScroll() {
     _autoScrollTimer?.cancel();
     if (widget.jobs.isEmpty) return;
 
-    // 초기 스크롤 위치: 처음부터 시작 (첫 번째 카드가 온전히 보이도록)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _scrollController.hasClients) {
         _scrollPosition = 0;
@@ -65,18 +59,15 @@ class _NewJobsSectionState extends State<NewJobsSection>
       }
     });
 
-    // 60fps 기준으로 0.3px/frame = 18px/초 (기차처럼 자동 스크롤)
     _autoScrollTimer = Timer.periodic(
-      const Duration(milliseconds: 16), // ~60fps
+      const Duration(milliseconds: 16),
       (timer) {
         if (!_isScrolling && mounted && _scrollController.hasClients) {
-          const cardWidth =
-              HomeLayoutMetrics.horizontalCardWidth + AppTheme.spacing4;
-          final oneSetWidth = widget.jobs.length * cardWidth; // 한 세트 전체 너비
+          const cardWidth = _cardWidth + AppTheme.spacing4;
+          final oneSetWidth = widget.jobs.length * cardWidth;
           final maxScroll = _scrollController.position.maxScrollExtent;
           final currentScroll = _scrollController.position.pixels;
 
-          // 무한 스크롤: 한 세트를 지나면 맨 앞으로 리셋
           if (currentScroll >= oneSetWidth - 1) {
             _scrollPosition = 0;
             _scrollController.jumpTo(0);
@@ -89,7 +80,6 @@ class _NewJobsSectionState extends State<NewJobsSection>
     );
   }
 
-  // 자동 스크롤 일시 중지 (2초 후 재개)
   void _pauseAutoScroll() {
     setState(() {
       _isScrolling = true;
@@ -109,79 +99,35 @@ class _NewJobsSectionState extends State<NewJobsSection>
     _pauseAutoScroll();
   }
 
-  String _formatAmount(int amount) {
-    return NumberFormat('#,###').format(amount);
-  }
-
-  int _getDaysLeft(Job job) {
-    if (job.countdown == null) return 0;
-    return (job.countdown! / 86400).floor();
-  }
-
-  String _getTimeTag(String? timeStr) {
-    if (timeStr == null) return '오후';
-    try {
-      final hour = int.parse(timeStr.split(':')[0]);
-      if (hour >= 6 && hour < 12) return '오전';
-      if (hour >= 12 && hour < 18) return '오후';
-      if (hour >= 18 && hour < 22) return '저녁';
-      return '야간';
-    } catch (e) {
-      return '오후';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (widget.jobs.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    // 카드를 3번 반복하여 무한 스크롤 효과
     final repeatedJobs = [...widget.jobs, ...widget.jobs, ...widget.jobs];
 
     return Container(
       decoration: const BoxDecoration(
         border: Border(
-          top: BorderSide(
-            color: AppTheme.borderGray,
-            width: 1,
-          ),
+          top: BorderSide(color: AppTheme.borderGray, width: 1),
         ),
       ),
-      padding: AppTheme.spacingSymmetric(
-        horizontal: AppTheme.spacing4,
-        vertical: AppTheme.spacing6,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 헤더
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                '전체 신규 공고',
-                style: HomeTextStyles.sectionTitle,
-              ),
-              GestureDetector(
-                onTap: () {
-                  // TODO: 공고 더보기 화면으로 이동
-                },
-                child: Text(
-                  '공고 더보기 >',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontSize: 14,
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
+            child: StitchSectionHeader(
+              title: '신규 공고',
+              subtitle: '방금 올라온 따끈한 공고예요',
+              onViewAll: widget.onViewAll,
+            ),
           ),
           const SizedBox(height: AppTheme.spacing4),
-          // 가로 스크롤 리스트
           SizedBox(
-            height: HomeLayoutMetrics.horizontalCarouselHeight,
+            height: 320,
             child: NotificationListener<ScrollNotification>(
               onNotification: (notification) {
                 if (notification is ScrollStartNotification) {
@@ -193,248 +139,28 @@ class _NewJobsSectionState extends State<NewJobsSection>
                 controller: _scrollController,
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.only(
-                  left: MediaQuery.of(context).padding.left,
-                  right: MediaQuery.of(context).padding.right,
+                  left: AppTheme.spacing4 + MediaQuery.of(context).padding.left,
+                  right:
+                      AppTheme.spacing4 + MediaQuery.of(context).padding.right,
                 ),
                 itemCount: repeatedJobs.length,
                 itemBuilder: (context, index) {
                   final job = repeatedJobs[index];
                   final isFavorite = widget.favoriteMap[job.id] ?? false;
-                  final daysLeft = _getDaysLeft(job);
-                  final isShortTerm = daysLeft == 0;
-                  final timeTag = _getTimeTag(job.time);
-
-                  return Container(
-                    width: HomeLayoutMetrics.horizontalCardWidth,
-                    margin: const EdgeInsets.only(right: AppTheme.spacing4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.backgroundWhite,
-                      borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                      border: Border.all(color: AppTheme.borderGray),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => widget.onJobTap?.call(job),
-                        borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                        child: Stack(
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // 이미지 영역 (그라데이션)
-                                Container(
-                                  height:
-                                      HomeLayoutMetrics.horizontalCardHeroHeight,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        AppTheme.primaryBlue.withValues(alpha: 0.3),
-                                        AppTheme.primaryPurple.withValues(alpha: 0.3),
-                                        AppTheme.primaryPink.withValues(alpha: 0.3),
-                                      ],
-                                    ),
-                                    borderRadius: const BorderRadius.only(
-                                      topLeft: Radius.circular(AppTheme.radiusLg),
-                                      topRight: Radius.circular(AppTheme.radiusLg),
-                                    ),
-                                  ),
-                                ),
-                                // 내용 영역
-                                Expanded(
-                                  child: Padding(
-                                    padding: AppTheme.spacing(AppTheme.spacing4),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        // 태그 영역
-                                        Wrap(
-                                          spacing: AppTheme.spacing2,
-                                          runSpacing: AppTheme.spacing1,
-                                          children: [
-                                            Container(
-                                              padding: AppTheme.spacingSymmetric(
-                                                horizontal: AppTheme.spacing2,
-                                                vertical: AppTheme.spacing1,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: AppTheme.green100,
-                                                borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
-                                              ),
-                                              child: Text(
-                                                timeTag,
-                                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: AppTheme.green700,
-                                                ),
-                                              ),
-                                            ),
-                                            Container(
-                                              padding: AppTheme.spacingSymmetric(
-                                                horizontal: AppTheme.spacing2,
-                                                vertical: AppTheme.spacing1,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: isShortTerm
-                                                    ? AppTheme.purple100
-                                                    : AppTheme.backgroundGray,
-                                                borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
-                                              ),
-                                              child: Text(
-                                                isShortTerm ? '단기' : '장기',
-                                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: isShortTerm
-                                                      ? AppTheme.primaryPurple
-                                                      : AppTheme.textGray700,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: AppTheme.spacing2),
-                                        // 매장명
-                                        Text(
-                                          job.shopName.isEmpty ? '매장명 없음' : job.shopName,
-                                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppTheme.textPrimary,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: AppTheme.spacing2),
-                                        // 금액 및 정보
-                                        Wrap(
-                                          spacing: AppTheme.spacing2,
-                                          runSpacing: AppTheme.spacing1,
-                                          children: [
-                                            Text(
-                                              '$daysLeft일 남음',
-                                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                                color: AppTheme.primaryBlue,
-                                              ),
-                                            ),
-                                            Text(
-                                              '${_formatAmount(job.amount)}원',
-                                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                                color: AppTheme.primaryBlue,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: AppTheme.spacing2),
-                                        // 신청자 수
-                                        Text(
-                                          '신청 0/${job.requiredCount}명',
-                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            fontSize: 12,
-                                            color: AppTheme.textSecondary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            // AD 배지 - 좌측 상단
-                            Positioned(
-                              top: AppTheme.spacing2,
-                              left: AppTheme.spacing2,
-                              child: Container(
-                                padding: AppTheme.spacingSymmetric(
-                                  horizontal: AppTheme.spacing2,
-                                  vertical: AppTheme.spacing1,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF1F2937), // gray-800
-                                  borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
-                                ),
-                                child: Text(
-                                  'AD',
-                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // 급구 배지 - 우측 상단 (AD 배지 옆)
-                            if (job.isUrgent)
-                              Positioned(
-                                top: AppTheme.spacing2,
-                                right: 48, // 찜 버튼 공간 확보
-                                child: Container(
-                                  padding: AppTheme.spacingSymmetric(
-                                    horizontal: AppTheme.spacing2,
-                                    vertical: AppTheme.spacing1,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.urgentRed,
-                                    borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
-                                  ),
-                                  child: Text(
-                                    '급구',
-                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            // 찜 버튼 - 우측 상단
-                            Positioned(
-                              top: AppTheme.spacing2,
-                              right: AppTheme.spacing2,
-                              child: Material(
-                                color: Colors.white.withValues(alpha: 0.8),
-                                borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-                                child: InkWell(
-                                  onTap: () {
-                                    widget.onFavoriteToggle?.call(job.id, isFavorite);
-                                  },
-                                  borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(AppTheme.spacing2),
-                                    child: IconMapper.icon(
-                                      'heart',
-                                      size: 16,
-                                      color: isFavorite
-                                          ? AppTheme.urgentRed
-                                          : AppTheme.textTertiary,
-                                    ) ??
-                                        Icon(
-                                          isFavorite ? Icons.favorite : Icons.favorite_border,
-                                          size: 16,
-                                          color: isFavorite
-                                              ? AppTheme.urgentRed
-                                              : AppTheme.textTertiary,
-                                        ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  return Padding(
+                    padding: const EdgeInsets.only(right: AppTheme.spacing4),
+                    child: StitchCompactJobCard(
+                      job: job,
+                      isFavorite: isFavorite,
+                      width: _cardWidth,
+                      showThumbnail: true,
+                      badgeLabel: job.isUrgent ? '급구' : 'NEW',
+                      badgeColor: job.isUrgent
+                          ? AppTheme.urgentRed
+                          : AppTheme.stitchPrimary,
+                      onTap: () => widget.onJobTap?.call(job),
+                      onFavoriteToggle: () =>
+                          widget.onFavoriteToggle?.call(job.id, isFavorite),
                     ),
                   );
                 },

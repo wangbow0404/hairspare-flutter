@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/di/service_locator.dart';
+import '../../core/services/global_messenger_service.dart';
 import '../../theme/app_theme.dart';
 import '../../view_models/job_detail_view_model.dart';
 import '../../widgets/job_detail/job_detail_bottom_bar.dart';
@@ -9,9 +10,12 @@ import '../../widgets/job_detail/job_detail_modals.dart';
 import '../../widgets/job_detail/job_detail_scroll_body.dart';
 import '../../widgets/spare_app_bar.dart';
 import '../../screens/spare/verification_screen.dart';
+import '../../mocks/mock_spare_data.dart';
+import '../../utils/api_config.dart';
 import '../../utils/navigation_helper.dart';
 import '../../models/spare_job_engagement.dart';
 import '../../widgets/schedule/schedule_conflict_dialog.dart';
+import '../../widgets/common/energy_recharge_choice_sheet.dart';
 
 /// Next.js와 동일한 공고 상세 화면. 상태는 [JobDetailViewModel], UI는 `lib/widgets/job_detail/` 위젯으로 분리.
 class JobDetailScreen extends StatefulWidget {
@@ -45,6 +49,13 @@ class _JobDetailScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<JobDetailViewModel>();
+
+    if (vm.showLowEnergySheet) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        vm.dismissLowEnergySheet();
+        showEnergyRechargeChoiceSheet(context, needed: vm.job?.energy);
+      });
+    }
 
     if (vm.isLoading) {
       return const Scaffold(
@@ -131,7 +142,7 @@ class _JobDetailScaffold extends StatelessWidget {
               if (vm.showConfirmModal)
                 JobDetailConfirmApplyModal(
                   job: job,
-                  onConfirm: () => vm.confirmApply(),
+                  onConfirm: () => _confirmApplyWithConflictCheck(context, vm),
                   onCancel: vm.dismissConfirmModal,
                 ),
             ],
@@ -143,6 +154,9 @@ class _JobDetailScaffold extends StatelessWidget {
 }
 
 Future<void> _tryOpenApplyFlow(BuildContext context, JobDetailViewModel vm) async {
+  if (ApiConfig.useMockData && vm.jobId == MockSpareData.overlapDemoJobId) {
+    await vm.refreshJobSnapshot();
+  }
   final conflicts = await vm.findApplyConflicts();
   if (!context.mounted) return;
   if (conflicts.isNotEmpty) {
@@ -157,25 +171,68 @@ Future<void> _tryOpenApplyFlow(BuildContext context, JobDetailViewModel vm) asyn
   vm.requestApply();
 }
 
+Future<void> _confirmApplyWithConflictCheck(
+  BuildContext context,
+  JobDetailViewModel vm,
+) async {
+  if (ApiConfig.useMockData && vm.jobId == MockSpareData.overlapDemoJobId) {
+    await vm.refreshJobSnapshot();
+  }
+  final conflicts = await vm.findApplyConflicts();
+  if (!context.mounted) return;
+  if (conflicts.isNotEmpty) {
+    vm.dismissConfirmModal();
+    await ScheduleConflictDialog.show(
+      context: context,
+      actionLabel: '지원',
+      conflicts: conflicts,
+      onResolved: () => vm.loadInitial(),
+    );
+    return;
+  }
+  await vm.confirmApply();
+}
+
 Future<void> _acceptProposalWithConflictCheck(
   BuildContext context,
   JobDetailViewModel vm,
 ) async {
+  final messenger = sl<GlobalMessengerService>();
   var conflicts = await vm.findAcceptProposalConflicts();
   if (!context.mounted) return;
+
+  final rejected = await vm.autoRejectOverlappingProposals(conflicts);
+  if (rejected > 0) {
+    messenger.showInfo('겹치는 제안 $rejected건을 거절했습니다.');
+    conflicts = await vm.findAcceptProposalConflicts();
+    if (!context.mounted) return;
+  }
+
   if (conflicts.isNotEmpty) {
+    if (!context.mounted) return;
     final resolved = await ScheduleConflictDialog.show(
       context: context,
       actionLabel: '제안 수락',
       conflicts: conflicts,
-      onResolved: () => vm.loadInitial(),
+      onResolved: () => vm.refreshEngagementOnly(),
     );
-    if (!resolved || !context.mounted) return;
+    if (!resolved || !context.mounted) {
+      messenger.showError('겹치는 근무를 정리해야 수락할 수 있어요.');
+      return;
+    }
     conflicts = await vm.findAcceptProposalConflicts();
-    if (conflicts.isNotEmpty) return;
+    if (!context.mounted) return;
+    if (conflicts.isNotEmpty) {
+      messenger.showError(
+        '아직 겹치는 근무가 남아 있습니다. 스케줄표에서 확인해 주세요.',
+      );
+      return;
+    }
   }
+
   final ok = await vm.acceptProposal();
-  if (ok && context.mounted) {
+  if (!context.mounted) return;
+  if (ok && Navigator.canPop(context)) {
     Navigator.pop(context, true);
   }
 }

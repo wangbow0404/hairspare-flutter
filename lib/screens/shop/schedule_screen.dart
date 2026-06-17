@@ -80,8 +80,8 @@ class _ShopScheduleScaffold extends StatelessWidget {
             Expanded(
               child: Stack(
                 children: [
-                  CustomScrollView(
-                    slivers: const [
+                  const CustomScrollView(
+                    slivers: [
                       SliverToBoxAdapter(
                         child: ShopScheduleScrollContent(),
                       ),

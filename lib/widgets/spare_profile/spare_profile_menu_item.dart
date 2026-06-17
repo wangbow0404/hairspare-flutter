@@ -44,12 +44,12 @@ class _SpareProfileMenuItemState extends State<SpareProfileMenuItem> {
           padding: AppTheme.spacing(AppTheme.spacing4),
           decoration: BoxDecoration(
             color: AppTheme.backgroundWhite,
-            borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+            borderRadius: BorderRadius.circular(AppTheme.radiusXl),
             border: Border.all(
               color: AppTheme.borderGray,
               width: 1,
             ),
-            boxShadow: _pressed ? AppTheme.shadowMd : AppTheme.shadowSm,
+            boxShadow: AppTheme.stitchSoftShadow,
           ),
           child: Row(
             children: [
@@ -61,7 +61,7 @@ class _SpareProfileMenuItemState extends State<SpareProfileMenuItem> {
                   height: 48,
                   decoration: BoxDecoration(
                     color: widget.bgColor,
-                    borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusXl),
                   ),
                   child: IconTheme(
                     data: IconThemeData(
@@ -82,7 +82,7 @@ class _SpareProfileMenuItemState extends State<SpareProfileMenuItem> {
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.textPrimary,
+                            color: AppTheme.stitchTextPrimary,
                           ),
                     ),
                     const SizedBox(height: AppTheme.spacing1 / 2),
@@ -90,7 +90,7 @@ class _SpareProfileMenuItemState extends State<SpareProfileMenuItem> {
                       widget.description,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             fontSize: 12,
-                            color: AppTheme.textSecondary,
+                            color: AppTheme.stitchTextSecondary,
                           ),
                     ),
                   ],

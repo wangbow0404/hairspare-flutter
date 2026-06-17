@@ -3,11 +3,12 @@ import 'package:provider/provider.dart';
 
 import '../../providers/chat_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/hairspare_brand_assets.dart';
 import '../../utils/app_bar_navigation.dart';
 import '../../utils/icon_mapper.dart';
 import '../../widgets/notification_bell.dart';
 
-/// 스페어 홈 상단 로고·검색·메시지·알림 (primaryBlue 로고).
+/// 스페어 홈 상단 로고·검색·메시지·알림 (Stitch primary 로고).
 class SpareHomeAppBarRow extends StatelessWidget {
   const SpareHomeAppBarRow({super.key, required this.scrollController});
 
@@ -28,14 +29,7 @@ class SpareHomeAppBarRow extends StatelessWidget {
               );
             }
           },
-          child: Text(
-            'HairSpare',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryBlue,
-                ),
-          ),
+          child: const HairSpareBrandLogo(height: 36),
         ),
         const Spacer(),
         Material(

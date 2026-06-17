@@ -180,19 +180,19 @@ class JobDetailConfirmApplyModal extends StatelessWidget {
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryPurple.withValues(alpha: 0.1),
+                      color: AppTheme.stitchPrimaryContainer.withValues(alpha: 0.1),
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                     ),
                     child:
                         IconMapper.icon(
                           'zap',
                           size: 32,
-                          color: AppTheme.primaryPurple,
+                          color: AppTheme.stitchPrimaryContainer,
                         ) ??
                         const Icon(
                           Icons.bolt,
                           size: 32,
-                          color: AppTheme.primaryPurple,
+                          color: AppTheme.stitchPrimaryContainer,
                         ),
                   ),
                   const SizedBox(height: AppTheme.spacing4),
@@ -216,7 +216,7 @@ class JobDetailConfirmApplyModal extends StatelessWidget {
                   Container(
                     padding: AppTheme.spacing(AppTheme.spacing4),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryPurple.withValues(alpha: 0.1),
+                      color: AppTheme.stitchPrimaryContainer.withValues(alpha: 0.1),
                       borderRadius: AppTheme.borderRadius(AppTheme.radius2xl),
                     ),
                     child: Column(
@@ -236,7 +236,7 @@ class JobDetailConfirmApplyModal extends StatelessWidget {
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: AppTheme.primaryPurple,
+                                  color: AppTheme.stitchPrimaryContainer,
                                 ),
                               ),
                               const TextSpan(text: '가 잠금됩니다'),
@@ -261,7 +261,7 @@ class JobDetailConfirmApplyModal extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: onConfirm,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryPurple,
+                        backgroundColor: AppTheme.stitchPrimaryContainer,
                         foregroundColor: Colors.white,
                         padding: AppTheme.spacing(AppTheme.spacing4),
                         shape: RoundedRectangleBorder(

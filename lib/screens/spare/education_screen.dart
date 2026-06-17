@@ -49,6 +49,10 @@ class _EducationScreenState extends State<EducationScreen> {
 
   DateTime? _selectedDateStart;
 
+  static const int _pageSize = 10;
+  int _currentPage = 1;
+  final ScrollController _listScrollController = ScrollController();
+
   // 드롭다운 버튼 키
   final GlobalKey _provinceButtonKey = GlobalKey();
   final GlobalKey _districtButtonKey = GlobalKey();
@@ -83,6 +87,12 @@ class _EducationScreenState extends State<EducationScreen> {
       orElse: () => _categories[0],
     );
     return category.subCategories;
+  }
+
+  @override
+  void dispose() {
+    _listScrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -178,14 +188,14 @@ class _EducationScreenState extends State<EducationScreen> {
         applicants: index * 2,
         maxApplicants: 20,
         createdAt: now.subtract(Duration(days: index)),
-        imageUrl: null,
+        imageUrl: 'https://picsum.photos/seed/hairspare-edu-$index/800/400',
         materials: hasRichContent
             ? [
-                EducationMaterial(
+                const EducationMaterial(
                   title: '사전 학습 PDF',
                   url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
                 ),
-                EducationMaterial(
+                const EducationMaterial(
                   title: '실습 체크리스트',
                   url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
                   fileType: 'pdf',
@@ -198,7 +208,7 @@ class _EducationScreenState extends State<EducationScreen> {
         venueLat: !isOnline && hasRichContent ? 37.5012 : null,
         venueLng: !isOnline && hasRichContent ? 127.0396 : null,
         meetingUrl: isOnline && hasRichContent
-            ? 'https://example.com/education/live/${index}'
+            ? 'https://example.com/education/live/$index'
             : null,
         curriculum: null,
         curriculumSchedule: curriculumSchedule,
@@ -296,7 +306,28 @@ class _EducationScreenState extends State<EducationScreen> {
 
     setState(() {
       _filteredEducations = filtered;
+      _currentPage = 1;
     });
+  }
+
+  int get _totalPages {
+    if (_filteredEducations.isEmpty) return 0;
+    return (_filteredEducations.length / _pageSize).ceil();
+  }
+
+  List<Education> get _paginatedEducations {
+    if (_filteredEducations.isEmpty) return const [];
+    final start = (_currentPage - 1) * _pageSize;
+    final end = (start + _pageSize).clamp(0, _filteredEducations.length);
+    return _filteredEducations.sublist(start, end);
+  }
+
+  void _goToPage(int page) {
+    if (page < 1 || page > _totalPages || page == _currentPage) return;
+    setState(() => _currentPage = page);
+    if (_listScrollController.hasClients) {
+      _listScrollController.jumpTo(0);
+    }
   }
 
   void _handleRefresh() {
@@ -314,6 +345,7 @@ class _EducationScreenState extends State<EducationScreen> {
       _deadlineImminent = false;
       _noReservation = false;
       _selectedDateStart = null;
+      _currentPage = 1;
     });
     _applyFilters();
   }
@@ -467,13 +499,21 @@ class _EducationScreenState extends State<EducationScreen> {
                       ],
                     ),
                   )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(AppTheme.spacing4),
-                    itemCount: _filteredEducations.length,
-                    itemBuilder: (context, index) {
-                      final education = _filteredEducations[index];
-                      return _buildEducationCard(education);
-                    },
+                : Column(
+                    children: [
+                      Expanded(
+                        child: ListView.builder(
+                          controller: _listScrollController,
+                          padding: const EdgeInsets.all(AppTheme.spacing4),
+                          itemCount: _paginatedEducations.length,
+                          itemBuilder: (context, index) {
+                            final education = _paginatedEducations[index];
+                            return _buildEducationCard(education);
+                          },
+                        ),
+                      ),
+                      if (_totalPages > 1) _buildPaginationBar(),
+                    ],
                   ),
           ),
         ],
@@ -717,6 +757,90 @@ class _EducationScreenState extends State<EducationScreen> {
     );
   }
 
+  Widget _buildPaginationBar() {
+    final start = (_currentPage - 1) * _pageSize + 1;
+    final end = (_currentPage * _pageSize).clamp(0, _filteredEducations.length);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing4,
+        vertical: AppTheme.spacing3,
+      ),
+      decoration: const BoxDecoration(
+        color: AppTheme.backgroundWhite,
+        border: Border(top: BorderSide(color: AppTheme.borderGray)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '총 ${_filteredEducations.length}개 중 $start-$end 표시',
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing2),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  onPressed: _currentPage > 1 ? () => _goToPage(_currentPage - 1) : null,
+                  icon: const Icon(Icons.chevron_left_rounded),
+                ),
+                ...List.generate(_totalPages, (index) {
+                  final page = index + 1;
+                  final isActive = page == _currentPage;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Material(
+                      color: isActive
+                          ? AppTheme.stitchPrimaryContainer
+                          : AppTheme.backgroundGray,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                      child: InkWell(
+                        onTap: () => _goToPage(page),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                        child: Container(
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            '$page',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: isActive
+                                  ? Colors.white
+                                  : AppTheme.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  onPressed: _currentPage < _totalPages
+                      ? () => _goToPage(_currentPage + 1)
+                      : null,
+                  icon: const Icon(Icons.chevron_right_rounded),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildEducationCard(Education education) {
     return GestureDetector(
       onTap: () {
@@ -857,7 +981,7 @@ class _EducationScreenState extends State<EducationScreen> {
   Widget _buildEducationImage(String url) {
     final isAsset = url.startsWith('assets/');
     return SizedBox(
-      height: 140,
+      height: 160,
       width: double.infinity,
       child: isAsset
           ? Image.asset(
@@ -867,30 +991,47 @@ class _EducationScreenState extends State<EducationScreen> {
             )
           : Image.network(
               url,
-              height: 140,
+              height: 160,
               width: double.infinity,
               fit: BoxFit.cover,
+              loadingBuilder: (context, child, progress) {
+                if (progress == null) return child;
+                return _buildEducationImagePlaceholder(showSpinner: true);
+              },
               errorBuilder: (_, __, ___) => _buildEducationImagePlaceholder(),
             ),
     );
   }
 
-  Widget _buildEducationImagePlaceholder() {
+  Widget _buildEducationImagePlaceholder({bool showSpinner = false}) {
     return Container(
-      height: 140,
+      height: 160,
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.primaryPurple.withValues(alpha: 0.6),
-            AppTheme.primaryBlue.withValues(alpha: 0.6),
+            AppTheme.stitchPrimaryContainer.withValues(alpha: 0.35),
+            AppTheme.primaryBlue.withValues(alpha: 0.35),
           ],
         ),
       ),
       child: Center(
-        child: Icon(Icons.school, size: 48, color: Colors.white.withValues(alpha: 0.8)),
+        child: showSpinner
+            ? const SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : Icon(
+                Icons.school_rounded,
+                size: 48,
+                color: Colors.white.withValues(alpha: 0.85),
+              ),
       ),
     );
   }

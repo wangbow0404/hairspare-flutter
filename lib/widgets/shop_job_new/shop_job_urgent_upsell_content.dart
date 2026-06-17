@@ -58,8 +58,8 @@ class ShopJobUrgentUpsellHero extends StatelessWidget {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(
                     AppTheme.spacing5,
                     AppTheme.spacing2,
                     AppTheme.spacing5,
@@ -68,13 +68,13 @@ class ShopJobUrgentUpsellHero extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const _HeroEventBadge(),
-                      const SizedBox(height: AppTheme.spacing4),
-                      const _HeroHeadline(),
-                      const SizedBox(height: AppTheme.spacing3),
-                      const _HeroSubCopy(),
-                      const SizedBox(height: AppTheme.spacing6),
-                      const _HeroStatRow(),
+                      _HeroEventBadge(),
+                      SizedBox(height: AppTheme.spacing4),
+                      _HeroHeadline(),
+                      SizedBox(height: AppTheme.spacing3),
+                      _HeroSubCopy(),
+                      SizedBox(height: AppTheme.spacing6),
+                      _HeroStatRow(),
                     ],
                   ),
                 ),
