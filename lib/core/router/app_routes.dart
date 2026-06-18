@@ -4,6 +4,7 @@ abstract final class AppRoutes {
   static const spareLogin = '/spare/login';
   static const shopLogin = '/shop/login';
   static const spareSignup = '/spare/signup';
+  static const spareSignupSuccess = '/spare/signup/success';
   static const shopSignup = '/shop/signup';
   static const spareFindId = '/spare/find-id';
   static const spareFindPassword = '/spare/find-password';
@@ -23,6 +24,13 @@ abstract final class AppRoutes {
   static const shopPayment = '/shop/payment';
   static const shopFavorites = '/shop/favorites';
   static const shopProfile = '/shop/profile';
+
+  // 모델 전용 탭 (스페어 하위 타입: 헤어모델). 2026-06 구조 분리 진행 중.
+  // 탭 구성: 홈 · 메시지 · 스케줄 · 마이 (현재 동작과 동일하게 유지).
+  static const modelHome = '/model/home';
+  static const modelMessages = '/model/messages';
+  static const modelSchedule = '/model/schedule';
+  static const modelProfile = '/model/profile';
 
   static const admin = '/admin';
   static const adminUsers = '/admin/users';

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/di/service_locator.dart';
+import '../../core/router/app_routes.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/navigation_helper.dart';
 import '../../view_models/work_check_view_model.dart';
-import '../../widgets/work_check/work_check_app_bar.dart';
+import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../widgets/schedule/schedule_work_complete_review_modal.dart';
+import '../../widgets/work_check/work_check_app_bar.dart';
 import '../../widgets/work_check/work_check_scroll_content.dart';
 
 /// 스페어 스케줄표·근무체크 (캘린더·근무 보상·일정 카드).
@@ -17,12 +20,16 @@ class WorkCheckScreen extends StatefulWidget {
     this.focusJobId,
     this.focusScheduleId,
     this.openProposalDetail = false,
+    this.isTabRoot = false,
+    this.isModelMode = false,
   });
 
   final DateTime? initialDay;
   final String? focusJobId;
   final String? focusScheduleId;
   final bool openProposalDetail;
+  final bool isTabRoot;
+  final bool isModelMode;
 
   @override
   State<WorkCheckScreen> createState() => _WorkCheckScreenState();
@@ -55,6 +62,8 @@ class _WorkCheckScreenState extends State<WorkCheckScreen> {
         openProposalDetail: widget.openProposalDetail,
         focusScheduleId: widget.focusScheduleId,
         focusJobId: widget.focusJobId,
+        isTabRoot: widget.isTabRoot,
+        isModelMode: widget.isModelMode,
       ),
     );
   }
@@ -67,6 +76,8 @@ class _WorkCheckScaffold extends StatefulWidget {
     required this.openProposalDetail,
     this.focusScheduleId,
     this.focusJobId,
+    this.isTabRoot = false,
+    this.isModelMode = false,
   });
 
   final TextEditingController searchController;
@@ -74,6 +85,8 @@ class _WorkCheckScaffold extends StatefulWidget {
   final bool openProposalDetail;
   final String? focusScheduleId;
   final String? focusJobId;
+  final bool isTabRoot;
+  final bool isModelMode;
 
   @override
   State<_WorkCheckScaffold> createState() => _WorkCheckScaffoldState();
@@ -82,6 +95,14 @@ class _WorkCheckScaffold extends StatefulWidget {
 class _WorkCheckScaffoldState extends State<_WorkCheckScaffold> {
   bool _openedProposalDetail = false;
   bool _scrolledToScheduleCard = false;
+
+  void _handleModelBack(BuildContext context) {
+    if (Navigator.canPop(context)) {
+      Navigator.maybePop(context);
+      return;
+    }
+    context.go(AppRoutes.spareHome);
+  }
 
   void _scrollToScheduleCardIfNeeded(WorkCheckViewModel vm) {
     if (_scrolledToScheduleCard || vm.isLoading) return;
@@ -134,9 +155,54 @@ class _WorkCheckScaffoldState extends State<_WorkCheckScaffold> {
     }
 
     if (vm.isLoading) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        body: Center(child: CircularProgressIndicator()),
+        appBar: widget.isModelMode
+            ? SpareSubpageAppBar(
+                title: '스케줄 관리',
+                showBackButton: true,
+                onBackPressed: () => _handleModelBack(context),
+              )
+            : null,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (widget.isModelMode) {
+      return Scaffold(
+        backgroundColor: AppTheme.backgroundGray,
+        appBar: SpareSubpageAppBar(
+          title: '스케줄 관리',
+          showBackButton: true,
+          onBackPressed: () => _handleModelBack(context),
+        ),
+        body: SafeArea(
+          top: false,
+          bottom: false,
+          child: Stack(
+            children: [
+              CustomScrollView(
+                controller: widget.scrollController,
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: WorkCheckScrollContent(
+                      isModelMode: true,
+                    ),
+                  ),
+                ],
+              ),
+              if (vm.showRatingModal && vm.ratedShopName != null)
+                ScheduleWorkCompleteReviewModal(
+                  shopName: vm.ratedShopName!,
+                  jobTitle: vm.ratedJobTitle ?? '공고',
+                  onClose: vm.dismissRatingModalUiOnly,
+                  onThumbsUp: () => vm.handleThumbsUp(),
+                  onCheckInOnly: () => vm.handleCloseRatingModal(),
+                  isSubmitting: vm.reviewSubmitting,
+                ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -150,8 +216,15 @@ class _WorkCheckScaffoldState extends State<_WorkCheckScaffold> {
             CustomScrollView(
               controller: widget.scrollController,
               slivers: [
-                WorkCheckSliverAppBar(searchController: widget.searchController),
-                const SliverToBoxAdapter(child: WorkCheckScrollContent()),
+                WorkCheckSliverAppBar(
+                  searchController: widget.searchController,
+                  showBackButton: !widget.isTabRoot,
+                ),
+                SliverToBoxAdapter(
+                  child: WorkCheckScrollContent(
+                    isModelMode: widget.isModelMode,
+                  ),
+                ),
               ],
             ),
             if (vm.showRatingModal && vm.ratedShopName != null)

@@ -20,6 +20,12 @@ void main() {
       expect(user?.role, UserRole.admin);
     });
 
+    test('4/4 returns spare model', () {
+      final user = MockAuthData.userForCredentials('4', '4');
+      expect(user?.role, UserRole.spare);
+      expect(user?.isModelAccount, isTrue);
+    });
+
     test('invalid credentials return null', () {
       expect(MockAuthData.userForCredentials('3', '1'), isNull);
     });
@@ -46,6 +52,10 @@ void main() {
         UserRole.spare,
       );
       expect(
+        MockAuthData.userForCredentialsOnPortal('4', '4', LoginPortal.spare)?.isModelAccount,
+        isTrue,
+      );
+      expect(
         MockAuthData.userForCredentialsOnPortal('3', '3', LoginPortal.spare)?.role,
         UserRole.admin,
       );
@@ -68,6 +78,13 @@ void main() {
       final token = MockAuthData.mockTokenForRole(UserRole.admin);
       final user = MockAuthData.userForMockToken(token);
       expect(user?.role, UserRole.admin);
+    });
+
+    test('model token restores model spare user', () {
+      final token = MockAuthData.mockTokenForUser(MockAuthData.modelUser());
+      final user = MockAuthData.userForMockToken(token);
+      expect(user?.role, UserRole.spare);
+      expect(user?.isModelAccount, isTrue);
     });
   });
 }

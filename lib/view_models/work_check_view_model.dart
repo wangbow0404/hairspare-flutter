@@ -189,6 +189,37 @@ class WorkCheckViewModel extends ChangeNotifier {
     }
   }
 
+  int get upcomingScheduleCount {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return schedules.where((s) {
+      final parsed = DateTime.tryParse(s.date);
+      if (parsed == null) return false;
+      final day = DateTime(parsed.year, parsed.month, parsed.day);
+      return !day.isBefore(today);
+    }).length;
+  }
+
+  Map<String, dynamic> getModelScheduleTitle() {
+    final count = upcomingScheduleCount;
+    if (count == 0) {
+      return {
+        'title': '시술 일정 관리',
+        'subtitle': '매칭된 시술 일정이 여기에 표시돼요',
+        'emoji': '📅',
+        'pillLabel': '예정 일정',
+        'pillValue': '0건',
+      };
+    }
+    return {
+      'title': '다가오는 시술',
+      'subtitle': '확정·조율 중인 시술 일정을 확인하세요',
+      'emoji': '💜',
+      'pillLabel': '예정 일정',
+      'pillValue': '$count건',
+    };
+  }
+
   Map<String, dynamic> getWorkCheckTitle(int days) {
     if (days == 0) {
       return {

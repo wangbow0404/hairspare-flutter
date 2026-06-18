@@ -11,9 +11,16 @@ import '../../utils/app_bar_navigation.dart';
 
 /// 스페어 근무체크 상단 Sliver (로고, 검색, 메시지, 알림).
 class WorkCheckSliverAppBar extends StatelessWidget {
-  const WorkCheckSliverAppBar({super.key, required this.searchController});
+  const WorkCheckSliverAppBar({
+    super.key,
+    required this.searchController,
+    this.showBackButton = true,
+    this.isModelMode = false,
+  });
 
   final TextEditingController searchController;
+  final bool showBackButton;
+  final bool isModelMode;
 
   @override
   Widget build(BuildContext context) {
@@ -38,14 +45,15 @@ class WorkCheckSliverAppBar extends StatelessWidget {
         ),
         child: Row(
           children: [
-            IconButton(
-              icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-                  const Icon(Icons.arrow_back_ios, size: 20, color: AppTheme.textSecondary),
-              onPressed: () => Navigator.maybePop(context),
-              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-            ),
+            if (showBackButton)
+              IconButton(
+                icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
+                    const Icon(Icons.arrow_back_ios, size: 20, color: AppTheme.textSecondary),
+                onPressed: () => Navigator.maybePop(context),
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              ),
             Text(
-              '스케줄표',
+              isModelMode ? '스케줄 관리' : '스케줄표',
               style: SharedAppBar.titleTextStyle(context),
             ),
             const Spacer(),

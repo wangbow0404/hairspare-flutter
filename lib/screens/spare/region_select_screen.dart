@@ -41,7 +41,7 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
   final GlobalKey _sortButtonKey = GlobalKey();
   
   // 추가 필터 상태
-  String? _spaceType; // 'chair', 'room'
+  String? _spaceType; // 'room' = 개인실
   List<String> _selectedFacilities = [];
   
   // 날짜 필터
@@ -170,16 +170,11 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
       }).toList();
     }
 
-    // 공간 유형 필터
-    if (_spaceType != null) {
-      filtered = filtered.where((space) {
-        if (_spaceType == 'chair') {
-          return space.facilities.contains('의자');
-        } else if (_spaceType == 'room') {
-          return space.facilities.contains('개인실');
-        }
-        return true;
-      }).toList();
+    // 공간 유형 필터 (개인실만)
+    if (_spaceType == 'room') {
+      filtered = filtered
+          .where((space) => space.facilities.contains('개인실'))
+          .toList();
     }
 
     // 정렬
@@ -498,20 +493,6 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                             ),
                             const SizedBox(width: AppTheme.spacing2),
                             _FilterChip(
-                              label: '의자',
-                              emoji: '🪑',
-                              isSelected: _spaceType == 'chair',
-                              onTap: () {
-                                setState(() {
-                                  _spaceType = _spaceType == 'chair' ? null : 'chair';
-                                });
-                                setState(() {
-                                  _filteredSpaces = _getFilteredSpaces(_allSpaces);
-                                });
-                              },
-                            ),
-                            const SizedBox(width: AppTheme.spacing2),
-                            _FilterChip(
                               label: '개인실',
                               emoji: '🚪',
                               isSelected: _spaceType == 'room',
@@ -522,38 +503,6 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                                 setState(() {
                                   _filteredSpaces = _getFilteredSpaces(_allSpaces);
                                 });
-                              },
-                            ),
-                            const SizedBox(width: AppTheme.spacing2),
-                            _FilterChip(
-                              label: '샴푸대',
-                              emoji: '💧',
-                              isSelected: _selectedFacilities.contains('샴푸대'),
-                              onTap: () {
-                                setState(() {
-                                  if (_selectedFacilities.contains('샴푸대')) {
-                                    _selectedFacilities.remove('샴푸대');
-                                  } else {
-                                    _selectedFacilities.add('샴푸대');
-                                  }
-                                });
-                                _loadSpaces();
-                              },
-                            ),
-                            const SizedBox(width: AppTheme.spacing2),
-                            _FilterChip(
-                              label: '드라이어',
-                              emoji: '💨',
-                              isSelected: _selectedFacilities.contains('드라이어'),
-                              onTap: () {
-                                setState(() {
-                                  if (_selectedFacilities.contains('드라이어')) {
-                                    _selectedFacilities.remove('드라이어');
-                                  } else {
-                                    _selectedFacilities.add('드라이어');
-                                  }
-                                });
-                                _loadSpaces();
                               },
                             ),
                           ],

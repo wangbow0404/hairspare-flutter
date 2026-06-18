@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/model_bottom_nav_bar.dart';
 
-/// StatefulShellRoute 하단 탭 셸 (스페어 / 샵 공통).
+/// 모델 전용 하단 탭 셸 — 홈 · 메시지 · 스케줄 · 마이.
 ///
-/// 모델 계정은 전용 [ModelTabShell]을 쓰므로 여기서 분기하지 않는다.
-class MainTabShell extends StatelessWidget {
-  const MainTabShell({
+/// 스페어/샵 공통 [MainTabShell]과 달리 항상 [ModelBottomNavBar]만 사용한다
+/// (모델은 자기 전용 `/model/...` 라우트 안에서만 동작).
+class ModelTabShell extends StatelessWidget {
+  const ModelTabShell({
     super.key,
     required this.navigationShell,
   });
@@ -18,14 +19,14 @@ class MainTabShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: navigationShell,
-      bottomNavigationBar: BottomNavBar(
+      bottomNavigationBar: ModelBottomNavBar(
         currentIndex: navigationShell.currentIndex,
-        onTap: _onSpareTabTap,
+        onTap: _onTap,
       ),
     );
   }
 
-  void _onSpareTabTap(int index) {
+  void _onTap(int index) {
     if (index == 0) {
       navigationShell.goBranch(0, initialLocation: true);
       return;

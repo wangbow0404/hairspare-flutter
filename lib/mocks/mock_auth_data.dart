@@ -1,4 +1,5 @@
 import '../models/login_portal.dart';
+import '../models/spare_subtype.dart';
 import '../models/user.dart';
 import '../utils/app_exception.dart';
 
@@ -14,8 +15,12 @@ class MockAuthData {
   static const String devShopPassword = '2';
   static const String devAdminUsername = '3';
   static const String devAdminPassword = '3';
+  static const String devModelUsername = '4';
+  static const String devModelPassword = '4';
 
-  static User spareUser() {
+  static const String _mockTokenSpareModel = 'mock_token_spare_model';
+
+  static User spareUser({SpareSubtype? spareSubtype}) {
     return User.fromJson({
       'id': 'mock-spare-1',
       'username': devSpareUsername,
@@ -23,9 +28,54 @@ class MockAuthData {
       'name': '김디자이너',
       'phone': '010-1234-5678',
       'role': 'spare',
+      'spareSubtype': (spareSubtype ?? _registeredSpareSubtype ?? SpareSubtype.professional).name,
       'createdAt': DateTime.now().toIso8601String(),
     });
   }
+
+  static User modelUser() {
+    return User.fromJson({
+      'id': 'mock-model-dev',
+      'username': devModelUsername,
+      'email': 'model@example.com',
+      'name': '모델테스트',
+      'phone': '010-4444-4444',
+      'role': 'spare',
+      'spareSubtype': SpareSubtype.model.name,
+      'createdAt': DateTime.now().toIso8601String(),
+    });
+  }
+
+  static SpareSubtype? _registeredSpareSubtype;
+  static Map<String, dynamic>? _registeredProfilePayload;
+
+  static User registerSpareUser({
+    required String username,
+    String? name,
+    String? email,
+    String? phone,
+    required SpareSubtype spareSubtype,
+    Map<String, dynamic>? profilePayload,
+  }) {
+    _registeredSpareSubtype = spareSubtype;
+    _registeredProfilePayload = profilePayload;
+    return User.fromJson({
+      'id': spareSubtype == SpareSubtype.model ? 'mock-model-1' : 'mock-spare-1',
+      'username': username,
+      'email': email ?? 'spare@example.com',
+      'name': name ?? (spareSubtype == SpareSubtype.model ? '모델회원' : '김디자이너'),
+      'phone': phone ?? '010-1234-5678',
+      'role': 'spare',
+      'spareSubtype': spareSubtype.name,
+      'createdAt': DateTime.now().toIso8601String(),
+    });
+  }
+
+  static bool get isRegisteredModel =>
+      _registeredSpareSubtype == SpareSubtype.model;
+
+  static Map<String, dynamic>? get registeredProfilePayload =>
+      _registeredProfilePayload;
 
   static User shopUser() {
     return User.fromJson({
@@ -61,6 +111,9 @@ class MockAuthData {
     if (username == devSpareUsername && password == devSparePassword) {
       return spareUser();
     }
+    if (username == devModelUsername && password == devModelPassword) {
+      return modelUser();
+    }
     if (username == devShopUsername && password == devShopPassword) {
       return shopUser();
     }
@@ -88,6 +141,13 @@ class MockAuthData {
 
   static String mockTokenForRole(UserRole role) => 'mock_token_${role.name}';
 
+  static String mockTokenForUser(User user) {
+    if (user.role == UserRole.spare && user.isModelAccount) {
+      return _mockTokenSpareModel;
+    }
+    return mockTokenForRole(user.role);
+  }
+
   static const String _mockTokenPrefix = 'mock_token_';
 
   /// 저장된 mock 토큰에서 역할 복원. 레거시 `mock_token`은 spare.
@@ -106,6 +166,9 @@ class MockAuthData {
     if (isShopAccountTerminated &&
         roleFromMockToken(token) == UserRole.shop) {
       return null;
+    }
+    if (token == _mockTokenSpareModel) {
+      return modelUser();
     }
     final role = roleFromMockToken(token);
     return switch (role) {

@@ -27,14 +27,18 @@ import '../../screens/spare/find_password_screen.dart';
 import '../../screens/spare/home_screen.dart';
 import '../../screens/spare/login_screen.dart';
 import '../../screens/spare/messages_screen.dart';
+import '../../screens/spare/model_home_screen.dart';
 import '../../screens/spare/notifications_list_screen.dart';
 import '../../screens/spare/payment_screen.dart';
+import '../../screens/spare/model_schedule_screen.dart';
 import '../../screens/spare/profile_screen.dart';
 import '../../screens/spare/search_screen.dart';
-import '../../screens/spare/signup_screen.dart';
+import '../../screens/spare/spare_signup_type_screen.dart';
+import '../../screens/spare/spare_signup_success_screen.dart';
 import '../di/service_locator.dart' show sl;
 import '../shell/admin_shell.dart';
 import '../shell/main_tab_shell.dart';
+import '../shell/model_tab_shell.dart';
 import 'app_routes.dart';
 import 'auth_redirect.dart';
 
@@ -63,7 +67,12 @@ final class AppRouter {
         GoRoute(
           path: AppRoutes.spareSignup,
           builder: (BuildContext context, GoRouterState state) =>
-              const SpareSignupScreen(),
+              const SpareSignupTypeScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.spareSignupSuccess,
+          builder: (BuildContext context, GoRouterState state) =>
+              const SpareSignupSuccessScreen(),
         ),
         GoRoute(
           path: AppRoutes.spareFindId,
@@ -149,8 +158,13 @@ final class AppRouter {
                   routes: <RouteBase>[
                     GoRoute(
                       path: 'payment',
-                      builder: (BuildContext context, GoRouterState state) =>
-                          const PaymentScreen(),
+                      builder: (BuildContext context, GoRouterState state) {
+                        final isModel =
+                            sl<AuthProvider>().currentUser?.isModelAccount ??
+                                false;
+                        if (isModel) return const MessagesScreen();
+                        return const PaymentScreen();
+                      },
                     ),
                   ],
                 ),
@@ -158,8 +172,13 @@ final class AppRouter {
                   routes: <RouteBase>[
                     GoRoute(
                       path: 'favorites',
-                      builder: (BuildContext context, GoRouterState state) =>
-                          const FavoritesScreen(),
+                      builder: (BuildContext context, GoRouterState state) {
+                        final isModel =
+                            sl<AuthProvider>().currentUser?.isModelAccount ??
+                                false;
+                        if (isModel) return const ModelScheduleScreen();
+                        return const FavoritesScreen();
+                      },
                     ),
                   ],
                 ),
@@ -251,6 +270,62 @@ final class AppRouter {
                       path: 'profile',
                       builder: (BuildContext context, GoRouterState state) =>
                           const ShopProfileScreen(),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+        GoRoute(
+          path: '/model',
+          redirect: (BuildContext context, GoRouterState state) {
+            if (state.uri.path == '/model') return AppRoutes.modelHome;
+            return null;
+          },
+          routes: <RouteBase>[
+            StatefulShellRoute.indexedStack(
+              builder: (
+                BuildContext context,
+                GoRouterState state,
+                StatefulNavigationShell navigationShell,
+              ) {
+                return ModelTabShell(navigationShell: navigationShell);
+              },
+              branches: <StatefulShellBranch>[
+                StatefulShellBranch(
+                  routes: <RouteBase>[
+                    GoRoute(
+                      path: 'home',
+                      builder: (BuildContext context, GoRouterState state) =>
+                          const ModelHomeScreen(),
+                    ),
+                  ],
+                ),
+                StatefulShellBranch(
+                  routes: <RouteBase>[
+                    GoRoute(
+                      path: 'messages',
+                      builder: (BuildContext context, GoRouterState state) =>
+                          const MessagesScreen(),
+                    ),
+                  ],
+                ),
+                StatefulShellBranch(
+                  routes: <RouteBase>[
+                    GoRoute(
+                      path: 'schedule',
+                      builder: (BuildContext context, GoRouterState state) =>
+                          const ModelScheduleScreen(),
+                    ),
+                  ],
+                ),
+                StatefulShellBranch(
+                  routes: <RouteBase>[
+                    GoRoute(
+                      path: 'profile',
+                      builder: (BuildContext context, GoRouterState state) =>
+                          const ProfileScreen(),
                     ),
                   ],
                 ),

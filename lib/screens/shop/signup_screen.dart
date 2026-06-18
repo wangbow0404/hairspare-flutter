@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../widgets/common/shared_app_bar.dart';
 import 'package:provider/provider.dart';
 import '../../models/user.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/router/app_navigation.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/common/shared_app_bar.dart';
+import '../../widgets/spare_signup/spare_signup_terms_section.dart';
 
 class ShopSignupScreen extends StatefulWidget {
   const ShopSignupScreen({super.key});
@@ -24,6 +26,16 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
   
   bool _obscurePassword = true;
   bool _obscurePasswordConfirm = true;
+  bool _termsAccepted = false;
+  bool _privacyAccepted = false;
+  bool _personalInfoProvisionAccepted = false;
+  bool _ageAccepted = false;
+
+  bool get _allTermsAccepted =>
+      _termsAccepted &&
+      _privacyAccepted &&
+      _personalInfoProvisionAccepted &&
+      _ageAccepted;
 
   @override
   void dispose() {
@@ -39,6 +51,12 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
 
   Future<void> _handleSignup() async {
     if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    if (!_allTermsAccepted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('필수 약관에 동의해 주세요.')),
+      );
       return;
     }
 
@@ -217,7 +235,29 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
                     prefixIcon: Icon(Icons.card_giftcard),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: AppTheme.spacing8),
+                SpareSignupTermsAllRow(
+                  allAccepted: _allTermsAccepted,
+                  onToggleAll: () => setState(() {
+                    final next = !_allTermsAccepted;
+                    _termsAccepted = next;
+                    _privacyAccepted = next;
+                    _personalInfoProvisionAccepted = next;
+                    _ageAccepted = next;
+                  }),
+                ),
+                SpareSignupTermsSection(
+                  termsAccepted: _termsAccepted,
+                  privacyAccepted: _privacyAccepted,
+                  personalInfoProvisionAccepted: _personalInfoProvisionAccepted,
+                  ageAccepted: _ageAccepted,
+                  onTermsChanged: (v) => setState(() => _termsAccepted = v),
+                  onPrivacyChanged: (v) => setState(() => _privacyAccepted = v),
+                  onPersonalInfoProvisionChanged: (v) =>
+                      setState(() => _personalInfoProvisionAccepted = v),
+                  onAgeChanged: (v) => setState(() => _ageAccepted = v),
+                ),
+                const SizedBox(height: AppTheme.spacing6),
                 // 회원가입 버튼
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, _) {

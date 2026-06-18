@@ -26,7 +26,7 @@ import '../../screens/spare/region_select_screen.dart';
 import '../../screens/spare/work_check_screen.dart';
 import 'spare_home_app_bar.dart';
 
-/// 스페어 홈 본문(헤더·배너·카테고리·공고 섹션).
+/// 스페어·디자이너 홈 본문(헤더·배너·카테고리·공고 섹션).
 class SpareHomeScrollView extends StatelessWidget {
   const SpareHomeScrollView({super.key, required this.scrollController});
 
@@ -79,6 +79,122 @@ class SpareHomeScrollView extends StatelessWidget {
       default:
         break;
     }
+  }
+
+  static List<CategoryItem> _categoryItems(BuildContext context) {
+    return [
+      CategoryItem(
+        emoji: '',
+        icon: Icons.work_outline,
+        label: '공고별',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (context) => const JobsListScreen(),
+            ),
+          );
+        },
+      ),
+      CategoryItem(
+        emoji: '',
+        icon: Icons.calendar_month_outlined,
+        label: '스케줄표',
+        onTap: () {
+          Navigator.push<void>(
+            context,
+            MaterialPageRoute<void>(
+              builder: (context) => const WorkCheckScreen(),
+            ),
+          );
+        },
+      ),
+      CategoryItem(
+        emoji: '',
+        icon: Icons.storefront_outlined,
+        label: '스토어',
+        onTap: () {
+          showDialog<void>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('준비 중'),
+              content: const Text('스토어 기능은 준비 중입니다.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('확인'),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+      CategoryItem(
+        emoji: '',
+        icon: Icons.monetization_on_outlined,
+        label: '+포인트',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (context) => const PointsScreen(),
+            ),
+          );
+        },
+      ),
+      CategoryItem(
+        emoji: '',
+        icon: Icons.chair_outlined,
+        label: '공간대여',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (context) => const RegionSelectScreen(),
+            ),
+          );
+        },
+      ),
+      CategoryItem(
+        emoji: '',
+        icon: Icons.school_outlined,
+        label: '교육',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (context) => const EducationScreen(),
+            ),
+          );
+        },
+      ),
+      CategoryItem(
+        emoji: '',
+        icon: Icons.star_outline_rounded,
+        label: '챌린지참여',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (context) => const ChallengeScreen(),
+            ),
+          );
+        },
+      ),
+      CategoryItem(
+        emoji: '',
+        icon: Icons.favorite_outline_rounded,
+        label: '모델매칭',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (context) => const ModelMatchFilterScreen(),
+            ),
+          );
+        },
+      ),
+    ];
   }
 
   @override
@@ -155,121 +271,7 @@ class SpareHomeScrollView extends StatelessWidget {
                     children: [
                       CategoryGrid(
                         padding: const EdgeInsets.only(top: 0, bottom: AppTheme.spacing2),
-                        categories: [
-                          CategoryItem(
-                            emoji: '',
-                            icon: Icons.work_outline,
-                            label: '공고별',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute<void>(
-                                  builder: (context) => const JobsListScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          CategoryItem(
-                            emoji: '',
-                            icon: Icons.calendar_month_outlined,
-                            label: '스케줄표',
-                            onTap: () {
-                              Navigator.push<void>(
-                                context,
-                                MaterialPageRoute<void>(
-                                  builder: (context) =>
-                                      const WorkCheckScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          CategoryItem(
-                            emoji: '',
-                            icon: Icons.storefront_outlined,
-                            label: '스토어',
-                            onTap: () {
-                              showDialog<void>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('준비 중'),
-                                  content: const Text('스토어 기능은 준비 중입니다.'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text('확인'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                          CategoryItem(
-                            emoji: '',
-                            icon: Icons.monetization_on_outlined,
-                            label: '+포인트',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute<void>(
-                                  builder: (context) => const PointsScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          CategoryItem(
-                            emoji: '',
-                            icon: Icons.chair_outlined,
-                            label: '공간대여',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute<void>(
-                                  builder: (context) => const RegionSelectScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          CategoryItem(
-                            emoji: '',
-                            icon: Icons.school_outlined,
-                            label: '교육',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute<void>(
-                                  builder: (context) => const EducationScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          CategoryItem(
-                            emoji: '',
-                            icon: Icons.star_outline_rounded,
-                            label: '챌린지참여',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute<void>(
-                                  builder: (context) => const ChallengeScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          CategoryItem(
-                            emoji: '',
-                            icon: Icons.favorite_outline_rounded,
-                            label: '모델매칭',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute<void>(
-                                  builder: (context) =>
-                                      const ModelMatchFilterScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
+                        categories: _categoryItems(context),
                       ),
                       Consumer<FavoriteProvider>(
                         builder: (context, favoriteProvider, _) {

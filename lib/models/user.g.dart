@@ -13,6 +13,7 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
   name: json['name'] as String?,
   phone: json['phone'] as String?,
   role: _userRoleFromJson(json['role']),
+  spareSubtype: spareSubtypeFromJson(json['spareSubtype']),
   profileImage: json['profileImage'] as String?,
   createdAt: const DateTimeOrNowConverter().fromJson(json['createdAt']),
 );
@@ -24,6 +25,7 @@ Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
   'name': instance.name,
   'phone': instance.phone,
   'role': _userRoleToJson(instance.role),
+  'spareSubtype': spareSubtypeToJson(instance.spareSubtype),
   'profileImage': instance.profileImage,
   'createdAt': const DateTimeOrNowConverter().toJson(instance.createdAt),
 };

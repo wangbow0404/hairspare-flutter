@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'dart:io';
 import '../models/login_portal.dart';
+import '../models/spare_subtype.dart';
 import '../models/user.dart';
 import '../utils/api_client.dart';
 import '../utils/api_config.dart';
@@ -46,7 +47,7 @@ class AuthService {
               : '아이디 또는 비밀번호가 올바르지 않습니다',
         );
       }
-      await _apiClient.setAuthToken(MockAuthData.mockTokenForRole(user.role));
+      await _apiClient.setAuthToken(MockAuthData.mockTokenForUser(user));
       return user;
     }
     try {
@@ -89,10 +90,12 @@ class AuthService {
     required String username,
     required String password,
     required UserRole role,
+    SpareSubtype? spareSubtype,
     String? email,
     String? name,
     String? phone,
     String? referralCode,
+    Map<String, dynamic>? profilePayload,
   }) async {
     if (ApiConfig.useMockData) {
       if (username.isEmpty || password.isEmpty) {
@@ -105,7 +108,14 @@ class AuthService {
         );
       }
       await _apiClient.setAuthToken('mock_token');
-      return role == UserRole.spare ? MockAuthData.spareUser() : MockAuthData.shopUser();
+      return MockAuthData.registerSpareUser(
+        username: username,
+        name: name,
+        email: email,
+        phone: phone,
+        spareSubtype: spareSubtype ?? SpareSubtype.professional,
+        profilePayload: profilePayload,
+      );
     }
     try {
       final response = await _dio.post(
@@ -114,11 +124,14 @@ class AuthService {
           'username': username,
           'password': password,
           'role': role.name,
+          if (spareSubtype != null) 'spareSubtype': spareSubtype.name,
           if (email != null && email.isNotEmpty) 'email': email,
           if (name != null && name.isNotEmpty) 'name': name,
           if (phone != null && phone.isNotEmpty) 'phone': phone,
           if (referralCode != null && referralCode.isNotEmpty)
             'referralCode': referralCode,
+          if (profilePayload != null && profilePayload.isNotEmpty)
+            'profile': profilePayload,
         },
       );
 

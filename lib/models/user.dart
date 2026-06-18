@@ -1,6 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 
 import 'json_converters.dart';
+import 'spare_subtype.dart';
 
 part 'user.g.dart';
 
@@ -31,6 +32,7 @@ class User {
     this.name,
     this.phone,
     required this.role,
+    this.spareSubtype,
     this.profileImage,
     required this.createdAt,
   });
@@ -44,6 +46,8 @@ class User {
   final String? phone;
   @JsonKey(fromJson: _userRoleFromJson, toJson: _userRoleToJson)
   final UserRole role;
+  @JsonKey(fromJson: spareSubtypeFromJson, toJson: spareSubtypeToJson)
+  final SpareSubtype? spareSubtype;
   final String? profileImage;
   @DateTimeOrNowConverter()
   final DateTime createdAt;
@@ -51,4 +55,6 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 
   Map<String, dynamic> toJson() => _$UserToJson(this);
+
+  bool get isModelAccount => spareSubtype == SpareSubtype.model;
 }

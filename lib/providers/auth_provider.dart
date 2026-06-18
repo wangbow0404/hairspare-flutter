@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/login_portal.dart';
+import '../models/spare_subtype.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
 import '../utils/error_handler.dart';
@@ -46,10 +47,12 @@ class AuthProvider with ChangeNotifier {
     required String username,
     required String password,
     required UserRole role,
+    SpareSubtype? spareSubtype,
     String? email,
     String? name,
     String? phone,
     String? referralCode,
+    Map<String, dynamic>? profilePayload,
   }) async {
     _isLoading = true;
     _error = null;
@@ -60,10 +63,12 @@ class AuthProvider with ChangeNotifier {
         username: username,
         password: password,
         role: role,
+        spareSubtype: spareSubtype,
         email: email,
         name: name,
         phone: phone,
         referralCode: referralCode,
+        profilePayload: profilePayload,
       );
       _error = null;
     } catch (e) {

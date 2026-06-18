@@ -305,4 +305,23 @@ class RegionHelper {
   static List<Region> getDistrictsByProvince(String provinceId) {
     return _regions.where((r) => r.parentId == provinceId).toList();
   }
+
+  /// 시/도 목록
+  static List<Region> getProvinces() {
+    return _regions.where((r) => r.type == RegionType.province).toList();
+  }
+
+  /// 선택된 지역 ID의 표시 이름 (시/도 + 구/군)
+  static String formatRegionLabel({
+    required String? provinceId,
+    required String? districtId,
+  }) {
+    if (districtId != null && districtId.isNotEmpty) {
+      return getRegionName(districtId);
+    }
+    if (provinceId != null && provinceId.isNotEmpty) {
+      return getRegionName(provinceId);
+    }
+    return '';
+  }
 }

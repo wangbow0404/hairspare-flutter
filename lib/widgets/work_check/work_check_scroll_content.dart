@@ -11,16 +11,21 @@ import '../../utils/schedule_cancellation_policy.dart';
 import '../../view_models/work_check_view_model.dart';
 import 'work_check_education_card.dart';
 
-/// 스페어 근무체크 스크롤 본문 (히어로, 달력, 카드, 체크 버튼, 안내).
+/// 스페어 근무체크 / 모델 시술 일정 스크롤 본문.
 class WorkCheckScrollContent extends StatelessWidget {
-  const WorkCheckScrollContent({super.key});
+  const WorkCheckScrollContent({super.key, this.isModelMode = false});
+
+  final bool isModelMode;
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<WorkCheckViewModel>();
-    final titleInfo = vm.getWorkCheckTitle(vm.consecutiveDays);
+    final titleInfo = isModelMode
+        ? vm.getModelScheduleTitle()
+        : vm.getWorkCheckTitle(vm.consecutiveDays);
     final displayDays = vm.consecutiveDays % 10;
     final daysInMonth = vm.getDaysInMonth(vm.currentMonth);
+    final upcomingCount = vm.upcomingScheduleCount;
 
     return Column(
       children: [
@@ -118,7 +123,9 @@ class WorkCheckScrollContent extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              '현재 연속 근무',
+                              isModelMode
+                                  ? titleInfo['pillLabel'] as String
+                                  : '현재 연속 근무',
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     fontSize: 14,
@@ -128,7 +135,9 @@ class WorkCheckScrollContent extends StatelessWidget {
                             ),
                             const SizedBox(width: AppTheme.spacing2),
                             Text(
-                              '$displayDays일',
+                              isModelMode
+                                  ? titleInfo['pillValue'] as String
+                                  : '$displayDays일',
                               style: Theme.of(context).textTheme.headlineSmall
                                   ?.copyWith(
                                     fontSize: 24,
@@ -147,184 +156,12 @@ class WorkCheckScrollContent extends StatelessWidget {
           ),
         ),
 
-        // 근무 보상 섹션 - 에너지 게이지
-        Container(
-          width: double.infinity,
-          decoration: const BoxDecoration(color: AppTheme.backgroundWhite),
-          padding: AppTheme.spacingSymmetric(
-            horizontal: AppTheme.spacing4,
-            vertical: AppTheme.spacing6,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '근무 보상',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-              const SizedBox(height: AppTheme.spacing2),
-              Text(
-                '노쇼 없이 10일 연속 근무하면 에너지 1개를 받아요!',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontSize: 14,
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-              const SizedBox(height: AppTheme.spacing4),
-              Container(
-                padding: AppTheme.spacing(AppTheme.spacing4),
-                decoration: BoxDecoration(
-                  color: AppTheme.backgroundGray,
-                  borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                ),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final barWidth = constraints.maxWidth;
-                    final fillWidth = (displayDays / 10) * barWidth;
-                    return Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '에너지 진행률',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppTheme.textGray700,
-                                  ),
-                            ),
-                            Text(
-                              '$displayDays / 10일',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.stitchPrimaryContainer,
-                                  ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppTheme.spacing4),
-                        // 에너지 게이지
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Container(
-                              width: double.infinity,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEEF0F3),
-                                borderRadius: AppTheme.borderRadius(
-                                  AppTheme.radiusFull,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  // 틱 마크 (9개 구분선 - 10등분)
-                                  ...List.generate(9, (index) {
-                                    return Expanded(
-                                      child: Container(
-                                        margin: EdgeInsets.only(
-                                          right: index < 8 ? 0 : 0,
-                                        ),
-                                        child: Align(
-                                          alignment: Alignment.centerRight,
-                                          child: Container(
-                                            width: 3,
-                                            height: 20,
-                                            decoration: BoxDecoration(
-                                              color: AppTheme.borderGray300,
-                                              borderRadius:
-                                                  BorderRadius.circular(2),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }),
-                                ],
-                              ),
-                            ),
-                            // 채워진 진행률 (그라데이션)
-                            if (displayDays > 0)
-                              Positioned(
-                                left: 0,
-                                top: 0,
-                                child: SizedBox(
-                                  width: fillWidth.clamp(0.0, barWidth),
-                                  height: 60,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          AppTheme.stitchPrimaryContainer,
-                                          AppTheme.stitchPrimaryContainer,
-                                        ],
-                                      ),
-                                      borderRadius: AppTheme.borderRadius(
-                                        AppTheme.radiusFull,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            // 원형 배지 (번개 아이콘)
-                            if (displayDays > 0)
-                              Positioned(
-                                left: (fillWidth - 32).clamp(
-                                  0.0,
-                                  barWidth - 64,
-                                ),
-                                top: 0,
-                                child: Container(
-                                  width: 64,
-                                  height: 64,
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        AppTheme.stitchPrimaryContainer,
-                                        AppTheme.stitchPrimaryContainer,
-                                      ],
-                                    ),
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Center(
-                                    child: Text(
-                                      '⚡',
-                                      style: TextStyle(fontSize: 24),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
+        if (isModelMode)
+          _ModelScheduleSummarySection(upcomingCount: upcomingCount)
+        else
+          _WorkRewardSection(displayDays: displayDays),
 
-        // 근무 현황 - 달력
+        // 근무/시술 현황 - 달력
         Container(
           width: double.infinity,
           padding: AppTheme.spacingSymmetric(
@@ -341,7 +178,7 @@ class WorkCheckScrollContent extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '근무 현황',
+                isModelMode ? '시술 캘린더' : '근무 현황',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -610,7 +447,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                       ),
                       const SizedBox(width: AppTheme.spacing1),
                       Text(
-                        '근무 예정',
+                        isModelMode ? '시술 예정' : '근무 예정',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontSize: 12,
                           color: AppTheme.textSecondary,
@@ -642,7 +479,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                       ),
                       const SizedBox(width: AppTheme.spacing1),
                       Text(
-                        '근무 완료',
+                        isModelMode ? '시술 완료' : '근무 완료',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontSize: 12,
                           color: AppTheme.textSecondary,
@@ -651,23 +488,24 @@ class WorkCheckScrollContent extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(width: AppTheme.spacing4),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.school,
-                        size: 16,
-                        color: AppTheme.stitchPrimaryContainer,
-                      ),
-                      const SizedBox(width: AppTheme.spacing1),
-                      Text(
-                        '교육',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontSize: 12,
-                          color: AppTheme.textSecondary,
+                  if (!isModelMode)
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.school,
+                          size: 16,
+                          color: AppTheme.stitchPrimaryContainer,
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: AppTheme.spacing1),
+                        Text(
+                          '교육',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ],
@@ -848,7 +686,9 @@ class WorkCheckScrollContent extends StatelessWidget {
                                             height: AppTheme.spacing1,
                                           ),
                                           Text(
-                                            '${schedule.job?.shopName ?? '매장'} 근무',
+                                            isModelMode
+                                                ? '${schedule.job?.shopName ?? '매장'} 시술'
+                                                : '${schedule.job?.shopName ?? '매장'} 근무',
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .bodySmall
@@ -925,6 +765,8 @@ class WorkCheckScrollContent extends StatelessWidget {
                                         child: Text(
                                           isProposed
                                               ? '제안 대기'
+                                              : isModelMode
+                                              ? '시술 예정'
                                               : '근무 예정',
                                           style: Theme.of(context)
                                               .textTheme
@@ -949,6 +791,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                   }),
                 ...vm
                     .getEnrollmentsForDate(vm.selectedDate)
+                    .where((_) => !isModelMode)
                     .map(
                       (enrollment) => WorkCheckEducationCard(
                         enrollment: enrollment,
@@ -958,8 +801,8 @@ class WorkCheckScrollContent extends StatelessWidget {
             ),
           ),
 
-        // 근무체크 버튼
-        if (vm.hasScheduledWork(vm.selectedDate))
+        // 근무체크 버튼 (스페어 전용)
+        if (!isModelMode && vm.hasScheduledWork(vm.selectedDate))
           Container(
           width: double.infinity,
           padding: AppTheme.spacingSymmetric(
@@ -1084,8 +927,8 @@ class WorkCheckScrollContent extends StatelessWidget {
           ),
         ),
 
-        // 근무 보너스 팁
-        Container(
+        if (!isModelMode)
+          Container(
           width: double.infinity,
           padding: AppTheme.spacingSymmetric(
             horizontal: AppTheme.spacing4,
@@ -1180,8 +1023,58 @@ class WorkCheckScrollContent extends StatelessWidget {
           ),
         ),
 
-        // 근무체크 안내사항
-        Container(
+        if (isModelMode)
+          Container(
+            width: double.infinity,
+            padding: AppTheme.spacingSymmetric(
+              horizontal: AppTheme.spacing4,
+              vertical: AppTheme.spacing6,
+            ),
+            decoration: const BoxDecoration(
+              color: AppTheme.backgroundWhite,
+              border: Border(
+                top: BorderSide(color: AppTheme.borderGray, width: 1),
+              ),
+            ),
+            child: Container(
+              padding: AppTheme.spacing(AppTheme.spacing4),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppTheme.backgroundGradientStart,
+                    AppTheme.backgroundGradientMiddle,
+                    AppTheme.backgroundGradientEnd,
+                  ],
+                ),
+                borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text('💡', style: TextStyle(fontSize: 24)),
+                      const SizedBox(width: AppTheme.spacing3),
+                      Expanded(
+                        child: Text(
+                          '시술 일정을 미리 확인하고 디자이너와 메시지로 조율해 보세요.',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: 14,
+                            color: AppTheme.textGray700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+        if (!isModelMode)
+          Container(
           width: double.infinity,
           padding: const EdgeInsets.only(
             top: AppTheme.spacing6,
@@ -1227,6 +1120,279 @@ class WorkCheckScrollContent extends StatelessWidget {
         // 하단 여백 (하단 네비게이션 바)
         SizedBox(height: MediaQuery.of(context).padding.bottom + 70),
       ],
+    );
+  }
+}
+
+class _ModelScheduleSummarySection extends StatelessWidget {
+  const _ModelScheduleSummarySection({required this.upcomingCount});
+
+  final int upcomingCount;
+
+  @override
+  Widget build(BuildContext context) {
+    const maxDisplay = 5;
+    final progress = (upcomingCount / maxDisplay).clamp(0.0, 1.0);
+
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(color: AppTheme.backgroundWhite),
+      padding: AppTheme.spacingSymmetric(
+        horizontal: AppTheme.spacing4,
+        vertical: AppTheme.spacing6,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '시술 일정 요약',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing2),
+          Text(
+            '확정·조율 중인 시술 일정을 한눈에 확인하세요.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontSize: 14,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing4),
+          Container(
+            padding: AppTheme.spacing(AppTheme.spacing4),
+            decoration: BoxDecoration(
+              color: AppTheme.backgroundGray,
+              borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '예정 시술',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textGray700,
+                      ),
+                    ),
+                    Text(
+                      '$upcomingCount건',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.stitchPrimaryContainer,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppTheme.spacing4),
+                ClipRRect(
+                  borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 8,
+                    backgroundColor: const Color(0xFFEEF0F3),
+                    color: AppTheme.stitchPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing3),
+                Text(
+                  upcomingCount == 0
+                      ? '매칭된 시술 일정이 여기에 표시돼요.'
+                      : '달력에서 날짜를 선택해 상세 일정을 확인하세요.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontSize: 13,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WorkRewardSection extends StatelessWidget {
+  const _WorkRewardSection({required this.displayDays});
+
+  final int displayDays;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(color: AppTheme.backgroundWhite),
+      padding: AppTheme.spacingSymmetric(
+        horizontal: AppTheme.spacing4,
+        vertical: AppTheme.spacing6,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '근무 보상',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing2),
+          Text(
+            '노쇼 없이 10일 연속 근무하면 에너지 1개를 받아요!',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontSize: 14,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing4),
+          Container(
+            padding: AppTheme.spacing(AppTheme.spacing4),
+            decoration: BoxDecoration(
+              color: AppTheme.backgroundGray,
+              borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final barWidth = constraints.maxWidth;
+                final fillWidth = (displayDays / 10) * barWidth;
+                return Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '에너지 진행률',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: AppTheme.textGray700,
+                              ),
+                        ),
+                        Text(
+                          '$displayDays / 10일',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.stitchPrimaryContainer,
+                              ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppTheme.spacing4),
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEEF0F3),
+                            borderRadius: AppTheme.borderRadius(
+                              AppTheme.radiusFull,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              ...List.generate(9, (index) {
+                                return Expanded(
+                                  child: Container(
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Container(
+                                        width: 3,
+                                        height: 20,
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.borderGray300,
+                                          borderRadius:
+                                              BorderRadius.circular(2),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+                        if (displayDays > 0)
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            child: SizedBox(
+                              width: fillWidth.clamp(0.0, barWidth),
+                              height: 60,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      AppTheme.stitchPrimaryContainer,
+                                      AppTheme.stitchPrimaryContainer,
+                                    ],
+                                  ),
+                                  borderRadius: AppTheme.borderRadius(
+                                    AppTheme.radiusFull,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        if (displayDays > 0)
+                          Positioned(
+                            left: (fillWidth - 32).clamp(
+                              0.0,
+                              barWidth - 64,
+                            ),
+                            top: 0,
+                            child: Container(
+                              width: 64,
+                              height: 64,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    AppTheme.stitchPrimaryContainer,
+                                    AppTheme.stitchPrimaryContainer,
+                                  ],
+                                ),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(
+                                      alpha: 0.2,
+                                    ),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  '⚡',
+                                  style: TextStyle(fontSize: 24),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

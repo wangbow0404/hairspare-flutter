@@ -308,6 +308,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
                                 ),
                                 child: Text(
                                   '목 데이터: 스페어 ${MockAuthData.devSpareUsername}/${MockAuthData.devSparePassword} · '
+                                  '모델 ${MockAuthData.devModelUsername}/${MockAuthData.devModelPassword} · '
                                   '샵 ${MockAuthData.devShopUsername}/${MockAuthData.devShopPassword} · '
                                   '관리자 ${MockAuthData.devAdminUsername}/${MockAuthData.devAdminPassword}',
                                   textAlign: TextAlign.center,
