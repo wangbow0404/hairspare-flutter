@@ -12,6 +12,19 @@ String _homeRouteFor(User user) {
   return AppRoutes.spareHome;
 }
 
+/// 스페어 로그인·회원가입·계정찾기 등 비로그인 접근 허용 경로.
+bool _isSparePublicPath(String path) {
+  const spareAuthPaths = <String>{
+    AppRoutes.spareLogin,
+    AppRoutes.spareSignup,
+    AppRoutes.spareFindId,
+    AppRoutes.spareFindPassword,
+    AppRoutes.spareSignupProfessional,
+    AppRoutes.spareSignupModel,
+  };
+  return spareAuthPaths.contains(path);
+}
+
 /// 전역 인증·역할 기반 리다이렉트 (`GoRouter.redirect`).
 String? authRedirect(AuthProvider auth, GoRouterState state) {
   final path = state.uri.path;
@@ -23,12 +36,6 @@ String? authRedirect(AuthProvider auth, GoRouterState state) {
   final user = auth.currentUser;
   final loggedIn = auth.isAuthenticated && user != null;
 
-  const spareAuthPaths = <String>{
-    AppRoutes.spareLogin,
-    AppRoutes.spareSignup,
-    AppRoutes.spareFindId,
-    AppRoutes.spareFindPassword,
-  };
   const shopAuthPaths = <String>{
     AppRoutes.shopLogin,
     AppRoutes.shopSignup,
@@ -39,8 +46,7 @@ String? authRedirect(AuthProvider auth, GoRouterState state) {
     if (path == AppRoutes.roleSelect) {
       return _homeRouteFor(user);
     }
-    if (spareAuthPaths.contains(path) &&
-        path != AppRoutes.spareSignupSuccess) {
+    if (_isSparePublicPath(path) && path != AppRoutes.spareSignupSuccess) {
       return _homeRouteFor(user);
     }
     if (shopAuthPaths.contains(path)) {
@@ -58,7 +64,7 @@ String? authRedirect(AuthProvider auth, GoRouterState state) {
   }
 
   if (path.startsWith('/spare')) {
-    final isPublic = spareAuthPaths.contains(path);
+    final isPublic = _isSparePublicPath(path);
     if (!loggedIn && path == AppRoutes.spareSignupSuccess) {
       return AppRoutes.spareLogin;
     }
@@ -90,6 +96,9 @@ String? authRedirect(AuthProvider auth, GoRouterState state) {
 
   if (path.startsWith('/shop')) {
     final isPublic = shopAuthPaths.contains(path);
+    if (!loggedIn && path == AppRoutes.shopSignupSuccess) {
+      return AppRoutes.shopLogin;
+    }
     if (!loggedIn && !isPublic) {
       return AppRoutes.shopLogin;
     }

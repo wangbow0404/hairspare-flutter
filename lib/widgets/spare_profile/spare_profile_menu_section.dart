@@ -25,6 +25,15 @@ class SpareProfileMenuSection extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spacing2),
           SpareProfileMenuItem(
+            icon: IconMapper.icon('image') ?? const Icon(Icons.collections_outlined),
+            label: '작업 포트폴리오',
+            description: '모델 매칭·프로필에 노출할 작업 사진',
+            color: AppTheme.primaryPurple,
+            bgColor: AppTheme.primaryPurple.withValues(alpha: 0.1),
+            onTap: () => SpareProfileNavigation.pushPortfolio(context),
+          ),
+          const SizedBox(height: AppTheme.spacing2),
+          SpareProfileMenuItem(
             icon: IconMapper.icon('heart') ?? const Icon(Icons.favorite),
             label: '구독한 크리에이터',
             description: '내가 구독한 크리에이터 목록',
@@ -75,7 +84,7 @@ class SpareProfileMenuSection extends StatelessWidget {
             description: '결제 내역 및 구독 관리',
             color: AppTheme.stitchPrimaryContainer,
             bgColor: AppTheme.stitchPrimaryContainer.withValues(alpha: 0.1),
-            onTap: () => SpareProfileNavigation.goPaymentTab(context),
+            onTap: () => SpareProfileNavigation.pushPayment(context),
           ),
           const SizedBox(height: AppTheme.spacing2),
           SpareProfileMenuItem(

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 
@@ -9,6 +10,8 @@ import '../../core/di/service_locator.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/behavior_tracker.dart';
 import '../../view_models/challenge_view_model.dart';
+import '../../utils/deferred_route_body.dart';
+import '../../utils/shell_navigation.dart';
 import '../../widgets/challenge/challenge_bottom_metadata.dart';
 import '../../widgets/challenge/challenge_comment_sheet_layer.dart';
 import '../../widgets/challenge/challenge_immersive_top_layer.dart';
@@ -16,7 +19,6 @@ import '../../widgets/challenge/challenge_right_action_rail.dart';
 import '../../widgets/challenge/challenge_screen_states.dart';
 import '../../widgets/challenge/challenge_url_launcher.dart';
 import '../../widgets/challenge/challenge_video_page.dart';
-import 'challenge_profile_screen.dart';
 
 /// 챌린지 숏폼 피드 — 풀스크린 비디오 + 오버레이 UI.
 class ChallengeScreen extends StatefulWidget {
@@ -34,35 +36,37 @@ class ChallengeScreen extends StatefulWidget {
   State<ChallengeScreen> createState() => _ChallengeScreenState();
 }
 
-class _ChallengeScreenState extends State<ChallengeScreen> {
+class _ChallengeScreenState extends State<ChallengeScreen>
+    with DeferredRouteBodyMixin {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) {
-        final vm = ChallengeViewModel(
-          challengeService: sl(),
-          subscriptionService: sl(),
-        );
-        final args = ModalRoute.of(context)?.settings.arguments;
-        final creatorId = widget.creatorId ??
-            (args is Map ? args['creatorId'] as String? : null);
-        final initialVideoId = widget.initialVideoId ??
-            (args is Map ? args['initialVideoId'] as String? : null);
-
-        if (creatorId != null &&
-            creatorId.isNotEmpty &&
-            initialVideoId != null &&
-            initialVideoId.isNotEmpty) {
-          vm.loadCreatorProfileFeed(
-            creatorId: creatorId,
-            initialVideoId: initialVideoId,
+    return deferredBody(
+      loading: const ChallengeLoadingScaffold(),
+      builder: (context) => ChangeNotifierProvider(
+        create: (_) {
+          final vm = ChallengeViewModel(
+            challengeService: sl(),
+            subscriptionService: sl(),
           );
-        } else {
-          vm.loadInitial();
-        }
-        return vm;
-      },
-      child: const _ChallengeBody(),
+          final query = GoRouterState.of(context).uri.queryParameters;
+          final creatorId = widget.creatorId ?? query['creatorId'];
+          final initialVideoId = widget.initialVideoId ?? query['initialVideoId'];
+
+          if (creatorId != null &&
+              creatorId.isNotEmpty &&
+              initialVideoId != null &&
+              initialVideoId.isNotEmpty) {
+            vm.loadCreatorProfileFeed(
+              creatorId: creatorId,
+              initialVideoId: initialVideoId,
+            );
+          } else {
+            vm.loadInitial();
+          }
+          return vm;
+        },
+        child: const _ChallengeBody(),
+      ),
     );
   }
 }
@@ -81,11 +85,13 @@ class _ChallengeBodyState extends State<_ChallengeBody> {
 
   int _videoBindingToken = -1;
   List<String> _lastBoundIds = [];
+  late final ChallengeViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
-    context.read<ChallengeViewModel>().addListener(_onVmChanged);
+    _viewModel = context.read<ChallengeViewModel>();
+    _viewModel.addListener(_onVmChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -109,7 +115,7 @@ class _ChallengeBodyState extends State<_ChallengeBody> {
 
   @override
   void dispose() {
-    context.read<ChallengeViewModel>().removeListener(_onVmChanged);
+    _viewModel.removeListener(_onVmChanged);
     for (final c in _videoControllers) {
       c?.dispose();
     }
@@ -335,12 +341,7 @@ class _ChallengeBodyState extends State<_ChallengeBody> {
 
   void _openCreatorProfile(String? creatorId) {
     if (creatorId != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ChallengeProfileScreen(userId: creatorId),
-        ),
-      );
+      ShellNavigation.pushChallengeProfile(context, userId: creatorId);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:hairspare/models/education_enrollment.dart';
-import 'package:hairspare/screens/spare/education_enrollment_detail_screen.dart';
 import 'package:hairspare/theme/app_theme.dart';
+import 'package:hairspare/utils/shell_navigation.dart';
 
 /// 근무체크 캘린더 하단 — 교육 신청 카드.
 class WorkCheckEducationCard extends StatelessWidget {
@@ -21,14 +21,7 @@ class WorkCheckEducationCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute<void>(
-                builder: (context) => EducationEnrollmentDetailScreen(
-                  enrollmentId: enrollment.id,
-                ),
-              ),
-            );
+            ShellNavigation.pushEnrollmentDetail(context, enrollment.id);
           },
           borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
           child: Container(

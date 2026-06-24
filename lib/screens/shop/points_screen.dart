@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import '../../core/router/app_routes.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_app_bar.dart';
 import '../../widgets/notification_bell.dart';
 import '../../providers/chat_provider.dart';
 import '../../utils/icon_mapper.dart';
-import 'messages_screen.dart';
 import '../../widgets/shop/shop_screen_safe_area.dart';
 
 /// Shop용 포인트 화면 (Next.js와 동일한 구조)
@@ -316,12 +317,7 @@ class _ShopPointsScreenState extends State<ShopPointsScreen> {
                             Material(
                               color: Colors.transparent,
                               child: InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => const ShopMessagesScreen()),
-                                  );
-                                },
+                                onTap: () => context.push(AppRoutes.shopMessages),
                                 borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                                 child: Container(
                                   padding: const EdgeInsets.all(AppTheme.spacing2),

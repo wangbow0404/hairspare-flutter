@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/notification.dart';
+import 'message_notification_navigation.dart';
 import 'navigation_helper.dart';
 
 /// 스페어 알림 탭 시 목적 화면 라우팅 (벨·알림 목록 공통).
@@ -42,7 +43,11 @@ abstract final class SpareNotificationNavigation {
         }
         return;
       case 'message_received':
-        NavigationHelper.navigateToMessages(context);
+        MessageNotificationNavigation.open(
+          context,
+          notification,
+          audience: 'spare',
+        );
         return;
       default:
         return;

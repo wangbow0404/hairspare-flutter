@@ -1,0 +1,36 @@
+---
+description: Safe Area — status bar / notch must never overlap app UI
+alwaysApply: true
+---
+
+# Safe Area (mandatory)
+
+Status bar (time, Wi‑Fi, battery), notch, and Dynamic Island must **never** be covered by app content.
+
+## When building any screen
+
+1. **`Scaffold.body` (tab root, full-screen scroll)**
+   - Wrap with `AppScreenSafeArea` (`lib/widgets/common/app_screen_safe_area.dart`).
+   - Set `bottom: false` when a bottom nav bar or sticky bar handles home indicator separately.
+
+2. **Custom top bar inside scroll (home, profile header)**
+   - Home tab roots: use `AppScreenInsets.pinnedTopBarSliver` so the bar stays fixed while content scrolls.
+   - Profile tab roots: keep `SpareProfileHeader` outside the scroll view (fixed `Column` header).
+   - Other custom headers: `AppScreenInsets.topBarShell` or manual `AppScreenInsets.topBarPadding` + `toolbarHeight` (44px).
+   - Do **not** place logos/buttons at `y: 0` without status bar inset.
+
+3. **`Scaffold.appBar`**
+   - Prefer `SharedAppBar`, `SpareSubpageAppBar`, or Material `AppBar` — they respect safe area via Scaffold.
+   - Custom `PreferredSizeWidget` app bars must include status bar height in `preferredSize` if not using Material AppBar.
+
+4. **Bottom bars / sheets**
+   - Add `MediaQuery.paddingOf(context).bottom` or wrap with `SafeArea(top: false)`.
+
+5. **Edge-to-edge / immersive (e.g. challenge)**
+   - Only opt out of safe area intentionally; restore insets for interactive controls.
+
+## Reference
+
+- Wrapper: `AppScreenSafeArea`
+- Insets helper: `AppScreenInsets` (`lib/utils/app_screen_insets.dart`)
+- Shop legacy alias: `ShopScreenSafeArea` → same as `AppScreenSafeArea`

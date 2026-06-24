@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// 모델 계정 하단 탭 — 홈 · 메시지 · 스케줄 · 마이.
+/// 모델 계정 하단 탭 — 홈 · 매칭 · 스케줄 · 마이.
 class ModelBottomNavBar extends StatelessWidget {
   const ModelBottomNavBar({
     super.key,
@@ -43,9 +43,9 @@ class ModelBottomNavBar extends StatelessWidget {
                 onTap: () => onTap(0),
               ),
               _NavItem(
-                activeIcon: Icons.chat_bubble_rounded,
-                inactiveIcon: Icons.chat_bubble_outline,
-                label: '메시지',
+                activeIcon: Icons.favorite_rounded,
+                inactiveIcon: Icons.favorite_outline,
+                label: '매칭',
                 isActive: currentIndex == 1,
                 onTap: () => onTap(1),
               ),

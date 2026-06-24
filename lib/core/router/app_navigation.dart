@@ -50,6 +50,42 @@ class AppNavigation {
     }
   }
 
+  /// 결제 화면 뒤로 — push 스택이 있으면 pop, 탭 루트면 [homeTabIndex]로 이동.
+  static void backFromPaymentTab(
+    BuildContext context, {
+    required void Function(BuildContext context) goHomeTab,
+  }) {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+    goHomeTab(context);
+  }
+
+  static void backFromSparePayment(BuildContext context) {
+    backFromPaymentTab(context, goHomeTab: (ctx) => goSpareMainTab(ctx, 0));
+  }
+
+  static void backFromShopPayment(BuildContext context) {
+    backFromPaymentTab(context, goHomeTab: (ctx) => goShopMainTab(ctx, 0));
+  }
+
+  /// 모델 메인 탭 (0=홈, 1=매칭, 2=스케줄, 3=마이)
+  static void goModelMainTab(BuildContext context, int index) {
+    const paths = <String>[
+      AppRoutes.modelHome,
+      AppRoutes.modelMatching,
+      AppRoutes.modelSchedule,
+      AppRoutes.modelProfile,
+    ];
+    appRouter.go(paths[index]);
+  }
+
+  /// 모델 탭 루트·프로필 push 공통 — pop 가능하면 pop, 아니면 홈 탭.
+  static void backFromModelTab(BuildContext context) {
+    backFromPaymentTab(context, goHomeTab: (ctx) => goModelMainTab(ctx, 0));
+  }
+
   /// 스페어 메인 탭 (0=홈, 1=결제, 2=찜, 3=마이)
   static void goSpareMainTab(BuildContext context, int index) {
     const paths = <String>[

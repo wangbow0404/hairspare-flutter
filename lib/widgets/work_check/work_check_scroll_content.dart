@@ -6,9 +6,9 @@ import '../../theme/app_theme.dart';
 import '../../utils/icon_mapper.dart';
 import '../../utils/schedule_work_session.dart';
 import '../../utils/navigation_helper.dart';
-import '../../utils/schedule_cancel_flow.dart';
-import '../../utils/schedule_cancellation_policy.dart';
+import '../../utils/schedule_session_audience.dart';
 import '../../view_models/work_check_view_model.dart';
+import 'work_check_action_bar.dart';
 import 'work_check_education_card.dart';
 
 /// 스페어 근무체크 / 모델 시술 일정 스크롤 본문.
@@ -20,6 +20,7 @@ class WorkCheckScrollContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<WorkCheckViewModel>();
+    final audience = ScheduleSessionAudience.fromModelMode(isModelMode);
     final titleInfo = isModelMode
         ? vm.getModelScheduleTitle()
         : vm.getWorkCheckTitle(vm.consecutiveDays);
@@ -125,7 +126,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                             Text(
                               isModelMode
                                   ? titleInfo['pillLabel'] as String
-                                  : '현재 연속 근무',
+                                  : audience.streakPillLabel,
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     fontSize: 14,
@@ -178,7 +179,7 @@ class WorkCheckScrollContent extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                isModelMode ? '시술 캘린더' : '근무 현황',
+                audience.calendarSectionTitle,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -447,7 +448,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                       ),
                       const SizedBox(width: AppTheme.spacing1),
                       Text(
-                        isModelMode ? '시술 예정' : '근무 예정',
+                        audience.scheduledLegend,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontSize: 12,
                           color: AppTheme.textSecondary,
@@ -479,7 +480,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                       ),
                       const SizedBox(width: AppTheme.spacing1),
                       Text(
-                        isModelMode ? '시술 완료' : '근무 완료',
+                        audience.completedLegend,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontSize: 12,
                           color: AppTheme.textSecondary,
@@ -535,8 +536,8 @@ class WorkCheckScrollContent extends StatelessWidget {
                         s.date ==
                             DateFormat('yyyy-MM-dd').format(vm.selectedDate) &&
                         (s.status == 'scheduled' ||
-                            s.status == 'proposed' ||
-                            s.status == 'completed'),
+                            s.status == 'completed' ||
+                            (!isModelMode && s.status == 'proposed')),
                   )
                   .map((schedule) {
                     final workTimeText =
@@ -560,7 +561,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                           onTap: isScheduleChecked
                               ? null
                               : () async {
-                                  if (isProposed) {
+                                  if (!isModelMode && isProposed) {
                                     final resolved =
                                         await NavigationHelper
                                             .navigateToWorkProposalDetail(
@@ -686,9 +687,9 @@ class WorkCheckScrollContent extends StatelessWidget {
                                             height: AppTheme.spacing1,
                                           ),
                                           Text(
-                                            isModelMode
-                                                ? '${schedule.job?.shopName ?? '매장'} 시술'
-                                                : '${schedule.job?.shopName ?? '매장'} 근무',
+                                            audience.scheduleCardSubtitle(
+                                              schedule.job?.shopName ?? '매장',
+                                            ),
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .bodySmall
@@ -715,7 +716,10 @@ class WorkCheckScrollContent extends StatelessWidget {
                                                 ),
                                               ),
                                               child: Text(
-                                                '체크인: ${DateFormat('yyyy-MM-dd HH:mm').format(schedule.checkInTime!)}',
+                                                audience.completedAtLabel(
+                                                  DateFormat('yyyy-MM-dd HH:mm')
+                                                      .format(schedule.checkInTime!),
+                                                ),
                                                 style: Theme.of(context)
                                                     .textTheme
                                                     .bodySmall
@@ -762,19 +766,17 @@ class WorkCheckScrollContent extends StatelessWidget {
                                             AppTheme.radiusFull,
                                           ),
                                         ),
-                                        child: Text(
-                                          isProposed
+                                          child: Text(
+                                          !isModelMode && isProposed
                                               ? '제안 대기'
-                                              : isModelMode
-                                              ? '시술 예정'
-                                              : '근무 예정',
+                                              : audience.scheduledLegend,
                                           style: Theme.of(context)
                                               .textTheme
                                               .labelSmall
                                               ?.copyWith(
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w500,
-                                                color: isProposed
+                                                color: !isModelMode && isProposed
                                                     ? AppTheme.stitchPrimaryContainer
                                                     : AppTheme.purple700,
                                               ),
@@ -801,131 +803,7 @@ class WorkCheckScrollContent extends StatelessWidget {
             ),
           ),
 
-        // 근무체크 버튼 (스페어 전용)
-        if (!isModelMode && vm.hasScheduledWork(vm.selectedDate))
-          Container(
-          width: double.infinity,
-          padding: AppTheme.spacingSymmetric(
-            horizontal: AppTheme.spacing4,
-            vertical: AppTheme.spacing6,
-          ),
-          decoration: const BoxDecoration(
-            color: AppTheme.backgroundWhite,
-            border: Border(
-              top: BorderSide(color: AppTheme.borderGray, width: 1),
-            ),
-          ),
-          child: Column(
-            children: [
-              // 승인 대기 상태
-              if (vm.pendingApprovals.containsKey(
-                DateFormat('yyyy-MM-dd').format(vm.selectedDate),
-              ))
-                Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
-                  padding: AppTheme.spacing(AppTheme.spacing3),
-                  decoration: BoxDecoration(
-                    color: AppTheme.yellow50,
-                    border: Border.all(color: AppTheme.yellow600, width: 1),
-                    borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                  ),
-                  child: Text(
-                    '${vm.pendingApprovals[DateFormat('yyyy-MM-dd').format(vm.selectedDate)]}에서 승인 대기 중입니다...',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontSize: 14,
-                      color: AppTheme.yellow800,
-                    ),
-                  ),
-                ),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed:
-                      (vm.selectedScheduleId == null ||
-                          vm.isChecked(vm.selectedDate) ||
-                          vm.pendingApprovals.containsKey(
-                            DateFormat('yyyy-MM-dd').format(vm.selectedDate),
-                          ))
-                      ? null
-                      : vm.handleCheckIn,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.stitchPrimaryContainer,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: AppTheme.borderGray300,
-                    disabledForegroundColor: AppTheme.textSecondary,
-                    padding: AppTheme.spacingSymmetric(
-                      horizontal: AppTheme.spacing4,
-                      vertical: AppTheme.spacing4,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '근무체크하기',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                      ),
-                      const SizedBox(width: AppTheme.spacing2),
-                      IconMapper.icon(
-                            'chevronright',
-                            size: 20,
-                            color: Colors.white,
-                          ) ??
-                          const Icon(
-                            Icons.chevron_right,
-                            size: 20,
-                            color: Colors.white,
-                          ),
-                    ],
-                  ),
-                ),
-              ),
-              if (vm.selectedScheduleId != null &&
-                  !vm.isChecked(vm.selectedDate))
-                Builder(
-                  builder: (ctx) {
-                    final selected = vm.schedules.where(
-                      (s) => s.id == vm.selectedScheduleId,
-                    );
-                    if (selected.isEmpty ||
-                        selected.first.status != 'scheduled') {
-                      return const SizedBox.shrink();
-                    }
-                    final schedule = selected.first;
-                    return Padding(
-                      padding: const EdgeInsets.only(top: AppTheme.spacing3),
-                      child: TextButton(
-                        onPressed: () async {
-                          await ScheduleCancelFlow.requestCancel(
-                            context: ctx,
-                            schedule: schedule,
-                            actor: CancellationActor.spare,
-                            onSuccess: () => vm.loadData(),
-                          );
-                        },
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppTheme.urgentRed,
-                        ),
-                        child: const Text(
-                          '일정 취소',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-            ],
-          ),
-        ),
+        WorkCheckActionBar(isModelMode: isModelMode),
 
         if (!isModelMode)
           Container(
@@ -1059,7 +937,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                       const SizedBox(width: AppTheme.spacing3),
                       Expanded(
                         child: Text(
-                          '시술 일정을 미리 확인하고 디자이너와 메시지로 조율해 보세요.',
+                          audience.tipBannerMessage,
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             fontSize: 14,
                             color: AppTheme.textGray700,
@@ -1073,48 +951,9 @@ class WorkCheckScrollContent extends StatelessWidget {
             ),
           ),
 
-        if (!isModelMode)
-          Container(
-          width: double.infinity,
-          padding: const EdgeInsets.only(
-            top: AppTheme.spacing6,
-            bottom: AppTheme.spacing2,
-            left: AppTheme.spacing4,
-            right: AppTheme.spacing4,
-          ),
-          decoration: const BoxDecoration(
-            color: AppTheme.backgroundWhite,
-            border: Border(
-              top: BorderSide(color: AppTheme.borderGray, width: 1),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '근무체크 안내사항',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-              const SizedBox(height: AppTheme.spacing4),
-              _workCheckInfoItem(
-                context,
-                '근무체크는 승인받은 근무 일정에만 가능합니다. 당일 근무를 마치고 체크해주세요.',
-              ),
-              const SizedBox(height: AppTheme.spacing3),
-              _workCheckInfoItem(
-                context,
-                '노쇼 없이 10일 연속 근무하면 에너지 1개를 받을 수 있습니다.',
-              ),
-              const SizedBox(height: AppTheme.spacing3),
-              _workCheckInfoItem(context, '연속 근무가 끊기면 에너지 게이지는 초기화됩니다.'),
-              const SizedBox(height: AppTheme.spacing3),
-              _workCheckInfoItem(context, '연속 근무는 달이 넘어가도 이어집니다.'),
-            ],
-          ),
+        _ScheduleInfoSection(
+          title: audience.infoSectionTitle,
+          lines: audience.infoBulletLines,
         ),
 
         // 하단 여백 (하단 네비게이션 바)
@@ -1420,4 +1259,51 @@ Widget _workCheckInfoItem(BuildContext context, String text) {
       ),
     ],
   );
+}
+
+class _ScheduleInfoSection extends StatelessWidget {
+  const _ScheduleInfoSection({
+    required this.title,
+    required this.lines,
+  });
+
+  final String title;
+  final List<String> lines;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(
+        top: AppTheme.spacing6,
+        bottom: AppTheme.spacing2,
+        left: AppTheme.spacing4,
+        right: AppTheme.spacing4,
+      ),
+      decoration: const BoxDecoration(
+        color: AppTheme.backgroundWhite,
+        border: Border(
+          top: BorderSide(color: AppTheme.borderGray, width: 1),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing4),
+          for (var i = 0; i < lines.length; i++) ...[
+            if (i > 0) const SizedBox(height: AppTheme.spacing3),
+            _workCheckInfoItem(context, lines[i]),
+          ],
+        ],
+      ),
+    );
+  }
 }

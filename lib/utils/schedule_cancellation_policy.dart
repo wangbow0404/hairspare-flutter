@@ -1,4 +1,5 @@
 import '../models/schedule.dart';
+import 'schedule_session_audience.dart';
 import 'schedule_work_session.dart';
 
 /// 스케줄 취소 정책 버전.
@@ -78,6 +79,23 @@ class CancellationEligibility {
         CancellationEligibilityStatus.blockedAlreadyCancelled => '취소됨',
         CancellationEligibilityStatus.blockedNotScheduled => '확정 전',
       };
+
+  CancellationEligibility forAudience(ScheduleSessionAudience audience) {
+    if (!audience.isModel) return this;
+    return CancellationEligibility(
+      status: status,
+      hoursUntilStart: hoursUntilStart,
+      penaltySummary: audience.localizePolicyText(penaltySummary),
+      blockedMessage: audience.localizePolicyText(blockedMessage),
+      penaltyTier: penaltyTier,
+      energyForfeit: energyForfeit,
+      shopWarningLevel: shopWarningLevel,
+      shopUnilateralCancelCount30d: shopUnilateralCancelCount30d,
+    );
+  }
+
+  String chipLabelFor(ScheduleSessionAudience audience) =>
+      audience.eligibilityChipLabel(eligibilityChipLabel);
 }
 
 /// 스케줄 취소 규칙 (클라이언트·mock·API 문서와 동기화).
@@ -101,7 +119,11 @@ abstract final class ScheduleCancellationPolicy {
 
   static List<String> policyBulletLines({
     CancellationActor actor = CancellationActor.spare,
+    bool isModelMode = false,
   }) {
+    if (isModelMode && actor == CancellationActor.spare) {
+      return modelPolicyBulletLines();
+    }
     return switch (actor) {
       CancellationActor.spare => [
         '확정된 근무를 취소하면 예약 에너지는 환불되지 않습니다.',
@@ -118,6 +140,13 @@ abstract final class ScheduleCancellationPolicy {
       ],
     };
   }
+
+  static List<String> modelPolicyBulletLines() => [
+        '확정된 시술 일정을 취소하면 보증금·에너지 환불 정책이 적용될 수 있습니다.',
+        '취소 시 해당 매장·모델 채팅방에 자동으로 알림이 전송됩니다.',
+        '시술 시작 시각 이후에는 앱에서 취소할 수 없습니다.',
+        '무단 노쇼 시 추가 패널티가 적용될 수 있습니다.',
+      ];
 
   static ShopCancellationWarningLevel shopWarningLevelForCount(int count) {
     if (count >= shopUnilateralCancelLimit30d) {

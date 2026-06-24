@@ -106,7 +106,9 @@ class SpareCard extends StatelessWidget {
                         ),
                       ),
                       if (showPopularBadge) ...[
-                        SizedBox(width: compact ? AppTheme.spacing1 : AppTheme.spacing2),
+                        SizedBox(
+                          width: compact ? AppTheme.spacing1 : AppTheme.spacing2,
+                        ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppTheme.spacing2,
@@ -119,7 +121,8 @@ class SpareCard extends StatelessWidget {
                                 AppTheme.orange500,
                               ],
                             ),
-                            borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusFull),
                             boxShadow: AppTheme.shadowMd,
                           ),
                           child: const Row(
@@ -140,27 +143,6 @@ class SpareCard extends StatelessWidget {
                                 ),
                               ),
                             ],
-                          ),
-                        ),
-                      ],
-                      if (spare.isLicenseVerified) ...[
-                        if (showPopularBadge) const SizedBox(width: AppTheme.spacing3),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: compact ? AppTheme.spacing1 : AppTheme.spacing2,
-                            vertical: AppTheme.spacing1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.purple100,
-                            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                          ),
-                          child: Text(
-                            '면허인증',
-                            style: (Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: AppTheme.purple700,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: compact ? 10 : null,
-                                )),
                           ),
                         ),
                       ],
@@ -237,20 +219,6 @@ class SpareCard extends StatelessWidget {
                                 color: AppTheme.textSecondary,
                               ),
                         ),
-                        if (spare.isVerified) ...[
-                          const SizedBox(width: AppTheme.spacing2),
-                          const Text(
-                            '•',
-                            style: TextStyle(color: AppTheme.textSecondary),
-                          ),
-                          const SizedBox(width: AppTheme.spacing2),
-                          Text(
-                            '본인인증',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppTheme.primaryBlue,
-                                ),
-                          ),
-                        ],
                       ],
                     ),
                   ] else ...[

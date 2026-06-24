@@ -7,6 +7,7 @@ import '../../utils/error_handler.dart';
 import '../../widgets/admin/admin_page_header.dart';
 import '../../widgets/admin/admin_search_filter_bar.dart';
 import '../../widgets/admin/admin_table_card.dart';
+import '../../widgets/admin/admin_action_dialog.dart';
 
 /// 관리자 에너지 관리 화면
 class AdminEnergyScreen extends StatefulWidget {
@@ -159,9 +160,14 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
     return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const AdminPageHeader(
+          AdminPageHeader(
             title: '에너지 관리',
             subtitle: '에너지 거래 내역을 조회하고 관리할 수 있습니다',
+            trailing: FilledButton.icon(
+              onPressed: _grantEnergy,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('수동 지급'),
+            ),
           ),
           const SizedBox(height: AppTheme.spacing6),
           AdminSearchFilterBar(
@@ -397,5 +403,35 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
           ),
         ],
       );
+  }
+
+  Future<void> _grantEnergy() async {
+    final userController = TextEditingController();
+    final amountController = TextEditingController(text: '100');
+    final reason = await AdminActionDialog.show(
+      context,
+      title: '에너지 수동 지급',
+      confirmLabel: '지급',
+      extraFields: [
+        TextField(controller: userController, decoration: const InputDecoration(labelText: '사용자 ID', border: OutlineInputBorder())),
+        const SizedBox(height: AppTheme.spacing2),
+        TextField(controller: amountController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '수량', border: OutlineInputBorder())),
+        const SizedBox(height: AppTheme.spacing2),
+      ],
+    );
+    final userId = userController.text.trim();
+    final amount = int.tryParse(amountController.text.trim()) ?? 0;
+    userController.dispose();
+    amountController.dispose();
+    if (reason == null || userId.isEmpty || amount <= 0 || !mounted) return;
+    try {
+      await _adminService.grantEnergy(userId, amount, reason: reason);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('에너지가 지급되었습니다 (감사 로그 기록)')));
+      _loadTransactions();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))), backgroundColor: AppTheme.urgentRed));
+    }
   }
 }

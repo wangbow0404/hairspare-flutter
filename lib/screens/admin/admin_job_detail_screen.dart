@@ -5,6 +5,7 @@ import '../../services/admin_service.dart';
 import '../../utils/error_handler.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/admin/admin_table_card.dart';
+import '../../widgets/admin/admin_action_dialog.dart';
 
 /// 관리자 공고 상세 화면
 class AdminJobDetailScreen extends StatefulWidget {
@@ -256,6 +257,22 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
             _buildInfoRow('지원', '${job['_count']?['applications'] ?? 0}건'),
             _buildInfoRow('스케줄', '${job['_count']?['schedules'] ?? 0}건'),
             _buildInfoRow('등록일', _formatDate(job['createdAt'])),
+            const SizedBox(height: AppTheme.spacing6),
+            const Divider(height: 1),
+            const SizedBox(height: AppTheme.spacing4),
+            Wrap(
+              spacing: AppTheme.spacing2,
+              runSpacing: AppTheme.spacing2,
+              children: [
+                OutlinedButton(onPressed: () => _hideJob(false), child: const Text('숨김')),
+                OutlinedButton(onPressed: () => _forceClose(), child: const Text('강제 마감')),
+                FilledButton(
+                  onPressed: () => _deleteJob(),
+                  style: FilledButton.styleFrom(backgroundColor: AppTheme.urgentRed),
+                  child: const Text('삭제'),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -291,5 +308,30 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _hideJob(bool hide) async {
+    final reason = await AdminActionDialog.show(context, title: '공고 숨김', confirmLabel: '적용', summary: _job?['title']?.toString(), isDanger: true);
+    if (reason == null || !mounted) return;
+    await _adminService.hideJob(widget.jobId, reason: reason, hide: hide);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('공고가 숨김 처리되었습니다')));
+  }
+
+  Future<void> _forceClose() async {
+    final reason = await AdminActionDialog.show(context, title: '공고 강제 마감', confirmLabel: '마감', summary: _job?['title']?.toString(), isDanger: true);
+    if (reason == null || !mounted) return;
+    await _adminService.forceCloseJob(widget.jobId, reason: reason);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('공고가 마감되었습니다')));
+  }
+
+  Future<void> _deleteJob() async {
+    final reason = await AdminActionDialog.show(context, title: '공고 삭제', confirmLabel: '삭제', summary: _job?['title']?.toString(), isDanger: true);
+    if (reason == null || !mounted) return;
+    await _adminService.deleteJob(widget.jobId, reason: reason);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('공고가 삭제되었습니다')));
+    context.pop();
   }
 }

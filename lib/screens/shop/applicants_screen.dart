@@ -10,10 +10,11 @@ import '../../services/job_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/application_status_utils.dart';
 import '../../utils/error_handler.dart';
+import '../../utils/deferred_route_body.dart';
+import '../../utils/shell_navigation.dart';
 import '../../widgets/common/shared_app_bar.dart';
 import '../../widgets/shop_applicants/shop_applicant_card.dart';
 import '../../widgets/shop_applicants/shop_applicants_filter_chip.dart';
-import 'spare_detail_screen.dart';
 
 /// 샵 지원자 관리 — 내 공고 목록과 동일한 필터·카드 톤.
 class ShopApplicantsScreen extends StatefulWidget {
@@ -25,7 +26,8 @@ class ShopApplicantsScreen extends StatefulWidget {
   State<ShopApplicantsScreen> createState() => _ShopApplicantsScreenState();
 }
 
-class _ShopApplicantsScreenState extends State<ShopApplicantsScreen> {
+class _ShopApplicantsScreenState extends State<ShopApplicantsScreen>
+    with DeferredRouteBodyMixin {
   final ApplicationService _applicationService = sl<ApplicationService>();
   final JobService _jobService = sl<JobService>();
   final GlobalMessengerService _messenger = sl<GlobalMessengerService>();
@@ -188,12 +190,7 @@ class _ShopApplicantsScreenState extends State<ShopApplicantsScreen> {
   }
 
   void _openSpareProfile(String spareId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (context) => ShopSpareDetailScreen(spareId: spareId),
-      ),
-    );
+    ShellNavigation.pushShopSpareDetail(context, spareId);
   }
 
   @override
@@ -205,9 +202,11 @@ class _ShopApplicantsScreenState extends State<ShopApplicantsScreen> {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
       appBar: const SharedAppBar(title: '지원자 관리'),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
+      body: deferredBody(
+        loading: const Center(child: CircularProgressIndicator()),
+        builder: (context) => _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
               children: [
                 _ApplicantsSummaryBar(
                   total: filtered.length,
@@ -261,6 +260,7 @@ class _ShopApplicantsScreenState extends State<ShopApplicantsScreen> {
                 ),
               ],
             ),
+      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/login_portal.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
@@ -22,6 +23,55 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _saveId = false;
+  bool _autoLogin = false;
+
+  static const _keySaveId = 'shop_save_id';
+  static const _keySavedUsername = 'shop_saved_username';
+  static const _keyAutoLogin = 'auto_login_enabled';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedData();
+  }
+
+  Future<void> _loadSavedData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saveId = prefs.getBool(_keySaveId) ?? false;
+    final autoLogin = prefs.getBool(_keyAutoLogin) ?? false;
+    final savedUsername = prefs.getString(_keySavedUsername) ?? '';
+    if (mounted) {
+      setState(() {
+        _saveId = saveId;
+        _autoLogin = autoLogin;
+        if (saveId && savedUsername.isNotEmpty) {
+          _usernameController.text = savedUsername;
+        }
+      });
+    }
+  }
+
+  Future<void> _onAutoLoginChanged(bool? value) async {
+    final v = value ?? false;
+    setState(() {
+      _autoLogin = v;
+      if (v) _saveId = true;
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyAutoLogin, v);
+  }
+
+  Future<void> _onSaveIdChanged(bool? value) async {
+    final v = value ?? false;
+    setState(() {
+      _saveId = v;
+      if (!v) _autoLogin = false;
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keySaveId, v);
+    if (!v) await prefs.setBool(_keyAutoLogin, false);
+  }
 
   @override
   void dispose() {
@@ -56,6 +106,16 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
         );
       }
     } else if (authProvider.isAuthenticated) {
+      final prefs = await SharedPreferences.getInstance();
+      if (_saveId) {
+        await prefs.setString(_keySavedUsername, username);
+        await prefs.setBool(_keySaveId, true);
+      } else {
+        await prefs.remove(_keySavedUsername);
+        await prefs.setBool(_keySaveId, false);
+      }
+      await prefs.setBool(_keyAutoLogin, _autoLogin);
+
       final user = authProvider.currentUser;
       if (mounted && user != null) {
         AppNavigation.goHomeForRole(user.role);
@@ -213,7 +273,58 @@ class _ShopLoginScreenState extends State<ShopLoginScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: AppTheme.spacing8),
+                      const SizedBox(height: AppTheme.spacing3),
+                      // 아이디 저장 / 자동로그인 체크박스
+                      Row(
+                        children: [
+                          SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: Checkbox(
+                              value: _saveId,
+                              onChanged: _onSaveIdChanged,
+                              activeColor: const Color(0xFF9333EA),
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          GestureDetector(
+                            onTap: () => _onSaveIdChanged(!_saveId),
+                            child: Text(
+                              '아이디 저장',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppTheme.spacing4),
+                          SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: Checkbox(
+                              value: _autoLogin,
+                              onChanged: _onAutoLoginChanged,
+                              activeColor: const Color(0xFF9333EA),
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          GestureDetector(
+                            onTap: () => _onAutoLoginChanged(!_autoLogin),
+                            child: Text(
+                              '자동로그인',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppTheme.spacing4),
                       // 로그인 버튼
                       Consumer<AuthProvider>(
                         builder: (context, authProvider, _) {

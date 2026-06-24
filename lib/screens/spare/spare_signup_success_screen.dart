@@ -7,7 +7,6 @@ import '../../core/router/app_routes.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/glass_modal.dart';
-import '../../screens/spare/verification_screen.dart';
 
 /// 회원가입 완료 — 본인인증 안내.
 class SpareSignupSuccessScreen extends StatelessWidget {
@@ -55,12 +54,7 @@ class SpareSignupSuccessScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (context) => const VerificationScreen(),
-                      ),
-                    );
+                    context.push(AppRoutes.spareSignupSuccessVerification);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.stitchPrimaryContainer,

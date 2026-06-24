@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../screens/shop/job_new_screen.dart';
+import '../../utils/deferred_route_body.dart';
+import '../../utils/shell_navigation.dart';
 import '../../theme/app_theme.dart';
 import '../../view_models/shop_jobs_list_view_model.dart';
 import '../../widgets/shop/shop_screen_safe_area.dart';
@@ -59,28 +60,35 @@ class _ShopJobsListScaffoldState extends State<_ShopJobsListScaffold> {
     super.dispose();
   }
 
+  Future<void> _openNewJob() async {
+    final vm = context.read<ShopJobsListViewModel>();
+    final created = await ShellNavigation.pushShopJobNew(context);
+    if (!mounted) return;
+    if (created == true) {
+      await vm.refresh();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    const fabBottomPadding = AppTheme.spacing4;
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: fabBottomPadding),
+        child: FloatingActionButton(
+          onPressed: () => deferAfterTap(_openNewJob),
+          backgroundColor: AppTheme.stitchPrimaryContainer,
+          foregroundColor: Colors.white,
+          elevation: 4,
+          child: const Icon(Icons.add, size: 28),
+        ),
+      ),
       body: ShopScreenSafeArea(
         child: Column(
           children: [
-            ShopJobsListHeader(
-              onOpenNewJob: () async {
-                final vm = context.read<ShopJobsListViewModel>();
-                final created = await Navigator.push<bool>(
-                  context,
-                  MaterialPageRoute<bool>(
-                    builder: (context) => const ShopJobNewScreen(),
-                  ),
-                );
-                if (!context.mounted) return;
-                if (created == true) {
-                  await vm.refresh();
-                }
-              },
-            ),
+            const ShopJobsListHeader(),
             Expanded(
               child: ShopJobsListScrollView(
                 scrollController: _scrollController,

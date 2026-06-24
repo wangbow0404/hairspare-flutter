@@ -10,6 +10,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../services/chat_service.dart';
 import '../../services/contact_violation_service.dart';
+import '../../services/model_designer_match_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/contact_blocker.dart';
 import '../../utils/error_handler.dart';
@@ -32,6 +33,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   final ChatService _chatService = sl<ChatService>();
   final ContactViolationService _contactViolationService =
       sl<ContactViolationService>();
+  final ModelDesignerMatchService _modelDesignerMatchService =
+      sl<ModelDesignerMatchService>();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   List<Message> _messages = [];
@@ -41,8 +44,11 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   final List<String> _recentOutgoingForContactCheck = [];
   static const int _recentOutgoingWindow = 8;
 
-  String _mySenderRole(User? user) =>
-      user?.role == UserRole.shop ? 'shop' : 'spare';
+  String _mySenderRole(User? user) {
+    if (user?.role == UserRole.shop) return 'shop';
+    if (user?.isModelAccount == true) return 'model';
+    return 'spare';
+  }
 
   bool _isMyMessage(Message message, User? currentUser, Chat chat) {
     if (currentUser == null) return false;
@@ -57,6 +63,12 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               message.senderId == chat.shopId);
     }
 
+    if (currentUser.isModelAccount) {
+      return (message.senderRole == 'model' || message.senderRole == 'spare') &&
+          (chat.spareId == currentUser.id ||
+              message.senderId == chat.spareId);
+    }
+
     return message.senderRole == 'spare' &&
         (chat.spareId == currentUser.id ||
             message.senderId == chat.spareId);
@@ -68,6 +80,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     }
     return a.senderRole == b.senderRole;
   }
+
+  bool _isModelDesignerChat(User? user) =>
+      user?.isModelAccount == true &&
+      _modelDesignerMatchService.isModelDesignerChat(widget.chatId);
 
   @override
   void initState() {
@@ -326,6 +342,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     final jobSubtitle = chat.jobTitle?.trim().isNotEmpty == true
         ? chat.jobTitle!
         : null;
+    final isModelDesignerChat = _isModelDesignerChat(currentUser);
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
@@ -338,6 +355,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       ),
       body: Column(
         children: [
+          if (isModelDesignerChat)
+            const _ModelDesignerChatPolicyBanner(),
           if (isShopChatBlocked)
             ChatShopPenaltyBanner(until: shopChatBlockedUntil),
           const ChatContactWarningBanner(),
@@ -555,6 +574,30 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ModelDesignerChatPolicyBanner extends StatelessWidget {
+  const _ModelDesignerChatPolicyBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing4,
+        vertical: AppTheme.spacing2,
+      ),
+      color: AppTheme.surfaceContainerLow,
+      child: const Text(
+        '매칭된 디자이너와만 대화할 수 있어요. 채팅방을 삭제하면 매칭이 자동으로 취소됩니다.',
+        style: TextStyle(
+          fontSize: 12,
+          color: AppTheme.stitchTextSecondary,
+          height: 1.4,
+        ),
       ),
     );
   }

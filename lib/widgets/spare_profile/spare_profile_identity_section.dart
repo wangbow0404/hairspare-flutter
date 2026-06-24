@@ -32,6 +32,7 @@ class SpareProfileIdentitySection extends StatelessWidget {
           final displayName = user?.name ?? user?.username ?? '사용자';
           final displayEmail = user?.email ?? '';
           final displayPhone = user?.phone ?? '';
+          final designer = vm.designerProfile;
 
           return Column(
             children: [
@@ -120,27 +121,111 @@ class SpareProfileIdentitySection extends StatelessWidget {
                                     color: AppTheme.textPrimary,
                                   ),
                             ),
-                            const SizedBox(width: AppTheme.spacing2),
-                            Container(
-                              padding: AppTheme.spacingSymmetric(
-                                horizontal: AppTheme.spacing2,
-                                vertical: AppTheme.spacing1 / 2,
+                            if (designer != null) ...[
+                              const SizedBox(width: AppTheme.spacing2),
+                              Container(
+                                padding: AppTheme.spacingSymmetric(
+                                  horizontal: AppTheme.spacing2,
+                                  vertical: AppTheme.spacing1 / 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.stitchPrimaryContainer
+                                      .withValues(alpha: 0.12),
+                                  borderRadius:
+                                      AppTheme.borderRadius(AppTheme.radiusFull),
+                                ),
+                                child: Text(
+                                  designer.roleLabel,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelSmall
+                                      ?.copyWith(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppTheme.stitchPrimary,
+                                      ),
+                                ),
                               ),
-                              decoration: BoxDecoration(
-                                color: AppTheme.backgroundGray,
-                                borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
+                            ] else ...[
+                              const SizedBox(width: AppTheme.spacing2),
+                              Container(
+                                padding: AppTheme.spacingSymmetric(
+                                  horizontal: AppTheme.spacing2,
+                                  vertical: AppTheme.spacing1 / 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.backgroundGray,
+                                  borderRadius:
+                                      AppTheme.borderRadius(AppTheme.radiusFull),
+                                ),
+                                child: Text(
+                                  '이메일',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelSmall
+                                      ?.copyWith(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.textGray700,
+                                      ),
+                                ),
                               ),
-                              child: Text(
-                                '이메일',
-                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppTheme.textGray700,
-                                    ),
-                              ),
-                            ),
+                            ],
                           ],
                         ),
+                        if (designer != null &&
+                            designer.regionLabel.isNotEmpty) ...[
+                          const SizedBox(height: AppTheme.spacing1),
+                          Text(
+                            designer.regionLabel,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  fontSize: 13,
+                                  color: AppTheme.stitchTextSecondary,
+                                ),
+                          ),
+                        ],
+                        if (designer != null &&
+                            designer.matchingIntro.isNotEmpty) ...[
+                          const SizedBox(height: AppTheme.spacing2),
+                          Text(
+                            designer.matchingIntro,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  fontSize: 14,
+                                  color: AppTheme.stitchTextPrimary,
+                                  height: 1.45,
+                                ),
+                          ),
+                        ],
+                        if (designer != null && designer.specialties.isNotEmpty) ...[
+                          const SizedBox(height: AppTheme.spacing2),
+                          Wrap(
+                            spacing: AppTheme.spacing1,
+                            runSpacing: AppTheme.spacing1,
+                            children: designer.specialties.take(4).map((tag) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppTheme.spacing2,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.purple100,
+                                  borderRadius:
+                                      BorderRadius.circular(AppTheme.radiusFull),
+                                ),
+                                child: Text(
+                                  tag,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.purple700,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
                         const SizedBox(height: AppTheme.spacing2),
                         if (displayEmail.isNotEmpty)
                           Row(
@@ -187,7 +272,14 @@ class SpareProfileIdentitySection extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => SpareProfileNavigation.pushProfileEdit(context),
+                  onPressed: () async {
+                    await SpareProfileNavigation.pushProfileEdit(context);
+                    if (context.mounted) {
+                      await context
+                          .read<SpareProfileViewModel>()
+                          .refreshDesignerProfile();
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.backgroundGray,
                     foregroundColor: AppTheme.textGray700,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/router/app_routes.dart';
 import '../../models/job.dart';
 import '../../providers/favorite_provider.dart';
 import '../../services/favorite_service.dart';
@@ -9,7 +11,6 @@ import '../../utils/job_popularity.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../widgets/stitch/stitch_empty_state.dart';
 import '../../widgets/stitch/stitch_list_job_card.dart';
-import 'job_detail_screen.dart';
 
 /// 찜한 공고 목록 — Stitch ListTemplate.
 class FavoritesScreen extends StatefulWidget {
@@ -80,12 +81,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   void _handleJobTap(Job job) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => JobDetailScreen(jobId: job.id),
-      ),
-    );
+    context.push(AppRoutes.spareFavoritesJobDetail(job.id));
   }
 
   @override

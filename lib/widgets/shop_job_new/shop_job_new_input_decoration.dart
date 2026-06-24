@@ -28,6 +28,14 @@ InputDecoration shopJobNewInputDecoration(
       borderRadius: BorderRadius.circular(AppTheme.radiusLg),
       borderSide: const BorderSide(color: AppTheme.urgentRed),
     ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+      borderSide: const BorderSide(color: AppTheme.urgentRed, width: 1.5),
+    ),
+    errorStyle: const TextStyle(
+      color: AppTheme.urgentRed,
+      fontSize: 12,
+    ),
     contentPadding: padding ??
         const EdgeInsets.symmetric(
           horizontal: AppTheme.spacing4,

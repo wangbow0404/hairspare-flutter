@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/router/app_routes.dart';
 import '../../models/spare_subtype.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/hairspare_brand_assets.dart';
 import '../../widgets/common/shared_app_bar.dart';
-import 'spare_signup_model_screen.dart';
-import 'spare_signup_professional_screen.dart';
 
 /// 회원가입 1단계 — 스페어·디자이너 vs 모델 유형 선택.
 class SpareSignupTypeScreen extends StatelessWidget {
@@ -50,13 +50,7 @@ class SpareSignupTypeScreen extends StatelessWidget {
                 description: '공고 지원 · 스케줄 · 에너지 결제',
                 icon: Icons.content_cut_outlined,
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (context) =>
-                          const SpareSignupProfessionalScreen(),
-                    ),
-                  );
+                  context.push(AppRoutes.spareSignupProfessional);
                 },
               ),
               const SizedBox(height: AppTheme.spacing4),
@@ -66,12 +60,7 @@ class SpareSignupTypeScreen extends StatelessWidget {
                 description: '디자이너 매칭에 노출 · 채팅으로 일정 조율',
                 icon: Icons.face_retouching_natural_outlined,
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (context) => const SpareSignupModelScreen(),
-                    ),
-                  );
+                  context.push(AppRoutes.spareSignupModel);
                 },
               ),
               const Spacer(),

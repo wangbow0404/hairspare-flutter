@@ -324,4 +324,31 @@ class RegionHelper {
     }
     return '';
   }
+
+  /// 샵 주변 지역 ID — 같은 시/도 내 구/군 (또는 해당 구/군 단독).
+  static List<String> nearbyRegionIds(String regionId) {
+    final matches = _regions.where((r) => r.id == regionId);
+    if (matches.isEmpty) return [regionId];
+    final region = matches.first;
+
+    if (region.type == RegionType.district && region.parentId != null) {
+      final siblings = _regions
+          .where((r) => r.parentId == region.parentId)
+          .map((r) => r.id)
+          .toList();
+      siblings.remove(regionId);
+      return [regionId, ...siblings];
+    }
+    if (region.type == RegionType.province) {
+      return getDistrictsByProvince(regionId).map((r) => r.id).toList();
+    }
+    return [regionId];
+  }
+
+  /// 구/군 짧은 이름 (섹션 부제용).
+  static String districtShortName(String regionId) {
+    final matches = _regions.where((r) => r.id == regionId);
+    if (matches.isEmpty) return regionId;
+    return matches.first.name;
+  }
 }

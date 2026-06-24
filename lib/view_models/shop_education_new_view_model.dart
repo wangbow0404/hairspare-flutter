@@ -11,6 +11,7 @@ import '../models/region.dart';
 import '../services/education_service.dart';
 import '../utils/error_handler.dart';
 import '../utils/region_helper.dart';
+import '../widgets/shop_education_new/shop_education_new_form_sections.dart';
 
 /// 샵 교육 등록 폼. [dispose]에서 컨트롤러 정리.
 class ShopEducationNewViewModel extends ChangeNotifier {
@@ -64,6 +65,8 @@ class ShopEducationNewViewModel extends ChangeNotifier {
   DateTime? selectedDeadline;
   String address = '';
   bool isLoading = false;
+  bool validationAttempted = false;
+  String? deadlineError;
 
   List<String> get availableSubCategories {
     if (selectedCategoryId == null) return [];
@@ -112,6 +115,40 @@ class ShopEducationNewViewModel extends ChangeNotifier {
     }
     if (selectedDeadline == null) {
       return '마감일을 선택해주세요';
+    }
+    return null;
+  }
+
+  void _syncExtraFieldErrors() {
+    deadlineError =
+        selectedDeadline == null ? '마감일을 선택해주세요' : null;
+  }
+
+  void markValidationAttempted() {
+    validationAttempted = true;
+    _syncExtraFieldErrors();
+    notifyListeners();
+  }
+
+  /// 화면 위→아래 순서로 첫 번째 미입력·오류 섹션.
+  ShopEducationNewFormSection? get firstInvalidSection {
+    if (validateTitle(titleController.text) != null) {
+      return ShopEducationNewFormSection.title;
+    }
+    if (selectedCategoryId == null ||
+        (availableSubCategories.isNotEmpty && selectedSubCategory == null)) {
+      return ShopEducationNewFormSection.category;
+    }
+    if (!isOnline &&
+        (selectedProvinceId == null || selectedDistrictId == null)) {
+      return ShopEducationNewFormSection.region;
+    }
+    if (validatePrice(priceController.text) != null ||
+        validateMaxApplicants(maxApplicantsController.text) != null) {
+      return ShopEducationNewFormSection.priceAndApplicants;
+    }
+    if (selectedDeadline == null) {
+      return ShopEducationNewFormSection.deadline;
     }
     return null;
   }
@@ -166,6 +203,7 @@ class ShopEducationNewViewModel extends ChangeNotifier {
 
   void setDeadline(DateTime? d) {
     selectedDeadline = d;
+    if (d != null) deadlineError = null;
     notifyListeners();
   }
 
@@ -269,16 +307,7 @@ class ShopEducationNewViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> submit(GlobalKey<FormState> formKey) async {
-    final formState = formKey.currentState;
-    if (formState == null || !formState.validate()) return false;
-
-    final extra = validateExtraFields();
-    if (extra != null) {
-      _m.showMessage(extra);
-      return false;
-    }
-
+  Future<bool> submit() async {
     isLoading = true;
     notifyListeners();
 

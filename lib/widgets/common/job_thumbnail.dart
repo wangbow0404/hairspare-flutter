@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../models/job.dart';
 import '../../theme/app_theme.dart';
+import 'app_network_image.dart';
 
 /// 공고/매장 썸네일. `Job.images` 첫 장을 표시하고,
 /// 이미지가 없거나 로딩 실패 시 보라 그라데이션 placeholder로 대체한다.
+///
+/// mock/dev 및 hot reload: [AppNetworkImage]로 picsum fetch 없이 즉시 렌더.
 class JobThumbnail extends StatelessWidget {
   const JobThumbnail({
     super.key,
@@ -28,6 +31,12 @@ class JobThumbnail extends StatelessWidget {
     return first.isEmpty ? null : first;
   }
 
+  int? get _memCacheWidth {
+    final w = width;
+    if (w == null || !w.isFinite) return null;
+    return (w * 2).round();
+  }
+
   @override
   Widget build(BuildContext context) {
     final radius = borderRadius ?? BorderRadius.circular(AppTheme.radiusLg);
@@ -39,28 +48,20 @@ class JobThumbnail extends StatelessWidget {
         width: width,
         height: height,
         child: url == null
-            ? const _ThumbnailPlaceholder()
-            : Image.network(
-                url,
+            ? const _JobThumbnailPlaceholder()
+            : AppNetworkImage(
+                imageUrl: url,
                 fit: fit,
-                width: width,
-                height: height,
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-                  return const _ThumbnailPlaceholder(showSpinner: true);
-                },
-                errorBuilder: (context, error, stackTrace) =>
-                    const _ThumbnailPlaceholder(),
+                memCacheWidth: _memCacheWidth,
+                fallbackIcon: Icons.storefront_outlined,
               ),
       ),
     );
   }
 }
 
-class _ThumbnailPlaceholder extends StatelessWidget {
-  const _ThumbnailPlaceholder({this.showSpinner = false});
-
-  final bool showSpinner;
+class _JobThumbnailPlaceholder extends StatelessWidget {
+  const _JobThumbnailPlaceholder();
 
   @override
   Widget build(BuildContext context) {
@@ -76,20 +77,11 @@ class _ThumbnailPlaceholder extends StatelessWidget {
         ),
       ),
       child: Center(
-        child: showSpinner
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppTheme.stitchPrimary,
-                ),
-              )
-            : Icon(
-                Icons.storefront_outlined,
-                color: AppTheme.stitchPrimary.withValues(alpha: 0.55),
-                size: 28,
-              ),
+        child: Icon(
+          Icons.storefront_outlined,
+          color: AppTheme.stitchPrimary.withValues(alpha: 0.55),
+          size: 28,
+        ),
       ),
     );
   }

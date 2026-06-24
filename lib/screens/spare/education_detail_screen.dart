@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:hairspare/screens/spare/education_energy_checkout_screen.dart';
-import 'package:hairspare/screens/spare/education_enrollment_detail_screen.dart';
+import 'package:hairspare/core/router/route_extras.dart';
+import 'package:hairspare/utils/shell_navigation.dart';
 import 'package:hairspare/theme/app_theme.dart';
 import 'package:hairspare/utils/icon_mapper.dart';
 import 'package:hairspare/view_models/education_detail_view_model.dart';
 import 'package:hairspare/widgets/spare_app_bar.dart';
 import 'education_screen.dart';
-import 'reviews_list_screen.dart';
 
 /// 교육 상세 화면 (개선된 레이아웃)
 class EducationDetailScreen extends StatelessWidget {
@@ -609,24 +608,16 @@ class EducationDetailScreen extends StatelessWidget {
           child: ElevatedButton(
             onPressed: enrolled
                 ? () {
-                    Navigator.push(
+                    ShellNavigation.pushEnrollmentDetail(
                       context,
-                      MaterialPageRoute<void>(
-                        builder: (context) => EducationEnrollmentDetailScreen(
-                          enrollmentId: vm.enrollment!.id,
-                        ),
-                      ),
+                      vm.enrollment!.id,
                     );
                   }
                 : vm.canApply
                     ? () async {
-                        final result = await Navigator.push<bool>(
+                        final result = await ShellNavigation.pushEducationCheckout(
                           context,
-                          MaterialPageRoute<bool>(
-                            builder: (context) => EducationEnergyCheckoutScreen(
-                              education: education,
-                            ),
-                          ),
+                          education,
                         );
                         if (result == true && context.mounted) {
                           await vm.loadEnrollmentStatus();
@@ -720,21 +711,12 @@ class _ExpandableReviewsSectionState extends State<_ExpandableReviewsSection> {
               const SizedBox(width: AppTheme.spacing2),
               TextButton(
                 onPressed: () {
-                  Navigator.push(
+                  ShellNavigation.pushReviews(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => ReviewsListScreen(
-                        title: '${widget.title} 리뷰',
-                        averageRating: widget.averageRating,
-                        reviews: widget.reviews
-                            .map((r) => ReviewItem(
-                                  userName: r.userName,
-                                  rating: r.rating,
-                                  comment: r.comment,
-                                  createdAt: r.createdAt,
-                                ))
-                            .toList(),
-                      ),
+                    ReviewsListRouteArgs(
+                      title: '${widget.title} 리뷰',
+                      averageRating: widget.averageRating,
+                      reviews: widget.reviews,
                     ),
                   );
                 },

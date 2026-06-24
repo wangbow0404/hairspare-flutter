@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../utils/shell_navigation.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../widgets/stitch/stitch_energy_hero_card.dart';
 import '../../widgets/stitch/stitch_empty_state.dart';
 import '../../services/energy_service.dart';
-import 'energy_purchase_screen.dart';
 
 /// Next.js와 동일한 에너지 화면
 class EnergyScreen extends StatefulWidget {
@@ -95,12 +95,8 @@ class _EnergyScreenState extends State<EnergyScreen> {
               child: StitchEnergyHeroCard(
                 balance: _balance,
                 onPurchase: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const EnergyPurchaseScreen(),
-                    ),
-                  ).then((_) => _loadEnergyData());
+                  ShellNavigation.pushEnergyPurchase(context)
+                      .then((_) => _loadEnergyData());
                 },
               ),
             ),

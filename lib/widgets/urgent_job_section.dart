@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/job.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/home_layout_metrics.dart';
 import 'stitch/stitch_compact_job_card.dart';
 import 'stitch/stitch_section_header.dart';
 
@@ -49,7 +50,7 @@ class UrgentJobSection extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spacing4),
           SizedBox(
-            height: 188,
+            height: HomeLayoutMetrics.compactCarouselHeight,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(
@@ -64,6 +65,7 @@ class UrgentJobSection extends StatelessWidget {
                 return StitchCompactJobCard(
                   job: job,
                   isFavorite: isFavorite,
+                  height: HomeLayoutMetrics.compactCarouselHeight,
                   onTap: () => onJobTap?.call(job),
                   onFavoriteToggle: onFavoriteToggle != null
                       ? () => onFavoriteToggle!(

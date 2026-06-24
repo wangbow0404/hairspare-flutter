@@ -3,25 +3,26 @@ import 'package:flutter/foundation.dart';
 import '../core/di/service_locator.dart';
 import '../mocks/mock_auth_data.dart';
 import '../models/hair_model.dart';
+import '../models/match_profile.dart';
+import '../models/model_discovery_item.dart';
 import '../models/model_match_preference.dart';
 import '../providers/auth_provider.dart';
-import '../providers/chat_provider.dart';
-import '../services/chat_service.dart';
+import '../services/matching_service.dart';
 import '../services/model_match_service.dart';
+import '../services/portfolio_service.dart';
+import '../services/spare_designer_profile_service.dart';
 import '../utils/error_handler.dart';
 
 /// 매칭 시도 결과.
-enum MatchAttemptStatus { matched, limitReached, error }
+enum MatchAttemptStatus { likeSent, limitReached, error }
 
 class MatchAttemptResult {
   final MatchAttemptStatus status;
-  final String? chatId;
   final HairModel? model;
   final String? message;
 
   const MatchAttemptResult(
     this.status, {
-    this.chatId,
     this.model,
     this.message,
   });
@@ -31,18 +32,28 @@ class MatchAttemptResult {
 class ModelMatchViewModel extends ChangeNotifier {
   ModelMatchViewModel({
     required ModelMatchService matchService,
-    required ChatService chatService,
+    required MatchingService matchingService,
+    SpareDesignerProfileService? designerProfileService,
   })  : _matchService = matchService,
-        _chatService = chatService;
+        _matchingService = matchingService,
+        _designerProfileService =
+            designerProfileService ?? sl<SpareDesignerProfileService>();
 
   final ModelMatchService _matchService;
-  final ChatService _chatService;
+  final MatchingService _matchingService;
+  final SpareDesignerProfileService _designerProfileService;
 
   ModelMatchPreference _preference = const ModelMatchPreference();
   ModelMatchPreference get preference => _preference;
 
   List<HairModel> _candidates = [];
   List<HairModel> get candidates => _candidates;
+
+  List<ModelDiscoveryItem> _discoveryItems = [];
+  List<ModelDiscoveryItem> get discoveryItems => _discoveryItems;
+
+  bool _isDiscoveryLoading = false;
+  bool get isDiscoveryLoading => _isDiscoveryLoading;
 
   int _currentIndex = 0;
   int get currentIndex => _currentIndex;
@@ -78,10 +89,27 @@ class ModelMatchViewModel extends ChangeNotifier {
       _candidates = results[0] as List<HairModel>;
       _remainingMatches = results[1] as int;
       _currentIndex = 0;
+      await loadDiscoveryModels();
     } catch (e) {
       _error = ErrorHandler.handleException(e).message;
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadDiscoveryModels() async {
+    _isDiscoveryLoading = true;
+    notifyListeners();
+    try {
+      final excludeIds = _candidates.map((m) => m.id).toSet();
+      _discoveryItems = await _matchService.getDiscoveryModels(
+        excludeIds: excludeIds,
+      );
+    } catch (_) {
+      _discoveryItems = const [];
+    } finally {
+      _isDiscoveryLoading = false;
       notifyListeners();
     }
   }
@@ -93,12 +121,14 @@ class ModelMatchViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 하트 — 한도 확인 후 채팅방 생성. 결과 반환.
+  /// 하트 — pending 관심 전송 (즉시 채팅 생성 없음).
   Future<MatchAttemptResult> like() async {
     final model = currentModel;
     if (model == null) {
-      return const MatchAttemptResult(MatchAttemptStatus.error,
-          message: '더 이상 추천할 모델이 없습니다.');
+      return const MatchAttemptResult(
+        MatchAttemptStatus.error,
+        message: '더 이상 추천할 모델이 없습니다.',
+      );
     }
 
     if (_remainingMatches <= 0) {
@@ -114,32 +144,49 @@ class ModelMatchViewModel extends ChangeNotifier {
       }
 
       final user = sl<AuthProvider>().currentUser ?? MockAuthData.spareUser();
-      final chatId = await _chatService.ensureChatForModel(
-        modelId: model.id,
-        modelName: model.name,
-        spareId: user.id,
-        spareName: user.name ?? user.username,
+      final portfolio = await sl<PortfolioService>().getImageUrls(
+        ownerId: user.id,
+        ownerRole: user.role.name,
+      );
+      final designerProfile =
+          await _designerProfileService.getProfile(user.id);
+      final intro = designerProfile.matchingIntro.trim().isNotEmpty
+          ? designerProfile.matchingIntro.trim()
+          : '${user.name ?? user.username} ${designerProfile.roleLabel}';
+      final fromProfile = MatchProfile(
+        id: user.id,
+        role: 'spare',
+        displayName: user.name ?? user.username,
+        subtitle: designerProfile.matchSubtitle,
+        intro: intro,
+        tags: designerProfile.matchTags,
+        region: designerProfile.regionLabel,
+        treatment: designerProfile.specialties.isNotEmpty
+            ? designerProfile.specialties.first
+            : designerProfile.roleLabel,
+        portfolioImages: portfolio,
+        avatarUrl: portfolio.isNotEmpty
+            ? portfolio.first
+            : user.profileImage,
+      );
+
+      await _matchingService.sendLikeToModel(
+        fromProfile: fromProfile,
+        targetModel: model,
       );
 
       _remainingMatches = await _matchService.remainingMatchesToday();
       _currentIndex += 1;
-
-      try {
-        await sl<ChatProvider>().refreshChats(viewerRole: 'spare');
-      } catch (_) {
-        // 채팅 목록 갱신 실패는 무시 (다음 진입 시 갱신).
-      }
-
       notifyListeners();
-      return MatchAttemptResult(
-        MatchAttemptStatus.matched,
-        chatId: chatId,
-        model: model,
-      );
+
+      return MatchAttemptResult(MatchAttemptStatus.likeSent, model: model);
     } catch (e) {
       final message = ErrorHandler.handleException(e).message;
-      return MatchAttemptResult(MatchAttemptStatus.error,
-          model: model, message: message);
+      return MatchAttemptResult(
+        MatchAttemptStatus.error,
+        model: model,
+        message: message,
+      );
     }
   }
 }

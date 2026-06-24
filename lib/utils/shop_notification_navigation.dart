@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../models/notification.dart';
-import '../screens/shop/applicants_screen.dart';
-import '../screens/shop/job_detail_screen.dart';
-import '../screens/shop/space_bookings_screen.dart';
-import 'navigation_helper.dart';
+import '../utils/shell_navigation.dart';
+import 'message_notification_navigation.dart';
 
 /// 샵 알림 탭 시 목적 화면 라우팅.
 abstract final class ShopNotificationNavigation {
@@ -14,38 +12,31 @@ abstract final class ShopNotificationNavigation {
     switch (notification.type) {
       case 'space_booking_request':
       case 'space_booking_confirmed':
-        Navigator.push(
-          context,
-          MaterialPageRoute<void>(
-            builder: (_) => ShopSpaceBookingsScreen(
-              spaceId: notification.relatedJobId,
-            ),
-          ),
-        );
+        if (notification.relatedJobId != null) {
+          ShellNavigation.pushShopSpaceBookings(
+            context,
+            notification.relatedJobId!,
+          );
+        }
         return;
       case 'application_received':
-        Navigator.push(
-          context,
-          MaterialPageRoute<void>(
-            builder: (_) => const ShopApplicantsScreen(),
-          ),
-        );
+        ShellNavigation.pushShopApplicants(context);
         return;
       case 'job_closing':
       case 'job':
         if (notification.relatedJobId != null) {
-          Navigator.push<void>(
+          ShellNavigation.pushShopJobDetail(
             context,
-            MaterialPageRoute<void>(
-              builder: (_) => ShopJobDetailScreen(
-                jobId: notification.relatedJobId!,
-              ),
-            ),
+            notification.relatedJobId!,
           );
         }
         return;
       case 'message_received':
-        NavigationHelper.navigateToMessages(context);
+        MessageNotificationNavigation.open(
+          context,
+          notification,
+          audience: 'shop',
+        );
         return;
       default:
         return;

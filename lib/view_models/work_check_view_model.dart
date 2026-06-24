@@ -9,6 +9,7 @@ import '../services/education_service.dart';
 import '../services/review_service.dart';
 import '../services/schedule_service.dart';
 import '../utils/error_handler.dart';
+import '../utils/schedule_session_audience.dart';
 import '../utils/schedule_work_session.dart';
 
 /// 스페어 근무체크 화면 ViewModel (캘린더·체크인·평가 모달 상태).
@@ -20,6 +21,7 @@ class WorkCheckViewModel extends ChangeNotifier {
     DateTime? initialDay,
     String? focusJobId,
     String? focusScheduleId,
+    this.isModelMode = false,
   }) : _scheduleService = scheduleService ?? sl<ScheduleService>(),
        _reviewService = reviewService ?? sl<ReviewService>(),
        _educationService = educationService ?? sl<EducationService>(),
@@ -30,6 +32,7 @@ class WorkCheckViewModel extends ChangeNotifier {
   final DateTime? _initialDay;
   final String? _focusJobId;
   final String? _focusScheduleId;
+  final bool isModelMode;
 
   GlobalMessengerService get _m => sl<GlobalMessengerService>();
 
@@ -72,6 +75,17 @@ class WorkCheckViewModel extends ChangeNotifier {
     } finally {
       isLoading = false;
       _applyInitialFocus();
+      if (isModelMode && selectedScheduleId == null) {
+        final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate);
+        if (hasScheduledWork(selectedDate)) {
+          final first = schedules.where(
+            (s) => s.date == dateStr && s.status == 'scheduled',
+          );
+          if (first.isNotEmpty) {
+            selectedScheduleId = first.first.id;
+          }
+        }
+      }
       notifyListeners();
     }
   }
@@ -160,7 +174,9 @@ class WorkCheckViewModel extends ChangeNotifier {
 
   Future<void> _loadSchedules() async {
     try {
-      final list = await _scheduleService.getSchedules();
+      final list = await _scheduleService.getSchedules(
+        ownerId: isModelMode ? 'model' : 'me',
+      );
       schedules = list;
       final completedDates = <String>{};
       for (final schedule in list) {
@@ -298,7 +314,7 @@ class WorkCheckViewModel extends ChangeNotifier {
           s.date == dateStr &&
           (s.status == 'scheduled' ||
               s.status == 'completed' ||
-              s.status == 'proposed'),
+              (!isModelMode && s.status == 'proposed')),
     );
   }
 
@@ -348,6 +364,17 @@ class WorkCheckViewModel extends ChangeNotifier {
       viewedDates = {...viewedDates, dateStr};
     }
     selectedScheduleId = null;
+    if (hasWork) {
+      final firstScheduled = schedules.where(
+        (s) =>
+            s.date == dateStr &&
+            s.status == 'scheduled' &&
+            !isChecked(date),
+      );
+      if (firstScheduled.isNotEmpty) {
+        selectedScheduleId = firstScheduled.first.id;
+      }
+    }
     notifyListeners();
   }
 
@@ -360,6 +387,8 @@ class WorkCheckViewModel extends ChangeNotifier {
   Future<void> handleCheckIn() async {
     if (selectedScheduleId == null) return;
 
+    final audience = ScheduleSessionAudience.fromModelMode(isModelMode);
+
     try {
       final selectedSchedule = schedules.firstWhere(
         (s) => s.id == selectedScheduleId,
@@ -367,13 +396,14 @@ class WorkCheckViewModel extends ChangeNotifier {
 
       if (selectedSchedule.status == 'completed' ||
           selectedSchedule.checkInTime != null) {
-        _m.showInfo('이미 근무 체크가 완료된 일정입니다.');
+        _m.showInfo(audience.alreadyCompletedMessage());
         return;
       }
 
       final blocked = ScheduleWorkSession.workCheckBlockedMessage(
         selectedSchedule,
         DateTime.now(),
+        audience: audience,
       );
       if (blocked != null) {
         _m.showInfo(blocked);
@@ -388,7 +418,7 @@ class WorkCheckViewModel extends ChangeNotifier {
       showRatingModal = true;
       notifyListeners();
     } catch (e) {
-      _m.showError('근무 정보를 찾을 수 없습니다.');
+      _m.showError(audience.scheduleInfoNotFoundMessage());
     }
   }
 
@@ -403,6 +433,7 @@ class WorkCheckViewModel extends ChangeNotifier {
   }
 
   Future<void> handleThumbsUp() async {
+    final audience = ScheduleSessionAudience.fromModelMode(isModelMode);
     if (ratedJobId == null || selectedScheduleId == null) {
       showRatingModal = false;
       ratedShopName = null;
@@ -452,7 +483,7 @@ class WorkCheckViewModel extends ChangeNotifier {
       notifyListeners();
 
       await _loadWorkCheckStats();
-      _m.showSuccess('근무체크가 완료되었습니다!');
+      _m.showSuccess(audience.checkCompleteSuccessMessage());
     } catch (e) {
       pendingApprovals = Map<String, String>.from(pendingApprovals)
         ..remove(dateStr);
@@ -468,6 +499,7 @@ class WorkCheckViewModel extends ChangeNotifier {
   }
 
   Future<void> handleCloseRatingModal() async {
+    final audience = ScheduleSessionAudience.fromModelMode(isModelMode);
     if (selectedScheduleId == null) {
       showRatingModal = false;
       ratedShopName = null;
@@ -511,7 +543,7 @@ class WorkCheckViewModel extends ChangeNotifier {
       notifyListeners();
 
       await _loadWorkCheckStats();
-      _m.showSuccess('근무체크가 완료되었습니다!');
+      _m.showSuccess(audience.checkCompleteSuccessMessage());
     } catch (e) {
       pendingApprovals = Map<String, String>.from(pendingApprovals)
         ..remove(dateStr);

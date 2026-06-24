@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../utils/shell_navigation.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../utils/icon_mapper.dart';
-import 'point_history_screen.dart';
 
 /// Next.js와 동일한 +포인트 화면
 class PointsScreen extends StatefulWidget {
@@ -310,12 +310,7 @@ class _PointsScreenState extends State<PointsScreen> {
                           const SizedBox(width: AppTheme.spacing3),
                           TextButton(
                             onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const PointHistoryScreen(),
-                                ),
-                              );
+                              ShellNavigation.pushPointHistory(context);
                             },
                             style: TextButton.styleFrom(
                               padding: EdgeInsets.zero,

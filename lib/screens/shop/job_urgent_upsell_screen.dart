@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/router/route_extras.dart';
+import '../../utils/shell_navigation.dart';
 import '../../theme/app_theme.dart';
 import '../../view_models/shop_job_new_view_model.dart';
 import '../../widgets/shop_job_new/shop_job_urgent_upsell_content.dart';
-import 'job_urgent_payment_screen.dart';
 
 /// 공고 등록 직전 급구 유도(업셀) — Figma 이벤트/프로모션 시안.
 class ShopJobUrgentUpsellScreen extends StatelessWidget {
@@ -30,12 +31,11 @@ class ShopJobUrgentUpsellScreen extends StatelessWidget {
     final vm = context.read<ShopJobNewViewModel>();
     vm.setUrgentForRegistration(true);
 
-    final paid = await Navigator.of(context).push<bool>(
-          MaterialPageRoute<bool>(
-            builder: (ctx) => ChangeNotifierProvider<ShopJobNewViewModel>.value(
-              value: vm,
-              child: ShopJobUrgentPaymentScreen(formKey: formKey),
-            ),
+    final paid = await ShellNavigation.pushShopJobUrgentPayment(
+          context,
+          ShopJobUrgentPaymentExtra(
+            viewModel: vm,
+            formKey: formKey,
           ),
         ) ??
         false;

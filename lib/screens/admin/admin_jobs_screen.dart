@@ -6,6 +6,7 @@ import '../../services/admin_service.dart';
 import '../../utils/error_handler.dart';
 import '../../core/router/app_routes.dart';
 import 'package:go_router/go_router.dart';
+import '../../widgets/admin/admin_screen_scaffold.dart';
 import '../../widgets/admin/admin_page_header.dart';
 import '../../widgets/admin/admin_search_filter_bar.dart';
 import '../../widgets/admin/admin_table_card.dart';
@@ -135,7 +136,8 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return AdminScreenScaffold(
+      header: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const AdminPageHeader(
@@ -198,10 +200,9 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
               ],
             ),
           ),
-          const SizedBox(height: AppTheme.spacing6),
-          SizedBox(
-            height: 600,
-            child: AdminTableCard(
+        ],
+      ),
+      body: AdminTableCard(
               child: _isLoading && _jobs.isEmpty
                   ? const AdminTableSkeleton(rowCount: 8, columnCount: 7)
                   : _jobs.isEmpty
@@ -226,13 +227,14 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(minWidth: 900),
                             child: Column(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 const AdminTableHeader(
                                   headers: ['공고 정보', '미용실', '지역', '금액', '지원/스케줄', '상태', '등록일'],
                                   flexValues: [2, 1, 1, 1, 1, 1, 1],
                                 ),
-                            // 테이블 본문
-                            Expanded(
+                            SizedBox(
+                              height: 480,
                               child: ListView.builder(
                                 itemCount: _jobs.length,
                                 itemBuilder: (context, index) {
@@ -471,9 +473,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                             ),
                           ),
                         ),
-            ),
-          ),
-        ],
-      );
+      ),
+    );
   }
 }

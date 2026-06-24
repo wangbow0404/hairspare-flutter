@@ -6,8 +6,8 @@ import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../widgets/stitch/stitch_empty_state.dart';
 import '../../providers/notification_provider.dart';
 import '../../models/notification.dart' show AppNotification;
-import '../../models/user.dart';
-import '../../utils/app_bar_navigation.dart';
+import '../../utils/messaging_audience.dart';
+import '../../utils/model_notification_navigation.dart';
 import '../../utils/shop_notification_navigation.dart';
 import '../../utils/spare_notification_navigation.dart';
 import '../../widgets/notifications/spare_notification_tile.dart';
@@ -21,10 +21,7 @@ class NotificationsListScreen extends StatefulWidget {
 }
 
 class _NotificationsListScreenState extends State<NotificationsListScreen> {
-  String _audience(BuildContext context) =>
-      AppBarNavigation.inferAppSectionRole(context) == UserRole.shop
-          ? 'shop'
-          : 'spare';
+  String _audience(BuildContext context) => MessagingAudience.resolve(context);
 
   @override
   void initState() {
@@ -46,6 +43,8 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
     if (!mounted) return;
     if (audience == 'shop') {
       ShopNotificationNavigation.handle(context, notification);
+    } else if (audience == 'model') {
+      ModelNotificationNavigation.handle(context, notification);
     } else {
       SpareNotificationNavigation.handle(context, notification);
     }

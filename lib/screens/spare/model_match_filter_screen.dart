@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/router/app_routes.dart';
 import '../../models/model_match_preference.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../widgets/stitch/stitch_filter_chip.dart';
 import '../../widgets/stitch/stitch_sticky_bottom_bar.dart';
-import 'model_match_swipe_screen.dart';
 
 /// 모델 매칭 1단계 — 만나고 싶은 모델 조건 설정.
 class ModelMatchFilterScreen extends StatefulWidget {
@@ -21,7 +22,6 @@ class _ModelMatchFilterScreenState extends State<ModelMatchFilterScreen> {
   final Set<String> _hairLengths = {};
   final Set<String> _treatments = {};
   final Set<String> _imageStyles = {};
-  final Set<String> _shootAgreements = {};
   double _distanceKm = ModelMatchOptions.defaultDistanceKm;
 
   void _toggle(Set<String> set, String value) {
@@ -37,15 +37,12 @@ class _ModelMatchFilterScreenState extends State<ModelMatchFilterScreen> {
       treatments: Set.of(_treatments),
       imageStyles: Set.of(_imageStyles),
       career: _career,
-      shootAgreements: Set.of(_shootAgreements),
       distanceKm: _distanceKm,
     );
-    Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (context) => ModelMatchSwipeScreen(preference: preference),
-      ),
-    );
+    final swipeRoute = GoRouterState.of(context).uri.path.startsWith('/shop')
+        ? AppRoutes.shopHomeModelMatchSwipe
+        : AppRoutes.spareHomeModelMatchSwipe;
+    context.push(swipeRoute, extra: preference);
   }
 
   @override
@@ -113,14 +110,6 @@ class _ModelMatchFilterScreenState extends State<ModelMatchFilterScreen> {
                     onTap: () => setState(() => _career = c),
                   ),
               ],
-            ),
-          ),
-          _FilterSection(
-            title: '촬영 협의',
-            child: _MultiChips(
-              options: ModelMatchOptions.shootAgreements,
-              selected: _shootAgreements,
-              onToggle: (v) => _toggle(_shootAgreements, v),
             ),
           ),
           _DistanceSection(

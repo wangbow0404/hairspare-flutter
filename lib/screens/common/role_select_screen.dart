@@ -71,28 +71,28 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Header Section
                       Column(
                         children: [
                           const HairSpareBrandLogo(height: 96),
                           const SizedBox(height: AppTheme.spacing3),
                           Text(
                             '헤어의 모든 시작, 헤어스페어',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontSize: 18,
-                              color: AppTheme.textSecondary,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  fontSize: 18,
+                                  color: AppTheme.textSecondary,
+                                ),
                             textAlign: TextAlign.center,
                           ),
                         ],
                       ),
                       const SizedBox(height: AppTheme.spacing12),
-                      // Button Section
                       SizedBox(
                         width: double.infinity,
                         child: Column(
                           children: [
-                            // 스페어 버튼
                             _RoleButton(
                               label: '헤어스페어 시작하기',
                               color: AppTheme.primaryBlue,
@@ -114,7 +114,6 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
                         ),
                       ),
                       const SizedBox(height: AppTheme.spacing8),
-                      // Tagline
                       Text(
                         '미용실 스페어 매칭 플랫폼',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(

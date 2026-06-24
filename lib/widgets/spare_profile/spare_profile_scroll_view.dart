@@ -15,18 +15,24 @@ class SpareProfileScrollView extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom + 70;
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.only(bottom: bottomInset),
-      child: const Column(
-        children: [
-          SpareProfileHeader(),
-          SpareProfileIdentitySection(),
-          SpareProfileQuickStats(),
-          SpareProfileMenuSection(),
-          SpareProfileLogoutSection(),
-          CustomerServiceSection(),
-        ],
-      ),
+    return Column(
+      children: [
+        const SpareProfileHeader(),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(bottom: bottomInset),
+            child: const Column(
+              children: [
+                SpareProfileIdentitySection(),
+                SpareProfileQuickStats(),
+                SpareProfileMenuSection(),
+                SpareProfileLogoutSection(),
+                CustomerServiceSection(),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

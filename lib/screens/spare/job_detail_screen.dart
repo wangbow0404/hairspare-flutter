@@ -5,19 +5,19 @@ import '../../core/di/service_locator.dart';
 import '../../core/services/global_messenger_service.dart';
 import '../../theme/app_theme.dart';
 import '../../view_models/job_detail_view_model.dart';
+import '../../mocks/mock_spare_data.dart';
+import '../../utils/api_config.dart';
+import '../../utils/deferred_route_body.dart';
+import '../../utils/navigation_helper.dart';
+import '../../utils/shell_navigation.dart';
+import '../../models/spare_job_engagement.dart';
+import '../../widgets/schedule/schedule_conflict_dialog.dart';
+import '../../widgets/common/energy_recharge_choice_sheet.dart';
 import '../../widgets/job_detail/job_detail_bottom_bar.dart';
 import '../../widgets/job_detail/job_detail_modals.dart';
 import '../../widgets/job_detail/job_detail_scroll_body.dart';
 import '../../widgets/spare_app_bar.dart';
-import '../../screens/spare/verification_screen.dart';
-import '../../mocks/mock_spare_data.dart';
-import '../../utils/api_config.dart';
-import '../../utils/navigation_helper.dart';
-import '../../models/spare_job_engagement.dart';
-import '../../widgets/schedule/schedule_conflict_dialog.dart';
-import '../../widgets/common/energy_recharge_choice_sheet.dart';
 
-/// Next.js와 동일한 공고 상세 화면. 상태는 [JobDetailViewModel], UI는 `lib/widgets/job_detail/` 위젯으로 분리.
 class JobDetailScreen extends StatefulWidget {
   const JobDetailScreen({super.key, required this.jobId});
 
@@ -131,12 +131,7 @@ class _JobDetailScaffold extends StatelessWidget {
                   onDismiss: vm.dismissVerificationModal,
                   onGoVerify: () {
                     vm.dismissVerificationModal();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const VerificationScreen(),
-                      ),
-                    );
+                    deferAfterTap(() => ShellNavigation.pushVerification(context));
                   },
                 ),
               if (vm.showConfirmModal)

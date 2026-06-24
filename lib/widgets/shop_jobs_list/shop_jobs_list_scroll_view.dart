@@ -7,10 +7,8 @@ import '../../models/job.dart';
 import '../../theme/app_theme.dart';
 import '../common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
+import '../../utils/shell_navigation.dart';
 import '../../view_models/shop_jobs_list_view_model.dart';
-import '../../screens/shop/applicants_screen.dart';
-import '../../screens/shop/job_detail_screen.dart';
-import '../../screens/shop/job_new_screen.dart';
 import 'shop_jobs_list_job_card.dart';
 
 /// 내 공고 목록 본문: 당겨서 새로고침·무한 스크롤 리스트(상단바는 [ShopJobsListHeader]).
@@ -47,29 +45,14 @@ class ShopJobsListScrollView extends StatelessWidget {
     }
   }
 
-  Future<void> _openNewJob(BuildContext context, ShopJobsListViewModel vm) async {
-    final created = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute<bool>(
-        builder: (context) => const ShopJobNewScreen(),
-      ),
-    );
-    if (!context.mounted) return;
-    if (created == true) {
-      await vm.refresh();
-    }
-  }
-
   Future<void> _openRepostJob(
     BuildContext context,
     ShopJobsListViewModel vm,
     Job job,
   ) async {
-    final created = await Navigator.push<bool>(
+    final created = await ShellNavigation.pushShopJobNew(
       context,
-      MaterialPageRoute<bool>(
-        builder: (context) => ShopJobNewScreen(jobToCopy: job),
-      ),
+      jobToCopy: job,
     );
     if (!context.mounted) return;
     if (created == true) {
@@ -82,11 +65,9 @@ class ShopJobsListScrollView extends StatelessWidget {
     ShopJobsListViewModel vm,
     Job job,
   ) async {
-    final updated = await Navigator.push<bool>(
+    final updated = await ShellNavigation.pushShopJobNew(
       context,
-      MaterialPageRoute<bool>(
-        builder: (context) => ShopJobNewScreen(jobToEdit: job),
-      ),
+      jobToEdit: job,
     );
     if (!context.mounted) return;
     if (updated == true) {
@@ -95,12 +76,7 @@ class ShopJobsListScrollView extends StatelessWidget {
   }
 
   void _openApplicants(BuildContext context, Job job) {
-    Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (context) => ShopApplicantsScreen(initialJobId: job.id),
-      ),
-    );
+    ShellNavigation.pushShopApplicants(context, jobId: job.id);
   }
 
   Future<void> _confirmHide(
@@ -212,12 +188,7 @@ class ShopJobsListScrollView extends StatelessWidget {
   }
 
   void _openJob(BuildContext context, Job job) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ShopJobDetailScreen(jobId: job.id),
-      ),
-    );
+    ShellNavigation.pushShopJobDetail(context, job.id);
   }
 
   @override
@@ -230,27 +201,6 @@ class ShopJobsListScrollView extends StatelessWidget {
         controller: scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          SliverToBoxAdapter(
-            child: Container(
-              padding: const EdgeInsets.all(AppTheme.spacing4),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  bottom: BorderSide(color: AppTheme.borderGray),
-                ),
-              ),
-              child: ElevatedButton.icon(
-                onPressed: () => _openNewJob(context, vm),
-                icon: const Icon(Icons.add),
-                label: const Text('새 공고 등록'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryPurple,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing3),
-                ),
-              ),
-            ),
-          ),
           SliverToBoxAdapter(
             child: Container(
               padding: const EdgeInsets.all(AppTheme.spacing4),
@@ -347,13 +297,6 @@ class ShopJobsListScrollView extends StatelessWidget {
                         color: AppTheme.textSecondary,
                       ),
                     ),
-                    if (vm.statusFilter != 'expired') ...[
-                      const SizedBox(height: AppTheme.spacing4),
-                      ElevatedButton(
-                        onPressed: () => _openNewJob(context, vm),
-                        child: const Text('공고 올리기'),
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -485,9 +428,7 @@ class _FilterChip extends StatelessWidget {
 
 /// 내 공고 상단바 — [ShopSparesListScreen]과 동일한 44px Row 레이아웃.
 class ShopJobsListHeader extends StatefulWidget {
-  const ShopJobsListHeader({super.key, required this.onOpenNewJob});
-
-  final VoidCallback onOpenNewJob;
+  const ShopJobsListHeader({super.key});
 
   @override
   State<ShopJobsListHeader> createState() => _ShopJobsListHeaderState();
@@ -595,12 +536,6 @@ class _ShopJobsListHeaderState extends State<ShopJobsListHeader> {
                 constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
                 icon: const Icon(Icons.search, color: AppTheme.textSecondary),
                 onPressed: () => setState(() => _isSearchOpen = true),
-              ),
-              IconButton(
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                icon: const Icon(Icons.add, color: AppTheme.textSecondary),
-                onPressed: widget.onOpenNewJob,
               ),
             ],
           ],

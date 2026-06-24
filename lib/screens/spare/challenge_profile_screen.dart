@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:hairspare/models/challenge_profile.dart';
 import 'package:hairspare/providers/auth_provider.dart';
 import 'package:hairspare/theme/app_theme.dart';
+import 'package:hairspare/utils/shell_navigation.dart';
 import 'package:hairspare/view_models/challenge_profile_view_model.dart';
 import 'package:hairspare/widgets/challenge/profile/challenge_profile_links_section.dart';
 import 'package:hairspare/widgets/challenge/profile/challenge_profile_featured_videos_row.dart';
@@ -12,8 +13,6 @@ import 'package:hairspare/widgets/challenge/profile/challenge_profile_stats_grid
 import 'package:hairspare/widgets/challenge/profile/challenge_profile_subscribe_bar.dart';
 import 'package:hairspare/widgets/challenge/profile/challenge_profile_videos_tab.dart';
 import 'package:hairspare/widgets/common/shared_app_bar.dart';
-import 'challenge_profile_edit_screen.dart';
-import 'challenge_screen.dart';
 
 /// 챌린지 프로필 (본인 · 타인 크리에이터).
 class ChallengeProfileScreen extends StatefulWidget {
@@ -63,24 +62,16 @@ class _ChallengeProfileScreenState extends State<ChallengeProfileScreen>
   }
 
   void _openVideo(MyChallenge video) {
-    Navigator.push(
+    ShellNavigation.pushChallengeFeed(
       context,
-      MaterialPageRoute<void>(
-        builder: (context) => ChallengeScreen(
-          creatorId: _targetUserId,
-          initialVideoId: video.id,
-        ),
-      ),
+      creatorId: _targetUserId,
+      initialVideoId: video.id,
     );
   }
 
   Future<void> _openEdit(ChallengeProfile profile) async {
-    final updated = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute<bool>(
-        builder: (context) => ChallengeProfileEditScreen(profile: profile),
-      ),
-    );
+    final updated =
+        await ShellNavigation.pushChallengeProfileEdit(context, profile);
     if (updated == true) {
       await _viewModel.loadAll();
     }

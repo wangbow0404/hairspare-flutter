@@ -1,17 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../screens/spare/challenge_profile_screen.dart';
-import '../../screens/spare/energy_screen.dart';
-import '../../screens/spare/my_applications_screen.dart';
-import '../../screens/spare/my_space_bookings_screen.dart';
-import '../../screens/spare/profile_edit_screen.dart';
-import '../../screens/spare/referral_screen.dart';
-import '../../screens/spare/settings_screen.dart';
-import '../../screens/spare/subscriptions_screen.dart';
-import '../../screens/spare/verification_screen.dart';
-import '../../screens/spare/work_check_screen.dart';
+import '../../core/router/app_routes.dart';
 import '../../utils/navigation_helper.dart';
-import 'app_navigation.dart';
 
 /// 스페어 프로필 화면에서 사용하는 화면 이동 (UI 위젯과 분리).
 abstract final class SpareProfileNavigation {
@@ -19,77 +10,51 @@ abstract final class SpareProfileNavigation {
     NavigationHelper.navigateToHomeFromLogo(context);
   }
 
-  static Future<void> pushSettings(BuildContext context) {
-    return Navigator.push<void>(
-      context,
-      MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
-    );
+  static void pushSettings(BuildContext context) {
+    context.push(AppRoutes.spareProfileSettings);
   }
 
   static Future<void> pushProfileEdit(BuildContext context) {
-    return Navigator.push<void>(
-      context,
-      MaterialPageRoute<void>(builder: (_) => const ProfileEditScreen()),
-    );
+    return context.push<void>(AppRoutes.spareProfileEdit);
   }
 
-  static Future<void> pushChallengeProfile(BuildContext context) {
-    return Navigator.push<void>(
-      context,
-      MaterialPageRoute<void>(builder: (_) => const ChallengeProfileScreen()),
-    );
+  static void pushChallengeProfile(BuildContext context) {
+    context.push(AppRoutes.spareProfileChallenge);
   }
 
-  static Future<void> pushSubscriptions(BuildContext context) {
-    return Navigator.push<void>(
-      context,
-      MaterialPageRoute<void>(builder: (_) => const SubscriptionsScreen()),
-    );
+  static void pushPortfolio(BuildContext context) {
+    context.push(AppRoutes.spareProfilePortfolio);
   }
 
-  static Future<void> pushEnergy(BuildContext context) {
-    return Navigator.push<void>(
-      context,
-      MaterialPageRoute<void>(builder: (_) => const EnergyScreen()),
-    );
+  static void pushSubscriptions(BuildContext context) {
+    context.push(AppRoutes.spareProfileSubscriptions);
   }
 
-  static Future<void> pushWorkCheck(BuildContext context) {
-    return Navigator.push<void>(
-      context,
-      MaterialPageRoute<void>(builder: (_) => const WorkCheckScreen()),
-    );
+  static void pushEnergy(BuildContext context) {
+    context.push(AppRoutes.spareProfileEnergy);
   }
 
-  static Future<void> pushMyApplications(BuildContext context) {
-    return Navigator.push<void>(
-      context,
-      MaterialPageRoute<void>(builder: (_) => const MyApplicationsScreen()),
-    );
+  static void pushWorkCheck(BuildContext context) {
+    context.push(AppRoutes.spareProfileWorkCheck);
   }
 
-  static Future<void> pushMySpaceBookings(BuildContext context) {
-    return Navigator.push<void>(
-      context,
-      MaterialPageRoute<void>(builder: (_) => const MySpaceBookingsScreen()),
-    );
+  static void pushMyApplications(BuildContext context) {
+    context.push(AppRoutes.spareProfileApplications);
   }
 
-  static void goPaymentTab(BuildContext context) {
-    AppNavigation.goSpareMainTab(context, 1);
+  static void pushMySpaceBookings(BuildContext context) {
+    context.push(AppRoutes.spareProfileSpaceBookings);
   }
 
-  static Future<void> pushReferral(BuildContext context) {
-    return Navigator.push<void>(
-      context,
-      MaterialPageRoute<void>(builder: (_) => const ReferralScreen()),
-    );
+  static void pushPayment(BuildContext context) {
+    context.push(AppRoutes.spareProfilePayment);
   }
 
-  static Future<void> pushVerification(BuildContext context) {
-    return Navigator.push<void>(
-      context,
-      MaterialPageRoute<void>(builder: (_) => const VerificationScreen()),
-    );
+  static void pushReferral(BuildContext context) {
+    context.push(AppRoutes.spareProfileReferral);
+  }
+
+  static void pushVerification(BuildContext context) {
+    context.push(AppRoutes.spareProfileVerification);
   }
 }

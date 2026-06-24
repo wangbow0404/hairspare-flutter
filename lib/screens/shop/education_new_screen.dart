@@ -6,28 +6,12 @@ import '../../core/di/service_locator.dart';
 import '../../theme/app_theme.dart';
 import '../../view_models/shop_education_new_view_model.dart';
 import '../../widgets/shop_education_new/shop_education_new_form_content.dart';
+import '../../widgets/shop_education_new/shop_education_new_form_sections.dart';
+import '../../widgets/shop_job_new/shop_job_new_ui_kit.dart';
 
-/// Shop/Designer 교육 올리기 화면. 상태는 [ShopEducationNewViewModel], UI는 `lib/widgets/shop_education_new/`.
-class ShopEducationNewScreen extends StatefulWidget {
+/// Shop 교육 등록 화면.
+class ShopEducationNewScreen extends StatelessWidget {
   const ShopEducationNewScreen({super.key});
-
-  @override
-  State<ShopEducationNewScreen> createState() => _ShopEducationNewScreenState();
-}
-
-class _ShopEducationNewScreenState extends State<ShopEducationNewScreen> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  Future<void> _submit() async {
-    final vm = context.read<ShopEducationNewViewModel>();
-    final ok = await vm.submit(_formKey);
-    if (!mounted) return;
-    if (ok) {
-      await Future<void>.delayed(const Duration(milliseconds: 550));
-      if (!mounted) return;
-      Navigator.pop(context, true);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,146 +19,100 @@ class _ShopEducationNewScreenState extends State<ShopEducationNewScreen> {
       create: (_) => ShopEducationNewViewModel(
         imagePicker: sl<ImagePicker>(),
       ),
-      child: _ShopEducationNewScaffold(
-        formKey: _formKey,
-        onSubmit: _submit,
-      ),
+      child: const _ShopEducationNewBody(),
     );
   }
 }
 
-class _ShopEducationNewScaffold extends StatelessWidget {
-  const _ShopEducationNewScaffold({
-    required this.formKey,
-    required this.onSubmit,
-  });
+class _ShopEducationNewBody extends StatefulWidget {
+  const _ShopEducationNewBody();
 
-  final GlobalKey<FormState> formKey;
-  final Future<void> Function() onSubmit;
+  @override
+  State<_ShopEducationNewBody> createState() => _ShopEducationNewBodyState();
+}
+
+class _ShopEducationNewBodyState extends State<_ShopEducationNewBody> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final ScrollController _scrollController = ScrollController();
+  final Map<ShopEducationNewFormSection, GlobalKey> _sectionKeys = {
+    for (final section in ShopEducationNewFormSection.values) section: GlobalKey(),
+  };
+  AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToFirstInvalid(ShopEducationNewViewModel vm) {
+    final section = vm.firstInvalidSection;
+    if (section == null) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final ctx = _sectionKeys[section]?.currentContext;
+      if (ctx == null) return;
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+        alignment: 0.12,
+      );
+    });
+  }
+
+  Future<void> _submit() async {
+    final vm = context.read<ShopEducationNewViewModel>();
+    vm.markValidationAttempted();
+
+    final formState = _formKey.currentState;
+    if (formState == null) return;
+
+    final formValid = formState.validate();
+    final extraValid = vm.validateExtraFields() == null;
+
+    if (!formValid || !extraValid) {
+      setState(() => _autovalidateMode = AutovalidateMode.always);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _scrollToFirstInvalid(vm);
+      });
+      return;
+    }
+
+    final ok = await vm.submit();
+    if (!mounted) return;
+    if (ok) {
+      Navigator.pop(context, true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ShopEducationNewViewModel>();
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFF3E8FF),
-              Color(0xFFEFF6FF),
-              Color(0xFFFDF2F8),
-            ],
-          ),
+      backgroundColor: AppTheme.backgroundGray,
+      appBar: const ShopJobNewAppBar(title: '교육 등록'),
+      body: ShopEducationNewFormContent(
+        formKey: _formKey,
+        scrollController: _scrollController,
+        autovalidateMode: _autovalidateMode,
+        sectionKeys: _sectionKeys,
+      ),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(
+          AppTheme.spacing4,
+          AppTheme.spacing2,
+          AppTheme.spacing4,
+          AppTheme.spacing4,
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Container(
-                height: 56,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.95),
-                  border: const Border(
-                    bottom: BorderSide(color: AppTheme.primaryPurpleLight),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.chevron_left,
-                          color: AppTheme.textPrimary),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    Expanded(
-                      child: Text(
-                        '교육 등록',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          foreground: Paint()
-                            ..shader = const LinearGradient(
-                              colors: [Color(0xFF9333EA), Color(0xFFEC4899)],
-                            ).createShader(const Rect.fromLTWH(0, 0, 200, 70)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: ShopEducationNewFormContent(formKey: formKey),
-              ),
-              Container(
-                padding: const EdgeInsets.all(AppTheme.spacing5),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.95),
-                  border: const Border(top: BorderSide(color: AppTheme.primaryPurpleLight)),
-                ),
-                child: SafeArea(
-                  top: false,
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: vm.isLoading ? null : () => onSubmit(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-                        ),
-                      ).copyWith(
-                        backgroundColor: WidgetStateProperty.all(Colors.transparent),
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF9333EA),
-                              Color(0xFF7C3AED),
-                              Color(0xFFEC4899),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.primaryPurple.withValues(alpha: 0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: vm.isLoading
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor:
-                                        AlwaysStoppedAnimation<Color>(Colors.white),
-                                  ),
-                                )
-                              : const Text(
-                                  '교육 등록하기',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+        child: ShopJobNewPrimaryButton(
+          label: '교육 등록하기',
+          isLoading: vm.isLoading,
+          backgroundColor: AppTheme.stitchPrimaryContainer,
+          onPressed: vm.isLoading ? null : _submit,
         ),
       ),
     );

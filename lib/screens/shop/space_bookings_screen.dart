@@ -4,8 +4,11 @@ import '../../models/space_rental.dart';
 import '../../services/space_rental_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
-import '../../widgets/common/shared_app_bar.dart';
-import '../../widgets/shop_space_bookings/shop_space_booking_card.dart';
+import '../../widgets/common/spare_subpage_app_bar.dart';
+import '../../widgets/shop_space_bookings/shop_space_bookings_filter_bar.dart';
+import '../../widgets/shop_space_bookings/shop_space_bookings_pending_hint.dart';
+import '../../widgets/stitch/stitch_empty_state.dart';
+import '../../widgets/stitch/stitch_list_space_booking_card.dart';
 
 class ShopSpaceBookingsScreen extends StatefulWidget {
   const ShopSpaceBookingsScreen({
@@ -21,13 +24,31 @@ class ShopSpaceBookingsScreen extends StatefulWidget {
 
 class _ShopSpaceBookingsScreenState extends State<ShopSpaceBookingsScreen> {
   final SpaceRentalService _spaceRentalService = SpaceRentalService();
-  List<SpaceBooking> _bookings = [];
+  List<SpaceBooking> _allBookings = [];
   bool _isLoading = true;
   String? _error;
   BookingStatus? _selectedStatus;
 
-  int get _pendingCount =>
-      _bookings.where((b) => b.status == BookingStatus.pending).length;
+  int get _pendingCount => _allBookings
+      .where((b) => b.status == BookingStatus.pending)
+      .length;
+
+  int get _confirmedCount => _allBookings
+      .where((b) => b.status == BookingStatus.confirmed)
+      .length;
+
+  int get _inProgressCount => _allBookings
+      .where((b) => b.status == BookingStatus.inProgress)
+      .length;
+
+  int get _completedCount => _allBookings
+      .where((b) => b.status == BookingStatus.completed)
+      .length;
+
+  List<SpaceBooking> get _filteredBookings {
+    if (_selectedStatus == null) return _allBookings;
+    return _allBookings.where((b) => b.status == _selectedStatus).toList();
+  }
 
   @override
   void initState() {
@@ -44,11 +65,10 @@ class _ShopSpaceBookingsScreenState extends State<ShopSpaceBookingsScreen> {
     try {
       final bookings = await _spaceRentalService.getSpaceBookings(
         spaceId: widget.spaceId,
-        status: _selectedStatus,
       );
       if (!mounted) return;
       setState(() {
-        _bookings = bookings;
+        _allBookings = bookings;
         _isLoading = false;
       });
     } catch (e) {
@@ -177,19 +197,31 @@ class _ShopSpaceBookingsScreenState extends State<ShopSpaceBookingsScreen> {
   Color _statusColor(BookingStatus status) {
     return switch (status) {
       BookingStatus.pending => AppTheme.orange600,
-      BookingStatus.confirmed => AppTheme.primaryPurple,
+      BookingStatus.confirmed => AppTheme.stitchPrimary,
       BookingStatus.inProgress => AppTheme.primaryBlue,
-      BookingStatus.completed => AppTheme.primaryGreen,
+      BookingStatus.completed => AppTheme.green600,
       BookingStatus.cancelled => AppTheme.urgentRed,
     };
   }
 
+  String get _emptyMessage {
+    if (_allBookings.isEmpty) {
+      return '아직 들어온 예약이 없습니다.\n스페어가 공간을 예약하면 여기에 표시됩니다.';
+    }
+    return '해당 상태의 예약이 없습니다.';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final listBottomPadding =
+        kBottomNavigationBarHeight + bottomInset + AppTheme.spacing4;
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: SharedAppBar(
+      appBar: SpareSubpageAppBar(
         title: widget.spaceId == null ? '예약 관리' : '공간 예약 관리',
+        showBackButton: Navigator.canPop(context),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -198,58 +230,66 @@ class _ShopSpaceBookingsScreenState extends State<ShopSpaceBookingsScreen> {
                   message: _error!,
                   onRetry: _loadBookings,
                 )
-              : RefreshIndicator(
-                  onRefresh: _loadBookings,
-                  child: CustomScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: ShopSpaceBookingsHero(
-                          pendingCount: _pendingCount,
-                          totalCount: _bookings.length,
-                        ),
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ShopSpaceBookingsFilterBar(
+                      selected: _selectedStatus,
+                      totalCount: _allBookings.length,
+                      pendingCount: _pendingCount,
+                      confirmedCount: _confirmedCount,
+                      inProgressCount: _inProgressCount,
+                      completedCount: _completedCount,
+                      onChanged: (status) =>
+                          setState(() => _selectedStatus = status),
+                      statusLabel: _statusLabel,
+                    ),
+                    ShopSpaceBookingsPendingHint(pendingCount: _pendingCount),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: _loadBookings,
+                        child: _filteredBookings.isEmpty
+                            ? ListView(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: EdgeInsets.only(
+                                  bottom: listBottomPadding,
+                                ),
+                                children: [
+                                  SizedBox(
+                                    height:
+                                        MediaQuery.sizeOf(context).height * 0.28,
+                                  ),
+                                  StitchEmptyState(
+                                    message: _emptyMessage,
+                                    icon: Icons.event_note_outlined,
+                                  ),
+                                ],
+                              )
+                            : ListView.builder(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: EdgeInsets.fromLTRB(
+                                  AppTheme.spacing5,
+                                  AppTheme.spacing4,
+                                  AppTheme.spacing5,
+                                  listBottomPadding,
+                                ),
+                                itemCount: _filteredBookings.length,
+                                itemBuilder: (context, index) {
+                                  final booking = _filteredBookings[index];
+                                  return StitchListSpaceBookingCard(
+                                    booking: booking,
+                                    statusLabel: _statusLabel,
+                                    statusColor: _statusColor,
+                                    onApprove: () =>
+                                        _approveBooking(booking.id),
+                                    onReject: () =>
+                                        _rejectBooking(booking.id),
+                                  );
+                                },
+                              ),
                       ),
-                      SliverToBoxAdapter(
-                        child: ShopSpaceBookingFilterBar(
-                          selected: _selectedStatus,
-                          onChanged: (status) {
-                            setState(() => _selectedStatus = status);
-                            _loadBookings();
-                          },
-                          statusLabel: _statusLabel,
-                        ),
-                      ),
-                      if (_bookings.isEmpty)
-                        const SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: _ShopSpaceBookingsEmptyState(),
-                        )
-                      else
-                        SliverPadding(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppTheme.spacing4,
-                            0,
-                            AppTheme.spacing4,
-                            AppTheme.spacing6,
-                          ),
-                          sliver: SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                                final booking = _bookings[index];
-                                return ShopSpaceBookingCard(
-                                  booking: booking,
-                                  statusLabel: _statusLabel,
-                                  statusColor: _statusColor,
-                                  onApprove: () => _approveBooking(booking.id),
-                                  onReject: () => _rejectBooking(booking.id),
-                                );
-                              },
-                              childCount: _bookings.length,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
     );
   }
@@ -272,54 +312,27 @@ class _ShopSpaceBookingsErrorState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: AppTheme.textSecondary),
+            const Icon(
+              Icons.error_outline,
+              size: 48,
+              color: AppTheme.stitchTextSecondary,
+            ),
             const SizedBox(height: AppTheme.spacing4),
             Text(
               message,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppTheme.textSecondary,
+                color: AppTheme.stitchTextSecondary,
               ),
             ),
             const SizedBox(height: AppTheme.spacing4),
             ElevatedButton(
               onPressed: onRetry,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryPurple,
+                backgroundColor: AppTheme.stitchPrimaryContainer,
                 foregroundColor: Colors.white,
               ),
               child: const Text('다시 시도'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ShopSpaceBookingsEmptyState extends StatelessWidget {
-  const _ShopSpaceBookingsEmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing6),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.calendar_month_outlined,
-              size: 56,
-              color: AppTheme.textTertiary.withValues(alpha: 0.8),
-            ),
-            const SizedBox(height: AppTheme.spacing3),
-            Text(
-              '예약 내역이 없습니다',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textSecondary,
-              ),
             ),
           ],
         ),

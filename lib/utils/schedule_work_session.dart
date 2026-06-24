@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
 
 import '../models/schedule.dart';
+import 'schedule_session_audience.dart';
 
 /// 스케줄의 근무 시작·종료 시각 대비 현재 시점 구간.
 enum ScheduleWorkPhase {
@@ -49,32 +50,41 @@ abstract final class ScheduleWorkSession {
   }
 
   /// 카드 상단 태그 문구 (완료 체크 여부 반영).
-  static String statusTagLabel(Schedule schedule, DateTime now) {
+  static String statusTagLabel(
+    Schedule schedule,
+    DateTime now, {
+    ScheduleSessionAudience audience = ScheduleSessionAudience.spare,
+  }) {
     if (schedule.status == 'completed' || schedule.checkInTime != null) {
-      return '완료';
+      return audience.isModel ? '시술 완료' : '완료';
     }
     switch (phase(schedule, now)) {
       case ScheduleWorkPhase.beforeStart:
-        return '근무 예정';
+        return audience.isModel ? '시술 예정' : '근무 예정';
       case ScheduleWorkPhase.inProgress:
-        return '근무 중';
+        return audience.isModel ? '시술 중' : '근무 중';
       case ScheduleWorkPhase.afterEnd:
-        return '체크 가능';
+        return audience.isModel ? '완료 가능' : '체크 가능';
     }
   }
 
   static String formatHm(DateTime t) => DateFormat('HH:mm').format(t);
 
-  /// 근무체크 탭이 막혀 있을 때 표시할 안내. [afterEnd]이면 `null`(모달 오픈).
-  static String? workCheckBlockedMessage(Schedule schedule, DateTime now) {
+  /// 근무체크·시술완료 탭이 막혀 있을 때 표시할 안내. [afterEnd]이면 `null`(모달 오픈).
+  static String? workCheckBlockedMessage(
+    Schedule schedule,
+    DateTime now, {
+    ScheduleSessionAudience audience = ScheduleSessionAudience.spare,
+  }) {
     if (schedule.status == 'completed' || schedule.checkInTime != null) {
-      return '이미 근무 체크가 완료된 일정입니다.';
+      return audience.alreadyCompletedMessage();
     }
+    final endHm = formatHm(endDateTime(schedule));
     switch (phase(schedule, now)) {
       case ScheduleWorkPhase.beforeStart:
-        return '아직 근무 전입니다.';
+        return audience.beforeSessionMessage(endHm);
       case ScheduleWorkPhase.inProgress:
-        return '아직 근무 중입니다.';
+        return audience.duringSessionMessage(endHm);
       case ScheduleWorkPhase.afterEnd:
         return null;
     }

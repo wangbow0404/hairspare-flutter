@@ -22,15 +22,19 @@ import '../../services/education_service.dart';
 import '../../services/energy_service.dart';
 import '../../services/favorite_service.dart';
 import '../../services/job_service.dart';
+import '../../services/matching_service.dart';
+import '../../services/model_designer_match_service.dart';
 import '../../services/model_match_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/payment_service.dart';
 import '../../services/point_service.dart';
+import '../../services/portfolio_service.dart';
 import '../../services/review_service.dart';
 import '../../services/schedule_service.dart';
 import '../../services/search_service.dart';
 import '../../services/space_rental_service.dart';
 import '../../services/spare_service.dart';
+import '../../services/spare_designer_profile_service.dart';
 import '../../services/subscription_service.dart';
 import '../../services/verification_service.dart';
 import '../../services/work_check_service.dart';
@@ -52,6 +56,10 @@ void configureDependencies() {
   sl.registerLazySingleton<AuthService>(() => AuthService());
   sl.registerLazySingleton<JobService>(() => JobService());
   sl.registerLazySingleton<ModelMatchService>(() => ModelMatchService());
+  sl.registerLazySingleton<MatchingService>(() => MatchingService());
+  sl.registerLazySingleton<ModelDesignerMatchService>(
+    () => ModelDesignerMatchService(),
+  );
   sl.registerLazySingleton<EducationService>(() => EducationService());
   sl.registerLazySingleton<FavoriteService>(() => FavoriteService());
   sl.registerLazySingleton<ScheduleService>(() => ScheduleService());
@@ -65,10 +73,14 @@ void configureDependencies() {
   sl.registerLazySingleton<ApplicationService>(() => ApplicationService());
   sl.registerLazySingleton<ChallengeService>(() => ChallengeService());
   sl.registerLazySingleton<PaymentService>(() => PaymentService());
+  sl.registerLazySingleton<PortfolioService>(() => PortfolioService());
   sl.registerLazySingleton<ReviewService>(() => ReviewService());
   sl.registerLazySingleton<SearchService>(() => SearchService());
   sl.registerLazySingleton<SpaceRentalService>(() => SpaceRentalService());
   sl.registerLazySingleton<SpareService>(() => SpareService());
+  sl.registerLazySingleton<SpareDesignerProfileService>(
+    () => SpareDesignerProfileService(),
+  );
   sl.registerLazySingleton<SubscriptionService>(() => SubscriptionService());
   sl.registerLazySingleton<VerificationService>(() => VerificationService());
   sl.registerLazySingleton<WorkCheckService>(() => WorkCheckService());

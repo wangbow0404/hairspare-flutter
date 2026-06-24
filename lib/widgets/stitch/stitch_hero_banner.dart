@@ -33,8 +33,8 @@ class _StitchHeroBannerState extends State<StitchHeroBanner> {
 
   static const List<_HeroSlide> _shopSlides = [
     _HeroSlide(imageAsset: 'assets/images/banners/banner2.jpg'),
-    _HeroSlide(imageAsset: 'assets/images/banners/banner2.jpg'),
     _HeroSlide(imageAsset: 'assets/images/banners/banner3.jpg'),
+    _HeroSlide(imageAsset: 'assets/images/banners/banner4.jpg'),
   ];
 
   List<_HeroSlide> get _slides =>

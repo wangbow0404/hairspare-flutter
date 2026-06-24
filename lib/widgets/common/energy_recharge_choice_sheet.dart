@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../screens/spare/energy_purchase_screen.dart';
-import '../../screens/spare/points_screen.dart';
+import '../../core/router/app_routes.dart';
+import '../../utils/shell_navigation.dart';
 import '../../theme/app_theme.dart';
 
 /// 에너지 부족 시 — 에너지 직접 구매 or 포인트 적립 미션 선택 바텀 시트.
@@ -95,12 +96,7 @@ class _EnergyRechargeChoiceSheet extends StatelessWidget {
               subtitle: '에너지를 직접 구매합니다',
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const EnergyPurchaseScreen(),
-                  ),
-                );
+                ShellNavigation.pushEnergyPurchase(context);
               },
             ),
             const SizedBox(height: 12),
@@ -112,12 +108,7 @@ class _EnergyRechargeChoiceSheet extends StatelessWidget {
               subtitle: '미션을 완료하고 포인트를 받아보세요',
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const PointsScreen(),
-                  ),
-                );
+                context.go(AppRoutes.spareHomePoints);
               },
             ),
             const SizedBox(height: 24),

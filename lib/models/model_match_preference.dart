@@ -28,11 +28,8 @@ abstract final class ModelMatchOptions {
 
   static const List<String> careers = ['전체', '신입', '경력(1년 이상)', '전문 모델'];
 
-  static const List<String> shootAgreements = [
-    '얼굴 공개 필수',
-    '부분 공개 가능',
-    '비공개(헤어만)',
-  ];
+  /// 모델 매칭 후보 — 얼굴 공개 필수만 노출.
+  static const String faceDisclosureRequired = '얼굴 공개 필수';
 
   static const double minDistanceKm = 1;
   static const double maxDistanceKm = 50;
@@ -46,7 +43,6 @@ class ModelMatchPreference {
   final Set<String> treatments;
   final Set<String> imageStyles;
   final String career;
-  final Set<String> shootAgreements;
   final double distanceKm;
 
   const ModelMatchPreference({
@@ -55,7 +51,6 @@ class ModelMatchPreference {
     this.treatments = const {},
     this.imageStyles = const {},
     this.career = ModelMatchOptions.anyLabel,
-    this.shootAgreements = const {},
     this.distanceKm = ModelMatchOptions.defaultDistanceKm,
   });
 
@@ -65,7 +60,6 @@ class ModelMatchPreference {
     Set<String>? treatments,
     Set<String>? imageStyles,
     String? career,
-    Set<String>? shootAgreements,
     double? distanceKm,
   }) {
     return ModelMatchPreference(
@@ -74,7 +68,6 @@ class ModelMatchPreference {
       treatments: treatments ?? this.treatments,
       imageStyles: imageStyles ?? this.imageStyles,
       career: career ?? this.career,
-      shootAgreements: shootAgreements ?? this.shootAgreements,
       distanceKm: distanceKm ?? this.distanceKm,
     );
   }

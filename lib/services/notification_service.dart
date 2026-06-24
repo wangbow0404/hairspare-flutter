@@ -5,6 +5,7 @@ import '../utils/app_exception.dart';
 import '../models/notification.dart';
 import '../mocks/mock_shop_data.dart';
 import '../mocks/mock_spare_data.dart';
+import '../mocks/mock_model_messaging_data.dart';
 import '../core/di/service_locator.dart';
 
 class NotificationSettings {
@@ -113,6 +114,9 @@ class NotificationService {
       if (audience == 'shop') {
         return MockShopData.getShopNotifications();
       }
+      if (audience == 'model') {
+        return MockSpareData.getModelNotifications();
+      }
       return MockSpareData.getSpareNotifications();
     }
     try {
@@ -156,6 +160,8 @@ class NotificationService {
     if (ApiConfig.useMockData) {
       if (audience == 'shop') {
         await MockShopData.dismissNotification(notificationId);
+      } else if (audience == 'model') {
+        await MockModelMessagingData.markNotificationRead(notificationId);
       } else {
         await MockSpareData.markNotificationRead(notificationId);
       }
@@ -187,6 +193,8 @@ class NotificationService {
     if (ApiConfig.useMockData) {
       if (audience == 'shop') {
         await MockShopData.dismissNotification(notificationId);
+      } else if (audience == 'model') {
+        await MockModelMessagingData.dismissNotification(notificationId);
       } else {
         await MockSpareData.dismissNotification(notificationId);
       }

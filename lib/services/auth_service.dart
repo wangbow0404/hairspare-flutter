@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import '../models/login_portal.dart';
 import '../models/spare_subtype.dart';
@@ -106,6 +107,16 @@ class AuthService {
           phone: phone,
           username: username,
         );
+        await _apiClient.setAuthToken(
+          MockAuthData.mockTokenForRole(UserRole.shop),
+        );
+        return MockAuthData.registerShopUser(
+          username: username,
+          name: name,
+          email: email,
+          phone: phone,
+          profilePayload: profilePayload,
+        );
       }
       await _apiClient.setAuthToken('mock_token');
       return MockAuthData.registerSpareUser(
@@ -158,6 +169,9 @@ class AuthService {
 
   Future<User?> getCurrentUser() async {
     if (ApiConfig.useMockData) {
+      // mock 모드: 자동로그인 플래그가 켜진 경우에만 세션을 복원한다.
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool('auto_login_enabled') != true) return null;
       final token = await _apiClient.getAuthToken();
       return MockAuthData.userForMockToken(token);
     }
@@ -186,6 +200,8 @@ class AuthService {
 
   Future<void> logout() async {
     await _apiClient.clearAuthToken();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('auto_login_enabled', false);
   }
 
   Future<User> updateProfile({

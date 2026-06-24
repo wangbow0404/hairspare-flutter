@@ -22,16 +22,34 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  SpareProfileViewModel? _viewModel;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _viewModel ??= SpareProfileViewModel(
+      imagePicker: sl<ImagePicker>(),
+      authService: sl<AuthService>(),
+      authProvider: Provider.of<AuthProvider>(context, listen: false),
+      energyProvider: Provider.of<EnergyProvider>(context, listen: false),
+      scheduleProvider: Provider.of<ScheduleProvider>(context, listen: false),
+    );
+  }
+
+  @override
+  void dispose() {
+    _viewModel?.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => SpareProfileViewModel(
-        imagePicker: sl<ImagePicker>(),
-        authService: sl<AuthService>(),
-        authProvider: Provider.of<AuthProvider>(context, listen: false),
-        energyProvider: Provider.of<EnergyProvider>(context, listen: false),
-        scheduleProvider: Provider.of<ScheduleProvider>(context, listen: false),
-      ),
+    final vm = _viewModel;
+    if (vm == null) {
+      return const SizedBox.shrink();
+    }
+    return ChangeNotifierProvider<SpareProfileViewModel>.value(
+      value: vm,
       child: const _SpareProfileBody(),
     );
   }
@@ -58,10 +76,7 @@ class _SpareProfileBodyState extends State<_SpareProfileBody> {
   Widget build(BuildContext context) {
     return const Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      body: SafeArea(
-        bottom: false,
-        child: SpareProfileScrollView(),
-      ),
+      body: SpareProfileScrollView(),
     );
   }
 }

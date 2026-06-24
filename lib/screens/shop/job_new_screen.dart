@@ -7,10 +7,11 @@ import '../../core/services/global_messenger_service.dart';
 import '../../theme/app_theme.dart';
 import '../../models/job.dart';
 import '../../view_models/shop_job_new_view_model.dart';
+import '../../core/router/route_extras.dart';
+import '../../utils/shell_navigation.dart';
 import '../../widgets/shop_job_new/shop_job_new_form_content.dart';
 import '../../widgets/shop_job_new/shop_job_new_form_sections.dart';
 import '../../widgets/shop_job_new/shop_job_new_ui_kit.dart';
-import 'job_urgent_upsell_screen.dart';
 
 /// Shop 공고 등록 화면.
 class ShopJobNewScreen extends StatelessWidget {
@@ -120,12 +121,11 @@ class _ShopJobNewBodyState extends State<_ShopJobNewBody> {
 
     if (!mounted) return;
 
-    final submitted = await Navigator.of(context).push<bool>(
-          MaterialPageRoute<bool>(
-            builder: (ctx) => ChangeNotifierProvider<ShopJobNewViewModel>.value(
-              value: vm,
-              child: ShopJobUrgentUpsellScreen(formKey: _formKey),
-            ),
+    final submitted = await ShellNavigation.pushShopJobUrgentUpsell(
+          context,
+          ShopJobUrgentUpsellExtra(
+            viewModel: vm,
+            formKey: _formKey,
           ),
         ) ??
         false;

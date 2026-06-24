@@ -5,6 +5,7 @@ import '../../services/admin_service.dart';
 import '../../utils/error_handler.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/admin/admin_table_card.dart';
+import '../../widgets/admin/admin_action_dialog.dart';
 
 /// 관리자 결제 상세 화면
 class AdminPaymentDetailScreen extends StatefulWidget {
@@ -238,11 +239,7 @@ class _AdminPaymentDetailScreenState extends State<AdminPaymentDetailScreen> {
                 Row(
                   children: [
                     FilledButton.icon(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('환불 기능은 준비 중입니다')),
-                        );
-                      },
+                      onPressed: () => _refund(),
                       icon: const Icon(Icons.undo, size: 18),
                       label: const Text('환불 처리'),
                       style: FilledButton.styleFrom(
@@ -288,5 +285,25 @@ class _AdminPaymentDetailScreenState extends State<AdminPaymentDetailScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _refund() async {
+    final amount = (_payment?['amount'] ?? 0) as int;
+    final reason = await AdminActionDialog.show(
+      context,
+      title: '결제 환불',
+      confirmLabel: '환불',
+      summary: '주문 ${_payment?['orderId']} · ${_formatCurrency(amount)}',
+      isDanger: true,
+    );
+    if (reason == null || !mounted) return;
+    try {
+      await _adminService.refundPayment(widget.paymentId, amount: amount, reason: reason);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('환불이 처리되었습니다 (감사 로그 기록)')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))), backgroundColor: AppTheme.urgentRed));
+    }
   }
 }

@@ -4,40 +4,30 @@ import '../../models/spare_profile.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/home_layout_metrics.dart';
 import '../../theme/home_text_styles.dart';
+import 'shop_home_spare_photo.dart';
 
-/// 샵 홈 가로 스크롤용 — 스페어 홈 [PopularJobsSection] 카드와 동일한 세로 레이아웃.
+/// 샵 홈 가로 스크롤 — 상단 커버 사진 + 하단 정보.
 class ShopHomeSpareFeatureCard extends StatelessWidget {
   const ShopHomeSpareFeatureCard({
     super.key,
     required this.spare,
     this.onTap,
     this.showHotBadge = false,
-    this.heroGradient,
   });
 
   final SpareProfile spare;
   final VoidCallback? onTap;
   final bool showHotBadge;
-  final Gradient? heroGradient;
 
   static const double cardWidth = HomeLayoutMetrics.horizontalCardWidth;
 
   static const double _cardHeight =
       HomeLayoutMetrics.horizontalCarouselHeight - 8;
 
+  static const double _photoHeight = HomeLayoutMetrics.horizontalCardHeroHeight;
+
   @override
   Widget build(BuildContext context) {
-    final gradient = heroGradient ??
-        const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0x663B82F6),
-            Color(0x669333EA),
-            Color(0x66EC4899),
-          ],
-        );
-
     final metaLine =
         '경력 ${spare.experience}년 · 완료 ${spare.completedJobs}건 · '
         '따봉 ${spare.thumbsUpCount} · ★ ${spare.rating.toStringAsFixed(1)}';
@@ -67,36 +57,46 @@ class ShopHomeSpareFeatureCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Stack(
-                    children: [
-                      Container(
-                        height: HomeLayoutMetrics.horizontalCardHeroHeight,
-                        decoration: BoxDecoration(
-                          gradient: gradient,
+                  SizedBox(
+                    height: _photoHeight,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        ShopHomeSparePhoto(
+                          spare: spare,
+                          width: cardWidth,
+                          height: _photoHeight,
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(AppTheme.radiusLg),
                             topRight: Radius.circular(AppTheme.radiusLg),
                           ),
                         ),
-                      ),
-                      Positioned.fill(
-                        child: Center(
-                          child: _AvatarCircle(spare: spare, size: 64),
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          height: 48,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.black.withValues(alpha: 0),
+                                  Colors.black.withValues(alpha: 0.28),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                      if (showHotBadge)
-                        const Positioned(
-                          top: AppTheme.spacing2,
-                          left: AppTheme.spacing2,
-                          child: _HotBadge(),
-                        ),
-                      if (spare.isLicenseVerified)
-                        const Positioned(
-                          top: AppTheme.spacing2,
-                          right: AppTheme.spacing2,
-                          child: _LicenseChip(),
-                        ),
-                    ],
+                        if (showHotBadge)
+                          const Positioned(
+                            top: AppTheme.spacing2,
+                            left: AppTheme.spacing2,
+                            child: _HotBadge(),
+                          ),
+                      ],
+                    ),
                   ),
                   Expanded(
                     child: Padding(
@@ -181,7 +181,7 @@ class _SpecialtyChip extends StatelessWidget {
   }
 }
 
-/// 일반 지원자 리스트 — 전체 너비, 콘텐츠 높이에 맞춤.
+/// 신규 지원자 — 왼쪽 사진 썸네일 + 정보 Row.
 class ShopHomeSpareListTile extends StatelessWidget {
   const ShopHomeSpareListTile({
     super.key,
@@ -193,6 +193,8 @@ class ShopHomeSpareListTile extends StatelessWidget {
   final SpareProfile spare;
   final VoidCallback? onTap;
   final bool showPopularBadge;
+
+  static const double _photoSize = 72;
 
   @override
   Widget build(BuildContext context) {
@@ -210,7 +212,12 @@ class ShopHomeSpareListTile extends StatelessWidget {
           padding: const EdgeInsets.all(AppTheme.spacing3),
           child: Row(
             children: [
-              _AvatarCircle(spare: spare, size: 52),
+              ShopHomeSparePhoto(
+                spare: spare,
+                width: _photoSize,
+                height: _photoSize,
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              ),
               const SizedBox(width: AppTheme.spacing3),
               Expanded(
                 child: Column(
@@ -234,15 +241,12 @@ class ShopHomeSpareListTile extends StatelessWidget {
                           const SizedBox(width: AppTheme.spacing2),
                           const _HotBadge(compact: true),
                         ],
-                        if (spare.isLicenseVerified) ...[
-                          const SizedBox(width: AppTheme.spacing2),
-                          const _LicenseChip(compact: true),
-                        ],
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '경력 ${spare.experience}년 · 완료 ${spare.completedJobs}건 · 따봉 ${spare.thumbsUpCount}',
+                      '경력 ${spare.experience}년 · 완료 ${spare.completedJobs}건 · '
+                      '따봉 ${spare.thumbsUpCount} · ★ ${spare.rating.toStringAsFixed(1)}',
                       style: HomeTextStyles.homeCardMeta,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -290,53 +294,6 @@ class ShopHomeSpareListTile extends StatelessWidget {
   }
 }
 
-class _AvatarCircle extends StatelessWidget {
-  const _AvatarCircle({required this.spare, required this.size});
-
-  final SpareProfile spare;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppTheme.primaryBlue, AppTheme.primaryPurple],
-        ),
-        border: Border.all(color: Colors.white, width: 3),
-        boxShadow: AppTheme.shadowMd,
-      ),
-      child: spare.profileImage != null
-          ? ClipOval(
-              child: Image.network(
-                spare.profileImage!,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _initial(),
-              ),
-            )
-          : _initial(),
-    );
-  }
-
-  Widget _initial() {
-    return Center(
-      child: Text(
-        spare.name.isNotEmpty ? spare.name[0] : '?',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: size * 0.38,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-}
-
 class _HotBadge extends StatelessWidget {
   const _HotBadge({this.compact = false});
 
@@ -354,6 +311,13 @@ class _HotBadge extends StatelessWidget {
           colors: [Color(0xFF9333EA), Color(0xFFEC4899)],
         ),
         borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
       child: Text(
         'HOT',
@@ -361,34 +325,6 @@ class _HotBadge extends StatelessWidget {
           color: Colors.white,
           fontSize: compact ? 9 : 11,
           fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-}
-
-class _LicenseChip extends StatelessWidget {
-  const _LicenseChip({this.compact = false});
-
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: compact ? 6 : AppTheme.spacing2,
-        vertical: 2,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-      ),
-      child: Text(
-        '면허인증',
-        style: TextStyle(
-          color: AppTheme.purple700,
-          fontSize: compact ? 9 : 10,
-          fontWeight: FontWeight.w600,
         ),
       ),
     );

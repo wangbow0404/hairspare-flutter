@@ -12,10 +12,12 @@ class StitchFilterBar extends StatelessWidget {
     required this.dropdownRow,
     required this.chipRow,
     this.countLabel = '전체',
+    this.countUnit = '개',
   });
 
   final int totalCount;
   final String countLabel;
+  final String countUnit;
   final VoidCallback onRefresh;
   final Widget dropdownRow;
   final Widget chipRow;
@@ -32,7 +34,7 @@ class StitchFilterBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '$countLabel $totalCount개',
+                '$countLabel $totalCount$countUnit',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

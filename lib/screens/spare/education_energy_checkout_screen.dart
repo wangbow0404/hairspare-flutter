@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import 'package:hairspare/core/di/service_locator.dart';
 import 'package:hairspare/core/services/global_messenger_service.dart';
-import 'package:hairspare/screens/spare/education_enrollment_detail_screen.dart';
 import 'package:hairspare/screens/spare/education_screen.dart';
-import 'package:hairspare/screens/spare/energy_purchase_screen.dart';
 import 'package:hairspare/services/education_service.dart';
 import 'package:hairspare/services/energy_service.dart';
 import 'package:hairspare/theme/app_theme.dart';
 import 'package:hairspare/utils/error_handler.dart';
+import 'package:hairspare/utils/shell_navigation.dart';
 import 'package:hairspare/widgets/common/shared_app_bar.dart';
 import 'package:hairspare/widgets/education/education_ui_kit.dart';
 
@@ -66,13 +66,8 @@ class _EducationEnergyCheckoutScreenState
       final enrollment =
           await _educationService.enrollWithEnergy(widget.education.id);
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute<void>(
-          builder: (context) => EducationEnrollmentDetailScreen(
-            enrollmentId: enrollment.id,
-          ),
-        ),
+      context.replace(
+        '${ShellNavigation.branchBase(context)}/enrollment/${enrollment.id}',
       );
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
@@ -85,12 +80,7 @@ class _EducationEnergyCheckoutScreenState
   }
 
   Future<void> _openEnergyPurchase() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (context) => const EnergyPurchaseScreen(),
-      ),
-    );
+    await ShellNavigation.pushEnergyPurchase(context);
     await _loadBalance();
   }
 

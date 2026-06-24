@@ -284,6 +284,10 @@ class VerificationService {
 
   /// 인증번호 발송
   Future<String> sendVerificationCode(String phone) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      return '123456';
+    }
     try {
       final response = await _dio.post(
         '/api/auth/send-verification-code',
@@ -308,6 +312,10 @@ class VerificationService {
 
   /// 인증번호 확인
   Future<bool> verifyCode(String phone, String code) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      return code.trim().length == 6;
+    }
     try {
       final response = await _dio.post(
         '/api/auth/verify-code',

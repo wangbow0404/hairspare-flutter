@@ -13,8 +13,10 @@ import '../../utils/space_booking_rules.dart';
 import '../../utils/space_hourly_slot_grid.dart';
 import '../../widgets/space_rental/space_booking_confirm_modal.dart';
 import '../../widgets/space_rental/space_rental_time_slot_picker.dart';
-import 'messages_screen.dart';
-import 'reviews_list_screen.dart';
+import '../../utils/app_bar_navigation.dart';
+import '../../core/router/route_extras.dart';
+import '../../utils/shell_navigation.dart';
+import 'education_screen.dart' show EducationReview;
 /// 공간대여 상세 화면
 class SpaceRentalDetailScreen extends StatefulWidget {
   final String spaceId;
@@ -668,12 +670,7 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
       width: double.infinity,
       child: OutlinedButton.icon(
         onPressed: canContact
-            ? () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const MessagesScreen()),
-                );
-              }
+            ? () => AppBarNavigation.pushMessages(context)
             : null,
         icon: Icon(
           Icons.chat_bubble_outline,
@@ -785,21 +782,21 @@ class _SpaceRentalReviewsSectionState extends State<_SpaceRentalReviewsSection> 
               const SizedBox(width: AppTheme.spacing2),
               TextButton(
                 onPressed: () {
-                  Navigator.push(
+                  ShellNavigation.pushReviews(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => ReviewsListScreen(
-                        title: '${widget.title} 리뷰',
-                        averageRating: widget.averageRating,
-                        reviews: widget.reviews
-                            .map((r) => ReviewItem(
-                                  userName: r.userName,
-                                  rating: r.rating,
-                                  comment: r.comment,
-                                  createdAt: r.createdAt,
-                                ))
-                            .toList(),
-                      ),
+                    ReviewsListRouteArgs(
+                      title: '${widget.title} 리뷰',
+                      averageRating: widget.averageRating,
+                      reviews: widget.reviews
+                          .map(
+                            (r) => EducationReview(
+                              userName: r.userName,
+                              rating: r.rating,
+                              comment: r.comment,
+                              createdAt: r.createdAt,
+                            ),
+                          )
+                          .toList(),
                     ),
                   );
                 },

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/model_home_data.dart';
 import '../../theme/app_theme.dart';
+import '../common/app_network_image.dart';
 
 /// 모델 홈 히어로 — 내 프로필 카드.
 class ModelHomeProfileCard extends StatefulWidget {
@@ -71,11 +72,11 @@ class _ModelHomeProfileCardState extends State<ModelHomeProfileCard> {
                     ),
                     child: ClipOval(
                       child: profile.photoUrl != null
-                          ? Image.network(
-                              profile.photoUrl!,
+                          ? AppNetworkImage(
+                              imageUrl: profile.photoUrl,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
-                                  const _ProfilePlaceholder(),
+                              memCacheWidth: 160,
+                              fallbackIcon: Icons.person_outline_rounded,
                             )
                           : const _ProfilePlaceholder(),
                     ),

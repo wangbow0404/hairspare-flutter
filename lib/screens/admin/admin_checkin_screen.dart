@@ -4,9 +4,11 @@ import 'dart:async';
 import '../../theme/app_theme.dart';
 import '../../services/admin_service.dart';
 import '../../utils/error_handler.dart';
+import '../../widgets/admin/admin_screen_scaffold.dart';
 import '../../widgets/admin/admin_page_header.dart';
 import '../../widgets/admin/admin_search_filter_bar.dart';
 import '../../widgets/admin/admin_table_card.dart';
+import '../../widgets/admin/admin_action_dialog.dart';
 
 /// 관리자 체크인 관리 화면
 class AdminCheckinScreen extends StatefulWidget {
@@ -93,7 +95,8 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return AdminScreenScaffold(
+      header: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const AdminPageHeader(
@@ -127,10 +130,9 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
               ],
             ),
           ),
-          const SizedBox(height: AppTheme.spacing6),
-          SizedBox(
-            height: 600,
-            child: AdminTableCard(
+        ],
+      ),
+      body: AdminTableCard(
               child: _isLoading && _schedules.isEmpty
                   ? const Center(child: CircularProgressIndicator())
                   : _schedules.isEmpty
@@ -165,20 +167,21 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
                             ),
                           ),
                         )
-                      : SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(minWidth: 900, minHeight: 400),
-                            child: SizedBox(
-                              height: 580,
-                              child: Column(
-                                children: [
-                                  const AdminTableHeader(
-                                    headers: ['스케줄', '스페어', '미용실', '공고', '체크인 일시', '상태'],
-                                    flexValues: [1, 1, 1, 2, 1, 1],
-                                  ),
-                                  Expanded(
-                                    child: ListView.builder(
+                      : LayoutBuilder(
+                          builder: (context, constraints) {
+                            return SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: SizedBox(
+                                width: constraints.maxWidth < 900 ? 900 : constraints.maxWidth,
+                                height: constraints.maxHeight,
+                                child: Column(
+                                  children: [
+                                    const AdminTableHeader(
+                                      headers: ['스케줄', '스페어', '미용실', '공고', '체크인 일시', '상태', '개입'],
+                                      flexValues: [1, 1, 1, 2, 1, 1, 1],
+                                    ),
+                                    Expanded(
+                                      child: ListView.builder(
                                       itemCount: _schedules.length,
                                       itemBuilder: (context, index) {
                                         final schedule = _schedules[index];
@@ -280,6 +283,18 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
                                                   ),
                                                 ),
                                               ),
+                                              Expanded(
+                                                flex: 1,
+                                                child: PopupMenuButton<String>(
+                                                  onSelected: (action) => _intervene(schedule, action),
+                                                  itemBuilder: (_) => const [
+                                                    PopupMenuItem(value: 'complete', child: Text('강제 완료')),
+                                                    PopupMenuItem(value: 'cancel', child: Text('강제 취소')),
+                                                    PopupMenuItem(value: 'noshow', child: Text('노쇼 처리')),
+                                                  ],
+                                                  child: const Icon(Icons.more_vert, size: 20),
+                                                ),
+                                              ),
                                             ],
                                           ),
                                         );
@@ -289,12 +304,11 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
                                 ],
                               ),
                             ),
-                          ),
+                          );
+                          },
                         ),
-            ),
-          ),
-        ],
-      );
+      ),
+    );
   }
 
   Color _getStateColor(String state) {
@@ -328,6 +342,35 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
         return '취소/노쇼';
       default:
         return state.isNotEmpty ? state : '-';
+    }
+  }
+
+  Future<void> _intervene(Map<String, dynamic> schedule, String action) async {
+    final labels = {'complete': '강제 완료', 'cancel': '강제 취소', 'noshow': '노쇼 처리'};
+    final reason = await AdminActionDialog.show(
+      context,
+      title: labels[action] ?? '스케줄 개입',
+      confirmLabel: '실행',
+      summary: schedule['job']?['title']?.toString(),
+      isDanger: action != 'complete',
+    );
+    if (reason == null || !mounted) return;
+    final id = schedule['id'].toString();
+    try {
+      switch (action) {
+        case 'complete':
+          await _adminService.forceCompleteSchedule(id, reason: reason);
+        case 'cancel':
+          await _adminService.forceCancelSchedule(id, reason: reason);
+        case 'noshow':
+          await _adminService.markNoShow(id, reason: reason, party: 'spare');
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${labels[action]} 완료 (감사 로그 기록)')));
+      _loadSchedules();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))), backgroundColor: AppTheme.urgentRed));
     }
   }
 }

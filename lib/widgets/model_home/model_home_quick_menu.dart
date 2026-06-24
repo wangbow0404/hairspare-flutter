@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
-import '../../screens/spare/education_screen.dart';
-import '../../screens/spare/profile_edit_screen.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/app_bar_navigation.dart';
 
@@ -20,8 +18,8 @@ class ModelHomeQuickMenu extends StatelessWidget {
           Expanded(
             child: _QuickMenuItem(
               icon: Icons.calendar_month_outlined,
-              label: '스케줄표',
-              onTap: () => context.go(AppRoutes.spareFavorites),
+              label: '시술 일정',
+              onTap: () => context.go(AppRoutes.modelSchedule),
             ),
           ),
           Expanded(
@@ -35,28 +33,14 @@ class ModelHomeQuickMenu extends StatelessWidget {
             child: _QuickMenuItem(
               icon: Icons.edit_document,
               label: '프로필 수정',
-              onTap: () {
-                Navigator.push<void>(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => const ProfileEditScreen(),
-                  ),
-                );
-              },
+              onTap: () => context.push(AppRoutes.modelHomeProfileEdit),
             ),
           ),
           Expanded(
             child: _QuickMenuItem(
               icon: Icons.school_outlined,
               label: '교육',
-              onTap: () {
-                Navigator.push<void>(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => const EducationScreen(),
-                  ),
-                );
-              },
+              onTap: () => context.push(AppRoutes.modelHomeEducation),
             ),
           ),
         ],

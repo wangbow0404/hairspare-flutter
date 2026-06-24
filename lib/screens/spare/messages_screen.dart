@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hairspare/core/di/service_locator.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/chat_provider.dart';
 import '../../services/chat_service.dart';
+import '../../services/model_designer_match_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/icon_mapper.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../widgets/stitch/stitch_empty_state.dart';
 import '../../widgets/stitch/stitch_segment_tabs.dart';
-import 'chat_room_screen.dart';
+import '../../utils/messaging_audience.dart';
+import '../../utils/messaging_navigation.dart';
 
 /// 스페어 메시지(채팅) 목록 — [ChatProvider]와 동일한 mock/API 데이터 사용.
 class MessagesScreen extends StatefulWidget {
@@ -31,7 +34,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.read<ChatProvider>().refreshChats(viewerRole: 'spare');
+      final audience = MessagingAudience.resolve(context);
+      context.read<ChatProvider>().refreshChats(viewerRole: audience);
     });
   }
 
@@ -49,14 +53,19 @@ class _MessagesScreenState extends State<MessagesScreen> {
   Future<void> _confirmDelete(
     BuildContext context,
     ChatProvider chatProvider,
-    String chatId,
-  ) async {
+    String chatId, {
+    required bool isModelDesignerChat,
+  }) async {
     final messenger = ScaffoldMessenger.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('채팅방 삭제'),
-        content: const Text('이 채팅방을 삭제하시겠습니까?'),
+        title: Text(isModelDesignerChat ? '채팅방 나가기' : '채팅방 삭제'),
+        content: Text(
+          isModelDesignerChat
+              ? '채팅방을 삭제하면 매칭이 자동으로 취소됩니다.'
+              : '이 채팅방을 삭제하시겠습니까?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -67,7 +76,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
             style: TextButton.styleFrom(
               foregroundColor: AppTheme.urgentRed,
             ),
-            child: const Text('삭제'),
+            child: Text(isModelDesignerChat ? '나가기' : '삭제'),
           ),
         ],
       ),
@@ -76,12 +85,20 @@ class _MessagesScreenState extends State<MessagesScreen> {
     if (confirmed != true || !mounted) return;
 
     try {
-      await _chatService.deleteChat(chatId);
+      if (isModelDesignerChat) {
+        await sl<ModelDesignerMatchService>().deleteChatAndCancelMatch(chatId);
+      } else {
+        await _chatService.deleteChat(chatId);
+      }
       if (!mounted) return;
       chatProvider.removeChatLocally(chatId);
       messenger.showSnackBar(
-        const SnackBar(
-          content: Text('채팅방이 삭제되었습니다'),
+        SnackBar(
+          content: Text(
+            isModelDesignerChat
+                ? '채팅방을 나갔습니다. 매칭이 취소되었습니다.'
+                : '채팅방이 삭제되었습니다',
+          ),
           backgroundColor: AppTheme.stitchPrimaryContainer,
         ),
       );
@@ -109,6 +126,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
         }
 
         if (chatProvider.error != null && chatProvider.chats.isEmpty) {
+          final audience = MessagingAudience.resolve(context);
           return Scaffold(
             backgroundColor: AppTheme.backgroundGray,
             appBar: const SpareSubpageAppBar(
@@ -119,7 +137,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
               message: chatProvider.error!,
               iconName: 'alertcircle',
               actionLabel: '다시 시도',
-              onAction: () => chatProvider.refreshChats(viewerRole: 'spare'),
+              onAction: () =>
+                  chatProvider.refreshChats(viewerRole: audience),
             ),
           );
         }
@@ -131,6 +150,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
             : chatProvider.chats;
 
         final tabIndex = _activeTab == 'unread' ? 1 : 0;
+        final audience = MessagingAudience.resolve(context);
+        final isModelMessaging = audience == 'model';
 
         return Scaffold(
           backgroundColor: AppTheme.backgroundGray,
@@ -140,6 +161,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
           ),
           body: Column(
             children: [
+              if (isModelMessaging) const _ModelMessagingPolicyBanner(),
               StitchSegmentTabs(
                 tabs: const ['전체', '안 읽음'],
                 activeIndex: tabIndex,
@@ -152,7 +174,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     ? StitchEmptyState(
                         message: _activeTab == 'unread'
                             ? '읽지 않은 메시지가 없습니다'
-                            : '메시지가 없습니다',
+                            : isModelMessaging
+                                ? '매칭된 디자이너와의 대화가 없습니다'
+                                : '메시지가 없습니다',
                         iconName: 'messagecircle',
                       )
                     : ListView.builder(
@@ -167,16 +191,17 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                   _swipedChatId != chat.id) {
                                 setState(() => _swipedChatId = null);
                               }
-                              Navigator.push<void>(
-                                context,
-                                MaterialPageRoute<void>(
-                                  builder: (context) =>
-                                      ChatRoomScreen(chatId: chat.id),
-                                ),
-                              ).then((_) {
+                              context
+                                  .push<void>(
+                                    MessagingNavigation.chatRouteForContext(
+                                      context,
+                                      chat.id,
+                                    ),
+                                  )
+                                  .then((_) {
                                 if (mounted) {
                                   chatProvider.refreshChats(
-                                    viewerRole: 'spare',
+                                    viewerRole: audience,
                                   );
                                 }
                               });
@@ -185,6 +210,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                               context,
                               chatProvider,
                               chat.id,
+                              isModelDesignerChat: isModelMessaging &&
+                                  sl<ModelDesignerMatchService>()
+                                      .isModelDesignerChat(chat.id),
                             ),
                             onSwipeChanged: (isSwiped) {
                               setState(() {
@@ -446,6 +474,35 @@ class _ChatUnreadBadge extends StatelessWidget {
           color: Colors.white,
           fontWeight: FontWeight.bold,
           height: 1,
+        ),
+      ),
+    );
+  }
+}
+
+class _ModelMessagingPolicyBanner extends StatelessWidget {
+  const _ModelMessagingPolicyBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing4,
+        vertical: AppTheme.spacing3,
+      ),
+      decoration: const BoxDecoration(
+        color: AppTheme.backgroundWhite,
+        border: Border(
+          bottom: BorderSide(color: AppTheme.borderGray, width: 1),
+        ),
+      ),
+      child: const Text(
+        '매칭된 디자이너와만 대화할 수 있어요. 채팅방을 삭제하면 매칭이 자동으로 취소됩니다.',
+        style: TextStyle(
+          fontSize: 13,
+          color: AppTheme.stitchTextSecondary,
+          height: 1.45,
         ),
       ),
     );

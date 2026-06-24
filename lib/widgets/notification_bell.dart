@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../models/notification.dart' show AppNotification;
-import '../theme/app_theme.dart';
 import '../providers/notification_provider.dart';
+import '../theme/app_theme.dart';
 import '../utils/navigation_helper.dart';
+import '../utils/model_notification_navigation.dart';
 import '../utils/shop_notification_navigation.dart';
 import '../utils/spare_notification_navigation.dart';
 
 class NotificationBell extends StatefulWidget {
-  final String role; // 'spare' | 'shop'
+  final String role; // 'spare' | 'shop' | 'model'
   final Function(AppNotification)? onNotificationTap;
   /// null이면 [AppTheme.textSecondary].
   final Color? iconColor;
@@ -294,6 +296,8 @@ class _NotificationBellState extends State<NotificationBell> {
     if (!mounted) return;
     if (widget.role == 'shop') {
       ShopNotificationNavigation.handle(context, notification);
+    } else if (widget.role == 'model') {
+      ModelNotificationNavigation.handle(context, notification);
     } else {
       SpareNotificationNavigation.handle(context, notification);
     }

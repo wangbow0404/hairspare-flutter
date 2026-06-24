@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/job_provider.dart';
 import '../../providers/favorite_provider.dart';
@@ -16,17 +17,22 @@ import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../widgets/date_filter_button.dart';
 import '../../utils/region_helper.dart';
 import '../../utils/job_popularity.dart';
-import '../spare/job_detail_screen.dart';
-import '../spare/space_rental_detail_screen.dart';
-import '../spare/education_detail_screen.dart';
+import '../../utils/jobs_list_sort.dart';
+import '../../core/router/app_routes.dart';
 import '../spare/education_screen.dart';
 
 /// Next.js와 동일한 공고 목록 화면
 class JobsListScreen extends StatefulWidget {
   final String? filter; // 'urgent', 'latest', 'deadline', 'hourly', 'daily', 'recommended'
   final String? searchQuery; // 홈 검색에서 전달된 검색어
+  final JobsListSortMode? initialSortMode;
 
-  const JobsListScreen({super.key, this.filter, this.searchQuery});
+  const JobsListScreen({
+    super.key,
+    this.filter,
+    this.searchQuery,
+    this.initialSortMode,
+  });
 
   @override
   State<JobsListScreen> createState() => _JobsListScreenState();
@@ -34,7 +40,7 @@ class JobsListScreen extends StatefulWidget {
 
 class _JobsListScreenState extends State<JobsListScreen> {
   String? _activeFilter;
-  String _sortBy = 'latest';
+  JobsListSortMode _sortMode = JobsListSortMode.all;
   String? _searchQuery;
 
   // 지역 필터 상태
@@ -54,6 +60,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
   // 추가 필터 상태
   bool _isPremium = false;
   DateTime? _selectedDateStart;
+  bool _bodyReady = false;
   
   // 지역 데이터
   List<Region> get _provinces {
@@ -71,13 +78,80 @@ class _JobsListScreenState extends State<JobsListScreen> {
   void initState() {
     super.initState();
     _activeFilter = widget.filter;
+    _sortMode = widget.initialSortMode ?? JobsListSortMode.all;
     _searchQuery = widget.searchQuery;
+    _scheduleDataLoad();
+    _scheduleBodyReveal();
+  }
+
+  /// push 애니메이션 완료 후 필터·목록 렌더 (ANR 방지).
+  void _scheduleBodyReveal() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final jobProvider = Provider.of<JobProvider>(context, listen: false);
-      if (_searchQuery != null) jobProvider.setSearchQuery(_searchQuery);
-      jobProvider.loadJobs(searchQuery: _searchQuery);
-      Provider.of<FavoriteProvider>(context, listen: false).loadFavorites();
+      if (!mounted) return;
+      final animation = ModalRoute.of(context)?.animation;
+      void reveal() {
+        if (!mounted || _bodyReady) return;
+        setState(() => _bodyReady = true);
+      }
+
+      if (animation != null && !animation.isCompleted) {
+        late AnimationStatusListener listener;
+        listener = (status) {
+          if (status == AnimationStatus.completed) {
+            animation.removeStatusListener(listener);
+            Future<void>.delayed(const Duration(milliseconds: 150), reveal);
+          }
+        };
+        animation.addStatusListener(listener);
+      } else {
+        Future<void>.delayed(const Duration(milliseconds: 450), reveal);
+      }
     });
+  }
+
+  // 네비게이션 애니메이션이 완전히 끝난 뒤 데이터를 불러온다.
+  // 애니메이션 중 notifyListeners()가 홈 화면 리빌드를 유발해 UI가 멈추는 문제를 방지.
+  void _scheduleDataLoad() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final animation = ModalRoute.of(context)?.animation;
+      void runLoad() {
+        if (!mounted) return;
+        _loadData();
+      }
+
+      if (animation != null && !animation.isCompleted) {
+        late AnimationStatusListener listener;
+        listener = (status) {
+          if (status == AnimationStatus.completed) {
+            animation.removeStatusListener(listener);
+            runLoad();
+          }
+        };
+        animation.addStatusListener(listener);
+      } else {
+        // 전환 애니메이션이 없어도 홈 JobProvider 리빌드와 겹치지 않도록 짧게 지연
+        Future<void>.delayed(const Duration(milliseconds: 350), runLoad);
+      }
+    });
+  }
+
+  void _loadData() {
+    if (!mounted) return;
+    final jobProvider = Provider.of<JobProvider>(context, listen: false);
+    if (_searchQuery != null) {
+      jobProvider.setSearchQuery(_searchQuery);
+    }
+    // 홈에서 이미 불러온 공고를 다시 loadJobs()하면 isLoading=true로
+    // 홈·목록 화면이 동시에 리빌드되어 전환 중 프레임 오류/멈춤이 난다.
+    if (jobProvider.jobs.isEmpty) {
+      jobProvider.loadJobs(searchQuery: _searchQuery);
+    }
+    final favoriteProvider =
+        Provider.of<FavoriteProvider>(context, listen: false);
+    if (favoriteProvider.favoriteJobIds.isEmpty) {
+      favoriteProvider.loadFavorites();
+    }
   }
 
   void _handleRefresh() {
@@ -85,7 +159,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
       _selectedProvince = null;
       _selectedDistrict = null;
       _activeFilter = null;
-      _sortBy = 'latest';
+      _sortMode = JobsListSortMode.all;
       _isPremium = false;
       _selectedDateStart = null;
       _searchQuery = null;
@@ -98,12 +172,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
 
 
   void _handleJobTap(Job job) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => JobDetailScreen(jobId: job.id),
-      ),
-    );
+    context.push(AppRoutes.spareHomeJobDetail(job.id));
   }
 
   /// 공고별 화면: 공고만 표시 (필터·정렬 순서 유지)
@@ -146,23 +215,12 @@ class _JobsListScreenState extends State<JobsListScreen> {
   }
 
   void _applySort(List<Job> list) {
-    if (_activeFilter == 'recommended') {
-      list.sort((a, b) {
-        if (a.isPremium != b.isPremium) return a.isPremium ? -1 : 1;
-        if (a.isUrgent != b.isUrgent) return a.isUrgent ? -1 : 1;
-        return b.createdAt.compareTo(a.createdAt);
-      });
-      return;
-    }
-    switch (_sortBy) {
-      case 'amount':
-        list.sort((a, b) => b.amount.compareTo(a.amount));
-      case 'deadline':
-        list.sort((a, b) => _deadlineSortKey(a).compareTo(_deadlineSortKey(b)));
-      case 'latest':
-      default:
-        list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    }
+    sortJobsForList(
+      list,
+      sortMode: _sortMode,
+      recommendedFilterActive: _activeFilter == 'recommended',
+      deadlineSortKey: _deadlineSortKey,
+    );
   }
 
   Widget _buildAnnouncementCard(
@@ -193,12 +251,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
         spaceRental: space,
         isFavorite: false,
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SpaceRentalDetailScreen(spaceId: space.id),
-            ),
-          );
+          context.push(AppRoutes.spareHomeSpaceDetail(space.id));
         },
       );
     }
@@ -209,12 +262,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
         education: edu,
         isFavorite: false,
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => EducationDetailScreen(education: edu),
-            ),
-          );
+          context.push(AppRoutes.spareHomeEducationDetail, extra: edu);
         },
       );
     }
@@ -305,6 +353,10 @@ class _JobsListScreenState extends State<JobsListScreen> {
             );
           }
 
+          if (!_bodyReady) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
           final allJobs = jobProvider.jobs;
           final popularJobIds = JobPopularity.popularJobIds(allJobs);
           final filteredJobs = _getFilteredJobs(allJobs);
@@ -386,20 +438,18 @@ class _JobsListScreenState extends State<JobsListScreen> {
                           ),
                           const SizedBox(width: AppTheme.spacing2),
                           JobFilterDropdown(
-                            label: '정렬',
-                            options: const ['최신순', '가격순', '마감순'],
-                            selectedValue: _sortBy == 'latest' ? '최신순'
-                                : _sortBy == 'amount' ? '가격순'
-                                : '마감순',
+                            label: '전체',
+                            options: const [
+                              '인기순',
+                              '최신순',
+                              '가격순',
+                              '마감순',
+                            ],
+                            selectedValue:
+                                jobsListSortDropdownLabel(_sortMode),
                             onSelected: (value) {
                               setState(() {
-                                if (value == '최신순') {
-                                  _sortBy = 'latest';
-                                } else if (value == '가격순') {
-                                  _sortBy = 'amount';
-                                } else if (value == '마감순') {
-                                  _sortBy = 'deadline';
-                                }
+                                _sortMode = jobsListSortModeFromDropdown(value);
                                 _showSortDropdown = false;
                               });
                             },
@@ -419,11 +469,15 @@ class _JobsListScreenState extends State<JobsListScreen> {
                   children: [
                           StitchFilterChip(
                             label: '전체',
-                            isSelected: _activeFilter == null && !_isPremium,
+                            isSelected:
+                                _activeFilter == null &&
+                                !_isPremium &&
+                                _sortMode == JobsListSortMode.all,
                             onTap: () {
                               setState(() {
                                 _activeFilter = null;
                                 _isPremium = false;
+                                _sortMode = JobsListSortMode.all;
                               });
                             },
                           ),
@@ -443,10 +497,11 @@ class _JobsListScreenState extends State<JobsListScreen> {
                           StitchFilterChip(
                             label: '최신순',
                             isSelected:
-                                _sortBy == 'latest' && _activeFilter == null,
+                                _sortMode == JobsListSortMode.latest &&
+                                _activeFilter == null,
                             onTap: () {
                               setState(() {
-                                _sortBy = 'latest';
+                                _sortMode = JobsListSortMode.latest;
                                 _activeFilter = null;
                               });
                             },

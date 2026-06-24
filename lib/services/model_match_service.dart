@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../core/di/service_locator.dart';
 import '../mocks/mock_model_match_data.dart';
 import '../models/hair_model.dart';
+import '../models/model_discovery_item.dart';
 import '../models/model_match_preference.dart';
 import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
@@ -32,6 +33,51 @@ class ModelMatchService {
             .whereType<Map<String, dynamic>>()
             .map(HairModel.fromJson)
             .toList();
+      }
+      return const [];
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 추천 소진 후 인기·신규 모델 탐색 피드.
+  Future<List<ModelDiscoveryItem>> getDiscoveryModels({
+    Set<String> excludeIds = const {},
+  }) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(const Duration(milliseconds: 180));
+      return MockModelMatchData.getDiscoveryModels(excludeIds: excludeIds);
+    }
+    try {
+      final response = await _dio.get(
+        '/api/model-match/discovery',
+        queryParameters: {
+          if (excludeIds.isNotEmpty) 'exclude': excludeIds.join(','),
+        },
+      );
+      if (response.statusCode == 200) {
+        final data = response.data['data'] ?? response.data;
+        final List<dynamic> list = data is List
+            ? data
+            : (data is Map && data['items'] != null
+                ? data['items'] as List
+                : []);
+        return list.whereType<Map<String, dynamic>>().map((json) {
+          final kindRaw = json['kind']?.toString() ?? 'popular';
+          final kind = kindRaw == 'new' || kindRaw == 'newlyJoined'
+              ? ModelDiscoveryKind.newlyJoined
+              : ModelDiscoveryKind.popular;
+          return ModelDiscoveryItem(
+            model: HairModel.fromJson(
+              json['model'] is Map<String, dynamic>
+                  ? json['model'] as Map<String, dynamic>
+                  : json,
+            ),
+            kind: kind,
+          );
+        }).toList();
       }
       return const [];
     } on DioException catch (e) {

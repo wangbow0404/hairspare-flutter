@@ -10,9 +10,10 @@ import '../models/spare_profile.dart';
 import '../providers/notification_provider.dart';
 import '../services/application_service.dart';
 import '../services/job_service.dart';
-import '../services/schedule_service.dart';
+import '../mocks/mock_shop_data.dart';
 import '../services/spare_service.dart';
 import '../utils/error_handler.dart';
+import '../utils/region_helper.dart';
 import '../utils/shop_applicant_counts.dart';
 
 /// 샵 홈 탭: 등록 공고 수·스페어 목록·알림. 홈에는 공고 **피드**를 두지 않고 [ShopJobsListScreen] 등에서만 관리.
@@ -22,11 +23,9 @@ class ShopHomeViewModel extends ChangeNotifier {
     JobService? jobService,
     SpareService? spareService,
     ApplicationService? applicationService,
-    ScheduleService? scheduleService,
   })  : _jobService = jobService ?? sl<JobService>(),
         _spareService = spareService ?? sl<SpareService>(),
-        _applicationService = applicationService ?? sl<ApplicationService>(),
-        _scheduleService = scheduleService ?? sl<ScheduleService>();
+        _applicationService = applicationService ?? sl<ApplicationService>();
 
   final NotificationProvider notificationProvider;
 
@@ -35,19 +34,23 @@ class ShopHomeViewModel extends ChangeNotifier {
   final JobService _jobService;
   final SpareService _spareService;
   final ApplicationService _applicationService;
-  final ScheduleService _scheduleService;
 
   bool isLoading = true;
 
   List<SpareProfile> popularSpares = [];
   List<SpareProfile> newSpares = [];
+  List<SpareProfile> nearbySpares = [];
   List<SpareProfile> regularSpares = [];
+
+  /// 샵(카페) 주변 지역 — 추후 프로필 API 연동.
+  String shopRegionId = MockShopData.mockShopHomeRegionId;
+  String shopRegionLabel = '';
   /// 진행중(published) 공고 수.
   int activeJobCount = 0;
   /// status=pending 지원 건수.
   int pendingApplicantsCount = 0;
-  /// 오늘 scheduled 일정 건수.
-  int todayScheduleCount = 0;
+  /// 오늘 모델 매칭 건수.
+  int todayModelMatchingCount = 0;
 
   /// 알림·내 공고·지원자·스페어 목록을 병렬 로드합니다.
   Future<void> loadInitial() async {
@@ -55,29 +58,42 @@ class ShopHomeViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      shopRegionLabel = RegionHelper.districtShortName(shopRegionId);
+      final nearbyIds = RegionHelper.nearbyRegionIds(shopRegionId);
+
       final results = await Future.wait<dynamic>([
         notificationProvider.loadNotifications(audience: 'shop'),
         _jobService.getMyJobs(),
         _applicationService.getShopApplications(),
-        _scheduleService.getTodaySchedules(),
+        MockShopData.getTodayModelMatchingCount(),
         _spareService.getSpares(sortBy: 'popular', limit: 10),
-        _spareService.getSpares(sortBy: 'newest', limit: 10),
-        _spareService.getSpares(limit: 10),
+        _spareService.getSpares(sortBy: 'newest', limit: 8),
+        _spareService.getSpares(
+          sortBy: 'popular',
+          regionIds: nearbyIds,
+          limit: 10,
+        ),
+        MockShopData.getSpares(sortBy: 'popular'),
       ]);
 
       final jobs = results[1] as List<Job>;
       final applications = results[2] as List<Application>;
-      final todaySchedules = results[3] as List;
 
       activeJobCount =
           jobs.where((j) => j.status == 'published').length;
       pendingApplicantsCount =
           ShopApplicantCounts.pending(applications);
-      todayScheduleCount = todaySchedules.length;
+      todayModelMatchingCount = results[3] as int;
 
       popularSpares = results[4] as List<SpareProfile>;
       newSpares = results[5] as List<SpareProfile>;
-      regularSpares = results[6] as List<SpareProfile>;
+      nearbySpares = results[6] as List<SpareProfile>;
+
+      final allSpares = results[7] as List<SpareProfile>;
+      final nearbySet = nearbyIds.toSet();
+      regularSpares = allSpares
+          .where((s) => !nearbySet.contains(s.regionId))
+          .toList();
     } catch (e) {
       final ex = ErrorHandler.handleException(e);
       _m.showError(

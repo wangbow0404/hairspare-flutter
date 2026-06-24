@@ -6,6 +6,7 @@ import '../../services/admin_service.dart';
 import '../../utils/error_handler.dart';
 import '../../core/router/app_routes.dart';
 import 'package:go_router/go_router.dart';
+import '../../widgets/admin/admin_screen_scaffold.dart';
 import '../../widgets/admin/admin_page_header.dart';
 import '../../widgets/admin/admin_search_filter_bar.dart';
 import '../../widgets/admin/admin_table_card.dart';
@@ -146,7 +147,8 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return AdminScreenScaffold(
+      header: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const AdminPageHeader(
@@ -201,10 +203,9 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
               ],
             ),
           ),
-          const SizedBox(height: AppTheme.spacing6),
-          SizedBox(
-            height: 600,
-            child: AdminTableCard(
+        ],
+      ),
+      body: AdminTableCard(
               child: _isLoading && _payments.isEmpty
                   ? const Center(child: CircularProgressIndicator())
                   : _payments.isEmpty
@@ -222,13 +223,14 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(minWidth: 900),
                             child: Column(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 const AdminTableHeader(
                               headers: ['주문 정보', '사용자', '유형', '금액', '상태', '결제일'],
                               flexValues: [1, 1, 1, 1, 1, 1],
                             ),
-                            // 테이블 본문
-                            Expanded(
+                            SizedBox(
+                              height: 480,
                               child: ListView.builder(
                                 itemCount: _payments.length,
                                 itemBuilder: (context, index) {
@@ -408,9 +410,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
                             ),
                           ),
                         ),
-            ),
-          ),
-        ],
-      );
+      ),
+    );
   }
 }

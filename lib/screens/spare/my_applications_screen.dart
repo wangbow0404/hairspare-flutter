@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../theme/app_theme.dart';
-import '../../widgets/spare_app_bar.dart';
+
 import '../../models/application.dart';
 import '../../services/application_service.dart';
+import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
-import 'job_detail_screen.dart';
+import '../../utils/shell_navigation.dart';
+import '../../widgets/spare_app_bar.dart';
 
 /// 내 지원 현황 화면
 class MyApplicationsScreen extends StatefulWidget {
@@ -171,11 +172,9 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> {
                                   statusLabel: _statusLabel(app.status),
                                   statusColor: _statusColor(app.status),
                                   onTap: () {
-                                    Navigator.push(
+                                    ShellNavigation.pushJobDetail(
                                       context,
-                                      MaterialPageRoute(
-                                        builder: (context) => JobDetailScreen(jobId: app.job.id),
-                                      ),
+                                      app.job.id,
                                     );
                                   },
                                 );

@@ -47,6 +47,21 @@ abstract final class HomeTextStyles {
     color: Colors.white.withValues(alpha: 0.9),
   );
 
+  /// 흰색 상태 카드 숫자 (보라 accent)
+  static const TextStyle dashboardValueOnWhite = TextStyle(
+    fontSize: 22,
+    fontWeight: FontWeight.bold,
+    color: AppTheme.stitchPrimaryContainer,
+  );
+
+  /// 흰색 상태 카드 라벨
+  static const TextStyle dashboardLabelOnWhite = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    color: AppTheme.stitchTextSecondary,
+    height: 1.3,
+  );
+
   /// 퀵 액션 제목 (카드 제목과 동일 위계)
   static const TextStyle quickActionTitle = TextStyle(
     fontSize: 14,

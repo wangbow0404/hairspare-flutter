@@ -1,22 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/router/app_routes.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/home_text_styles.dart';
 import '../../widgets/stitch/stitch_hero_banner.dart';
 import '../../widgets/category_grid.dart';
 import '../../widgets/customer_service_section.dart';
-import '../../screens/shop/applicants_screen.dart';
-import '../../screens/shop/challenge_screen.dart';
-import '../../screens/shop/education_screen.dart';
-import '../../screens/shop/jobs_list_screen.dart';
-import '../../screens/shop/my_spaces_screen.dart';
-import '../../screens/shop/points_screen.dart';
-import '../../screens/shop/schedule_screen.dart';
-import '../../screens/shop/spares_list_screen.dart';
 import '../../view_models/shop_home_view_model.dart';
 import 'shop_home_app_bar.dart';
+import 'shop_home_quick_menu.dart';
 import 'shop_home_spare_sections.dart';
+import 'shop_home_tips_banner.dart';
 
 /// 샵 홈 본문 스크롤(배너·카테고리·대시보드·리스트). 데이터는 [ShopHomeViewModel].
 class ShopHomeScrollView extends StatelessWidget {
@@ -25,10 +21,7 @@ class ShopHomeScrollView extends StatelessWidget {
   final ScrollController scrollController;
 
   void _openSparesList(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const ShopSparesListScreen()),
-    );
+    context.push(AppRoutes.shopHomeSpares);
   }
 
   @override
@@ -41,30 +34,21 @@ class ShopHomeScrollView extends StatelessWidget {
     }
 
     Future<void> openJobsList() async {
-      await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const ShopJobsListScreen()),
-      );
+      await context.push(AppRoutes.shopProfileJobs);
       if (context.mounted) {
         await context.read<ShopHomeViewModel>().loadInitial();
       }
     }
 
     Future<void> openApplicants() async {
-      await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const ShopApplicantsScreen()),
-      );
+      await context.push(AppRoutes.shopProfileApplicants);
       if (context.mounted) {
         await context.read<ShopHomeViewModel>().loadInitial();
       }
     }
 
     void openSchedule() {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const ShopScheduleScreen()),
-      );
+      context.push(AppRoutes.shopHomeSchedule);
     }
 
     Widget dashboardCard({
@@ -147,133 +131,7 @@ class ShopHomeScrollView extends StatelessWidget {
                   AppTheme.spacing4,
                   AppTheme.spacing6,
                 ),
-                categories: [
-                  CategoryItem(
-                    emoji: '',
-                    icon: Icons.groups_2_outlined,
-                    label: '인력별',
-                    color: AppTheme.primaryPurple,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ShopSparesListScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  CategoryItem(
-                    emoji: '',
-                    icon: Icons.event_note_outlined,
-                    label: '스케줄표',
-                    color: AppTheme.primaryBlue,
-                    onTap: openSchedule,
-                  ),
-                  CategoryItem(
-                    emoji: '',
-                    icon: Icons.storefront_outlined,
-                    label: '스토어',
-                    color: AppTheme.primaryGreen,
-                    onTap: () {
-                      showDialog<void>(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: const Text('준비 중'),
-                          content: const Text('스토어 기능은 준비 중입니다.'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: const Text('확인'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                  CategoryItem(
-                    emoji: '',
-                    icon: Icons.add_card_outlined,
-                    label: '+포인트',
-                    color: AppTheme.orange500,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ShopPointsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  CategoryItem(
-                    emoji: '',
-                    icon: Icons.meeting_room_outlined,
-                    label: '공간대여',
-                    color: AppTheme.primaryPink,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ShopMySpacesScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  CategoryItem(
-                    emoji: '',
-                    icon: Icons.school_outlined,
-                    label: '교육',
-                    color: AppTheme.primaryPurple,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ShopEducationScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  CategoryItem(
-                    emoji: '',
-                    icon: Icons.workspace_premium_outlined,
-                    label: '챌린지',
-                    color: AppTheme.primaryBlueDark,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ShopChallengeScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  CategoryItem(
-                    emoji: '',
-                    icon: Icons.lightbulb_outline,
-                    label: '커넥트',
-                    color: AppTheme.yellow600,
-                    onTap: () {
-                      showDialog<void>(
-                        context: context,
-                        barrierDismissible: true,
-                        builder: (ctx) => AlertDialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radius2xl,
-                            ),
-                          ),
-                          title: const Text('준비 중'),
-                          content: const Text('커넥트 기능은 준비 중입니다.'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: const Text('확인'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                categories: ShopHomeQuickMenu.buildCategories(context),
               ),
             ],
           ),
@@ -318,8 +176,8 @@ class ShopHomeScrollView extends StatelessWidget {
                 const SizedBox(width: AppTheme.spacing3),
                 Expanded(
                   child: dashboardCard(
-                    value: '${vm.todayScheduleCount}',
-                    label: '오늘 일정',
+                    value: '${vm.todayModelMatchingCount}',
+                    label: '오늘 모델매칭',
                     gradient: const LinearGradient(
                       colors: [Color(0xFF10B981), Color(0xFF059669)],
                     ),
@@ -336,7 +194,17 @@ class ShopHomeScrollView extends StatelessWidget {
             child: ShopHomePopularSparesSection(
               spares: vm.popularSpares,
               onSeeMore: () => _openSparesList(context),
-              onSpareTap: (_) => _openSparesList(context),
+              onSpareTap: (spare) => context.push(
+                AppRoutes.shopHomeSpareDetail(spare.id),
+              ),
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: ColoredBox(
+            color: AppTheme.backgroundGray,
+            child: ShopHomeTipsBanner(
+              onTap: () => context.push(AppRoutes.shopHomeMatchingTips),
             ),
           ),
         ),
@@ -344,17 +212,30 @@ class ShopHomeScrollView extends StatelessWidget {
           child: ShopHomeNewSparesSection(
             spares: vm.newSpares,
             onSeeMore: () => _openSparesList(context),
-            onSpareTap: (_) => _openSparesList(context),
-          ),
-        ),
-        if (vm.regularSpares.isNotEmpty)
-          SliverToBoxAdapter(
-            child: ShopHomeRegularSparesSection(
-              spares: vm.regularSpares,
-              onSeeMore: () => _openSparesList(context),
-              onSpareTap: (_) => _openSparesList(context),
+            onSpareTap: (spare) => context.push(
+              AppRoutes.shopHomeSpareDetail(spare.id),
             ),
           ),
+        ),
+        SliverToBoxAdapter(
+          child: ShopHomeNearbySparesSection(
+            spares: vm.nearbySpares,
+            regionLabel: vm.shopRegionLabel,
+            onSeeMore: () => _openSparesList(context),
+            onSpareTap: (spare) => context.push(
+              AppRoutes.shopHomeSpareDetail(spare.id),
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: ShopHomeRegularSparesSection(
+            spares: vm.regularSpares,
+            onSeeMore: () => _openSparesList(context),
+            onSpareTap: (spare) => context.push(
+              AppRoutes.shopHomeSpareDetail(spare.id),
+            ),
+          ),
+        ),
         SliverToBoxAdapter(
           child: ColoredBox(
             color: AppTheme.backgroundGray,

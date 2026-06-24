@@ -7,6 +7,7 @@ import '../models/schedule.dart';
 import '../services/schedule_service.dart';
 import '../utils/error_handler.dart';
 import '../utils/schedule_cancellation_policy.dart';
+import '../utils/schedule_session_audience.dart';
 import '../widgets/schedule/schedule_cancel_confirm_sheet.dart';
 import '../widgets/schedule/shop_schedule_cancel_reason_sheet.dart';
 import '../widgets/schedule/shop_schedule_penalty_warning_modal.dart';
@@ -17,17 +18,19 @@ abstract final class ScheduleCancelFlow {
 
   static CancellationEligibility _evaluate(
     Schedule schedule,
-    CancellationActor actor,
-  ) {
+    CancellationActor actor, {
+    bool isModelMode = false,
+  }) {
     final shopState = actor == CancellationActor.shop
         ? MockShopData.shopCancellationState()
         : (count: 0, suspendedUntil: null);
+    final audience = ScheduleSessionAudience.fromModelMode(isModelMode);
     return ScheduleCancellationPolicy.evaluate(
       schedule,
       actor: actor,
       shopUnilateralCancelCount30d: shopState.count,
       shopJobPostingSuspendedUntil: shopState.suspendedUntil,
-    );
+    ).forAudience(audience);
   }
 
   /// 취소 성공 시 `true`. 취소·변경 요청 없이 닫으면 `false`.
@@ -35,10 +38,15 @@ abstract final class ScheduleCancelFlow {
     required BuildContext context,
     required Schedule schedule,
     required CancellationActor actor,
+    bool isModelMode = false,
     VoidCallback? onSuccess,
   }) async {
     final messenger = sl<GlobalMessengerService>();
-    final eligibility = _evaluate(schedule, actor);
+    final eligibility = _evaluate(
+      schedule,
+      actor,
+      isModelMode: isModelMode,
+    );
 
     if (!eligibility.canCancelInApp) {
       messenger.showError(
@@ -87,6 +95,7 @@ abstract final class ScheduleCancelFlow {
         actor: actor,
         eligibility: eligibility,
         cancelReason: reasonResult.cancelReason,
+        isModelMode: isModelMode,
         onSuccess: onSuccess,
       );
     }
@@ -96,6 +105,7 @@ abstract final class ScheduleCancelFlow {
       schedule: schedule,
       actor: actor,
       eligibility: eligibility,
+      isModelMode: isModelMode,
       onSuccess: onSuccess,
     );
   }
@@ -134,16 +144,22 @@ abstract final class ScheduleCancelFlow {
     required CancellationActor actor,
     required CancellationEligibility eligibility,
     String? cancelReason,
+    bool isModelMode = false,
     VoidCallback? onSuccess,
   }) async {
     if (!context.mounted) return false;
 
+    final audience = ScheduleSessionAudience.fromModelMode(isModelMode);
+
     final agreed = await ScheduleCancelConfirmSheet.show(
       context: context,
       schedulesToCancel: [schedule],
-      title: actor == CancellationActor.shop ? '스케줄 취소' : '근무 취소 확인',
+      title: actor == CancellationActor.shop
+          ? '스케줄 취소'
+          : audience.cancelConfirmTitle(),
       actor: actor,
       eligibility: eligibility,
+      isModelMode: isModelMode,
     );
     if (!agreed || !context.mounted) return false;
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../screens/admin/admin_audit_logs_screen.dart';
 import '../../screens/admin/admin_checkin_screen.dart';
 import '../../screens/admin/admin_dashboard_screen.dart';
 import '../../screens/admin/admin_energy_screen.dart';
@@ -10,8 +11,22 @@ import '../../screens/admin/admin_jobs_screen.dart';
 import '../../screens/admin/admin_noshow_screen.dart';
 import '../../screens/admin/admin_payment_detail_screen.dart';
 import '../../screens/admin/admin_payments_screen.dart';
+import '../../screens/admin/admin_reports_screen.dart';
+import '../../screens/admin/admin_settings_screen.dart';
 import '../../screens/admin/admin_user_detail_screen.dart';
 import '../../screens/admin/admin_users_screen.dart';
+import '../../screens/admin/admin_verifications_screen.dart';
+import '../../screens/admin/admin_verification_detail_screen.dart';
+import '../../screens/admin/admin_report_detail_screen.dart';
+import '../../screens/admin/admin_matches_screen.dart';
+import '../../screens/admin/admin_spaces_screen.dart';
+import '../../screens/admin/admin_educations_screen.dart';
+import '../../screens/admin/admin_points_screen.dart';
+import '../../screens/admin/admin_subscriptions_screen.dart';
+import '../../screens/admin/admin_sanctions_screen.dart';
+import '../../screens/admin/admin_content_screen.dart';
+import '../../screens/admin/admin_notifications_screen.dart';
+import '../../screens/admin/admin_reference_screen.dart';
 import '../../screens/common/role_select_screen.dart';
 import '../../screens/shop/favorites_screen.dart';
 import '../../screens/shop/home_screen.dart';
@@ -20,27 +35,40 @@ import '../../screens/shop/login_screen.dart';
 import '../../screens/shop/messages_screen.dart';
 import '../../screens/shop/payment_screen.dart';
 import '../../screens/shop/profile_screen.dart';
+import '../../screens/shop/shop_signup_success_screen.dart';
 import '../../screens/shop/signup_screen.dart';
 import '../../screens/spare/favorites_screen.dart';
 import '../../screens/spare/find_id_screen.dart';
 import '../../screens/spare/find_password_screen.dart';
 import '../../screens/spare/home_screen.dart';
+import '../../screens/spare/jobs_list_screen.dart';
 import '../../screens/spare/login_screen.dart';
+import '../../screens/spare/model_match_filter_screen.dart';
 import '../../screens/spare/messages_screen.dart';
 import '../../screens/spare/model_home_screen.dart';
+import '../../screens/spare/model_matching_status_screen.dart';
+import '../../screens/spare/model_profile_screen.dart';
 import '../../screens/spare/notifications_list_screen.dart';
 import '../../screens/spare/payment_screen.dart';
+import '../../screens/spare/points_screen.dart';
 import '../../screens/spare/model_schedule_screen.dart';
 import '../../screens/spare/profile_screen.dart';
 import '../../screens/spare/search_screen.dart';
+import '../../screens/spare/verification_screen.dart';
+import '../../screens/spare/spare_signup_professional_screen.dart';
+import '../../screens/spare/spare_signup_model_screen.dart';
 import '../../screens/spare/spare_signup_type_screen.dart';
 import '../../screens/spare/spare_signup_success_screen.dart';
 import '../di/service_locator.dart' show sl;
 import '../shell/admin_shell.dart';
+import '../shell/lazy_shell_tab.dart';
 import '../shell/main_tab_shell.dart';
 import '../shell/model_tab_shell.dart';
+import '../../utils/jobs_list_sort.dart';
 import 'app_routes.dart';
 import 'auth_redirect.dart';
+import 'shared_leaf_routes.dart';
+import 'shell_sub_routes.dart';
 
 /// 앱 라우팅 (인증 가드 + 스페어/샵 StatefulShellRoute + 관리자 Shell).
 final class AppRouter {
@@ -68,11 +96,27 @@ final class AppRouter {
           path: AppRoutes.spareSignup,
           builder: (BuildContext context, GoRouterState state) =>
               const SpareSignupTypeScreen(),
+          routes: <RouteBase>[
+            GoRoute(
+              path: 'professional',
+              builder: (_, __) => const SpareSignupProfessionalScreen(),
+            ),
+            GoRoute(
+              path: 'model',
+              builder: (_, __) => const SpareSignupModelScreen(),
+            ),
+          ],
         ),
         GoRoute(
           path: AppRoutes.spareSignupSuccess,
           builder: (BuildContext context, GoRouterState state) =>
               const SpareSignupSuccessScreen(),
+          routes: <RouteBase>[
+            GoRoute(
+              path: 'verification',
+              builder: (_, __) => const VerificationScreen(),
+            ),
+          ],
         ),
         GoRoute(
           path: AppRoutes.spareFindId,
@@ -95,6 +139,11 @@ final class AppRouter {
           path: AppRoutes.shopSignup,
           builder: (BuildContext context, GoRouterState state) =>
               const ShopSignupScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.shopSignupSuccess,
+          builder: (BuildContext context, GoRouterState state) =>
+              const ShopSignupSuccessScreen(),
         ),
         GoRoute(
           path: AppRoutes.shopFindPassword,
@@ -133,6 +182,7 @@ final class AppRouter {
                             GoRouterState state,
                           ) =>
                               const MessagesScreen(),
+                          routes: ShellSubRoutes.chatRoomChildRoutes(),
                         ),
                         GoRoute(
                           path: 'search',
@@ -150,6 +200,43 @@ final class AppRouter {
                           ) =>
                               const NotificationsListScreen(),
                         ),
+                        GoRoute(
+                          path: 'jobs',
+                          builder: (
+                            BuildContext context,
+                            GoRouterState state,
+                          ) {
+                            final query = state.uri.queryParameters;
+                            return JobsListScreen(
+                              filter: query['filter'],
+                              searchQuery: query['q'],
+                              initialSortMode: jobsListSortModeFromRouteQuery(
+                                query['sort'],
+                              ),
+                            );
+                          },
+                        ),
+                        GoRoute(
+                          path: 'points',
+                          builder: (
+                            BuildContext context,
+                            GoRouterState state,
+                          ) =>
+                              const PointsScreen(),
+                        ),
+                        GoRoute(
+                          path: 'model_match',
+                          builder: (
+                            BuildContext context,
+                            GoRouterState state,
+                          ) =>
+                              const ModelMatchFilterScreen(),
+                          routes: <RouteBase>[
+                        ...ShellSubRoutes.modelMatchChildRoutes(),
+                        ...SharedLeafRoutes.all(),
+                      ],
+                        ),
+                        ...ShellSubRoutes.spareHomeChildRoutes(),
                       ],
                     ),
                   ],
@@ -162,9 +249,17 @@ final class AppRouter {
                         final isModel =
                             sl<AuthProvider>().currentUser?.isModelAccount ??
                                 false;
-                        if (isModel) return const MessagesScreen();
-                        return const PaymentScreen();
+                        return LazyShellTab(
+                          tabIndex: 1,
+                          child: isModel
+                              ? const MessagesScreen()
+                              : const PaymentScreen(),
+                        );
                       },
+                      routes: <RouteBase>[
+                        ...ShellSubRoutes.chatRoomChildRoutes(),
+                        ...SharedLeafRoutes.all(),
+                      ],
                     ),
                   ],
                 ),
@@ -176,9 +271,14 @@ final class AppRouter {
                         final isModel =
                             sl<AuthProvider>().currentUser?.isModelAccount ??
                                 false;
-                        if (isModel) return const ModelScheduleScreen();
-                        return const FavoritesScreen();
+                        return LazyShellTab(
+                          tabIndex: 2,
+                          child: isModel
+                              ? const ModelScheduleScreen()
+                              : const FavoritesScreen(),
+                        );
                       },
+                      routes: ShellSubRoutes.spareFavoritesChildRoutes(),
                     ),
                   ],
                 ),
@@ -187,7 +287,11 @@ final class AppRouter {
                     GoRoute(
                       path: 'profile',
                       builder: (BuildContext context, GoRouterState state) =>
-                          const ProfileScreen(),
+                          const LazyShellTab(
+                            tabIndex: 3,
+                            child: ProfileScreen(),
+                          ),
+                      routes: ShellSubRoutes.spareProfileChildRoutes(),
                     ),
                   ],
                 ),
@@ -225,6 +329,7 @@ final class AppRouter {
                             GoRouterState state,
                           ) =>
                               const ShopMessagesScreen(),
+                          routes: ShellSubRoutes.chatRoomChildRoutes(),
                         ),
                         GoRoute(
                           path: 'search',
@@ -242,6 +347,7 @@ final class AppRouter {
                           ) =>
                               const NotificationsListScreen(),
                         ),
+                        ...ShellSubRoutes.shopHomeChildRoutes(),
                       ],
                     ),
                   ],
@@ -251,7 +357,11 @@ final class AppRouter {
                     GoRoute(
                       path: 'payment',
                       builder: (BuildContext context, GoRouterState state) =>
-                          const ShopPaymentScreen(),
+                          const LazyShellTab(
+                            tabIndex: 1,
+                            child: ShopPaymentScreen(),
+                          ),
+                      routes: SharedLeafRoutes.all(),
                     ),
                   ],
                 ),
@@ -260,7 +370,11 @@ final class AppRouter {
                     GoRoute(
                       path: 'favorites',
                       builder: (BuildContext context, GoRouterState state) =>
-                          const ShopFavoritesScreen(),
+                          const LazyShellTab(
+                            tabIndex: 2,
+                            child: ShopFavoritesScreen(),
+                          ),
+                      routes: SharedLeafRoutes.all(),
                     ),
                   ],
                 ),
@@ -269,7 +383,11 @@ final class AppRouter {
                     GoRoute(
                       path: 'profile',
                       builder: (BuildContext context, GoRouterState state) =>
-                          const ShopProfileScreen(),
+                          const LazyShellTab(
+                            tabIndex: 3,
+                            child: ShopProfileScreen(),
+                          ),
+                      routes: ShellSubRoutes.shopProfileChildRoutes(),
                     ),
                   ],
                 ),
@@ -299,15 +417,40 @@ final class AppRouter {
                       path: 'home',
                       builder: (BuildContext context, GoRouterState state) =>
                           const ModelHomeScreen(),
+                      routes: <RouteBase>[
+                        GoRoute(
+                          path: 'messages',
+                          builder: (
+                            BuildContext context,
+                            GoRouterState state,
+                          ) =>
+                              const MessagesScreen(),
+                          routes: ShellSubRoutes.chatRoomChildRoutes(),
+                        ),
+                        GoRoute(
+                          path: 'notifications',
+                          builder: (
+                            BuildContext context,
+                            GoRouterState state,
+                          ) =>
+                              const NotificationsListScreen(),
+                        ),
+                        ...ShellSubRoutes.modelHomeChildRoutes(),
+                        ...ShellSubRoutes.matchProfileDetailChildRoutes(),
+                      ],
                     ),
                   ],
                 ),
                 StatefulShellBranch(
                   routes: <RouteBase>[
                     GoRoute(
-                      path: 'messages',
+                      path: 'matching',
                       builder: (BuildContext context, GoRouterState state) =>
-                          const MessagesScreen(),
+                          const LazyShellTab(
+                            tabIndex: 1,
+                            child: ModelMatchingStatusScreen(),
+                          ),
+                      routes: ShellSubRoutes.matchProfileDetailChildRoutes(),
                     ),
                   ],
                 ),
@@ -316,7 +459,10 @@ final class AppRouter {
                     GoRoute(
                       path: 'schedule',
                       builder: (BuildContext context, GoRouterState state) =>
-                          const ModelScheduleScreen(),
+                          const LazyShellTab(
+                            tabIndex: 2,
+                            child: ModelScheduleScreen(),
+                          ),
                     ),
                   ],
                 ),
@@ -325,7 +471,11 @@ final class AppRouter {
                     GoRoute(
                       path: 'profile',
                       builder: (BuildContext context, GoRouterState state) =>
-                          const ProfileScreen(),
+                          const LazyShellTab(
+                            tabIndex: 3,
+                            child: ModelProfileScreen(),
+                          ),
+                      routes: ShellSubRoutes.modelProfileChildRoutes(),
                     ),
                   ],
                 ),
@@ -421,6 +571,101 @@ final class AppRouter {
               path: AppRoutes.adminCheckin,
               builder: (BuildContext context, GoRouterState state) =>
                   const AdminCheckinScreen(),
+            ),
+            GoRoute(
+              path: AppRoutes.adminVerifications,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminVerificationsScreen(),
+              routes: [
+                GoRoute(
+                  path: ':verificationId',
+                  builder: (BuildContext context, GoRouterState state) {
+                    final verificationId = state.pathParameters['verificationId']!;
+                    Map<String, dynamic>? initial;
+                    final extra = state.extra;
+                    if (extra is Map<String, dynamic>) initial = extra;
+                    return AdminVerificationDetailScreen(
+                      verificationId: verificationId,
+                      initialData: initial,
+                    );
+                  },
+                ),
+              ],
+            ),
+            GoRoute(
+              path: AppRoutes.adminReports,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminReportsScreen(),
+              routes: [
+                GoRoute(
+                  path: ':reportId',
+                  builder: (BuildContext context, GoRouterState state) {
+                    final reportId = state.pathParameters['reportId']!;
+                    Map<String, dynamic>? initial;
+                    final extra = state.extra;
+                    if (extra is Map<String, dynamic>) initial = extra;
+                    return AdminReportDetailScreen(
+                      reportId: reportId,
+                      initialData: initial,
+                    );
+                  },
+                ),
+              ],
+            ),
+            GoRoute(
+              path: AppRoutes.adminSettings,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminSettingsScreen(),
+            ),
+            GoRoute(
+              path: AppRoutes.adminAuditLogs,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminAuditLogsScreen(),
+            ),
+            GoRoute(
+              path: AppRoutes.adminMatches,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminMatchesScreen(),
+            ),
+            GoRoute(
+              path: AppRoutes.adminSpaces,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminSpacesScreen(),
+            ),
+            GoRoute(
+              path: AppRoutes.adminEducations,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminEducationsScreen(),
+            ),
+            GoRoute(
+              path: AppRoutes.adminPoints,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminPointsScreen(),
+            ),
+            GoRoute(
+              path: AppRoutes.adminSubscriptions,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminSubscriptionsScreen(),
+            ),
+            GoRoute(
+              path: AppRoutes.adminSanctions,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminSanctionsScreen(),
+            ),
+            GoRoute(
+              path: AppRoutes.adminContent,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminContentScreen(),
+            ),
+            GoRoute(
+              path: AppRoutes.adminNotifications,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminNotificationsScreen(),
+            ),
+            GoRoute(
+              path: AppRoutes.adminReference,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminReferenceScreen(),
             ),
           ],
         ),

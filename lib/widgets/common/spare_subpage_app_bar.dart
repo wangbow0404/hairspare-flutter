@@ -5,6 +5,7 @@ import '../../providers/chat_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/app_bar_navigation.dart';
 import '../../utils/icon_mapper.dart';
+import '../../utils/messaging_audience.dart';
 import '../notification_bell.dart';
 import 'shared_app_bar.dart';
 
@@ -15,6 +16,8 @@ class SpareSubpageAppBar extends StatelessWidget implements PreferredSizeWidget 
     required this.title,
     this.gradientStyle = SpareSubpageAppBarGradientStyle.bluePurple,
     this.showBackButton = true,
+    this.showToolbarActions = true,
+    this.trailingActions,
     this.onBackPressed,
     this.onSearchPressed,
   });
@@ -22,6 +25,9 @@ class SpareSubpageAppBar extends StatelessWidget implements PreferredSizeWidget 
   final String title;
   final SpareSubpageAppBarGradientStyle gradientStyle;
   final bool showBackButton;
+  /// false면 검색·채팅·알림 숨김 — 편집/포트폴리오 등 전환 중 rebuild 부하 감소.
+  final bool showToolbarActions;
+  final List<Widget>? trailingActions;
   final VoidCallback? onBackPressed;
   final VoidCallback? onSearchPressed;
 
@@ -78,70 +84,75 @@ class SpareSubpageAppBar extends StatelessWidget implements PreferredSizeWidget 
           centerTitle: false,
           titleSpacing:
               showBackButton ? 0 : NavigationToolbar.kMiddleSpacing,
-          actions: [
-            IconButton(
-              icon: IconMapper.icon(
-                    'search',
-                    size: 24,
-                    color: AppTheme.textSecondary,
-                  ) ??
-                  const Icon(
-                    Icons.search,
-                    size: 24,
-                    color: AppTheme.textSecondary,
-                  ),
-              onPressed: () {
-                if (onSearchPressed != null) {
-                  onSearchPressed!();
-                } else {
-                  AppBarNavigation.pushSearch(context);
-                }
-              },
-              tooltip: '검색',
-            ),
-            Consumer<ChatProvider>(
-              builder: (context, chatProvider, _) {
-                final unreadCount = chatProvider.totalUnreadCount;
-                return Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.center,
-                  children: [
-                    IconButton(
-                      icon: IconMapper.icon(
-                            'messagecircle',
-                            size: 24,
-                            color: AppTheme.textSecondary,
-                          ) ??
-                          const Icon(
-                            Icons.chat_bubble_outline,
-                            size: 24,
-                            color: AppTheme.textSecondary,
-                          ),
-                      onPressed: () => AppBarNavigation.pushMessages(context),
-                      tooltip: '메시지',
-                    ),
-                    if (unreadCount > 0)
-                      Positioned(
-                        right: 10,
-                        top: 10,
-                        child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.urgentRed,
-                            shape: BoxShape.circle,
-                          ),
+          actions: showToolbarActions
+              ? [
+                  IconButton(
+                    icon: IconMapper.icon(
+                          'search',
+                          size: 24,
+                          color: AppTheme.textSecondary,
+                        ) ??
+                        const Icon(
+                          Icons.search,
+                          size: 24,
+                          color: AppTheme.textSecondary,
                         ),
-                      ),
-                  ],
-                );
-              },
-            ),
-            const Padding(
-              padding: EdgeInsets.only(right: AppTheme.spacing2),
-              child: NotificationBell(role: 'spare'),
-            ),
-          ],
+                    onPressed: () {
+                      if (onSearchPressed != null) {
+                        onSearchPressed!();
+                      } else {
+                        AppBarNavigation.pushSearch(context);
+                      }
+                    },
+                    tooltip: '검색',
+                  ),
+                  Consumer<ChatProvider>(
+                    builder: (context, chatProvider, _) {
+                      final unreadCount = chatProvider.totalUnreadCount;
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        alignment: Alignment.center,
+                        children: [
+                          IconButton(
+                            icon: IconMapper.icon(
+                                  'messagecircle',
+                                  size: 24,
+                                  color: AppTheme.textSecondary,
+                                ) ??
+                                const Icon(
+                                  Icons.chat_bubble_outline,
+                                  size: 24,
+                                  color: AppTheme.textSecondary,
+                                ),
+                            onPressed: () =>
+                                AppBarNavigation.pushMessages(context),
+                            tooltip: '메시지',
+                          ),
+                          if (unreadCount > 0)
+                            Positioned(
+                              right: 10,
+                              top: 10,
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: AppTheme.urgentRed,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: AppTheme.spacing2),
+                    child: NotificationBell(
+                      role: MessagingAudience.resolve(context),
+                    ),
+                  ),
+                ]
+              : trailingActions,
         ),
         Container(
           height: _gradientHeight,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../core/router/app_navigation.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/icon_mapper.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
@@ -99,13 +100,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final canPop = Navigator.canPop(context);
     if (_isLoading) {
       return Scaffold(
         backgroundColor: AppTheme.backgroundGray,
         appBar: SpareSubpageAppBar(
           title: '결제 정보',
-          showBackButton: canPop,
+          onBackPressed: () => AppNavigation.backFromSparePayment(context),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -115,7 +115,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       backgroundColor: AppTheme.backgroundGray,
       appBar: SpareSubpageAppBar(
         title: '결제 정보',
-        showBackButton: canPop,
+        onBackPressed: () => AppNavigation.backFromSparePayment(context),
       ),
       body: SingleChildScrollView(
         padding: AppTheme.spacing(AppTheme.spacing4),

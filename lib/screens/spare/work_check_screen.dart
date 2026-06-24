@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/di/service_locator.dart';
-import '../../core/router/app_routes.dart';
+import '../../core/router/app_navigation.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/deferred_route_body.dart';
 import '../../utils/navigation_helper.dart';
 import '../../view_models/work_check_view_model.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
@@ -55,10 +55,56 @@ class _WorkCheckScreenState extends State<WorkCheckScreen> {
         initialDay: widget.initialDay,
         focusJobId: widget.focusJobId,
         focusScheduleId: widget.focusScheduleId,
+        isModelMode: widget.isModelMode,
       )..loadInitial(),
-      child: _WorkCheckScaffold(
+      child: _WorkCheckDeferredShell(
         searchController: _searchController,
         scrollController: _scrollController,
+        openProposalDetail: widget.openProposalDetail,
+        focusScheduleId: widget.focusScheduleId,
+        focusJobId: widget.focusJobId,
+        isTabRoot: widget.isTabRoot,
+        isModelMode: widget.isModelMode,
+      ),
+    );
+  }
+}
+
+class _WorkCheckDeferredShell extends StatefulWidget {
+  const _WorkCheckDeferredShell({
+    required this.searchController,
+    required this.scrollController,
+    required this.openProposalDetail,
+    this.focusScheduleId,
+    this.focusJobId,
+    this.isTabRoot = false,
+    this.isModelMode = false,
+  });
+
+  final TextEditingController searchController;
+  final ScrollController scrollController;
+  final bool openProposalDetail;
+  final String? focusScheduleId;
+  final String? focusJobId;
+  final bool isTabRoot;
+  final bool isModelMode;
+
+  @override
+  State<_WorkCheckDeferredShell> createState() => _WorkCheckDeferredShellState();
+}
+
+class _WorkCheckDeferredShellState extends State<_WorkCheckDeferredShell>
+    with DeferredRouteBodyMixin {
+  @override
+  Widget build(BuildContext context) {
+    return deferredBody(
+      loading: const Scaffold(
+        backgroundColor: AppTheme.backgroundGray,
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      builder: (context) => _WorkCheckScaffold(
+        searchController: widget.searchController,
+        scrollController: widget.scrollController,
         openProposalDetail: widget.openProposalDetail,
         focusScheduleId: widget.focusScheduleId,
         focusJobId: widget.focusJobId,
@@ -97,11 +143,7 @@ class _WorkCheckScaffoldState extends State<_WorkCheckScaffold> {
   bool _scrolledToScheduleCard = false;
 
   void _handleModelBack(BuildContext context) {
-    if (Navigator.canPop(context)) {
-      Navigator.maybePop(context);
-      return;
-    }
-    context.go(AppRoutes.spareHome);
+    AppNavigation.backFromModelTab(context);
   }
 
   void _scrollToScheduleCardIfNeeded(WorkCheckViewModel vm) {
@@ -160,7 +202,7 @@ class _WorkCheckScaffoldState extends State<_WorkCheckScaffold> {
         appBar: widget.isModelMode
             ? SpareSubpageAppBar(
                 title: '스케줄 관리',
-                showBackButton: true,
+                showToolbarActions: !widget.isTabRoot,
                 onBackPressed: () => _handleModelBack(context),
               )
             : null,
@@ -173,7 +215,7 @@ class _WorkCheckScaffoldState extends State<_WorkCheckScaffold> {
         backgroundColor: AppTheme.backgroundGray,
         appBar: SpareSubpageAppBar(
           title: '스케줄 관리',
-          showBackButton: true,
+          showToolbarActions: !widget.isTabRoot,
           onBackPressed: () => _handleModelBack(context),
         ),
         body: SafeArea(
@@ -199,6 +241,8 @@ class _WorkCheckScaffoldState extends State<_WorkCheckScaffold> {
                   onThumbsUp: () => vm.handleThumbsUp(),
                   onCheckInOnly: () => vm.handleCloseRatingModal(),
                   isSubmitting: vm.reviewSubmitting,
+                  modalTitle: '시술 완료',
+                  prompt: '오늘 시술은 어땠나요?\n디자이너에게 응원을 보내보세요',
                 ),
             ],
           ),

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_app_bar.dart';
 import '../../providers/auth_provider.dart';
-import 'verification_screen.dart';
+import '../../utils/shell_navigation.dart';
 import '../../core/router/app_navigation.dart';
 
 /// Shop 설정 화면
@@ -241,14 +241,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                       Icons.chevron_right,
                       color: AppTheme.textTertiary,
                     ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ShopVerificationScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => ShellNavigation.pushVerification(context),
                   ),
                 ],
               ),

@@ -28,7 +28,7 @@ class NotificationProvider with ChangeNotifier {
     ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
   /// 알림 목록 로드
-  /// [audience] `spare` | `shop` — mock·API 모두 역할에 맞는 알림만 조회.
+  /// [audience] `spare` | `shop` | `model` — mock·API 모두 역할에 맞는 알림만 조회.
   Future<void> loadNotifications({String audience = 'spare'}) async {
     _audience = audience;
     _isLoading = true;

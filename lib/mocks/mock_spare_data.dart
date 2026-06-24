@@ -9,6 +9,7 @@ import '../models/space_rental.dart';
 import '../utils/space_slot_builder.dart';
 import '../services/chat_service.dart';
 import '../services/notification_service.dart';
+import 'mock_model_messaging_data.dart';
 import '../services/payment_service.dart';
 import '../services/review_service.dart';
 import '../models/challenge_feed.dart';
@@ -29,6 +30,9 @@ import 'mock_shop_data.dart';
 
 /// 스페어·미용실(공고 목록) Mock 데이터
 class MockSpareData {
+  static String _mockImage(String key) => 'mock://$key';
+
+  static String _mockJobImage(String jobId) => _mockImage('job/$jobId');
   static String _ymd(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
@@ -41,7 +45,7 @@ class MockSpareData {
 
   static Map<String, dynamic> _overlapDemoJobJson(String dateYmd) => {
         'id': overlapDemoJobId,
-        'images': ['https://picsum.photos/seed/hairspare-overlap-demo/400/300'],
+        'images': [_mockJobImage(overlapDemoJobId)],
         'title': '[겹침테스트] 저녁 스텝 모집',
         'shopName': '홍대 트렌디 헤어',
         'date': dateYmd,
@@ -122,7 +126,7 @@ class MockSpareData {
   static final List<Map<String, dynamic>> _jobsJson = [
     {
       'id': 'job-mock-1',
-      'images': ['https://picsum.photos/seed/hairspare-job1/400/300'],
+      'images': [_mockJobImage('job-mock-1')],
       'title': '오후 스텝 급구',
       'shopName': '빌라드블랑 강남점',
       'date': '2026-06-01',
@@ -139,7 +143,7 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-2',
-      'images': ['https://picsum.photos/seed/hairspare-job2/400/300'],
+      'images': [_mockJobImage('job-mock-2')],
       'title': '주말 디자이너 대타',
       'shopName': '헤어스튜디오 A',
       'date': '2026-06-02',
@@ -156,7 +160,7 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-3',
-      'images': ['https://picsum.photos/seed/hairspare-job3/400/300'],
+      'images': [_mockJobImage('job-mock-3')],
       'title': '평일 오전 스텝 (초보 가능)',
       'shopName': '이미용실',
       'date': '2026-06-03',
@@ -173,7 +177,7 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-4',
-      'images': ['https://picsum.photos/seed/hairspare-job4/400/300'],
+      'images': [_mockJobImage('job-mock-4')],
       'title': '금요 야간 디자이너',
       'shopName': '이미용실',
       'date': '2026-06-04',
@@ -190,7 +194,7 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-5',
-      'images': ['https://picsum.photos/seed/hairspare-job5/400/300'],
+      'images': [_mockJobImage('job-mock-5')],
       'title': '토요일 샴푸담당 스텝',
       'shopName': '이미용실',
       'date': '2026-06-07',
@@ -207,7 +211,7 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-6',
-      'images': ['https://picsum.photos/seed/hairspare-job6/400/300'],
+      'images': [_mockJobImage('job-mock-6')],
       'title': '[급구] 내일 오전 컷 모델',
       'shopName': '빌라드블랑 강남점',
       'date': '2026-06-08',
@@ -224,7 +228,7 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-7',
-      'images': ['https://picsum.photos/seed/hairspare-job7/400/300'],
+      'images': [_mockJobImage('job-mock-7')],
       'title': '일요일 휴무 대체 디자이너',
       'shopName': '헤어살롱 B',
       'date': '2026-06-09',
@@ -241,7 +245,7 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-8',
-      'images': ['https://picsum.photos/seed/hairspare-job8/400/300'],
+      'images': [_mockJobImage('job-mock-8')],
       'title': '드라이·스타일링 보조',
       'shopName': '이미용실',
       'date': '2026-06-10',
@@ -258,7 +262,7 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-9',
-      'images': ['https://picsum.photos/seed/hairspare-job9/400/300'],
+      'images': [_mockJobImage('job-mock-9')],
       'title': '(임시저장) 봄 시즌 이벤트 스텝',
       'shopName': '이미용실',
       'date': '2026-06-15',
@@ -275,7 +279,7 @@ class MockSpareData {
     },
     {
       'id': 'job-mock-10',
-      'images': ['https://picsum.photos/seed/hairspare-job10/400/300'],
+      'images': [_mockJobImage('job-mock-10')],
       'title': '저녁 타임 스텝 (월수금)',
       'shopName': '이미용실',
       'date': '2026-06-11',
@@ -915,7 +919,99 @@ class MockSpareData {
         .where((s) => s.status != 'cancelled')
         .toList();
 
-    if (ownerId == 'me') {
+    if (ownerId == 'model') {
+      final modelJobs = [
+        {
+          'id': 'job-model-treatment-1',
+          'title': '전체염색 모델',
+          'shopName': '빌라드블랑 강남점',
+          'date': todayStr,
+          'time': '14:00',
+          'endTime': '18:00',
+          'amount': 0,
+          'energy': 0,
+          'requiredCount': 1,
+          'regionId': 'seoul-gangnam',
+          'status': 'published',
+          'createdAt': DateTime.now().toIso8601String(),
+        },
+        {
+          'id': 'job-model-treatment-2',
+          'title': '레이어드 컷 모델',
+          'shopName': '빌라드블랑 홍대점',
+          'date': tomorrowStr,
+          'time': '11:00',
+          'endTime': '15:00',
+          'amount': 0,
+          'energy': 0,
+          'requiredCount': 1,
+          'regionId': 'seoul-mapo',
+          'status': 'published',
+          'createdAt': DateTime.now().toIso8601String(),
+        },
+      ];
+      list = [
+        Schedule.fromJson({
+          'id': 'sched-model-1',
+          'jobId': 'job-model-treatment-1',
+          'spareId': 'mock-model-dev',
+          'shopId': 'mock-shop-1',
+          'date': todayStr,
+          'startTime': '14:00',
+          'endTime': '18:00',
+          'status': 'scheduled',
+          'createdAt': DateTime.now().toIso8601String(),
+          'updatedAt': DateTime.now().toIso8601String(),
+          'job': modelJobs[0],
+          'spare': {'id': 'mock-model-dev', 'name': '모델테스트'},
+        }),
+        Schedule.fromJson({
+          'id': 'sched-model-2',
+          'jobId': 'job-model-treatment-2',
+          'spareId': 'mock-model-dev',
+          'shopId': 'mock-shop-1',
+          'date': tomorrowStr,
+          'startTime': '11:00',
+          'endTime': '15:00',
+          'status': 'scheduled',
+          'createdAt': DateTime.now().toIso8601String(),
+          'updatedAt': DateTime.now().toIso8601String(),
+          'job': modelJobs[1],
+          'spare': {'id': 'mock-model-dev', 'name': '모델테스트'},
+        }),
+        Schedule.fromJson({
+          'id': 'sched-model-3',
+          'jobId': 'job-model-treatment-1',
+          'spareId': 'mock-model-dev',
+          'shopId': 'mock-shop-1',
+          'date': plus2Str,
+          'startTime': '14:00',
+          'endTime': '18:00',
+          'status': 'scheduled',
+          'createdAt': DateTime.now().toIso8601String(),
+          'updatedAt': DateTime.now().toIso8601String(),
+          'job': modelJobs[0],
+          'spare': {'id': 'mock-model-dev', 'name': '모델테스트'},
+        }),
+        Schedule.fromJson({
+          'id': 'sched-model-completed',
+          'jobId': 'job-model-treatment-2',
+          'spareId': 'mock-model-dev',
+          'shopId': 'mock-shop-1',
+          'date': pastStr,
+          'startTime': '13:00',
+          'endTime': '17:00',
+          'status': 'completed',
+          'checkInTime': DateTime.now()
+              .subtract(const Duration(days: 5, hours: 2))
+              .toIso8601String(),
+          'createdAt': DateTime.now().toIso8601String(),
+          'updatedAt': DateTime.now().toIso8601String(),
+          'job': modelJobs[1],
+          'spare': {'id': 'mock-model-dev', 'name': '모델테스트'},
+        }),
+      ];
+    } else if (ownerId == 'me') {
       list = list
           .where(
             (s) =>
@@ -957,12 +1053,20 @@ class MockSpareData {
   /// 알림 확인(탭) — 자세히 보기 목록에는 읽음으로 유지.
   static Future<void> markNotificationRead(String notificationId) async {
     await Future.delayed(const Duration(milliseconds: 80));
+    if (notificationId.startsWith('notif-model-')) {
+      await MockModelMessagingData.markNotificationRead(notificationId);
+      return;
+    }
     _readNotificationIds.add(notificationId);
   }
 
   /// 알림 삭제·벨에서 완전 제거.
   static Future<void> dismissNotification(String notificationId) async {
     await Future.delayed(const Duration(milliseconds: 80));
+    if (notificationId.startsWith('notif-model-')) {
+      await MockModelMessagingData.dismissNotification(notificationId);
+      return;
+    }
     _dismissedNotificationIds.add(notificationId);
   }
 
@@ -1047,6 +1151,11 @@ class MockSpareData {
           (n) => n.copyWith(isRead: _notificationIsRead(n)),
         )
         .toList();
+  }
+
+  /// 모델 홈·알림 벨용 — 매칭·예약·메시지 알림.
+  static Future<List<AppNotification>> getModelNotifications() async {
+    return MockModelMessagingData.getNotifications();
   }
 
   static final List<Map<String, dynamic>> _chatsJson = [
@@ -1205,7 +1314,30 @@ class MockSpareData {
     }
   }
 
+  static String? findChatIdByShopId(String? shopId) {
+    if (shopId == null || shopId.isEmpty) return null;
+    for (final chat in _chatsJson) {
+      if (chat['shopId']?.toString() == shopId) {
+        return chat['id']?.toString();
+      }
+    }
+    return null;
+  }
+
+  static String? findChatIdBySpareId(String? spareId) {
+    if (spareId == null || spareId.isEmpty) return null;
+    for (final chat in _chatsJson) {
+      if (chat['spareId']?.toString() == spareId) {
+        return chat['id']?.toString();
+      }
+    }
+    return null;
+  }
+
   static Future<List<Chat>> getChats({String viewerRole = 'spare'}) async {
+    if (viewerRole == 'model') {
+      return MockModelMessagingData.getChats(viewerRole: viewerRole);
+    }
     await Future.delayed(const Duration(milliseconds: 300));
     _ensureChatReadState();
     _syncAllChatUnreadCounts(viewerRole);
@@ -1219,6 +1351,12 @@ class MockSpareData {
     String chatId, {
     String viewerRole = 'spare',
   }) async {
+    if (viewerRole == 'model' || MockModelMessagingData.isModelChatId(chatId)) {
+      return MockModelMessagingData.markChatAsRead(
+        chatId,
+        viewerRole: 'model',
+      );
+    }
     await Future.delayed(const Duration(milliseconds: 80));
     _ensureChatReadState();
     final messages = _chatMessages[chatId];
@@ -1240,6 +1378,15 @@ class MockSpareData {
     String? senderName,
     String? senderRole,
   }) async {
+    if (MockModelMessagingData.isModelChatId(chatId)) {
+      return MockModelMessagingData.sendMessage(
+        chatId,
+        content,
+        senderId: senderId,
+        senderName: senderName,
+        senderRole: senderRole,
+      );
+    }
     await Future.delayed(const Duration(milliseconds: 150));
     final now = DateTime.now();
     final chatIndex = _chatsJson.indexWhere((c) => c['id'] == chatId);
@@ -1296,6 +1443,9 @@ class MockSpareData {
   }
 
   static Future<void> deleteChat(String chatId) async {
+    if (MockModelMessagingData.isModelChatId(chatId)) {
+      return MockModelMessagingData.deleteChat(chatId);
+    }
     await Future.delayed(const Duration(milliseconds: 100));
     _chatsJson.removeWhere((c) => c['id'] == chatId);
     _chatMessages.remove(chatId);
@@ -2264,6 +2414,9 @@ class MockSpareData {
   };
 
   static Future<ChatWithMessages> getChatById(String chatId) async {
+    if (MockModelMessagingData.isModelChatId(chatId)) {
+      return MockModelMessagingData.getChatById(chatId);
+    }
     await Future.delayed(const Duration(milliseconds: 200));
     _ensureChatReadState();
     final chatData = Map<String, dynamic>.from(
@@ -2420,7 +2573,7 @@ class MockSpareData {
         startTime: tomorrow.add(const Duration(days: 2)),
         endTime: tomorrow.add(const Duration(days: 2, hours: 2)),
         totalPrice: 60000,
-        status: BookingStatus.confirmed,
+        status: BookingStatus.pending,
         createdAt: now.subtract(const Duration(hours: 5)),
         spaceRental: SpaceRental.fromJson(
           Map<String, dynamic>.from(space),
@@ -2428,8 +2581,7 @@ class MockSpareData {
       ),
     ]);
     _pushShopSpaceBookingNotification(_shopSpaceBookings.first);
-    addScheduleFromConfirmedSpaceBooking(_shopSpaceBookings[1]);
-    ensureChatForSpaceBooking(_shopSpaceBookings[1]);
+    _pushShopSpaceBookingNotification(_shopSpaceBookings[1]);
   }
 
   static List<Map<String, dynamic>> _resolvedShopSpaceMaps() {
@@ -2739,7 +2891,7 @@ class MockSpareData {
         'availableSlots': _makeSlots(now, defaultSchedule, applyMockUnavailable: true),
         'pricePerHour': 30000,
         'facilities': ['의자', '세트', '샴푸대', '드라이어'],
-        'imageUrls': ['https://picsum.photos/id/100/400/280'],
+        'imageUrls': [_mockImage('space/space-mock-1')],
         'status': 'available',
         'description':
             '쾌적한 미용 공간을 시간 단위로 대여합니다. 자연광이 잘 드는 넓은 공간으로 촬영 및 실습에 최적화되어 있습니다.',
@@ -2781,6 +2933,35 @@ class MockSpareData {
         'minHours': 2,
       },
       {
+        'id': 'space-shop-mock-2',
+        'shopId': 'mock-shop-1',
+        'shopName': '청담 하이엔드 살롱 (공간)',
+        'address': '서울 강남구 청담동 88-12',
+        'detailAddress': '2층',
+        'regionId': 'seoul-gangnam',
+        'regionName': '강남구',
+        'operatingSchedule': weekdayWeekendSchedule.toJson(),
+        'availableSlots': _makeSlots(now, weekdayWeekendSchedule),
+        'pricePerHour': 45000,
+        'facilities': ['의자', '세트'],
+        'imageUrls': [
+          'https://picsum.photos/seed/hairspare-space-shop-2/400/400',
+        ],
+        'status': 'available',
+        'description': '청담 고급 살롱 공간. 미니멀 인테리어와 자연광이 특징입니다.',
+        'createdAt': now.toIso8601String(),
+        'updatedAt': now.toIso8601String(),
+        'contactPhone': '02-5678-9012',
+        'subwayInfo': '압구정로데오역 5번 출구 도보 8분',
+        'isPremium': false,
+        'isHidden': true,
+        'usageNotes': '• 최소 2시간 단위 예약',
+        'averageRating': 4.5,
+        'reviewCount': 0,
+        'reviews': <Map<String, dynamic>>[],
+        'minHours': 2,
+      },
+      {
         'id': 'space-mock-2',
         'shopId': 'shop-2',
         'shopName': '헤어스튜디오 A',
@@ -2791,7 +2972,7 @@ class MockSpareData {
         'availableSlots': _makeSlots(now, weekdayWeekendSchedule),
         'pricePerHour': 25000,
         'facilities': ['의자', '세트'],
-        'imageUrls': ['https://picsum.photos/id/200/400/280'],
+        'imageUrls': [_mockImage('space/space-mock-2')],
         'status': 'available',
         'description': '홍대 인근 스튜디오 대여. 트렌디한 분위기의 작업 공간입니다.',
         'createdAt': now.toIso8601String(),
@@ -2833,7 +3014,7 @@ class MockSpareData {
         'availableSlots': _makeSlots(now, defaultSchedule),
         'pricePerHour': 35000,
         'facilities': ['의자', '세트', '샴푸대', '드라이어', '촬영조명'],
-        'imageUrls': ['https://picsum.photos/id/300/400/280'],
+        'imageUrls': [_mockImage('space/space-mock-3')],
         'status': 'available',
         'description': '촬영용 조명이 갖춰진 전문 스튜디오. 광고 촬영에 최적화된 환경을 제공합니다.',
         'createdAt': now.toIso8601String(),

@@ -7,9 +7,10 @@ import '../../utils/icon_mapper.dart';
 import '../../widgets/education_filter_dropdown.dart';
 import '../../widgets/date_filter_button.dart';
 import '../../utils/region_helper.dart';
-import '../../models/region.dart';
 import '../../models/education_material.dart';
-import 'education_detail_screen.dart';
+import '../../utils/deferred_route_body.dart';
+import '../../utils/shell_navigation.dart';
+import '../../models/region.dart';
 
 /// Next.js와 동일한 교육 화면 (복잡한 필터링 시스템)
 class EducationScreen extends StatefulWidget {
@@ -19,7 +20,8 @@ class EducationScreen extends StatefulWidget {
   State<EducationScreen> createState() => _EducationScreenState();
 }
 
-class _EducationScreenState extends State<EducationScreen> {
+class _EducationScreenState extends State<EducationScreen>
+    with DeferredRouteBodyMixin {
   List<Education> _educations = [];
   List<Education> _filteredEducations = [];
   bool _isLoading = true;
@@ -98,7 +100,31 @@ class _EducationScreenState extends State<EducationScreen> {
   @override
   void initState() {
     super.initState();
-    _loadEducations();
+    _scheduleDataLoad();
+  }
+
+  void _scheduleDataLoad() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final animation = ModalRoute.of(context)?.animation;
+      void run() {
+        if (!mounted) return;
+        _loadEducations();
+      }
+
+      if (animation != null && !animation.isCompleted) {
+        late AnimationStatusListener listener;
+        listener = (status) {
+          if (status == AnimationStatus.completed) {
+            animation.removeStatusListener(listener);
+            Future<void>.delayed(const Duration(milliseconds: 150), run);
+          }
+        };
+        animation.addStatusListener(listener);
+      } else {
+        Future<void>.delayed(const Duration(milliseconds: 450), run);
+      }
+    });
   }
 
   Future<void> _loadEducations() async {
@@ -369,7 +395,9 @@ class _EducationScreenState extends State<EducationScreen> {
         title: '교육',
         actions: buildSpareSubpageAppBarActions(context),
       ),
-      body: Column(
+      body: deferredBody(
+        loading: const Center(child: CircularProgressIndicator()),
+        builder: (context) => Column(
         children: [
           // 필터 섹션
           Container(
@@ -517,6 +545,7 @@ class _EducationScreenState extends State<EducationScreen> {
                   ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -844,11 +873,8 @@ class _EducationScreenState extends State<EducationScreen> {
   Widget _buildEducationCard(Education education) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => EducationDetailScreen(education: education),
-          ),
+        deferAfterTap(
+          () => ShellNavigation.pushEducationDetail(context, education),
         );
       },
       child: Container(

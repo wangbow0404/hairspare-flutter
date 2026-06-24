@@ -56,7 +56,6 @@ class AdminPageHeader extends StatelessWidget {
             const SizedBox(width: AppTheme.spacing2),
             Flexible(
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   if (showLiveBadge) ...[
@@ -69,16 +68,14 @@ class AdminPageHeader extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                     ),
-                    const Flexible(
-                      child: Text(
-                        '실시간 업데이트 중',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppTheme.textTertiary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
+                    const Text(
+                      '실시간 업데이트 중',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.textTertiary,
                       ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                     const SizedBox(width: AppTheme.spacing2),
                   ],

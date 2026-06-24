@@ -4,6 +4,7 @@ import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
 import '../mocks/mock_shop_data.dart';
+import '../services/portfolio_service.dart';
 import '../core/di/service_locator.dart';
 
 class SpareService {
@@ -14,13 +15,18 @@ class SpareService {
     List<String>? regionIds,
     String? role,
     bool? isVerified,
-    bool? isLicenseVerified,
     String? sortBy, // "popular" | "newest" | "experience" | "completed"
     String? searchQuery,
     int? limit,
     int? offset,
   }) async {
-    if (ApiConfig.useMockData) return await MockShopData.getSpares();
+    if (ApiConfig.useMockData) {
+      return await MockShopData.getSpares(
+        sortBy: sortBy,
+        limit: limit,
+        regionIds: regionIds,
+      );
+    }
     try {
       final queryParams = <String, dynamic>{};
       if (regionIds != null && regionIds.isNotEmpty) {
@@ -31,9 +37,6 @@ class SpareService {
       }
       if (isVerified != null) {
         queryParams['isVerified'] = isVerified;
-      }
-      if (isLicenseVerified != null) {
-        queryParams['isLicenseVerified'] = isLicenseVerified;
       }
       if (sortBy != null) {
         queryParams['sortBy'] = sortBy;
@@ -107,7 +110,14 @@ class SpareService {
 
   /// 스페어 상세 조회
   Future<SpareProfile> getSpareById(String spareId) async {
-    if (ApiConfig.useMockData) return await MockShopData.getSpareById(spareId);
+    if (ApiConfig.useMockData) {
+      final spare = await MockShopData.getSpareById(spareId);
+      final portfolio = await sl<PortfolioService>().imagesForSpareProfile(spareId);
+      if (portfolio.isEmpty) return spare;
+      final map = Map<String, dynamic>.from(spare.toJson());
+      map['images'] = portfolio;
+      return SpareProfile.fromJson(map);
+    }
     try {
       final response = await _dio.get('/api/spares/$spareId');
 

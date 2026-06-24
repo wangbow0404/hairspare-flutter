@@ -77,6 +77,30 @@ class MockAuthData {
   static Map<String, dynamic>? get registeredProfilePayload =>
       _registeredProfilePayload;
 
+  static Map<String, dynamic>? _registeredShopProfilePayload;
+
+  static User registerShopUser({
+    required String username,
+    String? name,
+    String? email,
+    String? phone,
+    Map<String, dynamic>? profilePayload,
+  }) {
+    _registeredShopProfilePayload = profilePayload;
+    return User.fromJson({
+      'id': 'mock-shop-new',
+      'username': username,
+      'email': email ?? 'shop@salon.co.kr',
+      'name': name ?? '새 미용실',
+      'phone': phone ?? '010-1234-5678',
+      'role': 'shop',
+      'createdAt': DateTime.now().toIso8601String(),
+    });
+  }
+
+  static Map<String, dynamic>? get registeredShopProfilePayload =>
+      _registeredShopProfilePayload;
+
   static User shopUser() {
     return User.fromJson({
       'id': 'mock-shop-1',

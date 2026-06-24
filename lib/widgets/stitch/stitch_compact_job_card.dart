@@ -17,6 +17,7 @@ class StitchCompactJobCard extends StatelessWidget {
     this.onTap,
     this.onFavoriteToggle,
     this.width = 240,
+    this.height,
     this.showThumbnail = false,
     this.badgeLabel = '급구',
     this.badgeColor = AppTheme.urgentRed,
@@ -27,6 +28,9 @@ class StitchCompactJobCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onFavoriteToggle;
   final double width;
+
+  /// 가로 캐러셀 등 부모 높이에 맞출 때 지정.
+  final double? height;
 
   /// 상단 16:9 사진 노출 여부.
   final bool showThumbnail;
@@ -67,12 +71,13 @@ class StitchCompactJobCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: width,
+      height: height,
       child: Material(
         color: AppTheme.backgroundWhite,
         borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+        clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(AppTheme.radiusXl),
           child: Ink(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppTheme.radiusXl),
@@ -81,12 +86,18 @@ class StitchCompactJobCard extends StatelessWidget {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.max,
               children: [
                 if (showThumbnail) _buildThumbnailHeader(),
-                Padding(
-                  padding: const EdgeInsets.all(AppTheme.spacing4),
-                  child: showThumbnail ? _buildBody() : _buildBodyWithStack(),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.all(
+                      showThumbnail ? AppTheme.spacing4 : AppTheme.spacing3,
+                    ),
+                    child: showThumbnail
+                        ? _buildBody()
+                        : _buildBodyWithStack(),
+                  ),
                 ),
               ],
             ),
@@ -143,8 +154,8 @@ class StitchCompactJobCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _Badge(label: badgeLabel, color: badgeColor),
-            const SizedBox(height: AppTheme.spacing3),
-            ..._buildInfo(),
+            const SizedBox(height: AppTheme.spacing2),
+            ..._buildInfo(compact: true),
           ],
         ),
       ],
@@ -154,35 +165,40 @@ class StitchCompactJobCard extends StatelessWidget {
   Widget _buildBody() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: _buildInfo(),
+      children: _buildInfo(compact: false),
     );
   }
 
-  List<Widget> _buildInfo() {
+  List<Widget> _buildInfo({required bool compact}) {
+    final gapBeforeDivider =
+        compact ? AppTheme.spacing2 : AppTheme.spacing4;
+    final gapAfterDivider =
+        compact ? AppTheme.spacing2 : AppTheme.spacing3;
+
     return [
       Text(
         job.shopName,
-        style: const TextStyle(
-          fontSize: 16,
+        style: TextStyle(
+          fontSize: compact ? 15 : 16,
           fontWeight: FontWeight.w700,
           color: AppTheme.stitchTextPrimary,
         ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      const SizedBox(height: AppTheme.spacing1),
+      SizedBox(height: compact ? 2 : AppTheme.spacing1),
       Text(
         _formatScheduleLine(job),
         style: const TextStyle(
-          fontSize: 14,
+          fontSize: 13,
           color: AppTheme.stitchTextSecondary,
         ),
-        maxLines: 2,
+        maxLines: compact ? 1 : 2,
         overflow: TextOverflow.ellipsis,
       ),
-      const SizedBox(height: AppTheme.spacing4),
+      SizedBox(height: gapBeforeDivider),
       const Divider(height: 1, color: AppTheme.borderGray),
-      const SizedBox(height: AppTheme.spacing3),
+      SizedBox(height: gapAfterDivider),
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -196,8 +212,8 @@ class StitchCompactJobCard extends StatelessWidget {
           ),
           Text(
             _formatPay(job.amount),
-            style: const TextStyle(
-              fontSize: 18,
+            style: TextStyle(
+              fontSize: compact ? 16 : 18,
               fontWeight: FontWeight.w600,
               color: AppTheme.stitchTextPrimary,
             ),

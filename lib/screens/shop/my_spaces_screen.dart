@@ -3,13 +3,12 @@ import 'package:flutter/material.dart';
 import '../../models/space_rental.dart';
 import '../../services/space_rental_service.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/deferred_route_body.dart';
 import '../../utils/error_handler.dart';
-import '../../utils/icon_mapper.dart';
-import '../../widgets/common/shared_app_bar.dart';
-import '../../widgets/shop_my_spaces/shop_my_space_card.dart';
-import 'space_bookings_screen.dart';
-import 'space_edit_screen.dart';
-import 'space_new_screen.dart';
+import '../../utils/shell_navigation.dart';
+import '../../widgets/common/spare_subpage_app_bar.dart';
+import '../../widgets/shop_my_spaces/shop_my_spaces_filter_bar.dart';
+import '../../widgets/stitch/stitch_list_space_card.dart';
 
 /// Shop 공간관리 화면
 class ShopMySpacesScreen extends StatefulWidget {
@@ -19,13 +18,18 @@ class ShopMySpacesScreen extends StatefulWidget {
   State<ShopMySpacesScreen> createState() => _ShopMySpacesScreenState();
 }
 
-class _ShopMySpacesScreenState extends State<ShopMySpacesScreen> {
+class _ShopMySpacesScreenState extends State<ShopMySpacesScreen>
+    with DeferredRouteBodyMixin {
   final SpaceRentalService _spaceRentalService = SpaceRentalService();
   List<SpaceRental> _spaces = [];
+  Map<String, int> _pendingBookingCounts = {};
   bool _isLoading = true;
   String? _error;
   ShopMySpacesFilter _filter = ShopMySpacesFilter.all;
-  final Map<String, bool> _statusUpdating = {};
+  final Map<String, bool> _visibilityUpdating = {};
+
+  int get _visibleCount => _spaces.where((s) => !s.isHidden).length;
+  int get _hiddenCount => _spaces.where((s) => s.isHidden).length;
 
   List<SpaceRental> get _filteredSpaces {
     return switch (_filter) {
@@ -48,10 +52,26 @@ class _ShopMySpacesScreenState extends State<ShopMySpacesScreen> {
     });
 
     try {
-      final spaces = await _spaceRentalService.getMySpaceRentals();
+      final results = await Future.wait([
+        _spaceRentalService.getMySpaceRentals(),
+        _spaceRentalService.getSpaceBookings(status: BookingStatus.pending),
+      ]);
       if (!mounted) return;
+
+      final spaces = results[0] as List<SpaceRental>;
+      final pendingBookings = results[1] as List<SpaceBooking>;
+      final pendingBySpace = <String, int>{};
+      for (final booking in pendingBookings) {
+        pendingBySpace.update(
+          booking.spaceRentalId,
+          (count) => count + 1,
+          ifAbsent: () => 1,
+        );
+      }
+
       setState(() {
         _spaces = spaces;
+        _pendingBookingCounts = pendingBySpace;
         _isLoading = false;
       });
     } catch (e) {
@@ -66,26 +86,19 @@ class _ShopMySpacesScreenState extends State<ShopMySpacesScreen> {
     }
   }
 
-  Future<void> _toggleSpaceStatus(SpaceRental space) async {
-    final newStatus = space.status == SpaceStatus.available
-        ? SpaceStatus.unavailable
-        : SpaceStatus.available;
-
-    setState(() => _statusUpdating[space.id] = true);
+  Future<void> _toggleVisibility(SpaceRental space, bool visible) async {
+    setState(() => _visibilityUpdating[space.id] = true);
 
     try {
-      await _spaceRentalService.updateSpaceRental(
-        spaceId: space.id,
-        status: newStatus,
-      );
+      if (visible) {
+        await _spaceRentalService.unhideSpaceRental(space.id);
+      } else {
+        await _spaceRentalService.hideSpaceRental(space.id);
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            newStatus == SpaceStatus.available
-                ? '예약 받기가 켜졌습니다'
-                : '예약 받기가 꺼졌습니다',
-          ),
+          content: Text(visible ? '공간이 노출됩니다' : '공간이 숨김 처리되었습니다'),
           backgroundColor: AppTheme.primaryGreen,
         ),
       );
@@ -104,7 +117,7 @@ class _ShopMySpacesScreenState extends State<ShopMySpacesScreen> {
       );
     } finally {
       if (mounted) {
-        setState(() => _statusUpdating[space.id] = false);
+        setState(() => _visibilityUpdating[space.id] = false);
       }
     }
   }
@@ -131,75 +144,11 @@ class _ShopMySpacesScreenState extends State<ShopMySpacesScreen> {
       ),
     );
     if (ok != true || !mounted) return;
-
-    try {
-      await _spaceRentalService.hideSpaceRental(space.id);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('공간이 숨김 처리되었습니다'),
-          backgroundColor: AppTheme.primaryGreen,
-        ),
-      );
-      await _loadSpaces();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ErrorHandler.getUserFriendlyMessage(
-              ErrorHandler.handleException(e),
-            ),
-          ),
-          backgroundColor: AppTheme.urgentRed,
-        ),
-      );
-    }
+    await _toggleVisibility(space, false);
   }
 
   Future<void> _confirmUnhide(SpaceRental space) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('숨김 해제'),
-        content: const Text('다시 스페어에게 공간이 노출됩니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('해제'),
-          ),
-        ],
-      ),
-    );
-    if (ok != true || !mounted) return;
-
-    try {
-      await _spaceRentalService.unhideSpaceRental(space.id);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('숨김이 해제되었습니다'),
-          backgroundColor: AppTheme.primaryGreen,
-        ),
-      );
-      await _loadSpaces();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ErrorHandler.getUserFriendlyMessage(
-              ErrorHandler.handleException(e),
-            ),
-          ),
-          backgroundColor: AppTheme.urgentRed,
-        ),
-      );
-    }
+    await _toggleVisibility(space, true);
   }
 
   Future<void> _deleteSpace(String spaceId) async {
@@ -250,110 +199,110 @@ class _ShopMySpacesScreenState extends State<ShopMySpacesScreen> {
   }
 
   Future<void> _openNewSpace() async {
-    final result = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(builder: (context) => const ShopSpaceNewScreen()),
-    );
+    final result = await ShellNavigation.pushShopSpaceNew(context);
     if (result == true) await _loadSpaces();
   }
 
   @override
   Widget build(BuildContext context) {
+    const fabBottomPadding = AppTheme.spacing4;
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: SharedAppBar(
+      appBar: SpareSubpageAppBar(
         title: '공간관리',
-        actions: [
-          IconButton(
-            icon: IconMapper.icon('plus', size: 24, color: AppTheme.primaryPurple) ??
-                const Icon(Icons.add, color: AppTheme.primaryPurple),
-            onPressed: _openNewSpace,
-            tooltip: '공간 등록',
-          ),
-        ],
+        showBackButton: Navigator.canPop(context),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? _ShopMySpacesErrorState(
-                  message: _error!,
-                  onRetry: _loadSpaces,
-                )
-              : _spaces.isEmpty
-                  ? _ShopMySpacesEmptyState(onAdd: _openNewSpace)
-                  : RefreshIndicator(
-                      onRefresh: _loadSpaces,
-                      child: CustomScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        slivers: [
-                          SliverToBoxAdapter(
-                            child: ShopMySpacesHeroBanner(spaceCount: _spaces.length),
+      floatingActionButton: _spaces.isEmpty
+          ? null
+          : Padding(
+              padding: const EdgeInsets.only(bottom: fabBottomPadding),
+              child: FloatingActionButton(
+                onPressed: _openNewSpace,
+                backgroundColor: AppTheme.stitchPrimaryContainer,
+                foregroundColor: Colors.white,
+                elevation: 4,
+                child: const Icon(Icons.add, size: 28),
+              ),
+            ),
+      body: deferredBody(
+        loading: const Center(child: CircularProgressIndicator()),
+        builder: (context) => _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+                ? _ShopMySpacesErrorState(
+                    message: _error!,
+                    onRetry: _loadSpaces,
+                  )
+                : _spaces.isEmpty
+                    ? _ShopMySpacesEmptyState(onAdd: _openNewSpace)
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          ShopMySpacesFilterBar(
+                            selected: _filter,
+                            totalCount: _spaces.length,
+                            visibleCount: _visibleCount,
+                            hiddenCount: _hiddenCount,
+                            onChanged: (f) => setState(() => _filter = f),
                           ),
-                          SliverToBoxAdapter(
-                            child: ShopMySpacesFilterBar(
-                              selected: _filter,
-                              onChanged: (f) => setState(() => _filter = f),
-                            ),
-                          ),
-                          if (_filteredSpaces.isEmpty)
-                            const SliverFillRemaining(
-                              hasScrollBody: false,
-                              child: _ShopMySpacesFilterEmptyState(),
-                            )
-                          else
-                            SliverPadding(
-                              padding: const EdgeInsets.fromLTRB(
-                                AppTheme.spacing4,
-                                0,
-                                AppTheme.spacing4,
-                                AppTheme.spacing6,
-                              ),
-                              sliver: SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) {
-                                    final space = _filteredSpaces[index];
-                                    return ShopMySpaceCard(
-                                      space: space,
-                                      isStatusUpdating:
-                                          _statusUpdating[space.id] ?? false,
-                                      onToggleAvailability: () =>
-                                          _toggleSpaceStatus(space),
-                                      onBookings: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                ShopSpaceBookingsScreen(
-                                              spaceId: space.id,
-                                            ),
+                          Expanded(
+                            child: _filteredSpaces.isEmpty
+                                ? const _ShopMySpacesFilterEmptyState()
+                                : RefreshIndicator(
+                                    onRefresh: _loadSpaces,
+                                    child: ListView.builder(
+                                      physics:
+                                          const AlwaysScrollableScrollPhysics(),
+                                      padding: const EdgeInsets.fromLTRB(
+                                        AppTheme.spacing5,
+                                        AppTheme.spacing4,
+                                        AppTheme.spacing5,
+                                        88,
+                                      ),
+                                      itemCount: _filteredSpaces.length,
+                                      itemBuilder: (context, index) {
+                                        final space = _filteredSpaces[index];
+                                        return StitchListSpaceCard(
+                                          space: space,
+                                          pendingBookingCount:
+                                              _pendingBookingCounts[
+                                                      space.id] ??
+                                                  0,
+                                          isVisibilityUpdating:
+                                              _visibilityUpdating[space.id] ??
+                                                  false,
+                                          onToggleVisibility: (visible) =>
+                                              _toggleVisibility(
+                                            space,
+                                            visible,
                                           ),
+                                          onBookings: () {
+                                            ShellNavigation
+                                                .pushShopSpaceBookings(
+                                              context,
+                                              space.id,
+                                            );
+                                          },
+                                          onEdit: () {
+                                            ShellNavigation.pushShopSpaceEdit(
+                                              context,
+                                              space.id,
+                                            ).then((_) => _loadSpaces());
+                                          },
+                                          onHide: () => _confirmHide(space),
+                                          onUnhide: () =>
+                                              _confirmUnhide(space),
+                                          onDelete: () =>
+                                              _deleteSpace(space.id),
                                         );
                                       },
-                                      onEdit: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                ShopSpaceEditScreen(
-                                              spaceId: space.id,
-                                            ),
-                                          ),
-                                        ).then((result) {
-                                          if (result == true) _loadSpaces();
-                                        });
-                                      },
-                                      onHide: () => _confirmHide(space),
-                                      onUnhide: () => _confirmUnhide(space),
-                                      onDelete: () => _deleteSpace(space.id),
-                                    );
-                                  },
-                                  childCount: _filteredSpaces.length,
-                                ),
-                              ),
-                            ),
+                                    ),
+                                  ),
+                          ),
                         ],
                       ),
-                    ),
+      ),
     );
   }
 }
@@ -398,7 +347,7 @@ class _ShopMySpacesErrorState extends StatelessWidget {
               icon: const Icon(Icons.refresh, size: 20),
               label: const Text('다시 시도'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryPurple,
+                backgroundColor: AppTheme.stitchPrimaryContainer,
                 foregroundColor: Colors.white,
               ),
             ),
@@ -423,44 +372,54 @@ class _ShopMySpacesEmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 96,
-              height: 96,
+              width: 64,
+              height: 64,
               decoration: const BoxDecoration(
-                color: AppTheme.primaryPurpleLight,
+                color: AppTheme.surfaceContainerLow,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.meeting_room_outlined,
-                size: 44,
-                color: AppTheme.primaryPurple,
+                Icons.storefront_outlined,
+                size: 32,
+                color: AppTheme.stitchTextSecondary,
               ),
             ),
             const SizedBox(height: AppTheme.spacing4),
             Text(
               '등록된 공간이 없습니다',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: AppTheme.spacing2),
             Text(
-              '공간을 등록하고 스페어에게 대여해 보세요',
+              '스페어 디자이너를 맞이할\n새로운 공간을 등록해주세요.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondary,
+                color: AppTheme.stitchTextSecondary,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppTheme.spacing6),
-            ElevatedButton.icon(
-              onPressed: onAdd,
-              icon: const Icon(Icons.add, size: 20),
-              label: const Text('공간 등록하기'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryPurple,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spacing5,
-                  vertical: AppTheme.spacing3,
+            SizedBox(
+              height: 52,
+              child: ElevatedButton(
+                onPressed: onAdd,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.stitchPrimaryContainer,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: const Text(
+                  '공간 등록하기',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
@@ -482,7 +441,7 @@ class _ShopMySpacesFilterEmptyState extends StatelessWidget {
         child: Text(
           '해당 필터에 맞는 공간이 없습니다',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppTheme.textSecondary,
+            color: AppTheme.stitchTextSecondary,
           ),
         ),
       ),

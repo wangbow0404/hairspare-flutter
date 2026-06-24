@@ -7,6 +7,7 @@ class ModelHomeInterest {
     required this.region,
     this.avatarUrl,
     this.isPrimaryCta = true,
+    this.chatId,
   });
 
   final String id;
@@ -15,6 +16,11 @@ class ModelHomeInterest {
   final String region;
   final String? avatarUrl;
   final bool isPrimaryCta;
+
+  /// 매칭 완료 시 연결된 채팅방 id. null이면 아직 매칭 전.
+  final String? chatId;
+
+  bool get isMatched => chatId != null && chatId!.isNotEmpty;
 }
 
 /// 모델 시술 결제 유형.

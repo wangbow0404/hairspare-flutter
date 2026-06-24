@@ -16,17 +16,24 @@ import 'mock_spare_data.dart';
 
 /// 미용실(Shop) 화면용 Mock 데이터
 class MockShopData {
+  /// 샵 홈 「내 지역 스페어」 필터 기준 (카페/샵 주변 지역).
+  static const String mockShopHomeRegionId = 'seoul-gangnam';
+
+  static String _mockProfile(String id) =>
+      'https://picsum.photos/seed/hairspare-$id/400/400';
+
   static final List<Map<String, dynamic>> _sparesJson = [
     {
       'id': 'spare-mock-1',
-      'name': '김디자이너',
+      'name': '김수아',
       'role': 'designer',
-      'regionId': 'region-1',
+      'profileImage': _mockProfile('spare-mock-1'),
+      'regionId': 'seoul-gangnam',
       'experience': 3,
       'rating': 4.8,
       'reviewCount': 24,
       'thumbsUpCount': 12,
-      'specialties': ['컷', '펌'],
+      'specialties': ['Perm Expert'],
       'availableTimes': ['주말'],
       'hourlyRate': 80000,
       'isVerified': true,
@@ -39,7 +46,8 @@ class MockShopData {
       'id': 'spare-mock-2',
       'name': '이스텝',
       'role': 'step',
-      'regionId': 'region-1',
+      'profileImage': _mockProfile('spare-mock-2'),
+      'regionId': 'seoul-gangnam',
       'experience': 1,
       'rating': 4.5,
       'reviewCount': 8,
@@ -50,7 +58,120 @@ class MockShopData {
       'isLicenseVerified': false,
       'noShowCount': 0,
       'completedJobs': 12,
-      'createdAt': DateTime.now().toIso8601String(),
+      'createdAt': DateTime.now().subtract(const Duration(days: 2)).toIso8601String(),
+    },
+    {
+      'id': 'spare-mock-3',
+      'name': '이준호',
+      'role': 'designer',
+      'profileImage': _mockProfile('spare-mock-3'),
+      'regionId': 'seoul-gangnam',
+      'experience': 5,
+      'rating': 4.9,
+      'reviewCount': 42,
+      'thumbsUpCount': 28,
+      'specialties': ['Colorist'],
+      'availableTimes': ['평일'],
+      'hourlyRate': 95000,
+      'isVerified': true,
+      'isLicenseVerified': true,
+      'noShowCount': 0,
+      'completedJobs': 78,
+      'createdAt': DateTime.now().subtract(const Duration(days: 5)).toIso8601String(),
+    },
+    {
+      'id': 'spare-mock-4',
+      'name': '최펌',
+      'role': 'designer',
+      'profileImage': _mockProfile('spare-mock-4'),
+      'regionId': 'seoul-mapo',
+      'experience': 4,
+      'rating': 4.7,
+      'reviewCount': 31,
+      'thumbsUpCount': 19,
+      'specialties': ['펌', '드라이'],
+      'availableTimes': ['주말'],
+      'hourlyRate': 85000,
+      'isVerified': true,
+      'isLicenseVerified': true,
+      'noShowCount': 0,
+      'completedJobs': 56,
+      'createdAt': DateTime.now().subtract(const Duration(days: 1)).toIso8601String(),
+    },
+    {
+      'id': 'spare-mock-5',
+      'name': '정스텝',
+      'role': 'step',
+      'profileImage': _mockProfile('spare-mock-5'),
+      'regionId': 'seoul-gangnam',
+      'experience': 2,
+      'rating': 4.6,
+      'reviewCount': 15,
+      'thumbsUpCount': 8,
+      'specialties': ['샴푸', '드라이'],
+      'availableTimes': ['평일', '주말'],
+      'isVerified': true,
+      'isLicenseVerified': false,
+      'noShowCount': 0,
+      'completedJobs': 22,
+      'createdAt': DateTime.now().subtract(const Duration(hours: 12)).toIso8601String(),
+    },
+    {
+      'id': 'spare-mock-6',
+      'name': '한디자인',
+      'role': 'designer',
+      'profileImage': _mockProfile('spare-mock-6'),
+      'regionId': 'seoul-seongdong',
+      'experience': 6,
+      'rating': 4.8,
+      'reviewCount': 55,
+      'thumbsUpCount': 34,
+      'specialties': ['컷', '스타일링'],
+      'availableTimes': ['평일'],
+      'hourlyRate': 100000,
+      'isVerified': true,
+      'isLicenseVerified': true,
+      'noShowCount': 0,
+      'completedJobs': 92,
+      'createdAt': DateTime.now().subtract(const Duration(days: 3)).toIso8601String(),
+    },
+    {
+      'id': 'spare-mock-7',
+      'name': '오수아',
+      'role': 'designer',
+      'profileImage': _mockProfile('spare-mock-7'),
+      'regionId': 'busan-haeundae',
+      'experience': 4,
+      'rating': 4.7,
+      'reviewCount': 28,
+      'thumbsUpCount': 16,
+      'specialties': ['펌', '컷'],
+      'availableTimes': ['주말'],
+      'hourlyRate': 75000,
+      'isVerified': true,
+      'isLicenseVerified': true,
+      'noShowCount': 0,
+      'completedJobs': 38,
+      'createdAt': DateTime.now().subtract(const Duration(days: 7)).toIso8601String(),
+    },
+    {
+      'id': 'spare-mock-8',
+      'name': '윤준호',
+      'role': 'designer',
+      'profileImage': _mockProfile('spare-mock-8'),
+      'regionId': 'gyeonggi-seongnam',
+      'experience': 3,
+      'rating': 4.6,
+      'reviewCount': 19,
+      'thumbsUpCount': 11,
+      'specialties': ['염색', '컷'],
+      'availableTimes': ['평일', '주말'],
+      'hourlyRate': 70000,
+      'isVerified': false,
+      'isLicenseVerified': true,
+      'noShowCount': 0,
+      'completedJobs': 27,
+      'createdAt': DateTime.now().subtract(const Duration(days: 10)).toIso8601String(),
     },
   ];
 
@@ -186,9 +307,34 @@ class MockShopData {
     return copy;
   }
 
-  static Future<List<SpareProfile>> getSpares() async {
+  static Future<List<SpareProfile>> getSpares({
+    String? sortBy,
+    int? limit,
+    List<String>? regionIds,
+  }) async {
     await Future.delayed(const Duration(milliseconds: 300));
-    return _sparesJson.map((j) => SpareProfile.fromJson(j)).toList();
+    var list = _sparesJson.map((j) => SpareProfile.fromJson(j)).toList();
+    if (regionIds != null && regionIds.isNotEmpty) {
+      list = list.where((s) => regionIds.contains(s.regionId)).toList();
+    }
+    switch (sortBy) {
+      case 'popular':
+        list.sort((a, b) => b.thumbsUpCount.compareTo(a.thumbsUpCount));
+      case 'newest':
+        list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      default:
+        break;
+    }
+    if (limit != null && list.length > limit) {
+      list = list.take(limit).toList();
+    }
+    return list;
+  }
+
+  /// 샵 홈 상태 카드 — 오늘의 모델 매칭 건수 (mock).
+  static Future<int> getTodayModelMatchingCount() async {
+    await Future.delayed(const Duration(milliseconds: 80));
+    return 1;
   }
 
   static Future<SpareProfile> getSpareById(String spareId) async {

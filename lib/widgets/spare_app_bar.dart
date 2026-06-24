@@ -24,6 +24,8 @@ class SpareAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showTrailingIcons;
   /// 우측에 표시할 커스텀 액션 위젯 (예: 공유 버튼)
   final List<Widget>? actions;
+  /// 뒤로가기 탭 시 (null이면 [Navigator.maybePop]).
+  final VoidCallback? onBackPressed;
 
   const SpareAppBar({
     super.key,
@@ -33,6 +35,7 @@ class SpareAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.subtitle,
     this.showTrailingIcons = true,
     this.actions,
+    this.onBackPressed,
   });
 
   /// [kToolbarHeight]만 쓰면 세로 패딩·로고 텍스트 높이를 합친 실제 높이를 넘어
@@ -65,7 +68,7 @@ class SpareAppBar extends StatelessWidget implements PreferredSizeWidget {
               Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () => Navigator.of(context).maybePop(),
+                  onTap: onBackPressed ?? () => Navigator.of(context).maybePop(),
                   borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                   child: Container(
                     padding: const EdgeInsets.all(AppTheme.spacing2),

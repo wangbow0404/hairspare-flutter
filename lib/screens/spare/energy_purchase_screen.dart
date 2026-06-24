@@ -5,8 +5,9 @@ import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/energy_service.dart';
 import '../../utils/energy_purchase_pricing.dart';
+import '../../core/router/route_extras.dart';
+import '../../utils/shell_navigation.dart';
 import '../../widgets/energy/energy_purchase_provisional_notice.dart';
-import 'energy_purchase_checkout_screen.dart';
 
 /// Next.js와 동일한 에너지 구매 화면
 class EnergyPurchaseScreen extends StatefulWidget {
@@ -63,14 +64,12 @@ class _EnergyPurchaseScreenState extends State<EnergyPurchaseScreen> {
       return;
     }
 
-    final purchased = await Navigator.push<bool>(
+    final purchased = await ShellNavigation.pushEnergyCheckout(
       context,
-      MaterialPageRoute(
-        builder: (context) => EnergyPurchaseCheckoutScreen(
-          energyAmount: _selectedPackage!.energyAmount,
-          cashPrice: _selectedPackage!.cashPriceKrw,
-          packageId: _selectedPackage!.id,
-        ),
+      EnergyPurchaseCheckoutArgs(
+        energyAmount: _selectedPackage!.energyAmount,
+        cashPrice: _selectedPackage!.cashPriceKrw,
+        packageId: _selectedPackage!.id,
       ),
     );
 

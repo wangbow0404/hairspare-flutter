@@ -30,11 +30,11 @@ class SpareHomeViewModel extends ChangeNotifier {
 
   Timer? _pollTimer;
 
-  /// 공고·찜·알림·채팅을 한 번에 불러옵니다.
+  /// 공고·찜·알림·채팅을 불러옵니다. 공고를 먼저 로드해 홈 UI를 빠르게 표시합니다.
   Future<void> loadInitial() async {
     try {
+      await _jobProvider.loadJobs();
       await Future.wait<void>([
-        _jobProvider.loadJobs(),
         _favoriteProvider.loadFavorites(),
         _notificationProvider.loadNotifications(audience: 'spare'),
         _chatProvider.loadChats(viewerRole: 'spare'),
@@ -51,6 +51,11 @@ class SpareHomeViewModel extends ChangeNotifier {
       _notificationProvider.refreshNotifications();
       _chatProvider.refreshChats(viewerRole: 'spare');
     });
+  }
+
+  void stopPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
   }
 
   @override

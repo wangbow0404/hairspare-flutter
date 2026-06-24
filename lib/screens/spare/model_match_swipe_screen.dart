@@ -6,9 +6,10 @@ import '../../models/hair_model.dart';
 import '../../models/model_match_preference.dart';
 import '../../theme/app_theme.dart';
 import '../../view_models/model_match_view_model.dart';
+import '../../widgets/common/app_network_image.dart';
 import '../../widgets/common/glass_modal.dart';
+import '../../widgets/model_match/model_match_exhausted_view.dart';
 import '../../widgets/stitch/stitch_empty_state.dart';
-import 'chat_room_screen.dart';
 
 /// 모델 매칭 2단계 — 카드 스와이프로 모델 선택.
 class ModelMatchSwipeScreen extends StatelessWidget {
@@ -21,7 +22,7 @@ class ModelMatchSwipeScreen extends StatelessWidget {
     return ChangeNotifierProvider<ModelMatchViewModel>(
       create: (_) => ModelMatchViewModel(
         matchService: sl(),
-        chatService: sl(),
+        matchingService: sl(),
       )
         ..setPreference(preference)
         ..loadCandidates(),
@@ -71,12 +72,11 @@ class _SwipeScaffold extends StatelessWidget {
             );
           }
           if (!vm.hasMore) {
-            return StitchEmptyState(
-              icon: Icons.favorite_border,
-              iconName: 'heart',
-              message: '추천할 모델을 모두 확인했어요.\n조건을 바꿔 다시 찾아보세요.',
-              actionLabel: '조건 다시 설정',
-              onAction: () => Navigator.of(context).pop(),
+            return ModelMatchExhaustedView(
+              items: vm.discoveryItems,
+              isLoading: vm.isDiscoveryLoading,
+              onResetFilters: () => Navigator.of(context).pop(),
+              onModelTap: (model) => showModelMatchPreview(context, model),
             );
           }
           return _SwipeDeck(vm: vm);
@@ -225,8 +225,8 @@ class _SwipeDeckState extends State<_SwipeDeck>
     _busy = false;
     if (!mounted) return;
     switch (result.status) {
-      case MatchAttemptStatus.matched:
-        _showMatchModal(result);
+      case MatchAttemptStatus.likeSent:
+        _showLikeSentModal(result);
         break;
       case MatchAttemptStatus.limitReached:
         _showLimitModal();
@@ -289,9 +289,8 @@ class _SwipeDeckState extends State<_SwipeDeck>
     );
   }
 
-  void _showMatchModal(MatchAttemptResult result) {
+  void _showLikeSentModal(MatchAttemptResult result) {
     final model = result.model;
-    final chatId = result.chatId;
     showDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -308,7 +307,7 @@ class _SwipeDeckState extends State<_SwipeDeck>
               ),
               const SizedBox(height: 16),
               Text(
-                '${model?.name ?? ''}님과 매칭됐어요!',
+                '${model?.name ?? ''}님에게 관심을 보냈어요!',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 18,
@@ -318,7 +317,7 @@ class _SwipeDeckState extends State<_SwipeDeck>
               ),
               const SizedBox(height: 8),
               const Text(
-                '채팅으로 촬영·시술 일정을 조율해 보세요.',
+                '상대가 수락하면 매칭되고 채팅을 시작할 수 있어요.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -328,29 +327,8 @@ class _SwipeDeckState extends State<_SwipeDeck>
               ),
               const SizedBox(height: 20),
               _ModalPrimaryButton(
-                label: '채팅하기',
-                onPressed: () {
-                  Navigator.of(dialogContext).pop();
-                  if (chatId != null && chatId.isNotEmpty) {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => ChatRoomScreen(chatId: chatId),
-                      ),
-                    );
-                  }
-                },
-              ),
-              const SizedBox(height: 8),
-              TextButton(
+                label: '확인',
                 onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text(
-                  '계속 둘러보기',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.stitchTextSecondary,
-                  ),
-                ),
               ),
             ],
           ),
@@ -360,81 +338,7 @@ class _SwipeDeckState extends State<_SwipeDeck>
   }
 
   void _showPreview(HairModel model) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (sheetContext) => GlassModalBottomSheet(
-        stitchStyle: true,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppTheme.spacing5,
-              AppTheme.spacing2,
-              AppTheme.spacing5,
-              AppTheme.spacing5,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Center(child: GlassModalDragHandle(stitchStyle: true)),
-                const SizedBox(height: AppTheme.spacing3),
-                Text(
-                  '${model.name} · ${model.age}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing1),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.place_outlined,
-                      size: 16,
-                      color: AppTheme.stitchTextSecondary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${model.region} · ${model.distanceKm.round()}km',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppTheme.stitchTextSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-                if (model.intro != null) ...[
-                  const SizedBox(height: AppTheme.spacing4),
-                  Text(
-                    model.intro!,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: AppTheme.stitchTextPrimary,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: AppTheme.spacing4),
-                _PreviewInfoRow(label: '기장', value: model.hairLength),
-                _PreviewInfoRow(label: '경력', value: model.career),
-                _PreviewInfoRow(label: '촬영 협의', value: model.shootAgreement),
-                _PreviewInfoRow(
-                  label: '선호 시술',
-                  value: model.preferredTreatments.join(', '),
-                ),
-                _PreviewInfoRow(
-                  label: '이미지',
-                  value: model.imageTags.join(', '),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    showModelMatchPreview(context, model);
   }
 
   @override
@@ -543,31 +447,11 @@ class _ModelCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(
-              model.primaryImage,
+            AppNetworkImage(
+              imageUrl: model.primaryImage,
               fit: BoxFit.cover,
-              loadingBuilder: (context, child, progress) {
-                if (progress == null) return child;
-                return const ColoredBox(
-                  color: AppTheme.surfaceContainerLow,
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppTheme.stitchPrimary,
-                    ),
-                  ),
-                );
-              },
-              errorBuilder: (context, error, stack) => const ColoredBox(
-                color: AppTheme.surfaceContainerLow,
-                child: Center(
-                  child: Icon(
-                    Icons.person_outline,
-                    size: 64,
-                    color: AppTheme.stitchTextSecondary,
-                  ),
-                ),
-              ),
+              memCacheWidth: 800,
+              fallbackIcon: Icons.person_outline,
             ),
             const DecoratedBox(
               decoration: BoxDecoration(
@@ -838,8 +722,115 @@ class _CircleAction extends StatelessWidget {
   }
 }
 
-class _PreviewInfoRow extends StatelessWidget {
-  const _PreviewInfoRow({required this.label, required this.value});
+class _ModalPrimaryButton extends StatelessWidget {
+  const _ModalPrimaryButton({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppTheme.stitchPrimaryContainer,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+          ),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        ),
+      ),
+    );
+  }
+}
+
+void showModelMatchPreview(BuildContext context, HairModel model) {
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (sheetContext) => GlassModalBottomSheet(
+      stitchStyle: true,
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing5,
+            AppTheme.spacing2,
+            AppTheme.spacing5,
+            AppTheme.spacing5,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Center(child: GlassModalDragHandle(stitchStyle: true)),
+              const SizedBox(height: AppTheme.spacing3),
+              Text(
+                '${model.name} · ${model.age}',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing1),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.place_outlined,
+                    size: 16,
+                    color: AppTheme.stitchTextSecondary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${model.region} · ${model.distanceKm.round()}km',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.stitchTextSecondary,
+                    ),
+                  ),
+                ],
+              ),
+              if (model.intro != null) ...[
+                const SizedBox(height: AppTheme.spacing4),
+                Text(
+                  model.intro!,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: AppTheme.stitchTextPrimary,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppTheme.spacing4),
+              _ModelMatchPreviewInfoRow(label: '기장', value: model.hairLength),
+              _ModelMatchPreviewInfoRow(label: '경력', value: model.career),
+              _ModelMatchPreviewInfoRow(
+                label: '선호 시술',
+                value: model.preferredTreatments.join(', '),
+              ),
+              _ModelMatchPreviewInfoRow(
+                label: '이미지',
+                value: model.imageTags.join(', '),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _ModelMatchPreviewInfoRow extends StatelessWidget {
+  const _ModelMatchPreviewInfoRow({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -873,36 +864,6 @@ class _PreviewInfoRow extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ModalPrimaryButton extends StatelessWidget {
-  const _ModalPrimaryButton({required this.label, required this.onPressed});
-
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.stitchPrimaryContainer,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-          ),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-        ),
       ),
     );
   }

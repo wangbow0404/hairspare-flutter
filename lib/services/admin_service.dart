@@ -394,4 +394,485 @@ class AdminService {
       throw ErrorHandler.handleException(e);
     }
   }
+
+  // ──────────────────────────────────────────────────────────────────
+  // M2. 인증 심사 큐
+  // ──────────────────────────────────────────────────────────────────
+
+  /// 인증 심사 대기/처리 목록 조회
+  Future<Map<String, dynamic>> getVerifications({
+    String? status,
+    String? type,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    if (ApiConfig.useMockData) {
+      return await MockAdminData.getVerifications(status: status, type: type);
+    }
+    try {
+      final queryParams = <String, dynamic>{'page': page, 'limit': limit};
+      if (status != null && status.isNotEmpty) queryParams['status'] = status;
+      if (type != null && type.isNotEmpty) queryParams['type'] = type;
+
+      final response = await _dio.get(
+        '/api/admin/verifications',
+        queryParameters: queryParams,
+      );
+      if (response.statusCode == 200) {
+        return response.data['data'] ?? response.data;
+      }
+      throw ServerException(
+        '인증 심사 목록 조회 실패: ${response.statusMessage}',
+        statusCode: response.statusCode,
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 인증 승인 (감사로그 기록 대상)
+  Future<void> approveVerification(String id, {String? note}) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    try {
+      await _dio.post('/api/admin/verifications/$id/approve', data: {
+        if (note != null) 'note': note,
+      });
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 인증 반려 (감사로그 기록 대상)
+  Future<void> rejectVerification(String id, {required String reason}) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    try {
+      await _dio.post('/api/admin/verifications/$id/reject', data: {
+        'reason': reason,
+      });
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 인증 심사 상세 (OCR·NTS·증빙)
+  Future<Map<String, dynamic>> getVerificationDetail(String id) async {
+    if (ApiConfig.useMockData) {
+      return await MockAdminData.getVerificationDetail(id);
+    }
+    try {
+      final response = await _dio.get('/api/admin/verifications/$id');
+      if (response.statusCode == 200) {
+        return response.data['data'] ?? response.data;
+      }
+      throw ServerException(
+        '인증 상세 조회 실패: ${response.statusMessage}',
+        statusCode: response.statusCode,
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────────────
+  // M12. 신고/제재 케이스
+  // ──────────────────────────────────────────────────────────────────
+
+  /// 신고 케이스 목록 조회
+  Future<Map<String, dynamic>> getReports({
+    String? status,
+    String? category,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    if (ApiConfig.useMockData) {
+      return await MockAdminData.getReports(status: status, category: category);
+    }
+    try {
+      final queryParams = <String, dynamic>{'page': page, 'limit': limit};
+      if (status != null && status.isNotEmpty) queryParams['status'] = status;
+      if (category != null && category.isNotEmpty) {
+        queryParams['category'] = category;
+      }
+
+      final response = await _dio.get(
+        '/api/admin/reports',
+        queryParameters: queryParams,
+      );
+      if (response.statusCode == 200) {
+        return response.data['data'] ?? response.data;
+      }
+      throw ServerException(
+        '신고 목록 조회 실패: ${response.statusMessage}',
+        statusCode: response.statusCode,
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 신고 케이스 처리 — 제재/반려 (감사로그 기록 대상)
+  /// [action]: dismiss | warn | suspend | ban
+  Future<void> resolveReport(
+    String id, {
+    required String action,
+    String? reason,
+    int? durationDays,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    try {
+      await _dio.post('/api/admin/reports/$id/resolve', data: {
+        'action': action,
+        if (reason != null) 'reason': reason,
+        if (durationDays != null) 'durationDays': durationDays,
+      });
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 신고 케이스 상세
+  Future<Map<String, dynamic>> getReportDetail(String id) async {
+    if (ApiConfig.useMockData) {
+      return await MockAdminData.getReportDetail(id);
+    }
+    try {
+      final response = await _dio.get('/api/admin/reports/$id');
+      if (response.statusCode == 200) {
+        return response.data['data'] ?? response.data;
+      }
+      throw ServerException(
+        '신고 상세 조회 실패: ${response.statusMessage}',
+        statusCode: response.statusCode,
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 채팅 로그 감사 뷰 (M12)
+  Future<Map<String, dynamic>> getChatTranscript(String chatId) async {
+    if (ApiConfig.useMockData) {
+      return await MockAdminData.getChatTranscript(chatId);
+    }
+    try {
+      final response = await _dio.get('/api/admin/chats/$chatId/transcript');
+      if (response.statusCode == 200) {
+        return response.data['data'] ?? response.data;
+      }
+      throw ServerException(
+        '채팅 로그 조회 실패: ${response.statusMessage}',
+        statusCode: response.statusCode,
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────────────
+  // M15. 비즈니스 설정
+  // ──────────────────────────────────────────────────────────────────
+
+  /// 비즈니스 설정 그룹/항목 조회
+  Future<Map<String, dynamic>> getBusinessSettings() async {
+    if (ApiConfig.useMockData) {
+      return await MockAdminData.getBusinessSettings();
+    }
+    try {
+      final response = await _dio.get('/api/admin/settings');
+      if (response.statusCode == 200) {
+        return response.data['data'] ?? response.data;
+      }
+      throw ServerException(
+        '비즈니스 설정 조회 실패: ${response.statusMessage}',
+        statusCode: response.statusCode,
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 비즈니스 설정 값 변경 (감사로그 기록 대상)
+  Future<void> updateBusinessSetting(String key, dynamic value) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    try {
+      await _dio.patch('/api/admin/settings/$key', data: {'value': value});
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────────────
+  // M18. 감사 로그
+  // ──────────────────────────────────────────────────────────────────
+
+  /// 감사 로그 조회 (읽기 전용 · 불변)
+  Future<Map<String, dynamic>> getAuditLogs({
+    String? action,
+    String? search,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    if (ApiConfig.useMockData) {
+      return await MockAdminData.getAuditLogs(action: action, search: search);
+    }
+    try {
+      final queryParams = <String, dynamic>{'page': page, 'limit': limit};
+      if (action != null && action.isNotEmpty) queryParams['action'] = action;
+      if (search != null && search.isNotEmpty) queryParams['search'] = search;
+
+      final response = await _dio.get(
+        '/api/admin/audit-logs',
+        queryParameters: queryParams,
+      );
+      if (response.statusCode == 200) {
+        return response.data['data'] ?? response.data;
+      }
+      throw ServerException(
+        '감사 로그 조회 실패: ${response.statusMessage}',
+        statusCode: response.statusCode,
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  // ── M1 회원 mutation ──
+  Future<void> suspendUser(String userId, {required String reason, DateTime? until}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.post('/api/admin/users/$userId/suspend', data: {'reason': reason, if (until != null) 'until': until.toIso8601String()});
+  }
+
+  Future<void> unsuspendUser(String userId, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.post('/api/admin/users/$userId/unsuspend', data: {'reason': reason});
+  }
+
+  Future<void> adjustEnergy(String userId, int delta, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.post('/api/admin/users/$userId/energy', data: {'delta': delta, 'reason': reason});
+  }
+
+  Future<void> adjustPoints(String userId, int delta, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.post('/api/admin/users/$userId/points', data: {'delta': delta, 'reason': reason});
+  }
+
+  // ── M3 공고 mutation ──
+  Future<void> hideJob(String jobId, {required String reason, bool hide = true}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.patch('/api/admin/jobs/$jobId/hide', data: {'hide': hide, 'reason': reason});
+  }
+
+  Future<void> forceCloseJob(String jobId, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.patch('/api/admin/jobs/$jobId/close', data: {'reason': reason});
+  }
+
+  Future<void> deleteJob(String jobId, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.delete('/api/admin/jobs/$jobId', data: {'reason': reason});
+  }
+
+  // ── M4 스케줄 mutation ──
+  Future<void> forceCompleteSchedule(String scheduleId, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.post('/api/admin/schedules/$scheduleId/complete', data: {'reason': reason});
+  }
+
+  Future<void> forceCancelSchedule(String scheduleId, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.post('/api/admin/schedules/$scheduleId/cancel', data: {'reason': reason});
+  }
+
+  Future<void> markNoShow(String scheduleId, {required String reason, required String party}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.post('/api/admin/schedules/$scheduleId/noshow', data: {'reason': reason, 'party': party});
+  }
+
+  // ── M5 모델 매칭 ──
+  Future<Map<String, dynamic>> getMatches({String? status, int page = 1, int limit = 20}) async {
+    if (ApiConfig.useMockData) return MockAdminData.getMatches(status: status);
+    final response = await _dio.get('/api/admin/matches', queryParameters: {'page': page, 'limit': limit, if (status != null) 'status': status});
+    return response.data['data'] ?? response.data;
+  }
+
+  Future<void> forceCancelMatch(String matchId, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.post('/api/admin/matches/$matchId/cancel', data: {'reason': reason});
+  }
+
+  // ── M6 공간 대여 ──
+  Future<Map<String, dynamic>> getSpaces({String? status}) async {
+    if (ApiConfig.useMockData) return MockAdminData.getSpaces(status: status);
+    final response = await _dio.get('/api/admin/spaces', queryParameters: {if (status != null) 'status': status});
+    return response.data['data'] ?? response.data;
+  }
+
+  Future<Map<String, dynamic>> getSpaceBookings({String? status}) async {
+    if (ApiConfig.useMockData) return MockAdminData.getSpaceBookings(status: status);
+    final response = await _dio.get('/api/admin/space-bookings', queryParameters: {if (status != null) 'status': status});
+    return response.data['data'] ?? response.data;
+  }
+
+  Future<void> forceCancelBooking(String bookingId, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.post('/api/admin/space-bookings/$bookingId/cancel', data: {'reason': reason});
+  }
+
+  // ── M7 교육 ──
+  Future<Map<String, dynamic>> getEducations({String? status}) async {
+    if (ApiConfig.useMockData) return MockAdminData.getEducations(status: status);
+    final response = await _dio.get('/api/admin/educations', queryParameters: {if (status != null) 'status': status});
+    return response.data['data'] ?? response.data;
+  }
+
+  Future<void> hideEducation(String educationId, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.patch('/api/admin/educations/$educationId/hide', data: {'reason': reason});
+  }
+
+  Future<void> refundEnrollment(String enrollmentId, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.post('/api/admin/enrollments/$enrollmentId/refund', data: {'reason': reason});
+  }
+
+  // ── M8 결제 mutation ──
+  Future<void> refundPayment(String paymentId, {required int amount, required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.post('/api/admin/payments/$paymentId/refund', data: {'amount': amount, 'reason': reason});
+  }
+
+  // ── M9 에너지 mutation ──
+  Future<void> grantEnergy(String userId, int amount, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.post('/api/admin/energy/grant', data: {'userId': userId, 'amount': amount, 'reason': reason});
+  }
+
+  Future<void> deductEnergy(String userId, int amount, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.post('/api/admin/energy/deduct', data: {'userId': userId, 'amount': amount, 'reason': reason});
+  }
+
+  // ── M10 포인트·미션 ──
+  Future<Map<String, dynamic>> getPointTransactions({String? type}) async {
+    if (ApiConfig.useMockData) return MockAdminData.getPointTransactions(type: type);
+    final response = await _dio.get('/api/admin/points', queryParameters: {if (type != null) 'type': type});
+    return response.data['data'] ?? response.data;
+  }
+
+  Future<Map<String, dynamic>> getMissions() async {
+    if (ApiConfig.useMockData) return MockAdminData.getMissions();
+    final response = await _dio.get('/api/admin/missions');
+    return response.data['data'] ?? response.data;
+  }
+
+  Future<void> grantPoints(String userId, int amount, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.post('/api/admin/points/grant', data: {'userId': userId, 'amount': amount, 'reason': reason});
+  }
+
+  // ── M11 구독 ──
+  Future<Map<String, dynamic>> getSubscriptions() async {
+    if (ApiConfig.useMockData) return MockAdminData.getSubscriptions();
+    final response = await _dio.get('/api/admin/subscriptions');
+    return response.data['data'] ?? response.data;
+  }
+
+  Future<Map<String, dynamic>> getCreators() async {
+    if (ApiConfig.useMockData) return MockAdminData.getCreators();
+    final response = await _dio.get('/api/admin/creators');
+    return response.data['data'] ?? response.data;
+  }
+
+  Future<void> verifyCreator(String creatorId, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.post('/api/admin/creators/$creatorId/verify', data: {'reason': reason});
+  }
+
+  // ── M13 제재 ──
+  Future<Map<String, dynamic>> getSanctions({String? status}) async {
+    if (ApiConfig.useMockData) return MockAdminData.getSanctions(status: status);
+    final response = await _dio.get('/api/admin/sanctions', queryParameters: {if (status != null) 'status': status});
+    return response.data['data'] ?? response.data;
+  }
+
+  Future<void> applySanction(String userId, {required String type, required String reason, int? durationDays}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.post('/api/admin/sanctions', data: {'userId': userId, 'type': type, 'reason': reason, if (durationDays != null) 'durationDays': durationDays});
+  }
+
+  Future<void> liftSanction(String sanctionId, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.delete('/api/admin/sanctions/$sanctionId', data: {'reason': reason});
+  }
+
+  // ── M14 콘텐츠 ──
+  Future<Map<String, dynamic>> getContentItems({String? type, String? flagged}) async {
+    if (ApiConfig.useMockData) return MockAdminData.getContentItems(type: type, flagged: flagged);
+    final response = await _dio.get('/api/admin/content', queryParameters: {if (type != null) 'type': type, if (flagged != null) 'flagged': flagged});
+    return response.data['data'] ?? response.data;
+  }
+
+  Future<void> hideContent(String contentId, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.patch('/api/admin/content/$contentId/hide', data: {'reason': reason});
+  }
+
+  Future<void> deleteContent(String contentId, {required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.delete('/api/admin/content/$contentId', data: {'reason': reason});
+  }
+
+  // ── M16 알림 ──
+  Future<Map<String, dynamic>> getNotificationData() async {
+    if (ApiConfig.useMockData) return MockAdminData.getNotificationData();
+    final response = await _dio.get('/api/admin/notifications');
+    return response.data['data'] ?? response.data;
+  }
+
+  Future<void> broadcastNotification({required String audience, required String title, required String body, required String reason}) async {
+    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    await _dio.post('/api/admin/notifications/broadcast', data: {'audience': audience, 'title': title, 'body': body, 'reason': reason});
+  }
+
+  // ── M17 레퍼런스 ──
+  Future<Map<String, dynamic>> getReferenceData({String? tab}) async {
+    if (ApiConfig.useMockData) return MockAdminData.getReferenceData(tab: tab);
+    final response = await _dio.get('/api/admin/reference', queryParameters: {if (tab != null) 'tab': tab});
+    return response.data['data'] ?? response.data;
+  }
 }

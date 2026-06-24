@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../utils/shell_navigation.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../models/space_rental.dart';
 import '../../services/space_rental_service.dart';
 import '../../utils/error_handler.dart';
-import 'space_rental_detail_screen.dart';
 
 /// 내 예약 내역 화면
 class MySpaceBookingsScreen extends StatefulWidget {
@@ -237,13 +237,9 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
                     child: InkWell(
                       onTap: () {
                         if (booking.spaceRental != null) {
-                          Navigator.push(
+                          ShellNavigation.pushSpaceDetail(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => SpaceRentalDetailScreen(
-                                spaceId: booking.spaceRentalId,
-                              ),
-                            ),
+                            booking.spaceRentalId,
                           );
                         }
                       },

@@ -31,3 +31,4 @@ Always write concise, idiomatic, clean, and maintainable code. Do not write unne
 7. Strict Typing & Imports: 
    - Avoid `dynamic`. Use strict types and `final` properties where possible.
    - Prefer `package:hairspare/...` absolute imports for cross-folder dependencies to avoid relative path hell (`../../../`).
+8. Safe Area: Never overlap status bar / notch. Use `AppScreenSafeArea` for [Scaffold.body] and `AppScreenInsets.topBarShell` for custom scroll headers (see `.cursor/rules/safe-area.mdc`).

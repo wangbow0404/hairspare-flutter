@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
-import '../../widgets/common/shared_app_bar.dart';
-import '../../utils/icon_mapper.dart';
-import '../spare/profile_edit_screen.dart';
-import '../spare/notifications_settings_screen.dart';
-import '../spare/change_password_screen.dart';
-import '../spare/delete_account_screen.dart';
-import '../../providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
 import '../../core/router/app_navigation.dart';
+import '../../theme/app_theme.dart';
+import '../../utils/icon_mapper.dart';
+import '../../utils/shell_navigation.dart';
+import '../../providers/auth_provider.dart';
+import '../../widgets/common/shared_app_bar.dart';
 
 /// Next.js와 동일한 설정 화면
 class SettingsScreen extends StatefulWidget {
@@ -72,40 +71,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             // 설정 메뉴
             ...[
-              {
-                'icon': IconMapper.icon('user', size: 20, color: AppTheme.primaryBlue) ??
+              _SettingsItem(
+                icon: IconMapper.icon('user', size: 20, color: AppTheme.primaryBlue) ??
                     const Icon(Icons.person, size: 20, color: AppTheme.primaryBlue),
-                'label': '프로필 수정',
-                'route': const ProfileEditScreen(),
-              },
-              {
-                'icon': IconMapper.icon('bell', size: 20, color: AppTheme.primaryPurple) ??
+                label: '프로필 수정',
+                onTap: () => ShellNavigation.pushSettingsProfileEdit(context),
+              ),
+              _SettingsItem(
+                icon: IconMapper.icon('bell', size: 20, color: AppTheme.primaryPurple) ??
                     const Icon(Icons.notifications, size: 20, color: AppTheme.primaryPurple),
-                'label': '알림 설정',
-                'route': const NotificationsSettingsScreen(),
-              },
-              {
-                'icon': IconMapper.icon('lock', size: 20, color: AppTheme.textSecondary) ??
+                label: '알림 설정',
+                onTap: () => ShellNavigation.pushSettingsNotifications(context),
+              ),
+              _SettingsItem(
+                icon: IconMapper.icon('lock', size: 20, color: AppTheme.textSecondary) ??
                     const Icon(Icons.lock, size: 20, color: AppTheme.textSecondary),
-                'label': '비밀번호 변경',
-                'route': const ChangePasswordScreen(),
-              },
-              {
-                'icon': IconMapper.icon('trash2', size: 20, color: AppTheme.urgentRed) ??
+                label: '비밀번호 변경',
+                onTap: () => ShellNavigation.pushSettingsChangePassword(context),
+              ),
+              _SettingsItem(
+                icon: IconMapper.icon('trash2', size: 20, color: AppTheme.urgentRed) ??
                     const Icon(Icons.delete, size: 20, color: AppTheme.urgentRed),
-                'label': '계정 삭제',
-                'route': const DeleteAccountScreen(),
-              },
+                label: '계정 삭제',
+                onTap: () => ShellNavigation.pushSettingsDeleteAccount(context),
+              ),
             ].map((item) {
               return Container(
                 margin: const EdgeInsets.only(bottom: AppTheme.spacing2),
                 child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => item['route'] as Widget),
-                    );
-                  },
+                  onTap: item.onTap,
                   borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                   child: Container(
                     padding: AppTheme.spacing(AppTheme.spacing4),
@@ -116,11 +110,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     child: Row(
                       children: [
-                        item['icon'] as Widget,
+                        item.icon,
                         const SizedBox(width: AppTheme.spacing4),
                         Expanded(
                           child: Text(
-                            item['label'] as String,
+                            item.label,
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -171,4 +165,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
+}
+
+class _SettingsItem {
+  const _SettingsItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final Widget icon;
+  final String label;
+  final VoidCallback onTap;
 }

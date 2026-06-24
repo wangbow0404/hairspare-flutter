@@ -34,7 +34,7 @@ void main() {
           ..isLoading = false
           ..activeJobCount = 3
           ..pendingApplicantsCount = 2
-          ..todayScheduleCount = 1;
+          ..todayModelMatchingCount = 1;
 
     await tester.pumpWidget(
       MultiProvider(
@@ -61,8 +61,9 @@ void main() {
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -520));
     await tester.pumpAndSettle();
 
-    expect(find.text('활성 공고'), findsOneWidget);
+    expect(find.text('진행중 공고'), findsOneWidget);
     expect(find.text('대기 지원자'), findsOneWidget);
+    expect(find.text('오늘의 매칭'), findsOneWidget);
 
     scrollController.dispose();
   });

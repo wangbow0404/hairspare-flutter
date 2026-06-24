@@ -8,6 +8,7 @@ import '../../providers/favorite_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../view_models/shop_home_view_model.dart';
+import '../../widgets/common/app_screen_safe_area.dart';
 import '../../widgets/shop_home/shop_home_scroll_view.dart';
 
 /// Shop 홈 화면
@@ -20,23 +21,40 @@ class ShopHomeScreen extends StatefulWidget {
 
 class _ShopHomeScreenState extends State<ShopHomeScreen> {
   final ScrollController _scrollController = ScrollController();
+  ShopHomeViewModel? _viewModel;
+  bool _providersReady = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_providersReady) return;
+    _providersReady = true;
+
+    _viewModel = ShopHomeViewModel(
+      notificationProvider: context.read<NotificationProvider>(),
+    );
+  }
 
   @override
   void dispose() {
+    _viewModel?.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => ShopHomeViewModel(
-        notificationProvider:
-            Provider.of<NotificationProvider>(context, listen: false),
-      ),
-      child: _ShopHomeLoadedBody(
-        scrollController: _scrollController,
-      ),
+    final vm = _viewModel;
+    if (vm == null) {
+      return const Scaffold(
+        backgroundColor: AppTheme.backgroundGray,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return ChangeNotifierProvider<ShopHomeViewModel>.value(
+      value: vm,
+      child: _ShopHomeLoadedBody(scrollController: _scrollController),
     );
   }
 }
@@ -68,7 +86,7 @@ class _ShopHomeLoadedBodyState extends State<_ShopHomeLoadedBody> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      body: SafeArea(
+      body: AppScreenSafeArea(
         bottom: false,
         child: ShopHomeScrollView(scrollController: widget.scrollController),
       ),

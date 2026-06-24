@@ -1,35 +1,81 @@
-# Flutter Hot Reload 가이드
+# Hot Reload 가이드
 
-## Hot Reload란?
-코드를 수정한 후 앱을 완전히 다시 실행하지 않고도 변경사항을 즉시 확인할 수 있는 기능입니다.
+## 로그인 직후 렉
 
-## 사용 방법
+**원인:** `StatefulShellRoute.indexedStack`가 결제·찜·프로필 탭까지 동시 마운트 → API·VM 4중 호출.
 
-### 1. Flutter 앱 실행 중일 때
-터미널에서 Flutter 앱이 실행 중인 상태에서:
+**해결:** [`LazyShellTab`](../lib/core/shell/lazy_shell_tab.dart) — 홈(tab 0)만 즉시 빌드, 나머지 탭은 탭 선택 시 첫 마운트.
 
-- **`r` 키를 누르면**: Hot Reload (빠른 새로고침)
-- **`R` 키를 누르면**: Hot Restart (전체 재시작)
-- **`q` 키를 누르면**: 앱 종료
+---
 
-### 2. VS Code / Cursor에서
-- **저장하면 자동으로 Hot Reload** (설정에 따라)
-- 또는 **`Cmd + Shift + P`** → "Flutter: Hot Reload" 선택
+| 항목 | 수정 전 (스페어 홈) | 목표 |
+|------|---------------------|------|
+| hot reload (`r`) | ~1s+, stuck 체감 | **<500ms**, stuck 없음 |
+| reload 중 picsum 요청 | 10~30+ | **0** (mock mode) |
+| shop 홈 `r` | 빠름 (baseline) | 유지 |
 
-### 3. Chrome DevTools에서
-- 브라우저에서 **F12**로 개발자 도구 열기
-- Flutter Inspector 사용 가능
+**근본 원인 (해결됨):**
 
-## 주의사항
-- Hot Reload는 대부분의 UI 변경사항을 즉시 반영합니다
-- 하지만 다음 경우에는 Hot Restart가 필요합니다:
-  - 새로운 패키지 추가
-  - 네이티브 코드 변경
-  - 초기화 로직 변경
+1. `JobThumbnail` → `Image.network` + mock picsum URL → reload마다 대량 fetch/decode
+2. `NewJobsSection` / `PopularJobsSection` → 16ms auto-scroll + reassemble 즉시 재시작
+3. `SpareHomeScrollView` monolith → Consumer 9중첩, favoriteMap/sort 반복
 
-## 추천 워크플로우
-1. `flutter run -d chrome --web-port=8080` 실행
-2. 코드 수정
-3. 파일 저장
-4. 터미널에서 `r` 키 누르기
-5. 브라우저에서 즉시 확인!
+---
+
+## `r` vs `R`
+
+| 키 | 용도 |
+|----|------|
+| **`r`** (hot reload) | UI 텍스트·색·padding 등 **작은** 변경 |
+| **`R`** (hot restart) | Provider/VM 구조 변경, `initState` 로직, route/DI 변경 |
+
+구조 변경 후에는 **`R` 1회** → 이후 `r`로 미세 조정.
+
+---
+
+## Dual device (iOS + Android)
+
+- **터미널 1개 = 디바이스 1개** (`./scripts/run_ios.sh`, `./scripts/run_android.sh`)
+- **동시에 `r` 금지** — compile 2배, stuck처럼 보임
+- 한쪽 reload 끝난 뒤 다른 쪽 reload
+
+---
+
+## stuck 시 복구
+
+1. `Performing hot reload...` 10초+ → `Ctrl+C`
+2. `./scripts/run_ios.sh` 또는 `./scripts/run_android.sh` 재실행
+3. **`R` 1회** 후 다시 `r`
+
+---
+
+## 이미지 규칙 (필수)
+
+- 리스트/카드 썸네일 → **`AppNetworkImage`** (`lib/widgets/common/app_network_image.dart`)
+- mock JSON → **`mock://`** URL (picsum 금지)
+- `JobThumbnail`은 `AppNetworkImage` 사용 (직접 `Image.network` 금지)
+
+로컬 검사:
+
+```bash
+./scripts/check_no_raw_network_images.sh
+```
+
+---
+
+## Auto-scroll 섹션
+
+**2026-06 ANR 대응:** `NewJobsSection` / `PopularJobsSection`의 `Timer.periodic` + `jumpTo()` 자동 스크롤은 **비활성화**됨. push 전환 중 IndexedStack 홈과 경합해 Android ANR을 유발했음.
+
+- 수동 가로 스크롤·3배 무한 리스트는 유지
+- 자동 스크롤 재도입 시: `jumpTo` 고주파 금지, `NavigationLock.isLocked` / `ModalRoute.isCurrent` 게이트, 단일 coordinator + `animateTo` 저주파만 허용
+- [`AutoScrollReassembleMixin`](lib/utils/auto_scroll_reassemble.dart)은 재도입 시 참고용으로만 유지
+
+---
+
+## 검증 체크리스트
+
+1. 스페어 홈 탭 → `r` 3회 — 터미널 ms 기록
+2. DevTools Network — reload 중 **picsum 0건**
+3. shop 홈 → `r` — baseline 유지
+4. `./scripts/check_no_raw_network_images.sh` 통과

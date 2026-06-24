@@ -1,0 +1,42 @@
+---
+description: 이미지 로딩·hot reload 안정성 — picsum/Raw Image.network 금지
+globs: lib/widgets/**/*.dart,lib/screens/**/*.dart,lib/mocks/**/*.dart
+alwaysApply: false
+---
+
+# Images & Hot Reload (mandatory)
+
+Hot reload lag on spare home was caused by `Image.network` + picsum URLs during rebuild. Follow these rules to prevent recurrence.
+
+## 1. List/card thumbnails → AppNetworkImage
+
+- Use [`AppNetworkImage`](lib/widgets/common/app_network_image.dart) for any image in scroll lists, cards, avatars, job thumbnails.
+- [`JobThumbnail`](lib/widgets/common/job_thumbnail.dart) must delegate to `AppNetworkImage` — never `Image.network` directly.
+- Avoid `NetworkImage(...)` in `CircleAvatar.backgroundImage` — use `ClipOval` + `AppNetworkImage`.
+
+## 2. Mock data URLs
+
+- Mock JSON must use **`mock://`** scheme (e.g. `mock://job/job-mock-1`).
+- **Do not** use `picsum.photos` or other external hosts in committed mock data.
+- Dev mock mode (`USE_MOCK_DATA=true`) must not trigger network fetch on reload.
+
+## 3. Auto-scroll carousels
+
+- Horizontal auto-scroll sections (`NewJobsSection`, `PopularJobsSection`, etc.) must use [`AutoScrollReassembleMixin`](lib/utils/auto_scroll_reassemble.dart).
+- On `reassemble()`, defer restart by **800ms** — do not call `_startAutoScroll()` immediately.
+
+## 4. Home screen ViewModels
+
+- Tab-root screens: `didChangeDependencies` + `_providersReady` + `ChangeNotifierProvider.value` (see [`shop/home_screen.dart`](lib/screens/shop/home_screen.dart)).
+- Do not put `ChangeNotifierProvider(create: ...)` in `build()` without guard.
+
+## 5. Verification
+
+Run before PR:
+
+```bash
+./scripts/check_no_raw_network_images.sh
+flutter test test/job_thumbnail_test.dart test/spare_home_scroll_view_test.dart
+```
+
+See [`docs/HOT_RELOAD_GUIDE.md`](docs/HOT_RELOAD_GUIDE.md).

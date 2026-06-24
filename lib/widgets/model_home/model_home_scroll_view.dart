@@ -4,11 +4,12 @@ import 'package:provider/provider.dart';
 import '../../mocks/mock_model_home_data.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../view_models/matching_view_model.dart';
 import '../../widgets/customer_service_section.dart';
-import '../../widgets/spare_home/spare_home_app_bar.dart';
+import '../../utils/app_screen_insets.dart';
+import 'model_home_app_bar.dart';
 import 'model_home_interest_section.dart';
 import 'model_home_profile_card.dart';
-import 'model_home_quick_menu.dart';
 import 'model_home_status_strip.dart';
 import 'model_home_upcoming_schedule_section.dart';
 
@@ -21,50 +22,45 @@ class ModelHomeScrollView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().currentUser;
-    final profile = MockModelHomeData.profileForUser(user);
-    final interests = MockModelHomeData.interests;
     final schedules = MockModelHomeData.upcomingSchedules;
 
     return CustomScrollView(
       controller: scrollController,
+      cacheExtent: 240,
       slivers: [
+        AppScreenInsets.pinnedTopBarSliver(
+          context: context,
+          child: ModelHomeAppBarRow(scrollController: scrollController),
+        ),
         SliverToBoxAdapter(
-          child: Container(
-            height: 44 + MediaQuery.paddingOf(context).top,
-            decoration: const BoxDecoration(
-              color: AppTheme.backgroundWhite,
-              border: Border(
-                bottom: BorderSide(color: AppTheme.borderGray, width: 1),
-              ),
-            ),
-            padding: EdgeInsets.only(
-              top: MediaQuery.paddingOf(context).top,
-              left: AppTheme.spacing4,
-              right: AppTheme.spacing4,
-            ),
-            child: SizedBox(
-              height: 44,
-              child: SpareHomeAppBarRow(scrollController: scrollController),
-            ),
+          child: Selector<MatchingViewModel, int>(
+            selector: (_, vm) => vm.pendingCount,
+            builder: (context, pendingCount, _) {
+              final profile = MockModelHomeData.profileForUser(
+                user,
+                todayInterestCount: pendingCount,
+              );
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: AppTheme.spacing4),
+                  ModelHomeProfileCard(profile: profile),
+                  const SizedBox(height: AppTheme.spacing4),
+                  ModelHomeStatusStrip(
+                    isIdentityVerified: profile.isIdentityVerified,
+                    todayInterestCount: profile.todayInterestCount,
+                  ),
+                ],
+              );
+            },
           ),
         ),
+        ...ModelHomeInterestSection.buildSlivers(context),
         SliverToBoxAdapter(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: AppTheme.spacing4),
-              ModelHomeProfileCard(profile: profile),
-              const SizedBox(height: AppTheme.spacing4),
-              ModelHomeStatusStrip(
-                isIdentityVerified: profile.isIdentityVerified,
-                todayInterestCount: profile.todayInterestCount,
-              ),
-              const SizedBox(height: AppTheme.spacing6),
-              ModelHomeInterestSection(interests: interests),
-              const SizedBox(height: AppTheme.spacing6),
               ModelHomeUpcomingScheduleSection(schedules: schedules),
-              const SizedBox(height: AppTheme.spacing6),
-              const ModelHomeQuickMenu(),
               const SizedBox(height: AppTheme.spacing6),
               const CustomerServiceSection(),
               SizedBox(height: MediaQuery.paddingOf(context).bottom + 24),

@@ -8,11 +8,10 @@ import '../../services/application_service.dart';
 import '../../services/job_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
+import '../../utils/shell_navigation.dart';
 import '../../view_models/job_detail_view_model.dart';
 import '../../widgets/job_detail/job_detail_scroll_body.dart';
 import '../../widgets/shop_jobs_list/shop_job_detail_bottom_bar.dart';
-import 'applicants_screen.dart';
-import 'job_new_screen.dart';
 
 /// 샵「내 공고」상세 — 스페어 [JobDetailScrollBody]와 동일한 본문 + 샵 관리 액션.
 class ShopJobDetailScreen extends StatefulWidget {
@@ -227,11 +226,9 @@ class _ShopJobDetailScreenState extends State<ShopJobDetailScreen> {
   }
 
   Future<void> _openEdit(Job job) async {
-    final updated = await Navigator.push<bool>(
+    final updated = await ShellNavigation.pushShopJobNew(
       context,
-      MaterialPageRoute<bool>(
-        builder: (context) => ShopJobNewScreen(jobToEdit: job),
-      ),
+      jobToEdit: job,
     );
     if (!mounted || updated != true) return;
     await context.read<JobDetailViewModel>().loadJob();
@@ -239,23 +236,16 @@ class _ShopJobDetailScreenState extends State<ShopJobDetailScreen> {
   }
 
   Future<void> _openRepost(Job job) async {
-    final created = await Navigator.push<bool>(
+    final created = await ShellNavigation.pushShopJobNew(
       context,
-      MaterialPageRoute<bool>(
-        builder: (context) => ShopJobNewScreen(jobToCopy: job),
-      ),
+      jobToCopy: job,
     );
     if (!mounted || created != true) return;
     Navigator.pop(context, true);
   }
 
   void _openApplicants(Job job) {
-    Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (context) => ShopApplicantsScreen(initialJobId: job.id),
-      ),
-    );
+    ShellNavigation.pushShopApplicants(context, jobId: job.id);
   }
 
   @override

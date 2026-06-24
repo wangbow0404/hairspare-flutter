@@ -5,6 +5,7 @@ import '../../models/schedule.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/schedule_cancellation_policy.dart';
 import '../../utils/schedule_conflict.dart';
+import '../../utils/schedule_session_audience.dart';
 import '../../utils/schedule_work_session.dart';
 import '../common/glass_modal.dart';
 
@@ -19,6 +20,7 @@ abstract final class ScheduleCancelConfirmSheet {
     String? title,
     CancellationActor actor = CancellationActor.spare,
     CancellationEligibility? eligibility,
+    bool isModelMode = false,
   }) async {
     if (schedulesToCancel.isEmpty) return false;
 
@@ -28,6 +30,8 @@ abstract final class ScheduleCancelConfirmSheet {
           actor: actor,
         );
 
+    final audience = ScheduleSessionAudience.fromModelMode(isModelMode);
+
     final agreed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -35,9 +39,10 @@ abstract final class ScheduleCancelConfirmSheet {
       barrierColor: Colors.black.withValues(alpha: 0.45),
       builder: (ctx) => _ScheduleCancelConfirmBody(
         schedules: schedulesToCancel,
-        title: title ?? '근무 취소 확인',
+        title: title ?? audience.cancelConfirmTitle(),
         actor: actor,
         eligibility: resolvedEligibility,
+        audience: audience,
       ),
     );
 
@@ -51,12 +56,14 @@ class _ScheduleCancelConfirmBody extends StatefulWidget {
     required this.title,
     required this.actor,
     required this.eligibility,
+    required this.audience,
   });
 
   final List<Schedule> schedules;
   final String title;
   final CancellationActor actor;
   final CancellationEligibility eligibility;
+  final ScheduleSessionAudience audience;
 
   @override
   State<_ScheduleCancelConfirmBody> createState() =>
@@ -136,7 +143,10 @@ class _ScheduleCancelConfirmBodyState extends State<_ScheduleCancelConfirmBody> 
                       ],
                     ),
                     const SizedBox(height: 14),
-                    _PolicyBulletCard(actor: widget.actor),
+                    _PolicyBulletCard(
+                      actor: widget.actor,
+                      isModelMode: widget.audience.isModel,
+                    ),
                     if (widget.eligibility.penaltySummary != null) ...[
                       const SizedBox(height: 10),
                       _PenaltySummaryCard(
@@ -145,7 +155,12 @@ class _ScheduleCancelConfirmBodyState extends State<_ScheduleCancelConfirmBody> 
                       ),
                     ],
                     const SizedBox(height: 12),
-                    ...widget.schedules.map(_CancelTargetRow.new),
+                    ...widget.schedules.map(
+                      (schedule) => _CancelTargetRow(
+                        schedule,
+                        targetLabel: widget.audience.cancelTargetLabel(),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -221,9 +236,13 @@ class _ScheduleCancelConfirmBodyState extends State<_ScheduleCancelConfirmBody> 
 }
 
 class _PolicyBulletCard extends StatelessWidget {
-  const _PolicyBulletCard({required this.actor});
+  const _PolicyBulletCard({
+    required this.actor,
+    this.isModelMode = false,
+  });
 
   final CancellationActor actor;
+  final bool isModelMode;
 
   @override
   Widget build(BuildContext context) {
@@ -256,7 +275,10 @@ class _PolicyBulletCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          ...ScheduleCancellationPolicy.policyBulletLines(actor: actor).map(
+          ...ScheduleCancellationPolicy.policyBulletLines(
+            actor: actor,
+            isModelMode: isModelMode,
+          ).map(
             (line) => Padding(
               padding: const EdgeInsets.only(bottom: 3),
               child: Text(
@@ -331,9 +353,10 @@ class _PenaltySummaryCard extends StatelessWidget {
 }
 
 class _CancelTargetRow extends StatelessWidget {
-  const _CancelTargetRow(this.schedule);
+  const _CancelTargetRow(this.schedule, {required this.targetLabel});
 
   final Schedule schedule;
+  final String targetLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -379,9 +402,9 @@ class _CancelTargetRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '취소할 근무',
-                  style: TextStyle(
+                Text(
+                  targetLabel,
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.stitchTextSecondary,

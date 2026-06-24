@@ -45,6 +45,11 @@ abstract final class AppBarNavigation {
   static void pushMessages(BuildContext context) {
     if (_isShop(context)) {
       appRouter.push(AppRoutes.shopMessages);
+      return;
+    }
+    final user = Provider.of<AuthProvider>(context, listen: false).currentUser;
+    if (user != null && user.isModelAccount) {
+      appRouter.push(AppRoutes.modelMessages);
     } else {
       appRouter.push(AppRoutes.spareMessages);
     }
@@ -53,6 +58,11 @@ abstract final class AppBarNavigation {
   static void pushNotificationsList(BuildContext context) {
     if (_isShop(context)) {
       appRouter.push(AppRoutes.shopNotifications);
+      return;
+    }
+    final user = Provider.of<AuthProvider>(context, listen: false).currentUser;
+    if (user != null && user.isModelAccount) {
+      appRouter.push(AppRoutes.modelNotifications);
     } else {
       appRouter.push(AppRoutes.spareNotifications);
     }
