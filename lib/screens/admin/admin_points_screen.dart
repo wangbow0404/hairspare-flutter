@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../services/admin_service.dart';
+import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/admin/admin_page_header.dart';
-import '../../widgets/admin/admin_table_card.dart';
+import '../../widgets/admin/admin_stitch_list_cards.dart';
+import '../../widgets/admin/admin_stitch_list_screen_shell.dart';
+import '../../widgets/admin/admin_stitch_widgets.dart';
 
 /// M10. 포인트·미션 관리
 class AdminPointsScreen extends StatefulWidget {
@@ -41,61 +43,91 @@ class _AdminPointsScreenState extends State<AdminPointsScreen> {
 
   String _formatDate(String? v) {
     if (v == null) return '-';
-    try { return DateFormat('yyyy.MM.dd HH:mm').format(DateTime.parse(v).toLocal()); } catch (_) { return v; }
+    try {
+      return DateFormat('yyyy.MM.dd HH:mm').format(DateTime.parse(v).toLocal());
+    } catch (_) {
+      return v;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const AdminPageHeader(title: '포인트·미션', subtitle: '포인트 거래 내역 및 미션 설정'),
-        const SizedBox(height: AppTheme.spacing6),
-        if (_isLoading)
-          const Center(child: CircularProgressIndicator())
-        else ...[
-          AdminTableCard(
-            padding: const EdgeInsets.all(AppTheme.spacing4),
+    return AdminStitchListScreenShell(
+      header: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AdminStitchPageHeader(
+            title: '포인트·미션',
+            subtitle: '포인트 거래 내역 및 미션 설정',
+          ),
+          SizedBox(height: AdminStitchTheme.sectionGap),
+        ],
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const AdminStitchListStateSliver.loading();
+    }
+    return SliverPadding(
+      padding: AdminStitchListScreenShell.listPadding(context),
+      sliver: SliverList(
+        delegate: SliverChildListDelegate([
+          AdminStitchCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('미션 설정', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: AppTheme.spacing3),
+                Text('미션 설정', style: AdminStitchTheme.sectionHeader),
+                const SizedBox(height: AdminStitchTheme.stackTight),
                 ..._missions.map((m) {
                   final map = m as Map<String, dynamic>;
                   return SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
                     title: Text(map['label']?.toString() ?? ''),
-                    subtitle: Text('보상 ${map['reward']}P · 일일 ${map['dailyCap']}회'),
+                    subtitle: Text(
+                      '보상 ${map['reward']}P · 일일 ${map['dailyCap']}회',
+                    ),
                     value: map['active'] == true,
                     onChanged: (_) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('미션 설정 변경 (mock)')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('미션 설정 변경 (mock)')),
+                      );
                     },
                   );
                 }),
               ],
             ),
           ),
-          const SizedBox(height: AppTheme.spacing6),
-          SizedBox(
-            height: 400,
-            child: AdminTableCard(
-              child: ListView.separated(
-                itemCount: _transactions.length,
-                separatorBuilder: (_, __) => Divider(color: AppTheme.adminPurple100.withValues(alpha: 0.5)),
-                itemBuilder: (_, i) {
-                  final t = _transactions[i] as Map<String, dynamic>;
-                  final suspicious = t['suspicious'] == true;
-                  return ListTile(
-                    title: Text(t['userName']?.toString() ?? '', style: TextStyle(fontWeight: FontWeight.w600, color: suspicious ? AppTheme.urgentRed : AppTheme.textPrimary)),
-                    subtitle: Text('${t['description']} · ${_formatDate(t['createdAt']?.toString())}'),
-                    trailing: Text('${t['typeLabel']} ${t['amount']}P', style: TextStyle(fontWeight: FontWeight.w600, color: suspicious ? AppTheme.urgentRed : AppTheme.green600)),
-                  );
-                },
+          const SizedBox(height: AdminStitchTheme.sectionGap),
+          Text('거래 내역', style: AdminStitchTheme.sectionHeader),
+          const SizedBox(height: AdminStitchTheme.stackTight),
+          ..._transactions.map((t) {
+            final map = t as Map<String, dynamic>;
+            final suspicious = map['suspicious'] == true;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AdminStitchTheme.sectionGap),
+              child: AdminStitchSimpleListCard(
+                title: map['userName']?.toString() ?? '',
+                subtitle:
+                    '${map['description']} · ${_formatDate(map['createdAt']?.toString())}',
+                icon: Icons.stars_outlined,
+                iconColor: suspicious
+                    ? AppTheme.urgentRed
+                    : AdminStitchTheme.emerald,
+                trailing: Text(
+                  '${map['typeLabel']} ${map['amount']}P',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: suspicious ? AppTheme.urgentRed : AppTheme.green600,
+                  ),
+                ),
               ),
-            ),
-          ),
-        ],
-      ],
+            );
+          }),
+        ]),
+      ),
     );
   }
 }

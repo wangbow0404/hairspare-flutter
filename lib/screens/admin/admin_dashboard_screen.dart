@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/router/app_routes.dart';
 import '../../services/admin_service.dart';
@@ -10,7 +11,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/admin/admin_stitch_widgets.dart';
 
-/// 관리자 대시보드 화면 (Stitch bento 레이아웃)
+/// 관리자 대시보드 (Stitch 목업 parity)
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
@@ -20,6 +21,8 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final AdminService _adminService = AdminService();
+  final NumberFormat _numberFormat = NumberFormat('#,###', 'ko_KR');
+
   Map<String, dynamic>? _stats;
   List<dynamic> _activities = [];
   bool _isLoading = true;
@@ -58,10 +61,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       if (mounted && _activities.isEmpty) {
         setState(() {
           _activities = [
-            {'type': 'signup', 'label': '회원가입', 'entity': '김디자이너', 'ago': '5분 전'},
-            {'type': 'job', 'label': '공고등록', 'entity': '이미용실', 'ago': '12분 전'},
-            {'type': 'payment', 'label': '결제완료', 'entity': '박스텝', 'ago': '23분 전'},
-            {'type': 'report', 'label': '신고접수', 'entity': '스페어 #8492', 'ago': '1시간 전'},
+            {
+              'type': 'signup',
+              'label': '미용실',
+              'entity': '글래머',
+              'description': '미용실 "글래머" 온보딩 완료',
+              'ago': '2분 전',
+              'source': '시스템 자동',
+            },
+            {
+              'type': 'report',
+              'label': '신고 접수',
+              'entity': '스페어 #8492',
+              'description': '스페어 #8492 신고 접수',
+              'ago': '15분 전',
+              'source': '사용자 제출',
+            },
+            {
+              'type': 'payment',
+              'label': '일괄 결제',
+              'entity': '412건',
+              'description': '412개 계정 일괄 결제 처리 완료',
+              'ago': '1시간 전',
+              'source': '시스템 배치',
+            },
           ];
         });
       }
@@ -97,14 +120,76 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
+  String _formatCount(num value) => _numberFormat.format(value);
+
   String _formatCurrency(int amount) {
     if (amount >= 10000) {
-      return '${(amount / 10000).toStringAsFixed(0)}만원';
+      return '${_numberFormat.format((amount / 10000).round())}만원';
     }
-    return '${amount.toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]},',
-        )}원';
+    return '${_numberFormat.format(amount)}원';
+  }
+
+  Widget _metricRow({
+    required Widget left,
+    required Widget right,
+    required double gap,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: left),
+        SizedBox(width: gap),
+        Expanded(child: right),
+      ],
+    );
+  }
+
+  Widget _pendingGrid({
+    required double gap,
+    required int pendingAuth,
+    required int openReports,
+    required int pendingBookings,
+    required int pendingEducations,
+  }) {
+    return Column(
+      children: [
+        _metricRow(
+          gap: gap,
+          left: AdminStitchAlertMetricCard(
+            label: '인증 대기',
+            value: _formatCount(pendingAuth),
+            icon: Icons.pending_actions_outlined,
+            subtitle: '조치 필요',
+            onTap: () => context.go(AppRoutes.adminVerifications),
+          ),
+          right: AdminStitchAlertMetricCard(
+            label: '미처리 신고',
+            value: _formatCount(openReports),
+            icon: Icons.error_outline,
+            subtitle: '긴급 우선',
+            onTap: () => context.go(AppRoutes.adminReports),
+          ),
+        ),
+        SizedBox(height: gap),
+        _metricRow(
+          gap: gap,
+          left: AdminStitchDashboardPendingCard(
+            label: '공간 승인 대기',
+            value: _formatCount(pendingBookings),
+            subtitle: '대기열',
+            icon: Icons.chair_outlined,
+            onTap: () => context.go(AppRoutes.adminSpaces),
+          ),
+          right: AdminStitchDashboardPendingCard(
+            label: '교육 승인 대기',
+            value: _formatCount(pendingEducations),
+            subtitle: '심사 대기',
+            icon: Icons.school_outlined,
+            onTap: () => context.go(AppRoutes.adminEducations),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -129,169 +214,98 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
 
     final usersTotal = _stats!['users']?['total'] ?? 0;
-    final usersToday = _stats!['users']?['today'] ?? 0;
+    final usersWeekPct = (_stats!['users']?['weekGrowthPct'] as num?)?.toDouble();
     final activeJobs = _stats!['jobs']?['active'] ?? 0;
+    final jobsTodayPct = (_stats!['jobs']?['todayGrowthPct'] as num?)?.toDouble();
+    final byRole = Map<String, int>.from(
+      (_stats!['users']?['byRole'] as Map?)?.map(
+            (k, v) => MapEntry(k.toString(), (v as num).toInt()),
+          ) ??
+          {},
+    );
     final todayPayments = (_stats!['payments']?['today'] ?? 0) as int;
+    final paymentTrendPct =
+        (_stats!['payments']?['avgGrowthPct'] as num?)?.toDouble();
     final pendingAuth = _stats!['pendingVerifications'] ?? 0;
     final openReports = _stats!['openReports'] ?? 0;
     final pendingBookings = _stats!['pendingBookings'] ?? 0;
+    final pendingEducations = _stats!['pendingEducations'] ?? 0;
+
+    String? usersTrend;
+    if (usersWeekPct != null) {
+      usersTrend = '+${usersWeekPct.toStringAsFixed(1)}% 이번 주';
+    }
+
+    String? jobsTrend;
+    if (jobsTodayPct != null) {
+      jobsTrend = '+${jobsTodayPct.toStringAsFixed(1)}% 오늘';
+    }
+
+    String? paymentTrend;
+    if (paymentTrendPct != null) {
+      paymentTrend = '+${paymentTrendPct.toStringAsFixed(1)}% 평균 대비';
+    }
 
     final activityMaps = _activities
         .take(5)
         .map((a) => Map<String, dynamic>.from(a as Map))
         .toList();
 
+    const gap = AdminStitchTheme.stackTight;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(AdminStitchTheme.pageMargin),
+      padding: EdgeInsets.fromLTRB(
+        AdminStitchTheme.pageMargin,
+        AdminStitchTheme.pageMargin,
+        AdminStitchTheme.pageMargin,
+        AdminStitchTheme.pageMargin + (bottomInset > 0 ? 72 : 16),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Expanded(
-                child: AdminStitchPageHeader(
-                  title: '개요',
-                  subtitle: '오늘의 플랫폼 현황입니다.',
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AdminStitchTheme.surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: AdminStitchTheme.emerald,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '실시간',
-                      style: AdminStitchTheme.labelSm.copyWith(
-                        fontSize: 10,
-                        color: AdminStitchTheme.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          const AdminStitchPageHeader(
+            title: '개요',
+            subtitle: '오늘의 현황입니다.',
           ),
           const SizedBox(height: AdminStitchTheme.sectionGap),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 640;
-              final gap = AdminStitchTheme.stackTight;
-
-              return Column(
-                children: [
-                  if (isWide)
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: AdminStitchMetricCard(
-                            label: '총 회원',
-                            value: '$usersTotal',
-                            icon: Icons.group_outlined,
-                            trendLabel: usersToday > 0 ? '오늘 +$usersToday' : null,
-                            onTap: () => context.go(AppRoutes.adminUsers),
-                          ),
-                        ),
-                        SizedBox(width: gap),
-                        Expanded(
-                          child: AdminStitchMetricCard(
-                            label: '활성 공고',
-                            value: '$activeJobs',
-                            icon: Icons.work_outline,
-                            trendLabel: '전체 ${_stats!['jobs']?['total'] ?? 0}개',
-                            onTap: () => context.go(AppRoutes.adminJobs),
-                          ),
-                        ),
-                      ],
-                    )
-                  else ...[
-                    AdminStitchMetricCard(
-                      label: '총 회원',
-                      value: '$usersTotal',
-                      icon: Icons.group_outlined,
-                      trendLabel: usersToday > 0 ? '오늘 +$usersToday' : null,
-                      onTap: () => context.go(AppRoutes.adminUsers),
-                    ),
-                    SizedBox(height: gap),
-                    AdminStitchMetricCard(
-                      label: '활성 공고',
-                      value: '$activeJobs',
-                      icon: Icons.work_outline,
-                      trendLabel: '전체 ${_stats!['jobs']?['total'] ?? 0}개',
-                      onTap: () => context.go(AppRoutes.adminJobs),
-                    ),
-                  ],
-                  SizedBox(height: gap),
-                  AdminStitchPaymentsHeroCard(
-                    label: '오늘 결제',
-                    value: _formatCurrency(todayPayments),
-                    onTap: () => context.go(AppRoutes.adminPayments),
-                  ),
-                  SizedBox(height: gap),
-                  if (isWide)
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: AdminStitchAlertMetricCard(
-                            label: '대기 인증',
-                            value: '$pendingAuth',
-                            icon: Icons.verified_user_outlined,
-                            onTap: () => context.go(AppRoutes.adminVerifications),
-                          ),
-                        ),
-                        SizedBox(width: gap),
-                        Expanded(
-                          child: AdminStitchAlertMetricCard(
-                            label: '미처리 신고',
-                            value: '$openReports',
-                            icon: Icons.report_outlined,
-                            onTap: () => context.go(AppRoutes.adminReports),
-                          ),
-                        ),
-                      ],
-                    )
-                  else ...[
-                    AdminStitchAlertMetricCard(
-                      label: '대기 인증',
-                      value: '$pendingAuth',
-                      icon: Icons.verified_user_outlined,
-                      onTap: () => context.go(AppRoutes.adminVerifications),
-                    ),
-                    SizedBox(height: gap),
-                    AdminStitchAlertMetricCard(
-                      label: '미처리 신고',
-                      value: '$openReports',
-                      icon: Icons.report_outlined,
-                      onTap: () => context.go(AppRoutes.adminReports),
-                    ),
-                  ],
-                  SizedBox(height: gap),
-                  AdminStitchListRowCard(
-                    icon: Icons.storefront_outlined,
-                    label: '대기 공간 승인',
-                    value: '$pendingBookings',
-                    onTap: () => context.go(AppRoutes.adminSpaces),
-                  ),
-                ],
-              );
-            },
+          _metricRow(
+            gap: gap,
+            left: AdminStitchMetricCard(
+              label: '총 회원',
+              value: _formatCount(usersTotal),
+              icon: Icons.group_outlined,
+              trendLabel: usersTrend,
+              onTap: () => context.go(AppRoutes.adminUsers),
+            ),
+            right: AdminStitchMetricCard(
+              label: '활성 공고',
+              value: _formatCount(activeJobs),
+              icon: Icons.work_outline,
+              useSecondaryIcon: true,
+              trendLabel: jobsTrend,
+              onTap: () => context.go(AppRoutes.adminJobs),
+            ),
           ),
+          const SizedBox(height: gap),
+          AdminStitchPaymentsHeroCard(
+            label: '오늘 결제',
+            value: _formatCurrency(todayPayments),
+            trendLabel: paymentTrend,
+            onTap: () => context.go(AppRoutes.adminPayments),
+          ),
+          const SizedBox(height: gap),
+          _pendingGrid(
+            gap: gap,
+            pendingAuth: pendingAuth,
+            openReports: openReports,
+            pendingBookings: pendingBookings,
+            pendingEducations: pendingEducations,
+          ),
+          if (byRole.isNotEmpty) ...[
+            const SizedBox(height: AdminStitchTheme.sectionGap),
+            AdminStitchUserDistributionCard(byRole: byRole),
+          ],
           if (activityMaps.isNotEmpty) ...[
             const SizedBox(height: AdminStitchTheme.sectionGap),
             AdminStitchActivityList(

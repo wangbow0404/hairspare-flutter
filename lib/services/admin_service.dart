@@ -79,18 +79,31 @@ class AdminService {
   /// 회원 목록 조회
   Future<Map<String, dynamic>> getUsers({
     String? role,
+    String? memberCategory,
     String? search,
     String? signupMethod,
     int page = 1,
     int limit = 20,
   }) async {
-    if (ApiConfig.useMockData) return await MockAdminData.getUsers(page: page, limit: limit);
+    if (ApiConfig.useMockData) {
+      return await MockAdminData.getUsers(
+        page: page,
+        limit: limit,
+        role: role,
+        memberCategory: memberCategory,
+        search: search,
+      );
+    }
     try {
       final queryParams = <String, dynamic>{
         'page': page,
         'limit': limit,
       };
-      if (role != null && role.isNotEmpty) queryParams['role'] = role;
+      if (memberCategory != null && memberCategory.isNotEmpty) {
+        queryParams['memberCategory'] = memberCategory;
+      } else if (role != null && role.isNotEmpty) {
+        queryParams['role'] = role;
+      }
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
       if (signupMethod != null && signupMethod.isNotEmpty && signupMethod != 'all') {
         queryParams['signupMethod'] = signupMethod;
@@ -316,6 +329,49 @@ class AdminService {
     }
   }
 
+  /// 공고 지원 목록 조회 (관리자)
+  Future<Map<String, dynamic>> getApplications({
+    String? status,
+    String? search,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    if (ApiConfig.useMockData) {
+      return await MockAdminData.getApplications(
+        status: status,
+        search: search,
+        page: page,
+        limit: limit,
+      );
+    }
+    try {
+      final queryParams = <String, dynamic>{'page': page, 'limit': limit};
+      if (status != null && status.isNotEmpty) queryParams['status'] = status;
+      if (search != null && search.isNotEmpty) queryParams['search'] = search;
+
+      final response = await _dio.get(
+        '/api/admin/applications',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'] ?? response.data;
+        return data is Map<String, dynamic>
+            ? data
+            : {'applications': [], 'pagination': {'page': 1, 'limit': 20, 'total': 0, 'totalPages': 1}};
+      } else {
+        throw ServerException('지원 목록 조회 실패: ${response.statusMessage}', statusCode: response.statusCode);
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return {'applications': [], 'pagination': {'page': 1, 'limit': 20, 'total': 0, 'totalPages': 1}};
+      }
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
   /// 체크인/스케줄 목록 조회
   Future<Map<String, dynamic>> getSchedules({
     String? search,
@@ -435,7 +491,7 @@ class AdminService {
   /// 인증 승인 (감사로그 기록 대상)
   Future<void> approveVerification(String id, {String? note}) async {
     if (ApiConfig.useMockData) {
-      await Future.delayed(const Duration(milliseconds: 250));
+      await MockAdminData.setVerificationStatus(id, 'approved');
       return;
     }
     try {
@@ -452,7 +508,7 @@ class AdminService {
   /// 인증 반려 (감사로그 기록 대상)
   Future<void> rejectVerification(String id, {required String reason}) async {
     if (ApiConfig.useMockData) {
-      await Future.delayed(const Duration(milliseconds: 250));
+      await MockAdminData.setVerificationStatus(id, 'rejected');
       return;
     }
     try {
@@ -535,7 +591,7 @@ class AdminService {
     int? durationDays,
   }) async {
     if (ApiConfig.useMockData) {
-      await Future.delayed(const Duration(milliseconds: 250));
+      await MockAdminData.setReportStatus(id, 'resolved');
       return;
     }
     try {
@@ -672,12 +728,18 @@ class AdminService {
 
   // ── M1 회원 mutation ──
   Future<void> suspendUser(String userId, {required String reason, DateTime? until}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    if (ApiConfig.useMockData) {
+      await MockAdminData.setUserSuspended(userId, suspended: true);
+      return;
+    }
     await _dio.post('/api/admin/users/$userId/suspend', data: {'reason': reason, if (until != null) 'until': until.toIso8601String()});
   }
 
   Future<void> unsuspendUser(String userId, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    if (ApiConfig.useMockData) {
+      await MockAdminData.setUserSuspended(userId, suspended: false);
+      return;
+    }
     await _dio.post('/api/admin/users/$userId/unsuspend', data: {'reason': reason});
   }
 
@@ -693,12 +755,12 @@ class AdminService {
 
   // ── M3 공고 mutation ──
   Future<void> hideJob(String jobId, {required String reason, bool hide = true}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    if (ApiConfig.useMockData) { await MockAdminData.setJobHidden(jobId, hide: hide); return; }
     await _dio.patch('/api/admin/jobs/$jobId/hide', data: {'hide': hide, 'reason': reason});
   }
 
   Future<void> forceCloseJob(String jobId, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    if (ApiConfig.useMockData) { await MockAdminData.setJobClosed(jobId); return; }
     await _dio.patch('/api/admin/jobs/$jobId/close', data: {'reason': reason});
   }
 
@@ -709,17 +771,17 @@ class AdminService {
 
   // ── M4 스케줄 mutation ──
   Future<void> forceCompleteSchedule(String scheduleId, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    if (ApiConfig.useMockData) { await MockAdminData.setScheduleState(scheduleId, 'completed'); return; }
     await _dio.post('/api/admin/schedules/$scheduleId/complete', data: {'reason': reason});
   }
 
   Future<void> forceCancelSchedule(String scheduleId, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    if (ApiConfig.useMockData) { await MockAdminData.setScheduleState(scheduleId, 'cancelled'); return; }
     await _dio.post('/api/admin/schedules/$scheduleId/cancel', data: {'reason': reason});
   }
 
   Future<void> markNoShow(String scheduleId, {required String reason, required String party}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    if (ApiConfig.useMockData) { await MockAdminData.setScheduleState(scheduleId, 'noshow'); return; }
     await _dio.post('/api/admin/schedules/$scheduleId/noshow', data: {'reason': reason, 'party': party});
   }
 

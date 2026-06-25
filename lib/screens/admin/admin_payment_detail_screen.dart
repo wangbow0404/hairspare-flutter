@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../services/admin_service.dart';
 import '../../utils/error_handler.dart';
@@ -125,7 +126,9 @@ class _AdminPaymentDetailScreenState extends State<AdminPaymentDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AdminStitchTheme.pageMargin),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -136,17 +139,19 @@ class _AdminPaymentDetailScreenState extends State<AdminPaymentDetailScreen> {
                 color: AppTheme.textPrimary,
               ),
               const SizedBox(width: AppTheme.spacing2),
-              const Text(
-                '결제 상세',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Text(
+                      '결제 상세',
+                      style: AdminStitchTheme.pageTitleForWidth(constraints.maxWidth),
+                    );
+                  },
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppTheme.spacing6),
+          const SizedBox(height: AdminStitchTheme.sectionGap),
           if (_isLoading && _payment == null)
             const Center(
               child: Padding(
@@ -179,80 +184,72 @@ class _AdminPaymentDetailScreenState extends State<AdminPaymentDetailScreen> {
           else
             const SizedBox.shrink(),
         ],
-      );
+      ),
+    );
   }
 
   Widget _buildContent() {
     final payment = _payment!;
     final statusColor = _getStatusBadgeColor(payment['status']);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AdminTableCard(
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return AdminTableCard(
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spacing6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: AppTheme.spacing4,
+              runSpacing: AppTheme.spacing2,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      payment['orderId'] ?? '-',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(width: AppTheme.spacing4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.spacing4,
-                        vertical: AppTheme.spacing2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                      ),
-                      child: Text(
-                        _getStatusLabel(payment['status']),
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: statusColor,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  payment['orderId'] ?? '-',
+                  style: AdminStitchTheme.pageTitleMobile.copyWith(
+                    color: AppTheme.textPrimary,
+                  ),
                 ),
-                const SizedBox(height: AppTheme.spacing6),
-                _buildInfoRow('결제 방식', payment['paymentMethod'] ?? '-'),
-                _buildInfoRow('유형', _getTypeLabel(payment['type'])),
-                _buildInfoRow('금액', _formatCurrency((payment['amount'] ?? 0) as int)),
-                _buildInfoRow('결제일', _formatDate(payment['createdAt'])),
-                _buildInfoRow('사용자', payment['user']?['name'] ?? '-'),
-                _buildInfoRow('이메일', payment['user']?['email'] ?? '-'),
-                const SizedBox(height: AppTheme.spacing6),
-                const Divider(height: 1),
-                const SizedBox(height: AppTheme.spacing4),
-                Row(
-                  children: [
-                    FilledButton.icon(
-                      onPressed: () => _refund(),
-                      icon: const Icon(Icons.undo, size: 18),
-                      label: const Text('환불 처리'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppTheme.urgentRed,
-                      ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing4,
+                    vertical: AppTheme.spacing2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                  ),
+                  child: Text(
+                    _getStatusLabel(payment['status']),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: statusColor,
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: AppTheme.spacing6),
+            _buildInfoRow('결제 방식', payment['paymentMethod'] ?? '-'),
+            _buildInfoRow('유형', _getTypeLabel(payment['type'])),
+            _buildInfoRow('금액', _formatCurrency((payment['amount'] ?? 0) as int)),
+            _buildInfoRow('결제일', _formatDate(payment['createdAt'])),
+            _buildInfoRow('사용자', payment['user']?['name'] ?? '-'),
+            _buildInfoRow('이메일', payment['user']?['email'] ?? '-'),
+            const SizedBox(height: AppTheme.spacing6),
+            const Divider(height: 1),
+            const SizedBox(height: AppTheme.spacing4),
+            FilledButton.icon(
+              onPressed: () => _refund(),
+              icon: const Icon(Icons.undo, size: 18),
+              label: const Text('환불 처리'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.urgentRed,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 

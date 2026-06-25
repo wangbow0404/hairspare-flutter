@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../services/admin_service.dart';
+import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
@@ -114,45 +115,61 @@ class _AdminReportDetailScreenState extends State<AdminReportDetailScreen> {
     final report = _report!;
     final isOpen = report['status'] == 'open' || report['status'] == 'in_review';
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    report['categoryLabel']?.toString() ?? '신고 케이스',
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '${report['reporterName']} → ${report['reportedName']} · ${_formatDate(report['createdAt']?.toString())}',
-                    style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
-                  ),
-                ],
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AdminStitchTheme.pageMargin),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.pop(),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
               ),
-            ),
-            _PriorityChip(label: report['priorityLabel']?.toString() ?? ''),
-          ],
-        ),
-        const SizedBox(height: AppTheme.spacing6),
-        Expanded(
-          child: LayoutBuilder(
+              const SizedBox(width: AppTheme.spacing1),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          report['categoryLabel']?.toString() ?? '신고 케이스',
+                          style: AdminStitchTheme.pageTitleForWidth(constraints.maxWidth),
+                        ),
+                        Text(
+                          '${report['reporterName']} → ${report['reportedName']} · ${_formatDate(report['createdAt']?.toString())}',
+                          style: AdminStitchTheme.pageSubtitle.copyWith(fontSize: 13),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing2),
+              _PriorityChip(label: report['priorityLabel']?.toString() ?? ''),
+            ],
+          ),
+          const SizedBox(height: AdminStitchTheme.sectionGap),
+          LayoutBuilder(
             builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 960;
+              final isWide = constraints.maxWidth >= 768;
               final left = AdminReportCasePanel(
                 report: report,
                 isOpen: isOpen,
                 onResolve: _resolve,
                 formatDate: _formatDate,
               );
-              final right = AdminReportChatLogPanel(messages: _messages, formatDate: _formatDate);
+              final right = AdminReportChatLogPanel(
+                messages: _messages,
+                formatDate: _formatDate,
+              );
               if (isWide) {
                 return Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(flex: 2, child: left),
                     const SizedBox(width: AppTheme.spacing4),
@@ -160,19 +177,18 @@ class _AdminReportDetailScreenState extends State<AdminReportDetailScreen> {
                   ],
                 );
               }
-              return SingleChildScrollView(
-                child: Column(
-                  children: [
-                    left,
-                    const SizedBox(height: AppTheme.spacing4),
-                    SizedBox(height: 400, child: right),
-                  ],
-                ),
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  left,
+                  const SizedBox(height: AppTheme.spacing4),
+                  right,
+                ],
               );
             },
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -278,64 +294,68 @@ class AdminReportChatLogPanel extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(
-            child: messages.isEmpty
-                ? const Center(child: Text('채팅 로그가 없습니다'))
-                : ListView.builder(
-                    padding: const EdgeInsets.all(AppTheme.spacing4),
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      final msg = messages[index] as Map<String, dynamic>;
-                      final violation = msg['contactViolation'] == true;
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
-                        padding: const EdgeInsets.all(AppTheme.spacing3),
-                        decoration: BoxDecoration(
-                          color: violation ? AppTheme.red50 : AppTheme.adminPurple50.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                          border: Border.all(
-                            color: violation ? AppTheme.red200 : AppTheme.adminPurple100,
-                            width: violation ? 2 : 1,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  msg['senderName']?.toString() ?? '',
-                                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                                ),
-                                if (violation) ...[
-                                  const SizedBox(width: AppTheme.spacing2),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.urgentRed,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Text(
-                                      '연락처 위반',
-                                      style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ],
-                                const Spacer(),
-                                Text(
-                                  formatDate(msg['createdAt']?.toString()),
-                                  style: const TextStyle(fontSize: 11, color: AppTheme.textTertiary),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: AppTheme.spacing2),
-                            Text(msg['body']?.toString() ?? '', style: const TextStyle(fontSize: 14)),
-                          ],
-                        ),
-                      );
-                    },
+          if (messages.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(AppTheme.spacing8),
+              child: Center(child: Text('채팅 로그가 없습니다')),
+            )
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(AppTheme.spacing4),
+              itemCount: messages.length,
+              itemBuilder: (context, index) {
+                final msg = messages[index] as Map<String, dynamic>;
+                final violation = msg['contactViolation'] == true;
+                return Container(
+                  margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
+                  padding: const EdgeInsets.all(AppTheme.spacing3),
+                  decoration: BoxDecoration(
+                    color: violation ? AppTheme.red50 : AppTheme.adminPurple50.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                    border: Border.all(
+                      color: violation ? AppTheme.red200 : AppTheme.adminPurple100,
+                      width: violation ? 2 : 1,
+                    ),
                   ),
-          ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            msg['senderName']?.toString() ?? '',
+                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                          ),
+                          if (violation) ...[
+                            const SizedBox(width: AppTheme.spacing2),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppTheme.urgentRed,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text(
+                                '연락처 위반',
+                                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                          const Spacer(),
+                          Text(
+                            formatDate(msg['createdAt']?.toString()),
+                            style: const TextStyle(fontSize: 11, color: AppTheme.textTertiary),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppTheme.spacing2),
+                      Text(msg['body']?.toString() ?? '', style: const TextStyle(fontSize: 14)),
+                    ],
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );

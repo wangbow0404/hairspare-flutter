@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../services/admin_service.dart';
 import '../../utils/error_handler.dart';
@@ -108,7 +109,9 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AdminStitchTheme.pageMargin),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -119,17 +122,19 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
                 color: AppTheme.textPrimary,
               ),
               const SizedBox(width: AppTheme.spacing2),
-              const Text(
-                '공고 상세',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Text(
+                      '공고 상세',
+                      style: AdminStitchTheme.pageTitleForWidth(constraints.maxWidth),
+                    );
+                  },
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppTheme.spacing6),
+          const SizedBox(height: AdminStitchTheme.sectionGap),
           if (_isLoading && _job == null)
             const Center(
               child: Padding(
@@ -162,7 +167,8 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
           else
             const SizedBox.shrink(),
         ],
-      );
+      ),
+    );
   }
 
   Widget _buildContent() {
@@ -177,12 +183,10 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
           children: [
             Row(
               children: [
-                Expanded(
+                Flexible(
                   child: Text(
                     job['title'] ?? '제목 없음',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                    style: AdminStitchTheme.pageTitleMobile.copyWith(
                       color: AppTheme.textPrimary,
                     ),
                   ),

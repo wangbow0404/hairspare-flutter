@@ -233,7 +233,14 @@ class JobService {
   /// 공고 지원
   Future<void> applyToJob(String jobId) async {
     if (ApiConfig.useMockData) {
-      await MockSpareData.applyToJob(jobId);
+      // 에너지 검증·차감을 상태 변경보다 먼저 실행해 부분 실패(partial failure) 방지
+      final job = await MockSpareData.getJobById(jobId);
+      await MockSpareData.applyToJob(jobId); // 스케줄 충돌 검사 (상태 변경 없음)
+      await MockSpareData.mockSpendEnergy(   // 에너지 부족 시 여기서 throw → 아래 상태 변경 차단
+        job.energy,
+        description: '공고 지원 · ${job.title}',
+        referenceId: jobId,
+      );
       final user = sl<AuthProvider>().currentUser ?? MockAuthData.spareUser();
       await MockShopData.addApplication(
         jobId: jobId,
@@ -244,12 +251,6 @@ class JobService {
           'email': user.email,
           'createdAt': user.createdAt.toIso8601String(),
         },
-      );
-      final job = await MockSpareData.getJobById(jobId);
-      await MockSpareData.mockSpendEnergy(
-        job.energy,
-        description: '공고 지원 · ${job.title}',
-        referenceId: jobId,
       );
       MockSpareData.recordLockedEnergyForJobApplication(
         jobId: jobId,

@@ -19,11 +19,20 @@ abstract final class AdminStitchTheme {
   static const Color surfaceContainer = Color(0xFFE9EEFB);
   static const Color surfaceDim = Color(0xFFD5DAE7);
   static const Color primaryFixed = Color(0xFFF0DBFF);
+  static const Color onPrimaryFixed = Color(0xFF2D0057);
+  static const Color secondaryFixed = Color(0xFFF3E8FF);
+  static const Color onSecondaryFixed = Color(0xFF4A148C);
   static const Color surfaceVariant = Color(0xFFDDE3EF);
   static const Color onSurfaceVariant = Color(0xFF4D4354);
   static const Color onPrimary = Color(0xFFFFFFFF);
   static const Color onSecondaryContainer = Color(0xFFFFFBFF);
   static const Color emerald = Color(0xFF10B981);
+  static const Color emeraldLight = Color(0xFF6EE7B7);
+  static const Color surfaceTint = Color(0x14580099);
+  static const Color alertPeachBg = Color(0xFFFFF1F2);
+  static const Color alertPeachBorder = Color(0xFFFECDD3);
+  static const Color alertPeachLabel = Color(0xFF9F1239);
+  static const Color alertPeachSubtitle = Color(0xFFDC2626);
 
   static const double pageMargin = 20;
   static const double componentPadding = 16;
@@ -33,12 +42,26 @@ abstract final class AdminStitchTheme {
   static const double radiusXl = 12;
   static const double radiusLg = 8;
   static const double radius2xl = 16;
+  static const double radius3xl = 20;
 
   static BoxDecoration get cardDecoration => BoxDecoration(
         color: surfaceCard,
         borderRadius: BorderRadius.circular(radiusXl),
         border: Border.all(color: borderDefault),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
       );
+
+  static const LinearGradient adminBgGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFF5F3FF), Color(0xFFFDF2F8)],
+  );
 
   static BoxDecoration get searchFieldDecoration => BoxDecoration(
         color: surfaceCard,
@@ -48,6 +71,37 @@ abstract final class AdminStitchTheme {
 
   static const TextStyle headlineMobile = TextStyle(
     fontSize: 26,
+    fontWeight: FontWeight.w800,
+    height: 1.2,
+    color: onSurface,
+  );
+
+  static const TextStyle pageTitleDesktop = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.w800,
+    height: 1.25,
+    color: onSurface,
+  );
+
+  static const TextStyle pageTitleMobile = TextStyle(
+    fontSize: 22,
+    fontWeight: FontWeight.w800,
+    height: 1.25,
+    color: onSurface,
+  );
+
+  static TextStyle pageTitleForWidth(double width) =>
+      width < 400 ? pageTitleMobile : pageTitleDesktop;
+
+  static const TextStyle pageSubtitle = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    height: 1.5,
+    color: textSecondary,
+  );
+
+  static const TextStyle headlineMd = TextStyle(
+    fontSize: 24,
     fontWeight: FontWeight.w800,
     height: 1.2,
     color: onSurface,

@@ -14,20 +14,29 @@ class AdminStitchPageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: AdminStitchTheme.headlineMobile),
-        if (subtitle != null) ...[
-          const SizedBox(height: AdminStitchTheme.stackTight),
-          Text(
-            subtitle!,
-            style: AdminStitchTheme.bodyMd.copyWith(
-              color: AdminStitchTheme.textSecondary,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: AdminStitchTheme.pageTitleForWidth(constraints.maxWidth),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-          ),
-        ],
-      ],
+            if (subtitle != null) ...[
+              const SizedBox(height: AdminStitchTheme.stackTight),
+              Text(
+                subtitle!,
+                style: AdminStitchTheme.pageSubtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }
@@ -100,19 +109,22 @@ class AdminStitchFilterChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          for (final tab in tabs) ...[
-            AdminStitchFilterChip(
-              label: tab,
-              selected: tab == selectedTab,
-              onTap: () => onTabChanged(tab),
-            ),
-            const SizedBox(width: AdminStitchTheme.stackTight),
+    return SizedBox(
+      height: 40,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            for (final tab in tabs) ...[
+              AdminStitchFilterChip(
+                label: tab,
+                selected: tab == selectedTab,
+                onTap: () => onTabChanged(tab),
+              ),
+              const SizedBox(width: AdminStitchTheme.stackTight),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -215,6 +227,7 @@ class AdminStitchMetricCard extends StatelessWidget {
     required this.value,
     required this.icon,
     this.trendLabel,
+    this.useSecondaryIcon = false,
     this.onTap,
   });
 
@@ -222,82 +235,76 @@ class AdminStitchMetricCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final String? trendLabel;
+  final bool useSecondaryIcon;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final iconBg = useSecondaryIcon
+        ? AdminStitchTheme.secondaryFixed
+        : AdminStitchTheme.primaryFixed;
+    final iconColor = useSecondaryIcon
+        ? AdminStitchTheme.secondary
+        : AdminStitchTheme.primary;
+
     return AdminStitchCard(
       onTap: onTap,
-      child: Stack(
-        clipBehavior: Clip.none,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Positioned(
-            right: -16,
-            top: -16,
-            child: Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AdminStitchTheme.primaryFixed.withValues(alpha: 0.5),
-                    AdminStitchTheme.secondaryContainer.withValues(alpha: 0.3),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Column(
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Icon(icon, size: 20, color: AdminStitchTheme.textSecondary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: AdminStitchTheme.labelSm.copyWith(
-                        color: AdminStitchTheme.textSecondary,
-                        fontWeight: FontWeight.w400,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+              Expanded(
+                child: Text(
+                  label.toUpperCase(),
+                  style: AdminStitchTheme.labelSm.copyWith(
+                    fontSize: 10,
+                    letterSpacing: 0.8,
+                    color: AdminStitchTheme.textSecondary,
+                    fontWeight: FontWeight.w600,
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                value,
-                style: AdminStitchTheme.headlineMobile.copyWith(fontSize: 24),
-              ),
-              if (trendLabel != null) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.trending_up,
-                      size: 14,
-                      color: AdminStitchTheme.emerald,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      trendLabel!,
-                      style: AdminStitchTheme.labelSm.copyWith(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w400,
-                        color: AdminStitchTheme.emerald,
-                      ),
-                    ),
-                  ],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
+              ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
+                ),
+                child: Icon(icon, size: 20, color: iconColor),
+              ),
             ],
           ),
+          const SizedBox(height: 12),
+          Text(value, style: AdminStitchTheme.headlineMd),
+          if (trendLabel != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(
+                  Icons.arrow_upward,
+                  size: 14,
+                  color: AdminStitchTheme.emerald,
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    trendLabel!,
+                    style: AdminStitchTheme.labelSm.copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: AdminStitchTheme.emerald,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -310,81 +317,128 @@ class AdminStitchAlertMetricCard extends StatelessWidget {
     required this.label,
     required this.value,
     required this.icon,
+    this.subtitle,
     this.onTap,
   });
 
   final String label;
   final String value;
   final IconData icon;
+  final String? subtitle;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    return AdminStitchDashboardPendingCard(
+      label: label,
+      value: value,
+      subtitle: subtitle ?? '조치 필요',
+      icon: icon,
+      tone: AdminDashboardPendingTone.alert,
+      onTap: onTap,
+    );
+  }
+}
+
+/// 대시보드 2×2 대기/알림 카드 (목업 parity)
+enum AdminDashboardPendingTone { alert, neutral }
+
+class AdminStitchDashboardPendingCard extends StatelessWidget {
+  const AdminStitchDashboardPendingCard({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.subtitle,
+    required this.icon,
+    this.tone = AdminDashboardPendingTone.neutral,
+    this.onTap,
+  });
+
+  final String label;
+  final String value;
+  final String subtitle;
+  final IconData icon;
+  final AdminDashboardPendingTone tone;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isAlert = tone == AdminDashboardPendingTone.alert;
+    final bg = isAlert ? AdminStitchTheme.alertPeachBg : AdminStitchTheme.surfaceCard;
+    final borderColor =
+        isAlert ? AdminStitchTheme.alertPeachBorder : AdminStitchTheme.borderDefault;
+    final labelColor =
+        isAlert ? AdminStitchTheme.alertPeachLabel : AdminStitchTheme.textSecondary;
+    final subtitleColor =
+        isAlert ? AdminStitchTheme.alertPeachSubtitle : AdminStitchTheme.textSecondary;
+    final iconBg = isAlert
+        ? Colors.white.withValues(alpha: 0.65)
+        : AdminStitchTheme.surfaceContainer;
+    final iconColor =
+        isAlert ? AdminStitchTheme.alertPeachSubtitle : AdminStitchTheme.primary;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AdminStitchTheme.radiusXl),
+        borderRadius: BorderRadius.circular(AdminStitchTheme.radius2xl),
         child: Container(
           padding: const EdgeInsets.all(AdminStitchTheme.componentPadding),
           decoration: BoxDecoration(
-            color: AdminStitchTheme.surfaceCard,
-            borderRadius: BorderRadius.circular(AdminStitchTheme.radiusXl),
-            border: Border.all(color: AdminStitchTheme.borderDefault),
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                child: Container(
-                  width: 4,
-                  decoration: BoxDecoration(
-                    color: AdminStitchTheme.statusError,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: AdminStitchTheme.statusError,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              label.toUpperCase(),
-                              style: AdminStitchTheme.labelSm.copyWith(
-                                fontSize: 10,
-                                color: AdminStitchTheme.statusError,
-                                letterSpacing: 0.8,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Icon(icon, size: 20, color: AdminStitchTheme.textSecondary),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      value,
-                      style: AdminStitchTheme.headlineMobile.copyWith(fontSize: 22),
+            color: bg,
+            borderRadius: BorderRadius.circular(AdminStitchTheme.radius2xl),
+            border: Border.all(color: borderColor),
+            boxShadow: isAlert
+                ? null
+                : const [
+                    BoxShadow(
+                      color: Color(0x0A000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
                     ),
                   ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      label.toUpperCase(),
+                      style: AdminStitchTheme.labelSm.copyWith(
+                        fontSize: 9,
+                        letterSpacing: 0.6,
+                        color: labelColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: iconBg,
+                      borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
+                    ),
+                    child: Icon(icon, size: 18, color: iconColor),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(value, style: AdminStitchTheme.headlineMd),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: AdminStitchTheme.labelSm.copyWith(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: subtitleColor,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -399,11 +453,13 @@ class AdminStitchPaymentsHeroCard extends StatelessWidget {
     super.key,
     required this.label,
     required this.value,
+    this.trendLabel,
     this.onTap,
   });
 
   final String label;
   final String value;
+  final String? trendLabel;
   final VoidCallback? onTap;
 
   @override
@@ -419,6 +475,13 @@ class AdminStitchPaymentsHeroCard extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: AdminStitchTheme.paymentsGradient,
             borderRadius: BorderRadius.circular(AdminStitchTheme.radiusXl),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x33580099),
+                blurRadius: 16,
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -427,22 +490,14 @@ class AdminStitchPaymentsHeroCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.payments_outlined,
-                          size: 20,
-                          color: AdminStitchTheme.onPrimary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          label,
-                          style: AdminStitchTheme.labelSm.copyWith(
-                            color: AdminStitchTheme.onPrimary.withValues(alpha: 0.9),
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      label.toUpperCase(),
+                      style: AdminStitchTheme.labelSm.copyWith(
+                        fontSize: 10,
+                        letterSpacing: 0.8,
+                        color: AdminStitchTheme.onPrimary.withValues(alpha: 0.85),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -451,11 +506,32 @@ class AdminStitchPaymentsHeroCard extends StatelessWidget {
                         color: AdminStitchTheme.onPrimary,
                       ),
                     ),
+                    if (trendLabel != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.arrow_upward,
+                            size: 14,
+                            color: AdminStitchTheme.emeraldLight,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            trendLabel!,
+                            style: AdminStitchTheme.labelSm.copyWith(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: AdminStitchTheme.emeraldLight,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
@@ -463,6 +539,7 @@ class AdminStitchPaymentsHeroCard extends StatelessWidget {
                 child: const Icon(
                   Icons.account_balance_wallet_outlined,
                   color: AdminStitchTheme.onPrimary,
+                  size: 24,
                 ),
               ),
             ],
@@ -507,15 +584,18 @@ class AdminStitchListRowCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  label,
+                  label.toUpperCase(),
                   style: AdminStitchTheme.labelSm.copyWith(
+                    fontSize: 10,
+                    letterSpacing: 0.8,
                     color: AdminStitchTheme.textSecondary,
-                    fontWeight: FontWeight.w400,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
                   value,
-                  style: AdminStitchTheme.headlineMobile.copyWith(fontSize: 22),
+                  style: AdminStitchTheme.headlineMd,
                 ),
               ],
             ),
@@ -526,6 +606,106 @@ class AdminStitchListRowCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class AdminStitchUserDistributionCard extends StatelessWidget {
+  const AdminStitchUserDistributionCard({
+    super.key,
+    required this.byRole,
+  });
+
+  final Map<String, int> byRole;
+
+  static const _roleLabels = {
+    'spare_designer': '스페어·디자이너',
+    'shop': '샵',
+    'model': '모델',
+  };
+
+  static const _roleColors = {
+    'spare_designer': AdminStitchTheme.primary,
+    'shop': AdminStitchTheme.secondary,
+    'model': AdminStitchTheme.emerald,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = _roleLabels.entries
+        .map((e) => MapEntry(e.key, byRole[e.key] ?? 0))
+        .toList();
+    final total = entries.fold<int>(0, (sum, e) => sum + e.value);
+    final safeTotal = total > 0 ? total : 1;
+
+    return AdminStitchCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('회원 분포', style: AdminStitchTheme.sectionHeader),
+          const SizedBox(height: AdminStitchTheme.componentPadding),
+          for (var i = 0; i < entries.length; i++) ...[
+            if (i > 0) const SizedBox(height: 14),
+            _RoleDistributionRow(
+              label: _roleLabels[entries[i].key]!,
+              count: entries[i].value,
+              fraction: entries[i].value / safeTotal,
+              color: _roleColors[entries[i].key] ?? AdminStitchTheme.primary,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _RoleDistributionRow extends StatelessWidget {
+  const _RoleDistributionRow({
+    required this.label,
+    required this.count,
+    required this.fraction,
+    required this.color,
+  });
+
+  final String label;
+  final int count;
+  final double fraction;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: AdminStitchTheme.bodyMd.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Text(
+              '$count',
+              style: AdminStitchTheme.labelSm.copyWith(
+                color: AdminStitchTheme.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: fraction.clamp(0.0, 1.0),
+            minHeight: 8,
+            backgroundColor: AdminStitchTheme.surfaceContainerHigh,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -552,11 +732,27 @@ class AdminStitchActivityList extends StatelessWidget {
               if (onViewAll != null)
                 TextButton(
                   onPressed: onViewAll,
-                  child: Text(
-                    '전체보기',
-                    style: AdminStitchTheme.labelSm.copyWith(
-                      color: AdminStitchTheme.primary,
-                    ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '전체보기',
+                        style: AdminStitchTheme.labelSm.copyWith(
+                          color: AdminStitchTheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      const Icon(
+                        Icons.arrow_forward,
+                        size: 16,
+                        color: AdminStitchTheme.primary,
+                      ),
+                    ],
                   ),
                 ),
             ],
@@ -577,29 +773,82 @@ class AdminStitchActivityItem extends StatelessWidget {
 
   final Map<String, dynamic> activity;
 
+  ({IconData icon, Color bg, Color fg}) _resolveStyle() {
+    final type = activity['type']?.toString() ?? '';
+    final colorKey = activity['color']?.toString() ?? '';
+
+    if (type.contains('report') || type.contains('noshow')) {
+      return (
+        icon: Icons.gavel,
+        bg: AdminStitchTheme.errorContainer,
+        fg: AdminStitchTheme.statusError,
+      );
+    }
+    if (type.contains('payment')) {
+      return (
+        icon: Icons.payments_outlined,
+        bg: const Color(0xFFD1FAE5),
+        fg: AdminStitchTheme.emerald,
+      );
+    }
+    if (type.contains('energy')) {
+      return (
+        icon: Icons.bolt,
+        bg: const Color(0xFFFEF3C7),
+        fg: const Color(0xFFD97706),
+      );
+    }
+    if (type.contains('schedule') || type.contains('checkin')) {
+      return (
+        icon: Icons.event_available_outlined,
+        bg: AdminStitchTheme.primaryFixed,
+        fg: AdminStitchTheme.primary,
+      );
+    }
+    if (type.contains('job')) {
+      return (
+        icon: Icons.work_outline,
+        bg: AdminStitchTheme.secondaryFixed,
+        fg: AdminStitchTheme.secondary,
+      );
+    }
+    if (colorKey == 'green') {
+      return (
+        icon: Icons.payments_outlined,
+        bg: const Color(0xFFD1FAE5),
+        fg: AdminStitchTheme.emerald,
+      );
+    }
+    if (colorKey == 'red') {
+      return (
+        icon: Icons.gavel,
+        bg: AdminStitchTheme.errorContainer,
+        fg: AdminStitchTheme.statusError,
+      );
+    }
+    return (
+      icon: Icons.person_add_outlined,
+      bg: AdminStitchTheme.surfaceContainerHigh,
+      fg: AdminStitchTheme.primary,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final type = activity['type']?.toString() ?? '';
-    final isSanction = type.contains('report') || type.contains('noshow');
+    final style = _resolveStyle();
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          width: 40,
+          height: 40,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isSanction
-                ? AdminStitchTheme.errorContainer
-                : AdminStitchTheme.surfaceContainerHigh,
+            color: style.bg,
             shape: BoxShape.circle,
           ),
-          child: Icon(
-            isSanction ? Icons.gavel : Icons.verified_outlined,
-            size: 18,
-            color: isSanction
-                ? AdminStitchTheme.statusError
-                : AdminStitchTheme.primary,
-          ),
+          child: Icon(style.icon, size: 20, color: style.fg),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -607,12 +856,17 @@ class AdminStitchActivityItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${activity['label'] ?? ''} · ${activity['entity'] ?? ''}',
-                style: AdminStitchTheme.bodyMd,
+                activity['description']?.toString() ??
+                    '${activity['label'] ?? ''} · ${activity['entity'] ?? ''}',
+                style: AdminStitchTheme.bodyMd.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
-                activity['ago']?.toString() ?? '',
+                activity['source'] != null
+                    ? '${activity['ago'] ?? ''} · ${activity['source']}'
+                    : activity['ago']?.toString() ?? '',
                 style: AdminStitchTheme.labelSm.copyWith(
                   fontSize: 11,
                   fontWeight: FontWeight.w400,
@@ -720,7 +974,8 @@ class AdminStitchUserCard extends StatelessWidget {
             ),
           ),
           IconButton(
-            onPressed: onMore ?? onTap,
+            onPressed: onMore,
+            tooltip: '더보기',
             icon: const Icon(Icons.more_vert, color: AdminStitchTheme.textSecondary),
           ),
         ],
@@ -975,6 +1230,244 @@ class AdminStitchReportCaseCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// M2. 인증 심사 큐 카드 (Stitch)
+class AdminStitchVerificationCard extends StatelessWidget {
+  const AdminStitchVerificationCard({
+    super.key,
+    required this.requestId,
+    required this.typeLabel,
+    required this.userName,
+    required this.userEmail,
+    required this.roleLabel,
+    required this.statusLabel,
+    required this.submittedAtLabel,
+    required this.typeColor,
+    required this.isPending,
+    required this.isApproved,
+    this.onTap,
+    this.onApprove,
+    this.onReject,
+  });
+
+  final String requestId;
+  final String typeLabel;
+  final String userName;
+  final String userEmail;
+  final String roleLabel;
+  final String statusLabel;
+  final String submittedAtLabel;
+  final Color typeColor;
+  final bool isPending;
+  final bool isApproved;
+  final VoidCallback? onTap;
+  final VoidCallback? onApprove;
+  final VoidCallback? onReject;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AdminStitchTheme.radiusXl),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AdminStitchTheme.surfaceCard,
+            borderRadius: BorderRadius.circular(AdminStitchTheme.radiusXl),
+            border: Border.all(color: AdminStitchTheme.borderDefault),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0A000000),
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: ColoredBox(
+                  color: typeColor,
+                  child: const SizedBox(width: 4),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: AdminStitchTheme.componentPadding + 4,
+                  top: AdminStitchTheme.componentPadding,
+                  right: AdminStitchTheme.componentPadding,
+                  bottom: AdminStitchTheme.componentPadding,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              requestId,
+                              style: AdminStitchTheme.labelSm.copyWith(
+                                color: AdminStitchTheme.textSecondary,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _VerificationTypeBadge(label: typeLabel),
+                          ],
+                        ),
+                        _VerificationStatusBadge(
+                          label: statusLabel,
+                          isPending: isPending,
+                          isApproved: isApproved,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      userName,
+                      style: AdminStitchTheme.sectionHeader,
+                    ),
+                    const SizedBox(height: 12),
+                    _InfoRow(
+                      icon: Icons.email_outlined,
+                      label: '이메일',
+                      value: userEmail,
+                    ),
+                    const SizedBox(height: 8),
+                    _InfoRow(
+                      icon: Icons.badge_outlined,
+                      label: '역할',
+                      value: roleLabel,
+                    ),
+                    const SizedBox(height: 8),
+                    _InfoRow(
+                      icon: Icons.schedule_outlined,
+                      label: '제출일',
+                      value: submittedAtLabel,
+                    ),
+                    if (isPending) ...[
+                      const Divider(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          if (onReject != null)
+                            OutlinedButton(
+                              onPressed: onReject,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AdminStitchTheme.statusError,
+                                side: const BorderSide(
+                                  color: AdminStitchTheme.errorContainer,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                              ),
+                              child: const Text('반려'),
+                            ),
+                          if (onApprove != null) ...[
+                            const SizedBox(width: 8),
+                            FilledButton(
+                              onPressed: onApprove,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AdminStitchTheme.emerald,
+                                foregroundColor: AdminStitchTheme.onPrimary,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                              ),
+                              child: const Text('승인'),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _VerificationTypeBadge extends StatelessWidget {
+  const _VerificationTypeBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: AdminStitchTheme.primaryFixed,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: AdminStitchTheme.labelSm.copyWith(
+          fontSize: 10,
+          color: AdminStitchTheme.primary,
+        ),
+      ),
+    );
+  }
+}
+
+class _VerificationStatusBadge extends StatelessWidget {
+  const _VerificationStatusBadge({
+    required this.label,
+    required this.isPending,
+    required this.isApproved,
+  });
+
+  final String label;
+  final bool isPending;
+  final bool isApproved;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color bg;
+    final Color fg;
+    if (isPending) {
+      bg = const Color(0xFFFFF7ED);
+      fg = const Color(0xFFEA580C);
+    } else if (isApproved) {
+      bg = const Color(0xFFD1FAE5);
+      fg = AdminStitchTheme.emerald;
+    } else {
+      bg = AdminStitchTheme.errorContainer;
+      fg = AdminStitchTheme.onErrorContainer;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: AdminStitchTheme.labelSm.copyWith(
+          fontSize: 10,
+          color: fg,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

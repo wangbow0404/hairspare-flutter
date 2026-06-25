@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
 import '../../utils/icon_mapper.dart';
+import '../common/report_sheet.dart';
 
-Future<void> showChallengeMoreOptionsSheet(BuildContext context) {
+Future<void> showChallengeMoreOptionsSheet(
+  BuildContext context, {
+  String? creatorUserId,
+  String? challengeId,
+}) {
   return showModalBottomSheet<void>(
     context: context,
     backgroundColor: Colors.grey[900],
@@ -21,11 +26,11 @@ Future<void> showChallengeMoreOptionsSheet(BuildContext context) {
             title: const Text('신고하기', style: TextStyle(color: Colors.white)),
             onTap: () {
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('신고 기능은 준비 중입니다'),
-                  duration: Duration(seconds: 1),
-                ),
+              showReportSheet(
+                context,
+                reportedUserId: creatorUserId,
+                referenceId: challengeId,
+                referenceType: 'challenge',
               );
             },
           ),

@@ -1,14 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'dart:async';
-import '../../theme/app_theme.dart';
+
 import '../../services/admin_service.dart';
+import '../../theme/admin_stitch_theme.dart';
+import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
-import '../../widgets/admin/admin_screen_scaffold.dart';
-import '../../widgets/admin/admin_page_header.dart';
-import '../../widgets/admin/admin_search_filter_bar.dart';
-import '../../widgets/admin/admin_table_card.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
+import '../../widgets/admin/admin_stitch_list_cards.dart';
+import '../../widgets/admin/admin_stitch_list_screen_shell.dart';
+import '../../widgets/admin/admin_stitch_widgets.dart';
 
 /// 관리자 체크인 관리 화면
 class AdminCheckinScreen extends StatefulWidget {
@@ -21,20 +23,31 @@ class AdminCheckinScreen extends StatefulWidget {
 class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
   final AdminService _adminService = AdminService();
   final TextEditingController _searchController = TextEditingController();
+
   List<dynamic> _schedules = [];
   bool _isLoading = true;
   int _currentPage = 1;
-  String _dateFilter = 'today'; // today, week, all
+  String _dateFilter = 'today';
   Timer? _updateTimer;
+  Timer? _searchDebounceTimer;
+
+  static const _dateTabs = ['오늘', '이번주', '전체'];
+  static const _dateMap = {
+    '오늘': 'today',
+    '이번주': 'week',
+    '전체': 'all',
+  };
 
   @override
   void initState() {
     super.initState();
     _loadSchedules();
-    _updateTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (mounted) {
+    _updateTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
         _loadSchedules(showLoading: false);
-      }
+      });
     });
   }
 
@@ -42,19 +55,20 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
   void dispose() {
     _searchController.dispose();
     _updateTimer?.cancel();
+    _searchDebounceTimer?.cancel();
     super.dispose();
   }
 
   Future<void> _loadSchedules({bool showLoading = true}) async {
     if (showLoading) {
-      setState(() {
-        _isLoading = true;
-      });
+      setState(() => _isLoading = true);
     }
 
     try {
       final result = await _adminService.getSchedules(
-        search: _searchController.text.trim().isEmpty ? null : _searchController.text.trim(),
+        search: _searchController.text.trim().isEmpty
+            ? null
+            : _searchController.text.trim(),
         dateFilter: _dateFilter,
         page: _currentPage,
         limit: 20,
@@ -71,265 +85,67 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
         if (showLoading) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('체크인 목록 조회 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}'),
+              content: Text(
+                '체크인 목록 조회 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}',
+              ),
               backgroundColor: AppTheme.urgentRed,
             ),
           );
         }
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
+  }
+
+  String _selectedDateTab() {
+    for (final entry in _dateMap.entries) {
+      if (entry.value == _dateFilter) return entry.key;
+    }
+    return '오늘';
   }
 
   String _formatDate(String? dateString) {
     if (dateString == null || dateString.isEmpty) return '-';
     try {
-      final date = DateTime.parse(dateString);
-      return DateFormat('yyyy년 M월 d일 HH:mm', 'ko_KR').format(date);
-    } catch (e) {
+      final date = DateTime.parse(dateString).toLocal();
+      return DateFormat('yyyy.MM.dd HH:mm', 'ko_KR').format(date);
+    } catch (_) {
       return dateString;
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return AdminScreenScaffold(
-      header: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const AdminPageHeader(
-            title: '체크인 관리',
-            subtitle: '오늘 체크인 및 전체 스케줄 내역을 조회할 수 있습니다',
-          ),
-          const SizedBox(height: AppTheme.spacing6),
-          AdminSearchFilterBar(
-            searchController: _searchController,
-            searchHint: '사용자, 미용실명으로 검색...',
-            filterDropdown: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButton<String>(
-                  value: _dateFilter.isEmpty ? 'today' : _dateFilter,
-                  hint: const Text('기간'),
-                  items: const [
-                    DropdownMenuItem(value: 'today', child: Text('오늘')),
-                    DropdownMenuItem(value: 'week', child: Text('이번 주')),
-                    DropdownMenuItem(value: 'all', child: Text('전체')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _dateFilter = value ?? 'today';
-                      _currentPage = 1;
-                      _loadSchedules();
-                    });
-                  },
-                  style: const TextStyle(color: AppTheme.textPrimary),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      body: AdminTableCard(
-              child: _isLoading && _schedules.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : _schedules.isEmpty
-                      ? const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(AppTheme.spacing8),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.calendar_today_outlined,
-                                  size: 64,
-                                  color: AppTheme.textTertiary,
-                                ),
-                                SizedBox(height: AppTheme.spacing4),
-                                Text(
-                                  '체크인 내역이 없습니다',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: AppTheme.textSecondary,
-                                  ),
-                                ),
-                                SizedBox(height: AppTheme.spacing2),
-                                Text(
-                                  '스페어의 체크인 내역이 여기에 표시됩니다',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: AppTheme.textTertiary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : LayoutBuilder(
-                          builder: (context, constraints) {
-                            return SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: SizedBox(
-                                width: constraints.maxWidth < 900 ? 900 : constraints.maxWidth,
-                                height: constraints.maxHeight,
-                                child: Column(
-                                  children: [
-                                    const AdminTableHeader(
-                                      headers: ['스케줄', '스페어', '미용실', '공고', '체크인 일시', '상태', '개입'],
-                                      flexValues: [1, 1, 1, 2, 1, 1, 1],
-                                    ),
-                                    Expanded(
-                                      child: ListView.builder(
-                                      itemCount: _schedules.length,
-                                      itemBuilder: (context, index) {
-                                        final schedule = _schedules[index];
-                                        final checkInTime = schedule['checkInTime'] ?? schedule['checkIn'];
-                                        final state = schedule['state'] ?? schedule['status'] ?? '';
-                                        return Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: AppTheme.spacing4,
-                                            vertical: AppTheme.spacing3,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            border: Border(
-                                              bottom: BorderSide(
-                                                color: AppTheme.adminPurple100.withValues(alpha: 0.5),
-                                              ),
-                                            ),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                flex: 1,
-                                                child: Text(
-                                                  schedule['id']?.toString() ?? '-',
-                                                  style: const TextStyle(
-                                                    fontSize: 13,
-                                                    color: AppTheme.textSecondary,
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              Expanded(
-                                                flex: 1,
-                                                child: Text(
-                                                  schedule['spare']?['name'] ??
-                                                      schedule['spare']?['email'] ??
-                                                      schedule['energyWallet']?['user']?['email'] ??
-                                                      '-',
-                                                  style: const TextStyle(
-                                                    fontSize: 13,
-                                                    color: AppTheme.textPrimary,
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              Expanded(
-                                                flex: 1,
-                                                child: Text(
-                                                  schedule['shop']?['name'] ??
-                                                      schedule['job']?['shop']?['name'] ??
-                                                      '-',
-                                                  style: const TextStyle(
-                                                    fontSize: 13,
-                                                    color: AppTheme.textPrimary,
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              Expanded(
-                                                flex: 2,
-                                                child: Text(
-                                                  schedule['job']?['title'] ?? '-',
-                                                  style: const TextStyle(
-                                                    fontSize: 13,
-                                                    color: AppTheme.textSecondary,
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              Expanded(
-                                                flex: 1,
-                                                child: Text(
-                                                  _formatDate(checkInTime?.toString()),
-                                                  style: const TextStyle(
-                                                    fontSize: 13,
-                                                    color: AppTheme.textSecondary,
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              Expanded(
-                                                flex: 1,
-                                                child: Container(
-                                                  padding: const EdgeInsets.symmetric(
-                                                    horizontal: AppTheme.spacing2,
-                                                    vertical: AppTheme.spacing1,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: _getStateColor(state).withValues(alpha: 0.15),
-                                                    borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                                                  ),
-                                                  child: Text(
-                                                    _getStateLabel(state),
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      fontWeight: FontWeight.w600,
-                                                      color: _getStateColor(state),
-                                                    ),
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                              ),
-                                              Expanded(
-                                                flex: 1,
-                                                child: PopupMenuButton<String>(
-                                                  onSelected: (action) => _intervene(schedule, action),
-                                                  itemBuilder: (_) => const [
-                                                    PopupMenuItem(value: 'complete', child: Text('강제 완료')),
-                                                    PopupMenuItem(value: 'cancel', child: Text('강제 취소')),
-                                                    PopupMenuItem(value: 'noshow', child: Text('노쇼 처리')),
-                                                  ],
-                                                  child: const Icon(Icons.more_vert, size: 20),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                          },
-                        ),
-      ),
-    );
+  String _spareName(Map<String, dynamic> schedule) {
+    return schedule['spare']?['name']?.toString() ??
+        schedule['spare']?['email']?.toString() ??
+        schedule['energyWallet']?['user']?['email']?.toString() ??
+        '-';
+  }
+
+  String _shopName(Map<String, dynamic> schedule) {
+    return schedule['shop']?['name']?.toString() ??
+        schedule['job']?['shop']?['name']?.toString() ??
+        '-';
   }
 
   Color _getStateColor(String state) {
-    switch (state.toString().toLowerCase()) {
+    switch (state.toLowerCase()) {
       case 'checked_in':
       case 'completed':
       case 'done':
-        return AppTheme.primaryGreen;
+        return AdminStitchTheme.emerald;
       case 'pending':
       case 'scheduled':
-        return Colors.orange;
+        return AppTheme.orange600;
       case 'cancelled':
       case 'noshow':
-        return AppTheme.urgentRed;
+        return AdminStitchTheme.statusError;
       default:
-        return AppTheme.textSecondary;
+        return AdminStitchTheme.textSecondary;
     }
   }
 
   String _getStateLabel(String state) {
-    switch (state.toString().toLowerCase()) {
+    switch (state.toLowerCase()) {
       case 'checked_in':
       case 'completed':
       case 'done':
@@ -346,7 +162,11 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
   }
 
   Future<void> _intervene(Map<String, dynamic> schedule, String action) async {
-    final labels = {'complete': '강제 완료', 'cancel': '강제 취소', 'noshow': '노쇼 처리'};
+    final labels = {
+      'complete': '강제 완료',
+      'cancel': '강제 취소',
+      'noshow': '노쇼 처리',
+    };
     final reason = await AdminActionDialog.show(
       context,
       title: labels[action] ?? '스케줄 개입',
@@ -363,14 +183,157 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
         case 'cancel':
           await _adminService.forceCancelSchedule(id, reason: reason);
         case 'noshow':
-          await _adminService.markNoShow(id, reason: reason, party: 'spare');
+          await _adminService.markNoShow(
+            id,
+            reason: reason,
+            party: 'spare',
+          );
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${labels[action]} 완료 (감사 로그 기록)')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${labels[action]} 완료 (감사 로그 기록)')),
+      );
       _loadSchedules();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))), backgroundColor: AppTheme.urgentRed));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ErrorHandler.getUserFriendlyMessage(
+              ErrorHandler.handleException(e),
+            ),
+          ),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AdminStitchListScreenShell(
+      header: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const AdminStitchPageHeader(
+            title: '체크인 관리',
+            subtitle: '오늘 체크인 및 전체 스케줄 내역을 조회할 수 있습니다',
+          ),
+          const SizedBox(height: AdminStitchTheme.sectionGap),
+          AdminStitchSearchField(
+            controller: _searchController,
+            hint: '사용자, 미용실명으로 검색...',
+            onChanged: (value) {
+              _searchDebounceTimer?.cancel();
+              setState(() => _currentPage = 1);
+              _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+                if (!mounted) return;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  _loadSchedules();
+                });
+              });
+            },
+          ),
+          const SizedBox(height: AdminStitchTheme.sectionGap),
+          AdminStitchFilterChips(
+            tabs: _dateTabs,
+            selectedTab: _selectedDateTab(),
+            onTabChanged: (tab) {
+              setState(() {
+                _dateFilter = _dateMap[tab] ?? 'today';
+                _currentPage = 1;
+              });
+              _loadSchedules();
+            },
+          ),
+          const SizedBox(height: AdminStitchTheme.sectionGap),
+        ],
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading && _schedules.isEmpty) {
+      return const AdminStitchListStateSliver.loading();
+    }
+    if (_schedules.isEmpty) {
+      return const AdminStitchListStateSliver.empty(
+        emptyMessage: '체크인 내역이 없습니다',
+        emptyIcon: Icons.calendar_today_outlined,
+      );
+    }
+    return SliverPadding(
+      padding: AdminStitchListScreenShell.listPadding(context),
+      sliver: SliverList.separated(
+        itemCount: _schedules.length,
+        separatorBuilder: (_, __) =>
+            const SizedBox(height: AdminStitchTheme.sectionGap),
+        itemBuilder: (_, index) {
+          final schedule = _schedules[index] as Map<String, dynamic>;
+          final checkInTime =
+              schedule['checkInTime'] ?? schedule['checkIn'];
+          final state =
+              schedule['state']?.toString() ??
+              schedule['status']?.toString() ??
+              '';
+          final stateColor = _getStateColor(state);
+          final jobTitle = schedule['job']?['title']?.toString() ?? '-';
+
+          return AdminStitchSimpleListCard(
+            title: _spareName(schedule),
+            subtitle:
+                '${_shopName(schedule)} · $jobTitle · ${_formatDate(checkInTime?.toString())}',
+            icon: Icons.calendar_today_outlined,
+            iconColor: stateColor,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: stateColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _getStateLabel(state),
+                    style: AdminStitchTheme.labelSm.copyWith(
+                      fontSize: 10,
+                      color: stateColor,
+                    ),
+                  ),
+                ),
+                PopupMenuButton<String>(
+                  onSelected: (action) => _intervene(schedule, action),
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(
+                      value: 'complete',
+                      child: Text('강제 완료'),
+                    ),
+                    PopupMenuItem(
+                      value: 'cancel',
+                      child: Text('강제 취소'),
+                    ),
+                    PopupMenuItem(
+                      value: 'noshow',
+                      child: Text('노쇼 처리'),
+                    ),
+                  ],
+                  icon: const Icon(
+                    Icons.more_vert,
+                    size: 20,
+                    color: AdminStitchTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 }

@@ -1,12 +1,17 @@
-/// 관리자 화면용 Mock 데이터
+import '../utils/admin_member_role.dart';
 /// ApiConfig.useMockData == true 일 때 AdminService에서 사용
 class MockAdminData {
   static Future<Map<String, dynamic>> getDashboardStats() async {
     await Future.delayed(const Duration(milliseconds: 300));
     return {
-      'users': {'total': 1247, 'today': 12, 'byRole': {'spare': 892, 'shop': 312, 'seller': 43}},
-      'jobs': {'total': 523, 'active': 89},
-      'payments': {'total': 45800000, 'today': 1250000},
+      'users': {
+        'total': 1247,
+        'today': 12,
+        'weekGrowthPct': 12.5,
+        'byRole': {'spare_designer': 892, 'shop': 312, 'model': 43},
+      },
+      'jobs': {'total': 523, 'active': 89, 'todayGrowthPct': 5.2},
+      'payments': {'total': 45800000, 'today': 1250000, 'avgGrowthPct': 8.1},
       'schedules': {'total': 3421, 'today': 23},
       'energy': {'wallets': 1105, 'transactions': 8934},
       'noShow': {'total': 18},
@@ -22,27 +27,102 @@ class MockAdminData {
     await Future.delayed(const Duration(milliseconds: 200));
     return {
       'activities': [
-        {'type': 'signup', 'label': '회원가입', 'entity': '김디자이너', 'ago': '5분 전', 'color': 'blue'},
-        {'type': 'job', 'label': '공고등록', 'entity': '이미용실', 'ago': '12분 전', 'color': 'purple'},
-        {'type': 'payment', 'label': '결제완료', 'entity': '박스텝', 'ago': '23분 전', 'color': 'green'},
-        {'type': 'noshow', 'label': '노쇼신고', 'entity': '최사장', 'ago': '1시간 전', 'color': 'red'},
+        {
+          'type': 'signup',
+          'label': '온보딩',
+          'entity': '글래머',
+          'description': '미용실 "글래머" 온보딩 완료',
+          'ago': '2분 전',
+          'source': '시스템 자동',
+          'color': 'purple',
+        },
+        {
+          'type': 'job',
+          'label': '공고등록',
+          'entity': '이미용실',
+          'description': '이미용실 공고 등록',
+          'ago': '12분 전',
+          'source': '사용자',
+          'color': 'purple',
+        },
+        {
+          'type': 'payment',
+          'label': '결제완료',
+          'entity': '박스텝',
+          'description': '412개 계정 일괄 결제 처리 완료',
+          'ago': '1시간 전',
+          'source': '시스템 배치',
+          'color': 'green',
+        },
+        {
+          'type': 'noshow',
+          'label': '신고접수',
+          'entity': '스페어 #8492',
+          'description': '스페어 #8492 신고 접수',
+          'ago': '15분 전',
+          'source': '사용자 제출',
+          'color': 'red',
+        },
         {'type': 'energy', 'label': '에너지충전', 'entity': '정디자이너', 'ago': '2시간 전', 'color': 'yellow'},
         {'type': 'schedule', 'label': '체크인', 'entity': '이스텝', 'ago': '3시간 전', 'color': 'purple'},
       ],
     };
   }
 
-  static Future<Map<String, dynamic>> getUsers({int page = 1, int limit = 20}) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final users = [
+  static final Set<String> _suspendedUserIds = {'usr-9'};
+
+  // ── 인증 상태 오버라이드 (approve/reject 호출 시 갱신)
+  static final Map<String, String> _verificationStatuses = {};
+
+  static Future<void> setVerificationStatus(String id, String status) async {
+    await Future.delayed(const Duration(milliseconds: 250));
+    _verificationStatuses[id] = status;
+  }
+
+  // ── 신고 상태 오버라이드 (resolve 호출 시 갱신)
+  static final Map<String, String> _reportStatuses = {};
+
+  static Future<void> setReportStatus(String id, String status) async {
+    await Future.delayed(const Duration(milliseconds: 250));
+    _reportStatuses[id] = status;
+  }
+
+  // ── 공고 상태 오버라이드 (hide/close 호출 시 갱신)
+  static final Set<String> _hiddenJobIds = {};
+  static final Set<String> _closedJobIds = {};
+
+  static Future<void> setJobHidden(String id, {required bool hide}) async {
+    await Future.delayed(const Duration(milliseconds: 250));
+    if (hide) { _hiddenJobIds.add(id); } else { _hiddenJobIds.remove(id); }
+  }
+
+  static Future<void> setJobClosed(String id) async {
+    await Future.delayed(const Duration(milliseconds: 250));
+    _closedJobIds.add(id);
+  }
+
+  // ── 스케줄 상태 오버라이드 (complete/cancel/noshow 호출 시 갱신)
+  static final Map<String, String> _scheduleStates = {};
+
+  static Future<void> setScheduleState(String id, String state) async {
+    await Future.delayed(const Duration(milliseconds: 250));
+    _scheduleStates[id] = state;
+  }
+
+  static List<Map<String, dynamic>> _userSeedList() {
+    return [
       {
         'id': 'usr-1',
         'name': '김디자이너',
         'email': 'kim@example.com',
         'phone': '010-1234-5678',
         'role': 'spare',
+        'spareSubtype': 'professional',
+        'spareRole': 'designer',
         'createdAt': '2025-01-15T10:00:00Z',
-        'accounts': [{'provider': 'email'}],
+        'accounts': [
+          {'provider': 'email'},
+        ],
         '_count': {'jobs': 0, 'applications': 3, 'schedules': 12},
       },
       {
@@ -52,7 +132,9 @@ class MockAdminData {
         'phone': '02-1234-5678',
         'role': 'shop',
         'createdAt': '2025-01-10T14:30:00Z',
-        'accounts': [{'provider': 'kakao'}],
+        'accounts': [
+          {'provider': 'kakao'},
+        ],
         '_count': {'jobs': 8, 'applications': 0, 'schedules': 45},
       },
       {
@@ -61,40 +143,261 @@ class MockAdminData {
         'email': 'park@example.com',
         'phone': '010-9876-5432',
         'role': 'spare',
+        'spareSubtype': 'professional',
+        'spareRole': 'step',
         'createdAt': '2025-02-01T09:00:00Z',
-        'accounts': [{'provider': 'naver'}],
+        'accounts': [
+          {'provider': 'naver'},
+        ],
         '_count': {'jobs': 0, 'applications': 5, 'schedules': 8},
       },
+      {
+        'id': 'usr-4',
+        'name': '최모델',
+        'email': 'choi.model@example.com',
+        'phone': '010-5555-1111',
+        'role': 'spare',
+        'spareSubtype': 'model',
+        'createdAt': '2025-01-20T11:00:00Z',
+        'accounts': [
+          {'provider': 'kakao'},
+        ],
+        '_count': {'jobs': 0, 'applications': 0, 'schedules': 0},
+      },
+      {
+        'id': 'usr-5',
+        'name': '정헤어살롱',
+        'email': 'jung@hair.co.kr',
+        'phone': '02-9876-5432',
+        'role': 'shop',
+        'createdAt': '2025-02-10T16:00:00Z',
+        'accounts': [
+          {'provider': 'email'},
+        ],
+        '_count': {'jobs': 5, 'applications': 0, 'schedules': 22},
+      },
+      {
+        'id': 'usr-6',
+        'name': '한스페어',
+        'email': 'han.spare@example.com',
+        'phone': '010-2222-3333',
+        'role': 'spare',
+        'spareSubtype': 'professional',
+        'spareRole': 'step',
+        'createdAt': '2025-03-05T08:30:00Z',
+        'accounts': [
+          {'provider': 'google'},
+        ],
+        '_count': {'jobs': 0, 'applications': 2, 'schedules': 4},
+      },
+      {
+        'id': 'usr-7',
+        'name': '윤뷰티',
+        'email': 'yoon@beauty.co.kr',
+        'phone': '02-3333-4444',
+        'role': 'shop',
+        'createdAt': '2025-03-12T13:00:00Z',
+        'accounts': [
+          {'provider': 'kakao'},
+        ],
+        '_count': {'jobs': 3, 'applications': 0, 'schedules': 15},
+      },
+      {
+        'id': 'usr-8',
+        'name': '강디자이너',
+        'email': 'kang.design@example.com',
+        'phone': '010-7777-8888',
+        'role': 'spare',
+        'spareSubtype': 'professional',
+        'spareRole': 'designer',
+        'createdAt': '2025-03-18T10:00:00Z',
+        'accounts': [
+          {'provider': 'naver'},
+        ],
+        '_count': {'jobs': 0, 'applications': 0, 'schedules': 0},
+      },
+      {
+        'id': 'usr-9',
+        'name': '조인턴',
+        'email': 'jo.intern@example.com',
+        'phone': '010-4444-5555',
+        'role': 'spare',
+        'spareSubtype': 'professional',
+        'spareRole': 'step',
+        'createdAt': '2025-04-01T09:00:00Z',
+        'accounts': [
+          {'provider': 'email'},
+        ],
+        '_count': {'jobs': 0, 'applications': 1, 'schedules': 0},
+      },
+      {
+        'id': 'usr-10',
+        'name': '서미용실',
+        'email': 'seo.salon@example.com',
+        'phone': '02-5555-6666',
+        'role': 'shop',
+        'createdAt': '2025-04-08T15:30:00Z',
+        'accounts': [
+          {'provider': 'email'},
+        ],
+        '_count': {'jobs': 6, 'applications': 0, 'schedules': 30},
+      },
+      {
+        'id': 'usr-11',
+        'name': '임스텝',
+        'email': 'lim.step@example.com',
+        'phone': '010-6666-7777',
+        'role': 'spare',
+        'spareSubtype': 'professional',
+        'spareRole': 'step',
+        'createdAt': '2025-04-15T12:00:00Z',
+        'accounts': [
+          {'provider': 'kakao'},
+        ],
+        '_count': {'jobs': 0, 'applications': 4, 'schedules': 6},
+      },
+      {
+        'id': 'usr-12',
+        'name': '오모델',
+        'email': 'oh.model@example.com',
+        'phone': '010-8888-9999',
+        'role': 'spare',
+        'spareSubtype': 'model',
+        'createdAt': '2025-04-20T17:00:00Z',
+        'accounts': [
+          {'provider': 'google'},
+        ],
+        '_count': {'jobs': 0, 'applications': 0, 'schedules': 0},
+      },
     ];
+  }
+
+  static Map<String, dynamic> _withAccountStatus(Map<String, dynamic> user) {
+    final copy = Map<String, dynamic>.from(user);
+    final id = copy['id']?.toString() ?? '';
+    final suspended = _suspendedUserIds.contains(id);
+    copy['status'] = suspended ? 'suspended' : 'active';
+    copy['accountStatus'] = suspended ? 'suspended' : 'active';
+    copy['accountStatusLabel'] = suspended ? '정지' : '정상';
+    return copy;
+  }
+
+  static Future<void> setUserSuspended(String userId, {required bool suspended}) async {
+    await Future.delayed(const Duration(milliseconds: 250));
+    if (suspended) {
+      _suspendedUserIds.add(userId);
+    } else {
+      _suspendedUserIds.remove(userId);
+    }
+  }
+
+  static Future<Map<String, dynamic>> getUsers({
+    int page = 1,
+    int limit = 20,
+    String? role,
+    String? memberCategory,
+    String? search,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    var users = _userSeedList().map(_withAccountStatus).toList();
+
+    if (memberCategory != null && memberCategory.isNotEmpty) {
+      users = users
+          .where((u) => AdminMemberRole.matchesFilter(u, memberCategory))
+          .toList();
+    } else if (role != null && role.isNotEmpty) {
+      users = users.where((u) => u['role'] == role).toList();
+    }
+
+    final query = search?.trim().toLowerCase() ?? '';
+    if (query.isNotEmpty) {
+      users = users.where((u) {
+        final name = u['name']?.toString().toLowerCase() ?? '';
+        final email = u['email']?.toString().toLowerCase() ?? '';
+        final phone = u['phone']?.toString().toLowerCase() ?? '';
+        return name.contains(query) ||
+            email.contains(query) ||
+            phone.contains(query);
+      }).toList();
+    }
+
+    final total = users.length;
+    final totalPages = total == 0 ? 1 : (total / limit).ceil();
+    final safePage = page.clamp(1, totalPages);
+    final start = (safePage - 1) * limit;
+    final end = (start + limit).clamp(0, total);
+    final pageUsers = start < total ? users.sublist(start, end) : <Map<String, dynamic>>[];
+
     return {
-      'users': users,
-      'pagination': {'page': page, 'limit': limit, 'total': 1247, 'totalPages': 63},
+      'users': pageUsers,
+      'pagination': {
+        'page': safePage,
+        'limit': limit,
+        'total': total,
+        'totalPages': totalPages,
+      },
     };
   }
 
   static Future<Map<String, dynamic>> getUserDetail(String userId) async {
     await Future.delayed(const Duration(milliseconds: 200));
+    Map<String, dynamic>? seed;
+    for (final user in _userSeedList()) {
+      if (user['id'] == userId) {
+        seed = user;
+        break;
+      }
+    }
+    final base = seed ??
+        {
+          'id': userId,
+          'name': '김디자이너',
+          'email': 'kim@example.com',
+          'phone': '010-1234-5678',
+          'role': 'spare',
+          'createdAt': '2025-01-15T10:00:00Z',
+        };
+    final withStatus = _withAccountStatus(base);
     return {
-      'id': userId,
-      'name': '김디자이너',
-      'email': 'kim@example.com',
-      'phone': '010-1234-5678',
-      'role': 'spare',
-      'createdAt': '2025-01-15T10:00:00Z',
+      ...withStatus,
       'profileImage': null,
-      'accountStatus': 'active',
-      'accountStatusLabel': '정상',
       'energyWallet': {'balance': 1250},
       'pointWallet': {'balance': 340},
-      '_count': {'jobs': 0, 'applications': 3, 'schedules': 12},
-      'accounts': [{'provider': 'email'}],
+      '_count': withStatus['_count'] ??
+          {'jobs': 0, 'applications': 3, 'schedules': 12},
+      'accounts': withStatus['accounts'] ?? [
+        {'provider': 'email'},
+      ],
       'recentActivity': [
-        {'label': '공고 지원', 'detail': '오후 스텝 급구', 'at': '2025-06-22T09:00:00Z'},
-        {'label': '체크인', 'detail': '빌라드블랑 강남점', 'at': '2025-06-21T14:05:00Z'},
+        {
+          'label': '공고 지원',
+          'detail': '오후 스텝 급구',
+          'at': '2025-06-22T09:00:00Z',
+        },
+        {
+          'label': '체크인',
+          'detail': '빌라드블랑 강남점',
+          'at': '2025-06-21T14:05:00Z',
+        },
       ],
-      'sanctionHistory': [
-        {'typeLabel': '경고', 'reason': '지각', 'at': '2025-05-01T00:00:00Z', 'active': false},
-      ],
+      'sanctionHistory': _suspendedUserIds.contains(userId)
+          ? [
+              {
+                'typeLabel': '정지',
+                'reason': '관리자 조치',
+                'at': '2025-06-20T00:00:00Z',
+                'active': true,
+              },
+            ]
+          : [
+              {
+                'typeLabel': '경고',
+                'reason': '지각',
+                'at': '2025-05-01T00:00:00Z',
+                'active': false,
+              },
+            ],
       'verification': {
         'status': 'approved',
         'statusLabel': '승인',
@@ -136,6 +439,12 @@ class MockAdminData {
 
   static Future<Map<String, dynamic>> getJobDetail(String jobId) async {
     await Future.delayed(const Duration(milliseconds: 200));
+    String status = 'published';
+    if (_closedJobIds.contains(jobId)) {
+      status = 'closed';
+    } else if (_hiddenJobIds.contains(jobId)) {
+      status = 'hidden';
+    }
     return {
       'id': jobId,
       'title': '오후 스텝 급구',
@@ -146,7 +455,8 @@ class MockAdminData {
       'date': '2025-02-15',
       'time': '14:00',
       'isUrgent': true,
-      'status': 'published',
+      'status': status,
+      'isHidden': _hiddenJobIds.contains(jobId),
     };
   }
 
@@ -222,9 +532,92 @@ class MockAdminData {
     };
   }
 
+  static Future<Map<String, dynamic>> getApplications({
+    String? status,
+    String? search,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    final all = [
+      {
+        'id': 'app-1',
+        'status': 'pending',
+        'statusLabel': '검토 대기',
+        'spare': {'name': '김디자이너', 'email': 'kim@example.com'},
+        'shop': {'name': '빌라드블랑 강남점'},
+        'job': {'id': 'job-1', 'title': '오후 스텝 급구', 'startTime': '2025-07-10T14:00:00Z', 'amount': 80000},
+        'createdAt': '2025-07-08T09:30:00Z',
+      },
+      {
+        'id': 'app-2',
+        'status': 'approved',
+        'statusLabel': '승인됨',
+        'spare': {'name': '박스타일리스트', 'email': 'park@example.com'},
+        'shop': {'name': '헤어스튜디오 강북'},
+        'job': {'id': 'job-2', 'title': '주말 디자이너 대타', 'startTime': '2025-07-12T10:00:00Z', 'amount': 100000},
+        'createdAt': '2025-07-07T16:20:00Z',
+      },
+      {
+        'id': 'app-3',
+        'status': 'rejected',
+        'statusLabel': '거절됨',
+        'spare': {'name': '이헤어', 'email': 'lee@example.com'},
+        'shop': {'name': '살롱드파리 홍대'},
+        'job': {'id': 'job-3', 'title': '평일 어시스턴트', 'startTime': '2025-07-09T11:00:00Z', 'amount': 60000},
+        'createdAt': '2025-07-06T11:00:00Z',
+      },
+      {
+        'id': 'app-4',
+        'status': 'cancelled_contact_violation',
+        'statusLabel': '연락처 위반 취소',
+        'spare': {'name': '최스텝', 'email': 'choi@example.com'},
+        'shop': {'name': '모던헤어 신촌'},
+        'job': {'id': 'job-4', 'title': '금요일 디자이너', 'startTime': '2025-07-11T13:00:00Z', 'amount': 90000},
+        'createdAt': '2025-07-05T14:45:00Z',
+      },
+      {
+        'id': 'app-5',
+        'status': 'pending',
+        'statusLabel': '검토 대기',
+        'spare': {'name': '정컬러리스트', 'email': 'jeong@example.com'},
+        'shop': {'name': '아뜰리에 헤어 압구정'},
+        'job': {'id': 'job-5', 'title': '컬러 전문 스페어 모집', 'startTime': '2025-07-15T09:00:00Z', 'amount': 120000},
+        'createdAt': '2025-07-08T18:00:00Z',
+      },
+    ];
+
+    var filtered = all.where((a) {
+      if (status != null && status.isNotEmpty && a['status'] != status) return false;
+      if (search != null && search.isNotEmpty) {
+        final q = search.toLowerCase();
+        final spareName = (a['spare'] as Map)['name']?.toString().toLowerCase() ?? '';
+        final shopName = (a['shop'] as Map)['name']?.toString().toLowerCase() ?? '';
+        final jobTitle = (a['job'] as Map)['title']?.toString().toLowerCase() ?? '';
+        if (!spareName.contains(q) && !shopName.contains(q) && !jobTitle.contains(q)) return false;
+      }
+      return true;
+    }).toList();
+
+    final total = filtered.length;
+    final start = (page - 1) * limit;
+    final end = (start + limit).clamp(0, total);
+    filtered = filtered.sublist(start.clamp(0, total), end);
+
+    return {
+      'applications': filtered,
+      'pagination': {
+        'page': page,
+        'limit': limit,
+        'total': total,
+        'totalPages': (total / limit).ceil().clamp(1, 9999),
+      },
+    };
+  }
+
   static Future<Map<String, dynamic>> getSchedules({int page = 1, int limit = 20}) async {
     await Future.delayed(const Duration(milliseconds: 300));
-    final schedules = [
+    final seed = [
       {
         'id': 'sched-1',
         'spare': {'name': '김디자이너', 'email': 'kim@example.com'},
@@ -241,6 +634,13 @@ class MockAdminData {
         'state': 'completed',
       },
     ];
+    final schedules = seed.map((s) {
+      final override = _scheduleStates[s['id']];
+      if (override == null) return s;
+      final copy = Map<String, dynamic>.from(s);
+      copy['state'] = override;
+      return copy;
+    }).toList();
     return {
       'schedules': schedules,
       'pagination': {'page': page, 'limit': limit, 'total': 3421, 'totalPages': 172},
@@ -322,7 +722,17 @@ class MockAdminData {
         'documentUrl': null,
       },
     ];
-    var filtered = all;
+    // 오버라이드 적용
+    final withOverrides = all.map((v) {
+      final override = _verificationStatuses[v['id']];
+      if (override == null) return v;
+      final copy = Map<String, dynamic>.from(v);
+      copy['status'] = override;
+      copy['statusLabel'] = _verificationStatusLabel(override);
+      return copy;
+    }).toList();
+
+    var filtered = withOverrides;
     if (status != null && status.isNotEmpty && status != 'all') {
       filtered = filtered.where((v) => v['status'] == status).toList();
     }
@@ -342,6 +752,7 @@ class MockAdminData {
 
   static Future<Map<String, dynamic>> getVerificationDetail(String id) async {
     await Future.delayed(const Duration(milliseconds: 200));
+    final statusOverride = _verificationStatuses[id];
     final base = {
       'id': id,
       'userId': 'usr-2',
@@ -350,7 +761,8 @@ class MockAdminData {
       'userRole': 'shop',
       'type': 'business',
       'typeLabel': '사업자등록',
-      'status': 'pending',
+      'status': statusOverride ?? 'pending',
+      'statusLabel': _verificationStatusLabel(statusOverride ?? 'pending'),
       'submittedAt': '2025-06-21T14:00:00Z',
     };
     return {
@@ -499,7 +911,20 @@ class MockAdminData {
         'resolution': 'warn',
       },
     ];
-    var filtered = all;
+    // 사용자가 제출한 신고 포함
+    final combined = [...all, ..._submittedReports];
+
+    // 오버라이드 적용
+    final withOverrides = combined.map((r) {
+      final override = _reportStatuses[r['id']];
+      if (override == null) return r;
+      final copy = Map<String, dynamic>.from(r);
+      copy['status'] = override;
+      copy['statusLabel'] = _reportStatusLabel(override);
+      return copy;
+    }).toList();
+
+    var filtered = withOverrides;
     if (status != null && status.isNotEmpty && status != 'all') {
       filtered = filtered.where((r) => r['status'] == status).toList();
     }
@@ -891,5 +1316,61 @@ class MockAdminData {
         {'id': 'cat-2', 'label': '염색'},
       ],
     };
+  }
+
+  // ── 사용자가 제출한 신고 목록 (mock에서 누적)
+  static final List<Map<String, dynamic>> _submittedReports = [];
+  static int _reportIdSeq = 100;
+
+  static Future<void> addReport({
+    required String category,
+    required String summary,
+    String? reportedUserId,
+    String? referenceId,
+    String? referenceType,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 250));
+    _submittedReports.add({
+      'id': 'rep-${_reportIdSeq++}',
+      'reporterName': '나',
+      'reportedName': reportedUserId ?? '알 수 없음',
+      'reportedRole': 'unknown',
+      'category': category,
+      'categoryLabel': _reportCategoryLabel(category),
+      'status': 'open',
+      'priority': 'medium',
+      'summary': summary,
+      if (referenceId != null) 'referenceId': referenceId,
+      if (referenceType != null) 'referenceType': referenceType,
+      'createdAt': DateTime.now().toUtc().toIso8601String(),
+    });
+  }
+
+  static String _reportCategoryLabel(String category) {
+    switch (category) {
+      case 'noshow': return '노쇼';
+      case 'contact': return '연락처 유출';
+      case 'abuse': return '욕설/비방';
+      case 'payment': return '결제 분쟁';
+      default: return '기타';
+    }
+  }
+
+  // ── 상태 레이블 헬퍼 ──
+
+  static String _verificationStatusLabel(String status) {
+    switch (status) {
+      case 'approved': return '승인';
+      case 'rejected': return '반려';
+      default: return '대기중';
+    }
+  }
+
+  static String _reportStatusLabel(String status) {
+    switch (status) {
+      case 'resolved': return '처리완료';
+      case 'in_review': return '검토중';
+      default: return '미처리';
+    }
   }
 }

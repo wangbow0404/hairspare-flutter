@@ -4,6 +4,8 @@ import '../../services/admin_service.dart';
 import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
+import '../../widgets/admin/admin_action_dialog.dart';
+import '../../widgets/admin/admin_stitch_list_screen_shell.dart';
 import '../../widgets/admin/admin_stitch_widgets.dart';
 
 /// M15. 비즈니스 설정 화면 (Stitch 그룹 탭 + 일괄 저장)
@@ -144,16 +146,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       return;
     }
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('설정 저장'),
-        content: Text('${changed.length}개 항목을 저장합니다. 감사 로그에 기록됩니다.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('취소')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('저장')),
-        ],
-      ),
+    final confirmed = await AdminActionDialog.confirm(
+      context,
+      title: '설정 저장',
+      message: '${changed.length}개 항목을 저장합니다. 감사 로그에 기록됩니다.',
+      confirmLabel: '저장',
     );
     if (confirmed != true || !mounted) return;
 
@@ -212,61 +209,75 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     return Column(
       children: [
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AdminStitchTheme.pageMargin),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const AdminStitchPageHeader(
-                  title: '비즈니스 설정',
-                  subtitle: '가격·한도·제재 정책을 관리합니다.',
+          child: CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AdminStitchTheme.pageMargin,
+                  AdminStitchTheme.pageMargin,
+                  AdminStitchTheme.pageMargin,
+                  0,
                 ),
-                const SizedBox(height: AdminStitchTheme.sectionGap),
-                if (groupTabs.isNotEmpty)
-                  AdminStitchFilterChips(
-                    tabs: groupTabs,
-                    selectedTab: groupTabs[_selectedGroupIndex],
-                    onTabChanged: (tab) {
-                      final index = groupTabs.indexOf(tab);
-                      if (index >= 0) setState(() => _selectedGroupIndex = index);
-                    },
-                  ),
-                const SizedBox(height: AdminStitchTheme.sectionGap),
-                if (selectedGroup != null) ...[
-                  if (selectedGroup['description'] != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: AdminStitchTheme.sectionGap),
-                      child: Text(
-                        selectedGroup['description'].toString(),
-                        style: AdminStitchTheme.bodyMd.copyWith(
-                          color: AdminStitchTheme.textSecondary,
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const AdminStitchPageHeader(
+                        title: '비즈니스 설정',
+                        subtitle: '가격·한도·제재 정책을 관리합니다.',
+                      ),
+                      const SizedBox(height: AdminStitchTheme.sectionGap),
+                      if (groupTabs.isNotEmpty)
+                        AdminStitchFilterChips(
+                          tabs: groupTabs,
+                          selectedTab: groupTabs[_selectedGroupIndex],
+                          onTabChanged: (tab) {
+                            final index = groupTabs.indexOf(tab);
+                            if (index >= 0) setState(() => _selectedGroupIndex = index);
+                          },
+                        ),
+                      const SizedBox(height: AdminStitchTheme.sectionGap),
+                      if (selectedGroup != null) ...[
+                        if (selectedGroup['description'] != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: AdminStitchTheme.sectionGap),
+                            child: Text(
+                              selectedGroup['description'].toString(),
+                              style: AdminStitchTheme.bodyMd.copyWith(
+                                color: AdminStitchTheme.textSecondary,
+                              ),
+                            ),
+                          ),
+                        AdminStitchCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              for (var i = 0; i < settings.length; i++) ...[
+                                if (i > 0) const SizedBox(height: AdminStitchTheme.sectionGap),
+                                _buildSettingField(settings[i] as Map),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: AdminStitchTheme.sectionGap),
+                      Center(
+                        child: Text(
+                          '저장 시 서버에 즉시 반영됩니다.',
+                          style: AdminStitchTheme.bodyMd.copyWith(
+                            color: AdminStitchTheme.textSecondary,
+                          ),
                         ),
                       ),
-                    ),
-                  AdminStitchCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (var i = 0; i < settings.length; i++) ...[
-                          if (i > 0) const SizedBox(height: AdminStitchTheme.sectionGap),
-                          _buildSettingField(settings[i] as Map),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-                const SizedBox(height: AdminStitchTheme.sectionGap),
-                Center(
-                  child: Text(
-                    '저장 시 서버에 즉시 반영됩니다.',
-                    style: AdminStitchTheme.bodyMd.copyWith(
-                      color: AdminStitchTheme.textSecondary,
-                    ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 100),
-              ],
-            ),
+              ),
+              SliverPadding(
+                padding: AdminStitchListScreenShell.listPadding(context, extraBottom: 0),
+                sliver: const SliverToBoxAdapter(child: SizedBox(height: 8)),
+              ),
+            ],
           ),
         ),
         AdminStitchBottomActionBar(

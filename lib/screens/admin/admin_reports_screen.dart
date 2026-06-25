@@ -8,6 +8,8 @@ import '../../services/admin_service.dart';
 import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
+import '../../widgets/admin/admin_action_dialog.dart';
+import '../../widgets/admin/admin_stitch_list_screen_shell.dart';
 import '../../widgets/admin/admin_stitch_widgets.dart';
 
 /// M12. 신고/제재 케이스 화면 (Stitch 케이스 카드)
@@ -28,6 +30,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   String _statusFilter = 'open';
   String _searchQuery = '';
   Timer? _updateTimer;
+  Timer? _searchDebounceTimer;
 
   static const _statusTabs = ['전체', '긴급', '검토중'];
   static const _statusMap = {
@@ -53,6 +56,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   void dispose() {
     _searchController.dispose();
     _updateTimer?.cancel();
+    _searchDebounceTimer?.cancel();
     super.dispose();
   }
 
@@ -174,7 +178,6 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   }
 
   Future<void> _resolveReport(Map<String, dynamic> report, String action) async {
-    final reasonController = TextEditingController();
     final actionLabels = {
       'dismiss': '기각',
       'warn': '경고',
@@ -183,41 +186,14 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     };
     final label = actionLabels[action] ?? action;
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('신고 $label'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('피신고: ${report['reportedName']} (${report['categoryLabel']})'),
-            const SizedBox(height: 12),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: '처리 사유 (필수)',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('취소')),
-          FilledButton(
-            onPressed: () {
-              if (reasonController.text.trim().isEmpty) return;
-              Navigator.pop(context, true);
-            },
-            child: Text(label),
-          ),
-        ],
-      ),
+    final reason = await AdminActionDialog.show(
+      context,
+      title: '신고 $label',
+      confirmLabel: label,
+      summary: '피신고: ${report['reportedName']} (${report['categoryLabel']})',
+      isDanger: action == 'ban' || action == 'suspend',
     );
-    final reason = reasonController.text.trim();
-    reasonController.dispose();
-    if (confirmed != true || reason.isEmpty || !mounted) return;
+    if (reason == null || !mounted) return;
 
     try {
       await _adminService.resolveReport(
@@ -266,8 +242,15 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                   controller: _searchController,
                   hint: '케이스 ID 또는 사용자 검색...',
                   onChanged: (value) {
+                    _searchDebounceTimer?.cancel();
                     setState(() => _searchQuery = value.trim());
-                    _loadReports(showLoading: false);
+                    _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+                      if (!mounted) return;
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (!mounted) return;
+                        _loadReports(showLoading: false);
+                      });
+                    });
                   },
                 ),
                 const SizedBox(height: AdminStitchTheme.sectionGap),
@@ -316,11 +299,11 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
           )
         else
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               AdminStitchTheme.pageMargin,
               0,
               AdminStitchTheme.pageMargin,
-              AdminStitchTheme.pageMargin,
+              AdminStitchListScreenShell.listPadding(context).bottom,
             ),
             sliver: SliverList.separated(
               itemCount: _reports.length,

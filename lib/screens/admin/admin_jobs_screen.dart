@@ -1,16 +1,19 @@
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'dart:async';
-import '../../theme/app_theme.dart';
-import '../../services/admin_service.dart';
-import '../../utils/error_handler.dart';
-import '../../core/router/app_routes.dart';
+
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../widgets/admin/admin_screen_scaffold.dart';
-import '../../widgets/admin/admin_page_header.dart';
-import '../../widgets/admin/admin_search_filter_bar.dart';
-import '../../widgets/admin/admin_table_card.dart';
-/// 관리자 공고 관리 화면 (Next.js와 동일한 스타일)
+import 'package:intl/intl.dart';
+
+import '../../core/router/app_routes.dart';
+import '../../services/admin_service.dart';
+import '../../theme/admin_stitch_theme.dart';
+import '../../theme/app_theme.dart';
+import '../../utils/error_handler.dart';
+import '../../widgets/admin/admin_stitch_list_cards.dart';
+import '../../widgets/admin/admin_stitch_list_screen_shell.dart';
+import '../../widgets/admin/admin_stitch_widgets.dart';
+
+/// 관리자 공고 관리 화면
 class AdminJobsScreen extends StatefulWidget {
   const AdminJobsScreen({super.key});
 
@@ -21,7 +24,7 @@ class AdminJobsScreen extends StatefulWidget {
 class _AdminJobsScreenState extends State<AdminJobsScreen> {
   final AdminService _adminService = AdminService();
   final TextEditingController _searchController = TextEditingController();
-  
+
   List<dynamic> _jobs = [];
   bool _isLoading = true;
   String _search = '';
@@ -33,15 +36,31 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
   Timer? _updateTimer;
   Timer? _searchDebounceTimer;
 
+  static const _statusTabs = ['전체', '게시중', '마감', '완료'];
+  static const _statusMap = {
+    '전체': '',
+    '게시중': 'published',
+    '마감': 'closed',
+    '완료': 'completed',
+  };
+
+  static const _urgentTabs = ['전체', '급구', '일반'];
+  static const _urgentMap = {
+    '전체': '',
+    '급구': 'true',
+    '일반': 'false',
+  };
+
   @override
   void initState() {
     super.initState();
     _loadJobs();
-    // 5초마다 자동 업데이트
-    _updateTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (mounted) {
+    _updateTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
         _loadJobs(showLoading: false);
-      }
+      });
     });
   }
 
@@ -55,9 +74,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
 
   Future<void> _loadJobs({bool showLoading = true}) async {
     if (showLoading) {
-      setState(() {
-        _isLoading = true;
-      });
+      setState(() => _isLoading = true);
     }
 
     try {
@@ -78,34 +95,24 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
         });
       }
     } catch (e) {
-      final appException = ErrorHandler.handleException(e);
       if (mounted) {
         if (showLoading) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('공고 목록 조회 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}'),
+              content: Text(
+                '공고 목록 조회 실패: ${ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))}',
+              ),
               backgroundColor: AppTheme.urgentRed,
             ),
           );
         }
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
   }
 
   String _formatCurrency(int amount) {
     return NumberFormat.currency(locale: 'ko_KR', symbol: '₩').format(amount);
-  }
-
-  String _formatDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return DateFormat('yyyy년 M월 d일', 'ko_KR').format(date);
-    } catch (e) {
-      return dateString;
-    }
   }
 
   String _getStatusLabel(String status) {
@@ -121,358 +128,188 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
     }
   }
 
-  Color _getStatusBadgeColor(String status) {
-    switch (status) {
-      case 'published':
-        return Colors.green;
-      case 'closed':
-        return Colors.grey;
-      case 'completed':
-        return Colors.blue;
-      default:
-        return Colors.grey;
+  String _selectedStatusTab() {
+    for (final entry in _statusMap.entries) {
+      if (entry.value == _statusFilter) return entry.key;
     }
+    return '전체';
+  }
+
+  String _selectedUrgentTab() {
+    for (final entry in _urgentMap.entries) {
+      if (entry.value == _urgentFilter) return entry.key;
+    }
+    return '전체';
   }
 
   @override
   Widget build(BuildContext context) {
-    return AdminScreenScaffold(
+    return AdminStitchListScreenShell(
       header: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const AdminPageHeader(
+          const AdminStitchPageHeader(
             title: '공고 관리',
             subtitle: '전체 공고를 조회하고 관리할 수 있습니다',
           ),
-          const SizedBox(height: AppTheme.spacing6),
-          AdminSearchFilterBar(
-            searchController: _searchController,
-            searchHint: '공고 제목, 미용실명으로 검색...',
-            onSearchChanged: (value) {
+          const SizedBox(height: AdminStitchTheme.sectionGap),
+          AdminStitchSearchField(
+            controller: _searchController,
+            hint: '공고 제목, 미용실명으로 검색...',
+            onChanged: (value) {
               _searchDebounceTimer?.cancel();
               setState(() {
                 _search = value;
                 _currentPage = 1;
               });
               _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
-                if (mounted) _loadJobs();
+                if (!mounted) return;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  _loadJobs();
+                });
               });
             },
-            filterDropdown: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButton<String>(
-                  value: _statusFilter.isEmpty ? null : _statusFilter,
-                  hint: const Text('전체 상태'),
-                  items: const [
-                    DropdownMenuItem(value: '', child: Text('전체 상태')),
-                    DropdownMenuItem(value: 'published', child: Text('게시중')),
-                    DropdownMenuItem(value: 'closed', child: Text('마감')),
-                    DropdownMenuItem(value: 'completed', child: Text('완료')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _statusFilter = value ?? '';
-                      _currentPage = 1;
-                    });
-                    _loadJobs();
-                  },
-                  style: const TextStyle(color: AppTheme.textPrimary),
-                ),
-                const SizedBox(width: AppTheme.spacing2),
-                DropdownButton<String>(
-                  value: _urgentFilter.isEmpty ? null : _urgentFilter,
-                  hint: const Text('전체'),
-                  items: const [
-                    DropdownMenuItem(value: '', child: Text('전체')),
-                    DropdownMenuItem(value: 'true', child: Text('급구만')),
-                    DropdownMenuItem(value: 'false', child: Text('일반만')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _urgentFilter = value ?? '';
-                      _currentPage = 1;
-                    });
-                    _loadJobs();
-                  },
-                  style: const TextStyle(color: AppTheme.textPrimary),
-                ),
-              ],
-            ),
           ),
+          const SizedBox(height: AdminStitchTheme.sectionGap),
+          AdminStitchFilterChips(
+            tabs: _statusTabs,
+            selectedTab: _selectedStatusTab(),
+            onTabChanged: (tab) {
+              setState(() {
+                _statusFilter = _statusMap[tab] ?? '';
+                _currentPage = 1;
+              });
+              _loadJobs();
+            },
+          ),
+          const SizedBox(height: AdminStitchTheme.stackTight),
+          AdminStitchFilterChips(
+            tabs: _urgentTabs,
+            selectedTab: _selectedUrgentTab(),
+            onTabChanged: (tab) {
+              setState(() {
+                _urgentFilter = _urgentMap[tab] ?? '';
+                _currentPage = 1;
+              });
+              _loadJobs();
+            },
+          ),
+          if (_total > 0) ...[
+            const SizedBox(height: AdminStitchTheme.sectionGap),
+            Text(
+              '총 $_total개',
+              style: AdminStitchTheme.bodyMd.copyWith(
+                color: AdminStitchTheme.textSecondary,
+              ),
+            ),
+          ],
+          const SizedBox(height: AdminStitchTheme.sectionGap),
         ],
       ),
-      body: AdminTableCard(
-              child: _isLoading && _jobs.isEmpty
-                  ? const AdminTableSkeleton(rowCount: 8, columnCount: 7)
-                  : _jobs.isEmpty
-                      ? const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(AppTheme.spacing8),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.work_outline, size: 64, color: AppTheme.textTertiary),
-                                SizedBox(height: AppTheme.spacing4),
-                                Text(
-                                  '공고가 없습니다',
-                                  style: TextStyle(fontSize: 16, color: AppTheme.textSecondary),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(minWidth: 900),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const AdminTableHeader(
-                                  headers: ['공고 정보', '미용실', '지역', '금액', '지원/스케줄', '상태', '등록일'],
-                                  flexValues: [2, 1, 1, 1, 1, 1, 1],
-                                ),
-                            SizedBox(
-                              height: 480,
-                              child: ListView.builder(
-                                itemCount: _jobs.length,
-                                itemBuilder: (context, index) {
-                                  final job = _jobs[index];
-                                  final jobId = job['id']?.toString();
-                                  return InkWell(
-                                    onTap: jobId != null
-                                        ? () {
-                                            context.push(
-                                              AppRoutes.adminJobDetail(jobId),
-                                              extra: job,
-                                            );
-                                          }
-                                        : null,
-                                    child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: AppTheme.spacing4,
-                                      vertical: AppTheme.spacing3,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      border: Border(
-                                        bottom: BorderSide(color: AppTheme.adminPurple100.withValues(alpha: 0.5)),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      children: [
-                                        Expanded(
-                                          flex: 2,
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                child: Text(
-                                                  job['title'] ?? '제목 없음',
-                                                  style: const TextStyle(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: AppTheme.textPrimary,
-                                                  ),
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              if (job['isUrgent'] == true) ...[
-                                                const SizedBox(width: AppTheme.spacing1),
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(
-                                                    horizontal: AppTheme.spacing2,
-                                                    vertical: 2,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: AppTheme.urgentRed.withValues(alpha: 0.1),
-                                                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                                                  ),
-                                                  child: const Text(
-                                                    '급구',
-                                                    style: TextStyle(
-                                                      fontSize: 10,
-                                                      fontWeight: FontWeight.w600,
-                                                      color: AppTheme.urgentRed,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                              if (job['isPremium'] == true) ...[
-                                                const SizedBox(width: AppTheme.spacing1),
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(
-                                                    horizontal: AppTheme.spacing2,
-                                                    vertical: 2,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: AppTheme.primaryPurple.withValues(alpha: 0.1),
-                                                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                                                  ),
-                                                  child: const Text(
-                                                    '프리미엄',
-                                                    style: TextStyle(
-                                                      fontSize: 10,
-                                                      fontWeight: FontWeight.w600,
-                                                      color: AppTheme.primaryPurple,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ],
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            job['shop']?['name'] ?? '-',
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              color: AppTheme.textSecondary,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            job['region']?['name'] ?? '-',
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              color: AppTheme.textSecondary,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            _formatCurrency((job['amount'] ?? 0) as int),
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppTheme.textPrimary,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            '지원 ${job['_count']?['applications'] ?? 0} · 스케줄 ${job['_count']?['schedules'] ?? 0}',
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: AppTheme.textSecondary,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: AppTheme.spacing2,
-                                              vertical: AppTheme.spacing1,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: _getStatusBadgeColor(job['status'] ?? '').withValues(alpha: 0.1),
-                                              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                                            ),
-                                            child: Text(
-                                              _getStatusLabel(job['status'] ?? ''),
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                                color: _getStatusBadgeColor(job['status'] ?? ''),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            _formatDate(job['createdAt'] ?? ''),
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: AppTheme.textSecondary,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                            if (_totalPages > 1)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppTheme.spacing6,
-                                  vertical: AppTheme.spacing4,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      AppTheme.adminPurple50.withValues(alpha: 0.3),
-                                      AppTheme.adminPink50.withValues(alpha: 0.3),
-                                    ],
-                                  ),
-                                  border: const Border(
-                                    top: BorderSide(color: AppTheme.adminPurple100, width: 2),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      '총 $_total개 중 ${(_currentPage - 1) * 20 + 1}-${(_currentPage * 20).clamp(0, _total)}개 표시',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppTheme.textSecondary,
-                                      ),
-                                    ),
-                                    Row(
-                                      children: [
-                                        TextButton(
-                                          onPressed: _currentPage > 1
-                                              ? () {
-                                                  setState(() {
-                                                    _currentPage--;
-                                                  });
-                                                  _loadJobs();
-                                                }
-                                              : null,
-                                          child: const Text('이전'),
-                                        ),
-                                        const SizedBox(width: AppTheme.spacing2),
-                                        TextButton(
-                                          onPressed: _currentPage < _totalPages
-                                              ? () {
-                                                  setState(() {
-                                                    _currentPage++;
-                                                  });
-                                                  _loadJobs();
-                                                }
-                                              : null,
-                                          child: const Text('다음'),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              ],
-                            ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading && _jobs.isEmpty) {
+      return const AdminStitchListStateSliver.loading();
+    }
+    if (_jobs.isEmpty) {
+      return const AdminStitchListStateSliver.empty(
+        emptyMessage: '공고가 없습니다',
+        emptyIcon: Icons.work_outline,
+      );
+    }
+    return SliverPadding(
+      padding: AdminStitchListScreenShell.listPadding(context),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            if (index == _jobs.length) {
+              return _buildPagination();
+            }
+            final job = _jobs[index] as Map<String, dynamic>;
+            final jobId = job['id']?.toString();
+            final shopName = job['shop']?['name']?.toString() ?? '-';
+            final regionName = job['region']?['name']?.toString() ?? '-';
+            final amount = _formatCurrency((job['amount'] ?? 0) as int);
+            final statusLabel = _getStatusLabel(job['status']?.toString() ?? '');
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: index < _jobs.length - 1
+                    ? AdminStitchTheme.sectionGap
+                    : 0,
+              ),
+              child: AdminStitchSimpleListCard(
+                title: job['title']?.toString() ?? '제목 없음',
+                subtitle: '$shopName · $regionName · $amount · $statusLabel',
+                icon: Icons.work_outline,
+                trailing: job['isUrgent'] == true
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.urgentRed.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
+                        ),
+                        child: const Text(
+                          '급구',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.urgentRed,
                           ),
                         ),
+                      )
+                    : null,
+                onTap: jobId != null
+                    ? () => context.push(
+                          AppRoutes.adminJobDetail(jobId),
+                          extra: job,
+                        )
+                    : null,
+              ),
+            );
+          },
+          childCount: _jobs.length + (_totalPages > 1 ? 1 : 0),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPagination() {
+    return Padding(
+      padding: const EdgeInsets.only(top: AdminStitchTheme.sectionGap),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: _currentPage > 1
+                ? () {
+                    setState(() => _currentPage--);
+                    _loadJobs();
+                  }
+                : null,
+            icon: const Icon(Icons.chevron_left),
+          ),
+          Text(
+            '$_currentPage / $_totalPages',
+            style: AdminStitchTheme.bodyMd,
+          ),
+          IconButton(
+            onPressed: _currentPage < _totalPages
+                ? () {
+                    setState(() => _currentPage++);
+                    _loadJobs();
+                  }
+                : null,
+            icon: const Icon(Icons.chevron_right),
+          ),
+        ],
       ),
     );
   }

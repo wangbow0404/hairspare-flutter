@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../services/admin_service.dart';
+import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
-import '../../widgets/admin/admin_screen_scaffold.dart';
-import '../../widgets/admin/admin_page_header.dart';
-import '../../widgets/admin/admin_search_filter_bar.dart';
-import '../../widgets/admin/admin_table_card.dart';
+import '../../widgets/admin/admin_stitch_list_cards.dart';
+import '../../widgets/admin/admin_stitch_list_screen_shell.dart';
+import '../../widgets/admin/admin_stitch_widgets.dart';
 
 /// M18. 감사 로그 화면 (읽기 전용)
 class AdminAuditLogsScreen extends StatefulWidget {
@@ -116,16 +116,16 @@ class _AdminAuditLogsScreenState extends State<AdminAuditLogsScreen> {
     switch (action) {
       case 'approve_verification':
       case 'grant_energy':
-        return AppTheme.green600;
+        return AdminStitchTheme.emerald;
       case 'reject_verification':
       case 'apply_sanction':
-        return AppTheme.urgentRed;
+        return AdminStitchTheme.statusError;
       case 'update_config':
-        return AppTheme.primaryPurple;
+        return AdminStitchTheme.primary;
       case 'resolve_case':
         return AppTheme.orange600;
       default:
-        return AppTheme.textSecondary;
+        return AdminStitchTheme.textSecondary;
     }
   }
 
@@ -137,66 +137,101 @@ class _AdminAuditLogsScreenState extends State<AdminAuditLogsScreen> {
   }
 
   void _showDetail(Map<String, dynamic> log) {
+    const dialogBg = Color(0xFF1E1C30);
+    const titleColor = Color(0xFFF5F3FF);
+    const subColor = Color(0xFF9CA3AF);
+    const noteColor = Color(0xFF6B7280);
+    const dividerColor = Color(0xFF3D3B56);
+
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('감사 로그 상세'),
-        content: SingleChildScrollView(
+      builder: (context) => Dialog(
+        backgroundColor: dialogBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _detailRow('일시', _formatDate(log['createdAt']?.toString() ?? '')),
-              _detailRow('관리자', log['adminName']?.toString() ?? '-'),
-              _detailRow('액션', log['actionLabel']?.toString() ?? log['action']?.toString() ?? '-'),
-              _detailRow('대상', '${log['targetType']} / ${log['targetId']}'),
-              _detailRow('사유', log['reason']?.toString() ?? '-'),
-              if (log['beforeValue'] != null) ...[
-                const SizedBox(height: AppTheme.spacing3),
-                const Text(
-                  '변경 전',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                    color: AppTheme.textSecondary,
+              const Text(
+                '감사 로그 상세',
+                style: TextStyle(
+                  color: titleColor,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Divider(color: dividerColor, height: 1),
+              const SizedBox(height: 12),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _detailRow('일시', _formatDate(log['createdAt']?.toString() ?? ''), subColor, titleColor),
+                      _detailRow('관리자', log['adminName']?.toString() ?? '-', subColor, titleColor),
+                      _detailRow(
+                        '액션',
+                        log['actionLabel']?.toString() ?? log['action']?.toString() ?? '-',
+                        subColor,
+                        titleColor,
+                      ),
+                      _detailRow('대상', '${log['targetType']} / ${log['targetId']}', subColor, titleColor),
+                      _detailRow('사유', log['reason']?.toString() ?? '-', subColor, titleColor),
+                      if (log['beforeValue'] != null) ...[
+                        const SizedBox(height: AdminStitchTheme.sectionGap),
+                        const Text(
+                          '변경 전',
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: noteColor),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          const JsonEncoder.withIndent('  ').convert(log['beforeValue']),
+                          style: const TextStyle(fontSize: 11, fontFamily: 'monospace', color: subColor),
+                        ),
+                      ],
+                      if (log['afterValue'] != null) ...[
+                        const SizedBox(height: AdminStitchTheme.sectionGap),
+                        const Text(
+                          '변경 후',
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: noteColor),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          const JsonEncoder.withIndent('  ').convert(log['afterValue']),
+                          style: const TextStyle(fontSize: 11, fontFamily: 'monospace', color: subColor),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                Text(
-                  const JsonEncoder.withIndent('  ').convert(log['beforeValue']),
-                  style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
+              ),
+              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('닫기', style: TextStyle(color: subColor)),
                 ),
-              ],
-              if (log['afterValue'] != null) ...[
-                const SizedBox(height: AppTheme.spacing3),
-                const Text(
-                  '변경 후',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-                Text(
-                  const JsonEncoder.withIndent('  ').convert(log['afterValue']),
-                  style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
-                ),
-              ],
+              ),
             ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
-          ),
-        ],
       ),
     );
   }
 
-  Widget _detailRow(String label, String value) {
+  Widget _detailRow(
+    String label,
+    String value,
+    Color labelColor,
+    Color valueColor,
+  ) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppTheme.spacing2),
+      padding: const EdgeInsets.only(bottom: AdminStitchTheme.stackTight),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -204,16 +239,13 @@ class _AdminAuditLogsScreenState extends State<AdminAuditLogsScreen> {
             width: 64,
             child: Text(
               label,
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppTheme.textSecondary,
-              ),
+              style: TextStyle(fontSize: 12, color: labelColor),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary),
+              style: TextStyle(fontSize: 13, color: valueColor),
             ),
           ),
         ],
@@ -223,19 +255,33 @@ class _AdminAuditLogsScreenState extends State<AdminAuditLogsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AdminScreenScaffold(
+    return AdminStitchListScreenShell(
       header: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const AdminPageHeader(
+          const AdminStitchPageHeader(
             title: '감사 로그',
             subtitle: '관리자 조치 이력을 추적합니다 (읽기 전용 · 수정 불가)',
           ),
-          const SizedBox(height: AppTheme.spacing6),
-          AdminSearchFilterBar(
-            searchController: _searchController,
-            searchHint: '관리자, 사유, 대상 ID 검색...',
-            filterTabs: _actionTabs,
+          const SizedBox(height: AdminStitchTheme.sectionGap),
+          AdminStitchSearchField(
+            controller: _searchController,
+            hint: '관리자, 사유, 대상 ID 검색...',
+            onChanged: (value) {
+              _searchDebounceTimer?.cancel();
+              setState(() => _search = value);
+              _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+                if (!mounted) return;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  _loadLogs();
+                });
+              });
+            },
+          ),
+          const SizedBox(height: AdminStitchTheme.sectionGap),
+          AdminStitchFilterChips(
+            tabs: _actionTabs,
             selectedTab: _selectedTabLabel(),
             onTabChanged: (tab) {
               setState(() {
@@ -243,172 +289,58 @@ class _AdminAuditLogsScreenState extends State<AdminAuditLogsScreen> {
               });
               _loadLogs();
             },
-            onSearchChanged: (value) {
-              _searchDebounceTimer?.cancel();
-              setState(() => _search = value);
-              _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
-                if (mounted) _loadLogs();
-              });
-            },
           ),
+          const SizedBox(height: AdminStitchTheme.sectionGap),
         ],
       ),
-      body: AdminTableCard(
-        child: _isLoading && _logs.isEmpty
-            ? const AdminTableSkeleton(rowCount: 8, columnCount: 6)
-            : _hasLoadError
-                ? _buildErrorState()
-                : _logs.isEmpty
-                    ? _buildEmptyState()
-                    : _buildTable(),
-      ),
+      body: _buildBody(),
     );
   }
 
-  Widget _buildErrorState() {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.cloud_off, size: 64, color: AppTheme.urgentRed),
-          const SizedBox(height: AppTheme.spacing4),
-          const Text('감사 로그를 불러오지 못했습니다'),
-          const SizedBox(height: AppTheme.spacing4),
-          FilledButton.icon(
-            onPressed: () => _loadLogs(),
-            icon: const Icon(Icons.refresh),
-            label: const Text('다시 시도'),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildBody() {
+    if (_isLoading && _logs.isEmpty) {
+      return const AdminStitchListStateSliver.loading();
+    }
+    if (_hasLoadError) {
+      return AdminStitchListStateSliver.error(
+        onRetry: () => _loadLogs(),
+      );
+    }
+    if (_logs.isEmpty) {
+      return const AdminStitchListStateSliver.empty(
+        emptyMessage: '감사 로그가 없습니다',
+        emptyIcon: Icons.history,
+      );
+    }
+    return SliverPadding(
+      padding: AdminStitchListScreenShell.listPadding(context),
+      sliver: SliverList.separated(
+        itemCount: _logs.length,
+        separatorBuilder: (_, __) =>
+            const SizedBox(height: AdminStitchTheme.sectionGap),
+        itemBuilder: (_, index) {
+          final log = _logs[index] as Map<String, dynamic>;
+          final action = log['action']?.toString() ?? '';
+          final actionLabel =
+              log['actionLabel']?.toString() ?? action;
+          final chipColor = _actionChipColor(action);
+          final target =
+              '${log['targetType']} / ${log['targetId']}';
+          final reason = log['reason']?.toString() ?? '-';
 
-  Widget _buildEmptyState() {
-    return const Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.history, size: 64, color: AppTheme.textTertiary),
-          SizedBox(height: AppTheme.spacing4),
-          Text('감사 로그가 없습니다', style: TextStyle(color: AppTheme.textSecondary)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTable() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minWidth: 960),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const AdminTableHeader(
-              headers: ['일시', '관리자', '액션', '대상', '사유', '상세'],
-              flexValues: [2, 1, 1, 1, 2, 1],
+          return AdminStitchSimpleListCard(
+            title: actionLabel,
+            subtitle:
+                '${_formatDate(log['createdAt']?.toString() ?? '')} · ${log['adminName']?.toString() ?? '-'} · $target · $reason',
+            icon: Icons.history,
+            iconColor: chipColor,
+            onTap: () => _showDetail(log),
+            trailing: const Icon(
+              Icons.chevron_right,
+              color: AdminStitchTheme.textSecondary,
             ),
-            SizedBox(
-              height: 480,
-              child: ListView.builder(
-                itemCount: _logs.length,
-                itemBuilder: (context, index) {
-                  final log = _logs[index] as Map<String, dynamic>;
-                  final action = log['action']?.toString() ?? '';
-                  final chipColor = _actionChipColor(action);
-                  return InkWell(
-                    onTap: () => _showDetail(log),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.spacing4,
-                        vertical: AppTheme.spacing3,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            color: AppTheme.adminPurple100.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              _formatDate(log['createdAt']?.toString() ?? ''),
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: Text(
-                              log['adminName']?.toString() ?? '-',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppTheme.spacing2,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: chipColor.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                              ),
-                              child: Text(
-                                log['actionLabel']?.toString() ?? action,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: chipColor,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: Text(
-                              '${log['targetType']}\n${log['targetId']}',
-                              style: const TextStyle(fontSize: 11),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              log['reason']?.toString() ?? '-',
-                              style: const TextStyle(fontSize: 12),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: IconButton(
-                              icon: const Icon(Icons.visibility, size: 18),
-                              onPressed: () => _showDetail(log),
-                              style: IconButton.styleFrom(
-                                backgroundColor: AppTheme.adminPurple50,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../services/admin_service.dart';
+import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
 import '../../widgets/admin/admin_table_card.dart';
@@ -105,79 +106,91 @@ class _AdminVerificationDetailScreenState
     final isPending = detail['status'] == 'pending';
     final ntsMatch = nts['match'] == true;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => context.pop(),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '인증 심사 · ${detail['typeLabel']}',
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '${detail['userName']} · ${_formatDate(detail['submittedAt']?.toString())}',
-                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-                  ),
-                ],
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AdminStitchTheme.pageMargin),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.pop(),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
               ),
-            ),
-            if (isPending) ...[
-              FilledButton(
-                onPressed: _approve,
-                style: FilledButton.styleFrom(backgroundColor: AppTheme.green600),
-                child: const Text('승인'),
+              const SizedBox(width: AppTheme.spacing1),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '인증 심사 · ${detail['typeLabel']}',
+                          style: AdminStitchTheme.pageTitleForWidth(constraints.maxWidth),
+                        ),
+                        Text(
+                          '${detail['userName']} · ${_formatDate(detail['submittedAt']?.toString())}',
+                          style: AdminStitchTheme.pageSubtitle.copyWith(fontSize: 13),
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
-              const SizedBox(width: AppTheme.spacing2),
-              OutlinedButton(
-                onPressed: _reject,
-                style: OutlinedButton.styleFrom(foregroundColor: AppTheme.urgentRed),
-                child: const Text('반려'),
-              ),
+              if (isPending) ...[
+                FilledButton(
+                  onPressed: _approve,
+                  style: FilledButton.styleFrom(backgroundColor: AppTheme.green600),
+                  child: const Text('승인'),
+                ),
+                const SizedBox(width: AppTheme.spacing2),
+                OutlinedButton(
+                  onPressed: _reject,
+                  style: OutlinedButton.styleFrom(foregroundColor: AppTheme.urgentRed),
+                  child: const Text('반려'),
+                ),
+              ],
             ],
-          ],
-        ),
-        const SizedBox(height: AppTheme.spacing6),
-        Expanded(
-          child: SingleChildScrollView(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isWide = constraints.maxWidth >= 900;
-                final left = AdminVerificationSubmissionPanel(
-                  submitted: submitted,
-                  userEmail: detail['userEmail']?.toString(),
-                  userRole: detail['userRole']?.toString(),
-                );
-                final right = AdminVerificationEvidencePanel(
-                  ocr: ocr,
-                  nts: nts,
-                  ntsMatch: ntsMatch,
-                );
-                if (isWide) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: left),
-                      const SizedBox(width: AppTheme.spacing4),
-                      Expanded(child: right),
-                    ],
-                  );
-                }
-                return Column(
-                  children: [left, const SizedBox(height: AppTheme.spacing4), right],
-                );
-              },
-            ),
           ),
-        ),
-      ],
+          const SizedBox(height: AdminStitchTheme.sectionGap),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth >= 768;
+              final left = AdminVerificationSubmissionPanel(
+                submitted: submitted,
+                userEmail: detail['userEmail']?.toString(),
+                userRole: detail['userRole']?.toString(),
+              );
+              final right = AdminVerificationEvidencePanel(
+                ocr: ocr,
+                nts: nts,
+                ntsMatch: ntsMatch,
+              );
+              if (isWide) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: left),
+                    const SizedBox(width: AppTheme.spacing4),
+                    Expanded(child: right),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  left,
+                  const SizedBox(height: AppTheme.spacing4),
+                  right,
+                ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../core/di/service_locator.dart';
 import '../core/router/app_navigation.dart';
+import '../core/router/app_router.dart';
 import '../providers/auth_provider.dart';
 import '../core/router/app_routes.dart';
 import '../services/admin_service.dart';
 import '../theme/admin_stitch_theme.dart';
 import '../theme/app_theme.dart';
+import 'admin/admin_mobile_bottom_nav.dart';
 import 'common/hairspare_brand_assets.dart';
 /// 관리자 레이아웃 위젯 (사이드바 + 헤더)
 class AdminLayout extends StatefulWidget {
@@ -64,6 +65,7 @@ class _AdminLayoutState extends State<AdminLayout> {
       title: '거래·매칭',
       items: [
         AdminNavItem(route: AppRoutes.adminJobs, label: '공고 관리', icon: Icons.work),
+        AdminNavItem(route: AppRoutes.adminApplications, label: '지원 현황', icon: Icons.assignment_outlined),
         AdminNavItem(route: AppRoutes.adminCheckin, label: '스케줄·체크인', icon: Icons.calendar_today),
         AdminNavItem(route: AppRoutes.adminMatches, label: '모델 매칭', icon: Icons.favorite),
         AdminNavItem(route: AppRoutes.adminSpaces, label: '공간 대여', icon: Icons.meeting_room, badgeKey: 'pendingBookings'),
@@ -151,6 +153,192 @@ class _AdminLayoutState extends State<AdminLayout> {
     if (item.badgeKey == null) return null;
     final count = _badgeCounts[item.badgeKey!] ?? 0;
     return count > 0 ? count : null;
+  }
+
+  Widget _buildAdminHeaderBrand({
+    required bool isMobile,
+    required bool isVeryNarrow,
+    bool showSymbol = false,
+  }) {
+    final logoHeight = isVeryNarrow ? 24.0 : (isMobile ? 28.0 : 32.0);
+    final adminFontSize = isVeryNarrow ? 13.0 : (isMobile ? 14.0 : 15.0);
+    final symbolSize = isMobile ? 40.0 : 44.0;
+
+    final textColumn = Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        HairSpareBrandLogo(height: logoHeight),
+        SizedBox(height: isMobile ? 3 : 4),
+        Text(
+          '관리자',
+          style: TextStyle(
+            fontSize: adminFontSize,
+            fontWeight: FontWeight.w600,
+            height: 1.1,
+            letterSpacing: -0.2,
+            color: AppTheme.textSecondary,
+          ),
+          maxLines: 1,
+        ),
+      ],
+    );
+
+    if (!showSymbol) {
+      return textColumn;
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        HairSpareBrandSymbol(size: symbolSize),
+        SizedBox(width: isMobile ? AppTheme.spacing2 : AppTheme.spacing3),
+        textColumn,
+      ],
+    );
+  }
+
+  Widget _buildHeaderRightActions({
+    required bool isMobile,
+    required bool isNarrow,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (!isMobile && !isNarrow)
+          Container(
+            constraints: const BoxConstraints(maxWidth: 180),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacing2,
+              vertical: AppTheme.spacing1,
+            ),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  AppTheme.adminPurple50,
+                  AppTheme.adminPink50,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.primaryGreen,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacing1),
+                const Text(
+                  '실시간 업데이트 중',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textGray700,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ],
+            ),
+          ),
+        if (isMobile) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 4,
+            ),
+            decoration: BoxDecoration(
+              color: AdminStitchTheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: AdminStitchTheme.emerald,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '실시간 동기화',
+                  style: AdminStitchTheme.labelSm.copyWith(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                    color: AdminStitchTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            onPressed: _handleLogout,
+            style: IconButton.styleFrom(
+              minimumSize: const Size(36, 36),
+              padding: EdgeInsets.zero,
+            ),
+            icon: CircleAvatar(
+              radius: 16,
+              backgroundColor: AdminStitchTheme.primaryFixed,
+              child: Icon(
+                Icons.person,
+                size: 18,
+                color: AdminStitchTheme.primary,
+              ),
+            ),
+          ),
+        ],
+        if (!isMobile) ...[
+          if (!isNarrow) ...[
+            const SizedBox(width: AppTheme.spacing2),
+            TextButton.icon(
+              onPressed: () => _navigateToRoute('/admin'),
+              icon: const Icon(
+                Icons.dashboard,
+                size: 18,
+                color: AppTheme.textSecondary,
+              ),
+              label: const Text(
+                '대시보드',
+                style: TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 13,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+          const SizedBox(width: AppTheme.spacing1),
+          TextButton.icon(
+            onPressed: _handleLogout,
+            icon: const Icon(
+              Icons.logout,
+              size: 16,
+              color: AppTheme.textSecondary,
+            ),
+            label: const Text(
+              '로그아웃',
+              style: TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 13,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ],
+    );
   }
 
   Widget _buildNavItem(AdminNavItem item, bool isMobile, bool Function(String) isActive) {
@@ -257,15 +445,16 @@ class _AdminLayoutState extends State<AdminLayout> {
 
   void _navigateToRoute(String route) {
     if (widget.currentRoute == route) return;
-    context.go(route);
+    appRouter.go(route);
   }
 
   void _onNavItemTap(AdminNavItem item, bool isMobile) {
     if (isMobile) {
       Navigator.of(context).pop();
+      final route = item.route;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!context.mounted) return;
-        context.go(item.route);
+        if (!mounted) return;
+        appRouter.go(route);
       });
     } else {
       _navigateToRoute(item.route);
@@ -386,8 +575,13 @@ class _AdminLayoutState extends State<AdminLayout> {
               ),
             )
           : null,
+      bottomNavigationBar: isMobile
+          ? AdminMobileBottomNav(currentRoute: widget.currentRoute)
+          : null,
       body: Container(
-        color: AdminStitchTheme.bgSubtle,
+        decoration: const BoxDecoration(
+          gradient: AdminStitchTheme.adminBgGradient,
+        ),
         child: Column(
           children: [
             // 헤더 — [SpareAppBar]와 동일하게 SafeArea를 내부에 둠
@@ -408,169 +602,106 @@ class _AdminLayoutState extends State<AdminLayout> {
               child: SafeArea(
                 bottom: false,
                 child: SizedBox(
-                  height: isMobile ? 56 : 80,
+                  height: isMobile ? 60 : 84,
                   child: Padding(
                     padding: EdgeInsets.symmetric(
                       horizontal: isVeryNarrow
                           ? AppTheme.spacing1
                           : (isMobile ? AppTheme.spacing2 : AppTheme.spacing3),
                     ),
-                    child: Row(
-                      children: [
-                        if (isMobile)
-                          IconButton(
-                            icon: Icon(Icons.menu, color: AppTheme.textPrimary, size: isVeryNarrow ? 20 : 24),
-                            onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                            style: IconButton.styleFrom(
-                              minimumSize: isVeryNarrow ? const Size(36, 36) : const Size(48, 48),
-                              padding: isVeryNarrow ? const EdgeInsets.all(8) : null,
-                            ),
-                          ),
-                        Expanded(
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () => _navigateToRoute('/admin'),
-                              borderRadius: BorderRadius.circular(AppTheme.radius2xl),
-                              splashColor: AppTheme.primaryPurple500.withValues(alpha: 0.2),
-                              highlightColor: AppTheme.primaryPurple500.withValues(alpha: 0.1),
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: isVeryNarrow ? AppTheme.spacing1 : AppTheme.spacing2,
-                                  vertical: isVeryNarrow ? 4 : (isMobile ? AppTheme.spacing1 : AppTheme.spacing2),
-                                ),
-                                child: Row(
-                                  children: [
-                                    HairSpareBrandSymbol(
-                                      size: isVeryNarrow ? 28 : (isMobile ? 36 : 40),
+                    child: isMobile
+                        ? Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.menu,
+                                      color: AppTheme.textPrimary,
+                                      size: isVeryNarrow ? 20 : 24,
                                     ),
-                                    if (!isVeryNarrow) ...[
-                                      SizedBox(width: isMobile ? AppTheme.spacing1 : AppTheme.spacing2),
-                                      Expanded(
-                                        child: FittedBox(
-                                          fit: BoxFit.scaleDown,
-                                          alignment: Alignment.centerLeft,
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              HairSpareBrandLogo(
-                                                height: isMobile ? 18 : 22,
-                                              ),
-                                              Text(
-                                                '관리자',
-                                                style: TextStyle(
-                                                  fontSize: isMobile ? 9 : 11,
-                                                  color: AppTheme.textSecondary,
-                                                ),
-                                                maxLines: 1,
-                                              ),
-                                            ],
-                                          ),
+                                    onPressed: () =>
+                                        _scaffoldKey.currentState?.openDrawer(),
+                                    style: IconButton.styleFrom(
+                                      minimumSize: isVeryNarrow
+                                          ? const Size(36, 36)
+                                          : const Size(48, 48),
+                                      padding: isVeryNarrow
+                                          ? const EdgeInsets.all(8)
+                                          : null,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  _buildHeaderRightActions(
+                                    isMobile: isMobile,
+                                    isNarrow: isNarrow,
+                                  ),
+                                ],
+                              ),
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => _navigateToRoute('/admin'),
+                                  borderRadius:
+                                      BorderRadius.circular(AppTheme.radius2xl),
+                                  splashColor: AppTheme.primaryPurple500
+                                      .withValues(alpha: 0.2),
+                                  highlightColor: AppTheme.primaryPurple500
+                                      .withValues(alpha: 0.1),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppTheme.spacing2,
+                                      vertical: AppTheme.spacing1,
+                                    ),
+                                    child: _buildAdminHeaderBrand(
+                                      isMobile: true,
+                                      isVeryNarrow: isVeryNarrow,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () => _navigateToRoute('/admin'),
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radius2xl,
+                                    ),
+                                    splashColor: AppTheme.primaryPurple500
+                                        .withValues(alpha: 0.2),
+                                    highlightColor: AppTheme.primaryPurple500
+                                        .withValues(alpha: 0.1),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: AppTheme.spacing2,
+                                          vertical: AppTheme.spacing2,
+                                        ),
+                                        child: _buildAdminHeaderBrand(
+                                          isMobile: false,
+                                          isVeryNarrow: false,
+                                          showSymbol: true,
                                         ),
                                       ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (!isMobile && !isNarrow)
-                              Container(
-                                constraints: const BoxConstraints(maxWidth: 180),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppTheme.spacing2,
-                                  vertical: AppTheme.spacing1,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      AppTheme.adminPurple50,
-                                      AppTheme.adminPink50,
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      width: 6,
-                                      height: 6,
-                                      decoration: const BoxDecoration(
-                                        color: AppTheme.primaryGreen,
-                                        shape: BoxShape.circle,
-                                      ),
                                     ),
-                                    const SizedBox(width: AppTheme.spacing1),
-                                    const Text(
-                                      '실시간 업데이트 중',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppTheme.textGray700,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            if (isMobile)
-                              IconButton(
-                                icon: const Icon(Icons.dashboard, size: 20, color: AppTheme.textSecondary),
-                                onPressed: () => _navigateToRoute('/admin'),
-                                style: IconButton.styleFrom(
-                                  minimumSize: const Size(36, 36),
-                                  padding: EdgeInsets.zero,
-                                ),
-                              ),
-                            if (!isMobile && !isNarrow) ...[
-                              const SizedBox(width: AppTheme.spacing2),
-                              TextButton.icon(
-                                onPressed: () => _navigateToRoute('/admin'),
-                                icon: const Icon(Icons.dashboard, size: 18, color: AppTheme.textSecondary),
-                                label: const Text(
-                                  '대시보드',
-                                  style: TextStyle(
-                                    color: AppTheme.textSecondary,
-                                    fontSize: 13,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              const SizedBox(width: AppTheme.spacing1),
+                              _buildHeaderRightActions(
+                                isMobile: isMobile,
+                                isNarrow: isNarrow,
+                              ),
                             ],
-                            const SizedBox(width: AppTheme.spacing1),
-                            isMobile
-                                ? IconButton(
-                                    icon: const Icon(Icons.logout, size: 20, color: AppTheme.textSecondary),
-                                    onPressed: _handleLogout,
-                                    style: IconButton.styleFrom(
-                                      minimumSize: const Size(36, 36),
-                                      padding: EdgeInsets.zero,
-                                    ),
-                                  )
-                                : TextButton.icon(
-                                    onPressed: _handleLogout,
-                                    icon: const Icon(Icons.logout, size: 16, color: AppTheme.textSecondary),
-                                    label: const Text(
-                                      '로그아웃',
-                                      style: TextStyle(
-                                        color: AppTheme.textSecondary,
-                                        fontSize: 13,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
                   ),
                 ),
               ),

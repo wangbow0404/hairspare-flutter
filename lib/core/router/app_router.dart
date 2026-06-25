@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../screens/admin/admin_audit_logs_screen.dart';
+import '../../screens/admin/admin_applications_screen.dart';
 import '../../screens/admin/admin_checkin_screen.dart';
 import '../../screens/admin/admin_dashboard_screen.dart';
 import '../../screens/admin/admin_energy_screen.dart';
@@ -521,6 +522,11 @@ final class AppRouter {
               path: AppRoutes.adminJobs,
               builder: (BuildContext context, GoRouterState state) =>
                   const AdminJobsScreen(),
+            ),
+            GoRoute(
+              path: AppRoutes.adminApplications,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminApplicationsScreen(),
             ),
             GoRoute(
               path: '${AppRoutes.adminJobs}/:jobId',

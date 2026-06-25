@@ -18,6 +18,7 @@ import '../services/favorite_service.dart';
 import '../services/job_service.dart';
 import '../services/schedule_service.dart';
 import '../services/verification_service.dart';
+import '../utils/app_exception.dart';
 import '../utils/error_handler.dart';
 import '../utils/region_helper.dart';
 import '../utils/schedule_work_session.dart';
@@ -338,7 +339,16 @@ class JobDetailViewModel extends ChangeNotifier {
       );
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
-      _m.showError(ErrorHandler.getUserFriendlyMessage(appException));
+      final msg = appException.message;
+      // 서버가 에너지 부족 코드를 반환한 경우 — 충전 바텀시트 표시
+      if (appException is ValidationException &&
+          (msg.contains('에너지') || msg.contains('energy'))) {
+        showConfirmModal = false;
+        showLowEnergySheet = true;
+        notifyListeners();
+      } else {
+        _m.showError(ErrorHandler.getUserFriendlyMessage(appException));
+      }
     } finally {
       isLoading = false;
       notifyListeners();

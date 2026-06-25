@@ -97,9 +97,10 @@ class AdminTableSkeleton extends StatelessWidget {
           headers: List.generate(columnCount, (i) => ''),
           flexValues: List.filled(columnCount, 1),
         ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: rowCount,
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: rowCount,
             itemBuilder: (context, index) {
               return Container(
                 padding: const EdgeInsets.symmetric(
@@ -128,7 +129,6 @@ class AdminTableSkeleton extends StatelessWidget {
               );
             },
           ),
-        ),
       ],
     );
   }

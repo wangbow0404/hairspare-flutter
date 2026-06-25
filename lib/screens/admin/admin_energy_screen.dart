@@ -1,13 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'dart:async';
-import '../../theme/app_theme.dart';
+
 import '../../services/admin_service.dart';
+import '../../theme/admin_stitch_theme.dart';
+import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
-import '../../widgets/admin/admin_page_header.dart';
-import '../../widgets/admin/admin_search_filter_bar.dart';
-import '../../widgets/admin/admin_table_card.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
+import '../../widgets/admin/admin_page_header.dart';
+import '../../widgets/admin/admin_stitch_list_cards.dart';
+import '../../widgets/admin/admin_stitch_list_screen_shell.dart';
+import '../../widgets/admin/admin_stitch_widgets.dart';
 
 /// 관리자 에너지 관리 화면
 class AdminEnergyScreen extends StatefulWidget {
@@ -25,18 +29,28 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
   String _typeFilter = '';
   int _currentPage = 1;
   int _totalPages = 1;
-  int _total = 0;
   Timer? _updateTimer;
+
+  static const _typeTabs = ['전체', '구매', '잠금', '반환', '몰수', '보상'];
+  static const _typeMap = {
+    '전체': '',
+    '구매': 'purchase',
+    '잠금': 'lock',
+    '반환': 'return',
+    '몰수': 'forfeit',
+    '보상': 'reward',
+  };
 
   @override
   void initState() {
     super.initState();
     _loadTransactions();
-    // 5초마다 자동 업데이트
-    _updateTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (mounted) {
+    _updateTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
         _loadTransactions(showLoading: false);
-      }
+      });
     });
   }
 
@@ -48,11 +62,7 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
   }
 
   Future<void> _loadTransactions({bool showLoading = true}) async {
-    if (showLoading) {
-      setState(() {
-        _isLoading = true;
-      });
-    }
+    if (showLoading) setState(() => _isLoading = true);
 
     try {
       final result = await _adminService.getEnergyTransactions(
@@ -64,345 +74,40 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
         setState(() {
           _transactions = result['transactions'] ?? [];
           _totalPages = result['pagination']?['totalPages'] ?? 1;
-          _total = result['pagination']?['total'] ?? 0;
           _isLoading = false;
         });
       }
     } catch (e) {
-      final appException = ErrorHandler.handleException(e);
       if (mounted) {
         if (showLoading) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('에너지 거래 내역 조회 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}'),
+              content: Text(
+                '에너지 거래 내역 조회 실패: ${ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))}',
+              ),
               backgroundColor: AppTheme.urgentRed,
             ),
           );
         }
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
   }
 
   String _formatDate(String dateString) {
     try {
-      final date = DateTime.parse(dateString);
-      return DateFormat('yyyy년 M월 d일 HH:mm', 'ko_KR').format(date);
-    } catch (e) {
+      return DateFormat('yyyy.MM.dd HH:mm', 'ko_KR')
+          .format(DateTime.parse(dateString).toLocal());
+    } catch (_) {
       return dateString;
     }
   }
 
-  String _getTypeLabel(String type) {
-    switch (type) {
-      case 'purchase':
-        return '구매';
-      case 'lock':
-        return '잠금';
-      case 'return':
-        return '반환';
-      case 'forfeit':
-        return '몰수';
-      case 'reward':
-        return '보상';
-      default:
-        return type;
+  String _selectedTypeTab() {
+    for (final e in _typeMap.entries) {
+      if (e.value == _typeFilter) return e.key;
     }
-  }
-
-  Color _getTypeColor(String type) {
-    switch (type) {
-      case 'purchase':
-        return Colors.green;
-      case 'lock':
-        return Colors.yellow;
-      case 'return':
-        return Colors.blue;
-      case 'forfeit':
-        return Colors.red;
-      case 'reward':
-        return AppTheme.primaryPurple;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _getStateLabel(String state) {
-    switch (state) {
-      case 'completed':
-        return '완료';
-      case 'pending':
-        return '대기';
-      case 'failed':
-        return '실패';
-      default:
-        return state;
-    }
-  }
-
-  Color _getStateBadgeColor(String state) {
-    switch (state) {
-      case 'completed':
-        return Colors.green;
-      case 'pending':
-        return Colors.yellow;
-      case 'failed':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AdminPageHeader(
-            title: '에너지 관리',
-            subtitle: '에너지 거래 내역을 조회하고 관리할 수 있습니다',
-            trailing: FilledButton.icon(
-              onPressed: _grantEnergy,
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('수동 지급'),
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing6),
-          AdminSearchFilterBar(
-            searchController: _searchController,
-            searchHint: '사용자, 이메일로 검색...',
-            filterDropdown: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButton<String>(
-                  value: _typeFilter.isEmpty ? '' : _typeFilter,
-                  hint: const Text('전체 유형'),
-                  items: const [
-                    DropdownMenuItem(value: '', child: Text('전체 유형')),
-                    DropdownMenuItem(value: 'purchase', child: Text('구매')),
-                    DropdownMenuItem(value: 'lock', child: Text('잠금')),
-                    DropdownMenuItem(value: 'return', child: Text('반환')),
-                    DropdownMenuItem(value: 'forfeit', child: Text('몰수')),
-                    DropdownMenuItem(value: 'reward', child: Text('보상')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _typeFilter = value ?? '';
-                      _currentPage = 1;
-                    });
-                    _loadTransactions();
-                  },
-                  style: const TextStyle(color: AppTheme.textPrimary),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing6),
-          SizedBox(
-            height: 600,
-            child: AdminTableCard(
-              child: _isLoading && _transactions.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : _transactions.isEmpty
-                      ? const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(AppTheme.spacing8),
-                            child: Text(
-                              '거래 내역이 없습니다',
-                              style: TextStyle(color: AppTheme.textSecondary),
-                            ),
-                          ),
-                        )
-                      : SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(minWidth: 900, minHeight: 400),
-                            child: SizedBox(
-                              height: 580,
-                              child: Column(
-                              children: [
-                                const AdminTableHeader(
-                                  headers: ['사용자', '유형', '금액', '공고', '상태', '거래일'],
-                                  flexValues: [1, 1, 1, 1, 1, 1],
-                                ),
-                            // 테이블 본문
-                            Expanded(
-                              child: ListView.builder(
-                                itemCount: _transactions.length,
-                                itemBuilder: (context, index) {
-                                  final transaction = _transactions[index];
-                                  final typeColor = _getTypeColor(transaction['type'] ?? '');
-                                  final stateColor = _getStateBadgeColor(transaction['state'] ?? '');
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: AppTheme.spacing4,
-                                      vertical: AppTheme.spacing3,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      border: Border(
-                                        bottom: BorderSide(color: AppTheme.adminPurple100.withValues(alpha: 0.5)),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            transaction['energyWallet']?['user']?['email'] ?? '-',
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              color: AppTheme.textSecondary,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            _getTypeLabel(transaction['type'] ?? ''),
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                              color: typeColor,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            '${(transaction['amount'] ?? 0) > 0 ? '+' : ''}${transaction['amount'] ?? 0}개',
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                              color: (transaction['amount'] ?? 0) > 0 ? Colors.green : Colors.red,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            transaction['job']?['title'] ?? '-',
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: AppTheme.textSecondary,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: AppTheme.spacing2,
-                                              vertical: AppTheme.spacing1,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: stateColor.withValues(alpha: 0.1),
-                                              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                                            ),
-                                            child: Text(
-                                              _getStateLabel(transaction['state'] ?? ''),
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                                color: stateColor,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            _formatDate(transaction['createdAt'] ?? ''),
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: AppTheme.textSecondary,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                            // 페이지네이션
-                            if (_totalPages > 1)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppTheme.spacing6,
-                                  vertical: AppTheme.spacing4,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      AppTheme.adminPurple50.withValues(alpha: 0.3),
-                                      AppTheme.adminPink50.withValues(alpha: 0.3),
-                                    ],
-                                  ),
-                                  border: const Border(
-                                    top: BorderSide(color: AppTheme.adminPurple100, width: 2),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      '총 $_total건 중 ${(_currentPage - 1) * 20 + 1}-${(_currentPage * 20).clamp(0, _total)}건 표시',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppTheme.textSecondary,
-                                      ),
-                                    ),
-                                    Row(
-                                      children: [
-                                        TextButton(
-                                          onPressed: _currentPage > 1
-                                              ? () {
-                                                  setState(() {
-                                                    _currentPage--;
-                                                  });
-                                                  _loadTransactions();
-                                                }
-                                              : null,
-                                          child: const Text('이전'),
-                                        ),
-                                        const SizedBox(width: AppTheme.spacing2),
-                                        TextButton(
-                                          onPressed: _currentPage < _totalPages
-                                              ? () {
-                                                  setState(() {
-                                                    _currentPage++;
-                                                  });
-                                                  _loadTransactions();
-                                                }
-                                              : null,
-                                          child: const Text('다음'),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              ],
-                            ),
-                            ),
-                          ),
-                        ),
-            ),
-          ),
-        ],
-      );
+    return '전체';
   }
 
   Future<void> _grantEnergy() async {
@@ -413,10 +118,12 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
       title: '에너지 수동 지급',
       confirmLabel: '지급',
       extraFields: [
-        TextField(controller: userController, decoration: const InputDecoration(labelText: '사용자 ID', border: OutlineInputBorder())),
-        const SizedBox(height: AppTheme.spacing2),
-        TextField(controller: amountController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '수량', border: OutlineInputBorder())),
-        const SizedBox(height: AppTheme.spacing2),
+        AdminFieldConfig(label: '사용자 ID', controller: userController),
+        AdminFieldConfig(
+          label: '수량',
+          controller: amountController,
+          keyboardType: TextInputType.number,
+        ),
       ],
     );
     final userId = userController.text.trim();
@@ -427,11 +134,132 @@ class _AdminEnergyScreenState extends State<AdminEnergyScreen> {
     try {
       await _adminService.grantEnergy(userId, amount, reason: reason);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('에너지가 지급되었습니다 (감사 로그 기록)')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('에너지가 지급되었습니다 (감사 로그 기록)')),
+      );
       _loadTransactions();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))), backgroundColor: AppTheme.urgentRed));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e)),
+          ),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AdminStitchListScreenShell(
+      header: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AdminPageHeader(
+            title: '에너지 관리',
+            subtitle: '에너지 거래 내역 조회 및 수동 지급',
+            trailing: FilledButton.icon(
+              onPressed: _grantEnergy,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('수동 지급'),
+            ),
+          ),
+          const SizedBox(height: AdminStitchTheme.sectionGap),
+          AdminStitchSearchField(
+            controller: _searchController,
+            hint: '사용자, 이메일 검색...',
+          ),
+          const SizedBox(height: AdminStitchTheme.sectionGap),
+          AdminStitchFilterChips(
+            tabs: _typeTabs,
+            selectedTab: _selectedTypeTab(),
+            onTabChanged: (tab) {
+              setState(() {
+                _typeFilter = _typeMap[tab] ?? '';
+                _currentPage = 1;
+              });
+              _loadTransactions();
+            },
+          ),
+          const SizedBox(height: AdminStitchTheme.sectionGap),
+        ],
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading && _transactions.isEmpty) {
+      return const AdminStitchListStateSliver.loading();
+    }
+    if (_transactions.isEmpty) {
+      return const AdminStitchListStateSliver.empty(
+        emptyMessage: '거래 내역이 없습니다',
+        emptyIcon: Icons.bolt_outlined,
+      );
+    }
+    return SliverPadding(
+      padding: AdminStitchListScreenShell.listPadding(context),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            if (index == _transactions.length) {
+              return _buildPagination();
+            }
+            final t = _transactions[index] as Map<String, dynamic>;
+            final amount = t['amount'] as num? ?? 0;
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: index < _transactions.length - 1
+                    ? AdminStitchTheme.sectionGap
+                    : 0,
+              ),
+              child: AdminStitchSimpleListCard(
+                title: t['energyWallet']?['user']?['email']?.toString() ?? '-',
+                subtitle:
+                    '${t['typeLabel'] ?? t['type']} · ${amount > 0 ? '+' : ''}$amount개 · ${_formatDate(t['createdAt']?.toString() ?? '')}',
+                icon: Icons.bolt_outlined,
+                iconColor: amount >= 0
+                    ? AdminStitchTheme.emerald
+                    : AdminStitchTheme.statusError,
+              ),
+            );
+          },
+          childCount: _transactions.length + (_totalPages > 1 ? 1 : 0),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPagination() {
+    return Padding(
+      padding: const EdgeInsets.only(top: AdminStitchTheme.sectionGap),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: _currentPage > 1
+                ? () {
+                    setState(() => _currentPage--);
+                    _loadTransactions();
+                  }
+                : null,
+            icon: const Icon(Icons.chevron_left),
+          ),
+          Text('$_currentPage / $_totalPages', style: AdminStitchTheme.bodyMd),
+          IconButton(
+            onPressed: _currentPage < _totalPages
+                ? () {
+                    setState(() => _currentPage++);
+                    _loadTransactions();
+                  }
+                : null,
+            icon: const Icon(Icons.chevron_right),
+          ),
+        ],
+      ),
+    );
   }
 }

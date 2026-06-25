@@ -130,6 +130,7 @@ abstract final class AppRoutes {
   static const admin = '/admin';
   static const adminUsers = '/admin/users';
   static const adminJobs = '/admin/jobs';
+  static const adminApplications = '/admin/applications';
   static const adminPayments = '/admin/payments';
   static const adminEnergy = '/admin/energy';
   static const adminNoshow = '/admin/noshow';

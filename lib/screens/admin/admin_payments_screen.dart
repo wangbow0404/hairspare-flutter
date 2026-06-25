@@ -1,15 +1,18 @@
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'dart:async';
-import '../../theme/app_theme.dart';
-import '../../services/admin_service.dart';
-import '../../utils/error_handler.dart';
-import '../../core/router/app_routes.dart';
+
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../widgets/admin/admin_screen_scaffold.dart';
-import '../../widgets/admin/admin_page_header.dart';
-import '../../widgets/admin/admin_search_filter_bar.dart';
-import '../../widgets/admin/admin_table_card.dart';
+import 'package:intl/intl.dart';
+
+import '../../core/router/app_routes.dart';
+import '../../services/admin_service.dart';
+import '../../theme/admin_stitch_theme.dart';
+import '../../theme/app_theme.dart';
+import '../../utils/error_handler.dart';
+import '../../widgets/admin/admin_stitch_list_cards.dart';
+import '../../widgets/admin/admin_stitch_list_screen_shell.dart';
+import '../../widgets/admin/admin_stitch_widgets.dart';
+
 /// 관리자 결제 관리 화면
 class AdminPaymentsScreen extends StatefulWidget {
   const AdminPaymentsScreen({super.key});
@@ -21,6 +24,7 @@ class AdminPaymentsScreen extends StatefulWidget {
 class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
   final AdminService _adminService = AdminService();
   final TextEditingController _searchController = TextEditingController();
+
   List<dynamic> _payments = [];
   bool _isLoading = true;
   String _statusFilter = '';
@@ -30,15 +34,33 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
   int _total = 0;
   Timer? _updateTimer;
 
+  static const _statusTabs = ['전체', '성공', '대기', '실패', '취소'];
+  static const _statusMap = {
+    '전체': '',
+    '성공': 'success',
+    '대기': 'pending',
+    '실패': 'failed',
+    '취소': 'cancelled',
+  };
+
+  static const _typeTabs = ['전체', '에너지 구매', '구독', '프리미엄 고정'];
+  static const _typeMap = {
+    '전체': '',
+    '에너지 구매': 'energy_purchase',
+    '구독': 'subscription',
+    '프리미엄 고정': 'premium_fix',
+  };
+
   @override
   void initState() {
     super.initState();
     _loadPayments();
-    // 5초마다 자동 업데이트
-    _updateTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (mounted) {
+    _updateTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
         _loadPayments(showLoading: false);
-      }
+      });
     });
   }
 
@@ -51,9 +73,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
 
   Future<void> _loadPayments({bool showLoading = true}) async {
     if (showLoading) {
-      setState(() {
-        _isLoading = true;
-      });
+      setState(() => _isLoading = true);
     }
 
     try {
@@ -72,34 +92,24 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
         });
       }
     } catch (e) {
-      final appException = ErrorHandler.handleException(e);
       if (mounted) {
         if (showLoading) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('결제 목록 조회 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}'),
+              content: Text(
+                '결제 목록 조회 실패: ${ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))}',
+              ),
               backgroundColor: AppTheme.urgentRed,
             ),
           );
         }
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
   }
 
   String _formatCurrency(int amount) {
     return NumberFormat.currency(locale: 'ko_KR', symbol: '₩').format(amount);
-  }
-
-  String _formatDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return DateFormat('yyyy년 M월 d일 HH:mm', 'ko_KR').format(date);
-    } catch (e) {
-      return dateString;
-    }
   }
 
   String _getStatusLabel(String status) {
@@ -117,21 +127,6 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
     }
   }
 
-  Color _getStatusBadgeColor(String status) {
-    switch (status) {
-      case 'success':
-        return Colors.green;
-      case 'pending':
-        return Colors.yellow;
-      case 'failed':
-        return Colors.red;
-      case 'cancelled':
-        return Colors.grey;
-      default:
-        return Colors.grey;
-    }
-  }
-
   String _getTypeLabel(String type) {
     switch (type) {
       case 'energy_purchase':
@@ -145,271 +140,155 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
     }
   }
 
+  String _selectedStatusTab() {
+    for (final entry in _statusMap.entries) {
+      if (entry.value == _statusFilter) return entry.key;
+    }
+    return '전체';
+  }
+
+  String _selectedTypeTab() {
+    for (final entry in _typeMap.entries) {
+      if (entry.value == _typeFilter) return entry.key;
+    }
+    return '전체';
+  }
+
   @override
   Widget build(BuildContext context) {
-    return AdminScreenScaffold(
+    return AdminStitchListScreenShell(
       header: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const AdminPageHeader(
+          const AdminStitchPageHeader(
             title: '결제 관리',
             subtitle: '전체 결제 내역을 조회하고 관리할 수 있습니다',
           ),
-          const SizedBox(height: AppTheme.spacing6),
-          AdminSearchFilterBar(
-            searchController: _searchController,
-            searchHint: '주문번호, 사용자로 검색...',
-            filterDropdown: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButton<String>(
-                  value: _statusFilter.isEmpty ? null : _statusFilter,
-                  hint: const Text('전체 상태'),
-                  items: const [
-                    DropdownMenuItem(value: '', child: Text('전체 상태')),
-                    DropdownMenuItem(value: 'success', child: Text('성공')),
-                    DropdownMenuItem(value: 'pending', child: Text('대기')),
-                    DropdownMenuItem(value: 'failed', child: Text('실패')),
-                    DropdownMenuItem(value: 'cancelled', child: Text('취소')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _statusFilter = value ?? '';
-                      _currentPage = 1;
-                    });
-                    _loadPayments();
-                  },
-                  style: const TextStyle(color: AppTheme.textPrimary),
-                ),
-                const SizedBox(width: AppTheme.spacing2),
-                DropdownButton<String>(
-                  value: _typeFilter.isEmpty ? null : _typeFilter,
-                  hint: const Text('전체 유형'),
-                  items: const [
-                    DropdownMenuItem(value: '', child: Text('전체 유형')),
-                    DropdownMenuItem(value: 'energy_purchase', child: Text('에너지 구매')),
-                    DropdownMenuItem(value: 'subscription', child: Text('구독')),
-                    DropdownMenuItem(value: 'premium_fix', child: Text('프리미엄 고정')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _typeFilter = value ?? '';
-                      _currentPage = 1;
-                    });
-                    _loadPayments();
-                  },
-                  style: const TextStyle(color: AppTheme.textPrimary),
-                ),
-              ],
-            ),
+          const SizedBox(height: AdminStitchTheme.sectionGap),
+          AdminStitchSearchField(
+            controller: _searchController,
+            hint: '주문번호, 사용자로 검색...',
           ),
+          const SizedBox(height: AdminStitchTheme.sectionGap),
+          AdminStitchFilterChips(
+            tabs: _statusTabs,
+            selectedTab: _selectedStatusTab(),
+            onTabChanged: (tab) {
+              setState(() {
+                _statusFilter = _statusMap[tab] ?? '';
+                _currentPage = 1;
+              });
+              _loadPayments();
+            },
+          ),
+          const SizedBox(height: AdminStitchTheme.stackTight),
+          AdminStitchFilterChips(
+            tabs: _typeTabs,
+            selectedTab: _selectedTypeTab(),
+            onTabChanged: (tab) {
+              setState(() {
+                _typeFilter = _typeMap[tab] ?? '';
+                _currentPage = 1;
+              });
+              _loadPayments();
+            },
+          ),
+          if (_total > 0) ...[
+            const SizedBox(height: AdminStitchTheme.sectionGap),
+            Text(
+              '총 $_total건',
+              style: AdminStitchTheme.bodyMd.copyWith(
+                color: AdminStitchTheme.textSecondary,
+              ),
+            ),
+          ],
+          const SizedBox(height: AdminStitchTheme.sectionGap),
         ],
       ),
-      body: AdminTableCard(
-              child: _isLoading && _payments.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : _payments.isEmpty
-                      ? const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(AppTheme.spacing8),
-                            child: Text(
-                              '결제 내역이 없습니다',
-                              style: TextStyle(color: AppTheme.textSecondary),
-                            ),
-                          ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading && _payments.isEmpty) {
+      return const AdminStitchListStateSliver.loading();
+    }
+    if (_payments.isEmpty) {
+      return const AdminStitchListStateSliver.empty(
+        emptyMessage: '결제 내역이 없습니다',
+        emptyIcon: Icons.payment_outlined,
+      );
+    }
+    return SliverPadding(
+      padding: AdminStitchListScreenShell.listPadding(context),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            if (index == _payments.length) {
+              return _buildPagination();
+            }
+            final payment = _payments[index] as Map<String, dynamic>;
+            final paymentId = payment['id']?.toString();
+            final orderId = payment['orderId']?.toString() ?? '-';
+            final userEmail = payment['user']?['email']?.toString() ?? '-';
+            final amount = _formatCurrency((payment['amount'] ?? 0) as int);
+            final statusLabel = _getStatusLabel(payment['status']?.toString() ?? '');
+            final typeLabel = _getTypeLabel(payment['type']?.toString() ?? '');
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: index < _payments.length - 1
+                    ? AdminStitchTheme.sectionGap
+                    : 0,
+              ),
+              child: AdminStitchSimpleListCard(
+                title: orderId,
+                subtitle: '$userEmail · $amount · $typeLabel · $statusLabel',
+                icon: Icons.payment_outlined,
+                onTap: paymentId != null
+                    ? () => context.push(
+                          AppRoutes.adminPaymentDetail(paymentId),
+                          extra: payment,
                         )
-                      : SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(minWidth: 900),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const AdminTableHeader(
-                              headers: ['주문 정보', '사용자', '유형', '금액', '상태', '결제일'],
-                              flexValues: [1, 1, 1, 1, 1, 1],
-                            ),
-                            SizedBox(
-                              height: 480,
-                              child: ListView.builder(
-                                itemCount: _payments.length,
-                                itemBuilder: (context, index) {
-                                  final payment = _payments[index];
-                                  final statusColor = _getStatusBadgeColor(payment['status'] ?? '');
-                                  final paymentId = payment['id']?.toString();
-                                  return InkWell(
-                                    onTap: paymentId != null
-                                        ? () {
-                                            context.push(
-                                              AppRoutes.adminPaymentDetail(paymentId),
-                                              extra: payment,
-                                            );
-                                          }
-                                        : null,
-                                    child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: AppTheme.spacing4,
-                                      vertical: AppTheme.spacing3,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      border: Border(
-                                        bottom: BorderSide(color: AppTheme.adminPurple100.withValues(alpha: 0.5)),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            '${payment['orderId'] ?? ''} (${payment['paymentMethod'] ?? '-'})',
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppTheme.textPrimary,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            payment['user']?['email'] ?? '-',
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              color: AppTheme.textSecondary,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            _getTypeLabel(payment['type'] ?? ''),
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              color: AppTheme.textSecondary,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            _formatCurrency((payment['amount'] ?? 0) as int),
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppTheme.textPrimary,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: AppTheme.spacing2,
-                                              vertical: AppTheme.spacing1,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: statusColor.withValues(alpha: 0.1),
-                                              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                                            ),
-                                            child: Text(
-                                              _getStatusLabel(payment['status'] ?? ''),
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                                color: statusColor,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            _formatDate(payment['createdAt'] ?? ''),
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: AppTheme.textSecondary,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                            // 페이지네이션
-                            if (_totalPages > 1)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppTheme.spacing6,
-                                  vertical: AppTheme.spacing4,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      AppTheme.adminPurple50.withValues(alpha: 0.3),
-                                      AppTheme.adminPink50.withValues(alpha: 0.3),
-                                    ],
-                                  ),
-                                  border: const Border(
-                                    top: BorderSide(color: AppTheme.adminPurple100, width: 2),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      '총 $_total건 중 ${(_currentPage - 1) * 20 + 1}-${(_currentPage * 20).clamp(0, _total)}건 표시',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppTheme.textSecondary,
-                                      ),
-                                    ),
-                                    Row(
-                                      children: [
-                                        TextButton(
-                                          onPressed: _currentPage > 1
-                                              ? () {
-                                                  setState(() {
-                                                    _currentPage--;
-                                                  });
-                                                  _loadPayments();
-                                                }
-                                              : null,
-                                          child: const Text('이전'),
-                                        ),
-                                        const SizedBox(width: AppTheme.spacing2),
-                                        TextButton(
-                                          onPressed: _currentPage < _totalPages
-                                              ? () {
-                                                  setState(() {
-                                                    _currentPage++;
-                                                  });
-                                                  _loadPayments();
-                                                }
-                                              : null,
-                                          child: const Text('다음'),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              ],
-                            ),
-                          ),
-                        ),
+                    : null,
+              ),
+            );
+          },
+          childCount: _payments.length + (_totalPages > 1 ? 1 : 0),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPagination() {
+    return Padding(
+      padding: const EdgeInsets.only(top: AdminStitchTheme.sectionGap),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: _currentPage > 1
+                ? () {
+                    setState(() => _currentPage--);
+                    _loadPayments();
+                  }
+                : null,
+            icon: const Icon(Icons.chevron_left),
+          ),
+          Text(
+            '$_currentPage / $_totalPages',
+            style: AdminStitchTheme.bodyMd,
+          ),
+          IconButton(
+            onPressed: _currentPage < _totalPages
+                ? () {
+                    setState(() => _currentPage++);
+                    _loadPayments();
+                  }
+                : null,
+            icon: const Icon(Icons.chevron_right),
+          ),
+        ],
       ),
     );
   }
