@@ -1,4 +1,4 @@
-package com.example.hairspare
+package kr.co.hairspare.app
 
 import io.flutter.embedding.android.FlutterActivity
 
