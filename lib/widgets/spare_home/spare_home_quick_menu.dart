@@ -22,30 +22,6 @@ abstract final class SpareHomeQuickMenu {
       ),
       CategoryItem(
         emoji: '',
-        icon: Icons.storefront_outlined,
-        label: '스토어',
-        onTap: () => _showComingSoon(context, '스토어 기능은 준비 중입니다.'),
-      ),
-      CategoryItem(
-        emoji: '',
-        icon: Icons.monetization_on_outlined,
-        label: '+포인트',
-        onTap: () => context.push(AppRoutes.spareHomePoints),
-      ),
-      CategoryItem(
-        emoji: '',
-        icon: Icons.chair_outlined,
-        label: '공간대여',
-        onTap: () => context.push(AppRoutes.spareHomeRegionSelect),
-      ),
-      CategoryItem(
-        emoji: '',
-        icon: Icons.school_outlined,
-        label: '교육',
-        onTap: () => context.push(AppRoutes.spareHomeEducation),
-      ),
-      CategoryItem(
-        emoji: '',
         icon: Icons.star_outline_rounded,
         label: '챌린지참여',
         onTap: () => context.push(AppRoutes.spareHomeChallenge),
@@ -59,19 +35,4 @@ abstract final class SpareHomeQuickMenu {
     ];
   }
 
-  static void _showComingSoon(BuildContext context, String message) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('준비 중'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('확인'),
-          ),
-        ],
-      ),
-    );
-  }
 }

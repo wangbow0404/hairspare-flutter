@@ -43,15 +43,6 @@ class SpareProfileMenuSection extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spacing2),
           SpareProfileMenuItem(
-            icon: IconMapper.icon('zap') ?? const Icon(Icons.flash_on),
-            label: '내 에너지',
-            description: '에너지 잔액 및 거래 내역',
-            color: AppTheme.yellow400,
-            bgColor: AppTheme.yellow400.withValues(alpha: 0.1),
-            onTap: () => SpareProfileNavigation.pushEnergy(context),
-          ),
-          const SizedBox(height: AppTheme.spacing2),
-          SpareProfileMenuItem(
             icon: IconMapper.icon('calendar') ?? const Icon(Icons.calendar_today),
             label: '내 스케줄',
             description: '근무 일정 확인 및 체크인',
@@ -67,15 +58,6 @@ class SpareProfileMenuSection extends StatelessWidget {
             color: AppTheme.stitchPrimaryContainer,
             bgColor: AppTheme.stitchPrimaryContainer.withValues(alpha: 0.1),
             onTap: () => SpareProfileNavigation.pushMyApplications(context),
-          ),
-          const SizedBox(height: AppTheme.spacing2),
-          SpareProfileMenuItem(
-            icon: IconMapper.icon('home') ?? const Icon(Icons.room),
-            label: '내 공간 예약',
-            description: '공간대여 예약 내역',
-            color: AppTheme.primaryGreen,
-            bgColor: AppTheme.primaryGreen.withValues(alpha: 0.1),
-            onTap: () => SpareProfileNavigation.pushMySpaceBookings(context),
           ),
           const SizedBox(height: AppTheme.spacing2),
           SpareProfileMenuItem(

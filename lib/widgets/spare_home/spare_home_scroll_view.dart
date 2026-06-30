@@ -44,12 +44,6 @@ class SpareHomeScrollView extends StatelessWidget {
       case 0:
         context.push(AppRoutes.spareHomeJobsPath(filter: 'urgent'));
         break;
-      case 1:
-        context.push(AppRoutes.spareHomeEnergy);
-        break;
-      case 2:
-        context.push(AppRoutes.spareHomeEducation);
-        break;
       default:
         break;
     }
