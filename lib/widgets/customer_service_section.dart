@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../core/router/app_routes.dart';
 import '../theme/app_theme.dart';
 import '../utils/icon_mapper.dart';
 
@@ -227,17 +229,7 @@ class _CustomerServiceSectionState extends State<CustomerServiceSection> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () async {
-                    final messenger = ScaffoldMessenger.of(context);
-                    final Uri privacyUri = Uri.parse('https://www.hairspare.co.kr/privacy');
-                    if (await canLaunchUrl(privacyUri)) {
-                      await launchUrl(privacyUri, mode: LaunchMode.externalApplication);
-                    } else {
-                      messenger.showSnackBar(
-                        const SnackBar(content: Text('개인정보 처리방침 페이지를 열 수 없습니다')),
-                      );
-                    }
-                  },
+                  onPressed: () => context.push(AppRoutes.privacyPolicy),
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
                     minimumSize: Size.zero,
@@ -246,9 +238,9 @@ class _CustomerServiceSectionState extends State<CustomerServiceSection> {
                   child: Text(
                     '개인정보 처리방침',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontSize: 14, // text-sm
+                      fontSize: 14,
                       color: AppTheme.stitchPrimary,
-                      height: 1.2, // leading-tight
+                      height: 1.2,
                     ),
                   ),
                 ),

@@ -1,6 +1,7 @@
 /// 중앙 라우트 경로 (GoRouter).
 abstract final class AppRoutes {
   static const roleSelect = '/';
+  static const privacyPolicy = '/privacy';
   static const spareLogin = '/spare/login';
   static const shopLogin = '/shop/login';
   static const spareSignup = '/spare/signup';
