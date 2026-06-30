@@ -28,7 +28,7 @@ class AuthInterceptor extends Interceptor {
   static const _authorizationHeader = 'Authorization';
   static const _bearerPrefix = 'Bearer ';
   static const _accessTokenKey = 'auth_token';
-  static const _refreshPath = '/auth/refresh';
+  static const _refreshPath = '/api/auth/refresh';
   static const _retryMark = 'auth_retry_attempted';
 
   final Dio _dio;
@@ -116,7 +116,7 @@ class AuthInterceptor extends Interceptor {
       final payload = data['data'] is Map<String, dynamic>
           ? data['data'] as Map<String, dynamic>
           : data;
-      final token = payload['token'] ?? payload['accessToken'];
+      final token = payload['access_token'] ?? payload['accessToken'] ?? payload['token'];
       final accessToken = token?.toString() ?? '';
       if (accessToken.isEmpty) {
         throw DioException(

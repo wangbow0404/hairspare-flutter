@@ -32,9 +32,7 @@ class ApiConfig {
       return 'http://localhost:8000';
     }
 
-    throw StateError(
-      'API_BASE_URL이 설정되지 않았습니다. '
-      'assets/env/app.env 또는 --dart-define=API_BASE_URL=... 를 설정하세요.',
-    );
+    // 릴리스 빌드 기본값: Railway 배포 서버
+    return 'https://hairspare-backend-production.up.railway.app';
   }
 }

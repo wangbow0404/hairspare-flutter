@@ -68,9 +68,11 @@ class AuthService {
         }
         final user = User.fromJson(userData);
         
-        // 토큰 저장 (NextAuth 세션 쿠키 사용 시 별도 처리 필요)
-        if (data['token'] != null) {
-          await _apiClient.setAuthToken(data['token'].toString());
+        // Access Token 저장 (15분짜리, SecureStorage에 보관)
+        // Refresh Token은 서버가 HttpOnly 쿠키로 자동 설정 → 코드 처리 불필요
+        final accessToken = data['access_token'] ?? data['token'];
+        if (accessToken != null) {
+          await _apiClient.setAuthToken(accessToken.toString());
         }
 
         return user;
@@ -199,6 +201,14 @@ class AuthService {
   }
 
   Future<void> logout() async {
+    if (!ApiConfig.useMockData) {
+      // 서버에 로그아웃 요청 → HttpOnly 쿠키(Refresh Token) 삭제
+      try {
+        await _dio.post('/api/auth/logout');
+      } catch (_) {
+        // 서버 오류여도 로컬 토큰은 반드시 삭제
+      }
+    }
     await _apiClient.clearAuthToken();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('auto_login_enabled', false);

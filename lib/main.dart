@@ -42,8 +42,7 @@ void main() async {
     kakao.KakaoSdk.init(nativeAppKey: kakaoKey);
   }
   
-  configureDependencies();
-  // API 클라이언트 초기화 (JWT + refresh cookie + 동시성 제어 인터셉터)
+  // API 클라이언트 초기화를 가장 먼저 (Dio _dio 초기화 필요)
   ApiClient().init(
     onSessionExpiredMessage: (message) {
       sl<GlobalMessengerService>().showError(message);
@@ -53,9 +52,10 @@ void main() async {
       appRouter.go(AppRoutes.roleSelect);
     },
   );
-  await sl<AuthProvider>().checkAuth();
+  configureDependencies();
   final router = AppRouter.createRouter(sl<AuthProvider>());
   registerGoRouter(router);
+  await sl<AuthProvider>().checkAuth();
 
   runApp(MyApp(router: router));
 }
