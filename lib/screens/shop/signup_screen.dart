@@ -181,7 +181,7 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (!_phoneVerified) {
+    if (kSignupPhoneVerificationEnabled && !_phoneVerified) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('휴대폰 인증을 완료해 주세요.')),
       );

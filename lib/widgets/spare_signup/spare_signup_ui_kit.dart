@@ -335,6 +335,13 @@ class SpareSignupExperienceSlider extends StatelessWidget {
 }
 
 /// 휴대폰 SMS 인증 — 번호 입력 + 인증하기/확인.
+/// 회원가입 시 휴대폰 본인인증 사용 여부 (중앙 스위치).
+///
+/// 현재는 앱스토어 1차 출시를 위해 본인인증을 받지 않고 전화번호만 입력받는다.
+/// 본인인증을 다시 켜려면 이 값을 `true`로 바꾸면 인증 UI·통과 검사가 모두 되살아난다.
+/// (인증 관련 코드는 보존되어 있다.)
+const bool kSignupPhoneVerificationEnabled = false;
+
 class SpareSignupPhoneVerificationField extends StatelessWidget {
   const SpareSignupPhoneVerificationField({
     super.key,
@@ -346,6 +353,7 @@ class SpareSignupPhoneVerificationField extends StatelessWidget {
     required this.onSendCode,
     required this.onVerifyCode,
     this.phoneValidator,
+    this.verificationEnabled = kSignupPhoneVerificationEnabled,
   });
 
   final TextEditingController phoneController;
@@ -356,6 +364,10 @@ class SpareSignupPhoneVerificationField extends StatelessWidget {
   final VoidCallback onSendCode;
   final VoidCallback onVerifyCode;
   final String? Function(String?)? phoneValidator;
+
+  /// false면 인증 UI(인증하기 버튼·인증번호 입력·완료 표시)를 숨기고
+  /// 전화번호 입력만 노출한다.
+  final bool verificationEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -380,7 +392,7 @@ class SpareSignupPhoneVerificationField extends StatelessWidget {
             Expanded(
               child: TextFormField(
                 controller: phoneController,
-                enabled: !isVerified && !codeSent,
+                enabled: !verificationEnabled || (!isVerified && !codeSent),
                 keyboardType: TextInputType.phone,
                 validator: phoneValidator,
                 style: const TextStyle(
@@ -423,7 +435,7 @@ class SpareSignupPhoneVerificationField extends StatelessWidget {
                 ),
               ),
             ),
-            if (!isVerified) ...[
+            if (verificationEnabled && !isVerified) ...[
               const SizedBox(width: AppTheme.spacing2),
               SizedBox(
                 height: 48,
@@ -464,7 +476,7 @@ class SpareSignupPhoneVerificationField extends StatelessWidget {
             ],
           ],
         ),
-        if (codeSent && !isVerified) ...[
+        if (verificationEnabled && codeSent && !isVerified) ...[
           const SizedBox(height: AppTheme.spacing2),
           SpareSignupLabeledField(
             controller: codeController,
@@ -477,7 +489,7 @@ class SpareSignupPhoneVerificationField extends StatelessWidget {
             ],
           ),
         ],
-        if (isVerified) ...[
+        if (verificationEnabled && isVerified) ...[
           const SizedBox(height: AppTheme.spacing2),
           const Row(
             children: [

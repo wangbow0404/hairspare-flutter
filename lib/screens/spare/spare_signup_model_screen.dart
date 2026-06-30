@@ -289,7 +289,7 @@ class _SpareSignupModelScreenState extends State<SpareSignupModelScreen> {
                     SizedBox(width: AppTheme.spacing2),
                     Expanded(
                       child: Text(
-                        '가입 후 본인인증이 필수입니다. 인증 완료 후 디자이너 매칭에 노출됩니다.',
+                        '가입 후 디자이너 매칭에 노출됩니다.',
                         style: TextStyle(
                           fontSize: 13,
                           color: AppTheme.stitchTextSecondary,
