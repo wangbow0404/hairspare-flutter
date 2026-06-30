@@ -17,6 +17,7 @@ import '../../services/application_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/challenge_service.dart';
 import '../../services/chat_service.dart';
+import '../../services/block_service.dart';
 import '../../services/contact_violation_service.dart';
 import '../../services/education_service.dart';
 import '../../services/energy_service.dart';
@@ -65,6 +66,7 @@ void configureDependencies() {
   sl.registerLazySingleton<ScheduleService>(() => ScheduleService());
   sl.registerLazySingleton<EnergyService>(() => EnergyService());
   sl.registerLazySingleton<NotificationService>(() => NotificationService());
+  sl.registerLazySingleton<BlockService>(() => BlockService());
   sl.registerLazySingleton<ChatService>(() => ChatService());
   sl.registerLazySingleton<ContactViolationService>(
     () => ContactViolationService(),

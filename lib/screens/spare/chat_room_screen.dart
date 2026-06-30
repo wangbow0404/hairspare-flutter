@@ -15,8 +15,10 @@ import '../../theme/app_theme.dart';
 import '../../utils/contact_blocker.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/icon_mapper.dart';
+import '../../services/block_service.dart';
 import '../../widgets/chat/chat_contact_warning_banner.dart';
 import '../../widgets/chat/contact_violation_blocked_modal.dart';
+import '../../widgets/common/report_sheet.dart';
 import '../../widgets/spare_app_bar.dart';
 
 /// Next.js와 동일한 채팅방 화면
@@ -333,6 +335,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     final chat = _chat!;
     final isShop = currentUser?.role == UserRole.shop;
     final otherUserName = isShop ? chat.spareName : chat.shopName;
+    final otherUserId = isShop ? chat.spareId : chat.shopId;
     final shopChatBlockedUntil = isShop
         ? _contactViolationService.shopChatBlockedUntil()
         : null;
@@ -352,6 +355,57 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         showTrailingIcons: false,
         title: otherUserName,
         subtitle: jobSubtitle,
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) async {
+              if (value == 'report') {
+                await showReportSheet(
+                  context,
+                  reportedUserId: otherUserId,
+                  referenceId: chat.id,
+                  referenceType: 'chat',
+                );
+              } else if (value == 'block') {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('차단하기'),
+                    content: Text('$otherUserName 님을 차단하시겠습니까?\n차단 후에는 상대방이 회원님을 찾을 수 없습니다.'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('차단', style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed == true && context.mounted) {
+                  try {
+                    await sl<BlockService>().blockUser(otherUserId);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('$otherUserName 님이 차단되었습니다')),
+                      );
+                      Navigator.of(context).pop();
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('차단 실패: $e'), backgroundColor: Colors.red),
+                      );
+                    }
+                  }
+                }
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'report', child: Text('신고하기')),
+              PopupMenuItem(value: 'block', child: Text('차단하기', style: TextStyle(color: Colors.red))),
+            ],
+          ),
+        ],
       ),
       body: Column(
         children: [
