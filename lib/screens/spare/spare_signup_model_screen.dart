@@ -99,7 +99,18 @@ class _SpareSignupModelScreenState extends State<SpareSignupModelScreen> {
       );
       final data = response.data['data'] ?? response.data;
       return data['url']?.toString();
-    } catch (_) {
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      final body = e.response?.data?.toString() ?? e.message;
+      debugPrint('[upload-image] DioException $statusCode: $body');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('업로드 실패 ($statusCode): $body')),
+        );
+      }
+      return null;
+    } catch (e) {
+      debugPrint('[upload-image] Error: $e');
       return null;
     }
   }
@@ -150,13 +161,7 @@ class _SpareSignupModelScreenState extends State<SpareSignupModelScreen> {
     final photoUrls = <String>[];
     for (final bytes in _photoBytes) {
       final url = await _uploadImageBytes(bytes, 'model-photos');
-      if (url == null) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('사진 업로드 중 오류가 발생했습니다. 다시 시도해 주세요.')),
-        );
-        return;
-      }
+      if (url == null) return; // _uploadImageBytes 내부에서 스낵바 처리
       photoUrls.add(url);
     }
 
