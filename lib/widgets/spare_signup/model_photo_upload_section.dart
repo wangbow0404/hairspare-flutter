@@ -1,24 +1,25 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/di/service_locator.dart';
 import '../../theme/app_theme.dart';
 
-/// 모델 가입 — 프로필 사진 1~3장 업로드.
+/// 모델 가입 — 프로필 사진 1~3장 선택 (웹·네이티브 공용).
+/// 사진 바이트를 메모리에 보관하므로 File I/O 없이 웹에서도 동작.
 class ModelPhotoUploadSection extends StatefulWidget {
   const ModelPhotoUploadSection({
     super.key,
-    required this.photoPaths,
+    required this.photoBytes,
     required this.onChanged,
   });
 
-  final List<String> photoPaths;
-  final ValueChanged<List<String>> onChanged;
+  final List<Uint8List> photoBytes;
+  final ValueChanged<List<Uint8List>> onChanged;
 
   @override
-  State<ModelPhotoUploadSection> createState() => _ModelPhotoUploadSectionState();
+  State<ModelPhotoUploadSection> createState() =>
+      _ModelPhotoUploadSectionState();
 }
 
 class _ModelPhotoUploadSectionState extends State<ModelPhotoUploadSection> {
@@ -32,19 +33,20 @@ class _ModelPhotoUploadSectionState extends State<ModelPhotoUploadSection> {
       imageQuality: 85,
     );
     if (file == null) return;
-    final paths = List<String>.from(widget.photoPaths);
-    while (paths.length <= index) {
-      paths.add('');
+    final bytes = await file.readAsBytes();
+    final list = List<Uint8List>.from(widget.photoBytes);
+    while (list.length <= index) {
+      list.add(Uint8List(0));
     }
-    paths[index] = file.path;
-    widget.onChanged(paths.where((p) => p.isNotEmpty).toList());
+    list[index] = bytes;
+    widget.onChanged(list.where((b) => b.isNotEmpty).toList());
   }
 
   void _removePhoto(int index) {
-    final paths = List<String>.from(widget.photoPaths);
-    if (index < paths.length) {
-      paths.removeAt(index);
-      widget.onChanged(paths);
+    final list = List<Uint8List>.from(widget.photoBytes);
+    if (index < list.length) {
+      list.removeAt(index);
+      widget.onChanged(list);
     }
   }
 
@@ -75,14 +77,18 @@ class _ModelPhotoUploadSectionState extends State<ModelPhotoUploadSection> {
           children: [
             for (var i = 0; i < _maxPhotos; i++) ...[
               if (i > 0) const SizedBox(width: AppTheme.spacing3),
-              Expanded(child: _PhotoSlot(
-                path: i < widget.photoPaths.length ? widget.photoPaths[i] : null,
-                label: i == 0 ? '대표' : '${i + 1}',
-                onTap: () => _pickPhoto(i),
-                onRemove: i < widget.photoPaths.length
-                    ? () => _removePhoto(i)
-                    : null,
-              )),
+              Expanded(
+                child: _PhotoSlot(
+                  bytes: i < widget.photoBytes.length
+                      ? widget.photoBytes[i]
+                      : null,
+                  label: i == 0 ? '대표' : '${i + 1}',
+                  onTap: () => _pickPhoto(i),
+                  onRemove: i < widget.photoBytes.length
+                      ? () => _removePhoto(i)
+                      : null,
+                ),
+              ),
             ],
           ],
         ),
@@ -93,20 +99,20 @@ class _ModelPhotoUploadSectionState extends State<ModelPhotoUploadSection> {
 
 class _PhotoSlot extends StatelessWidget {
   const _PhotoSlot({
-    required this.path,
+    required this.bytes,
     required this.label,
     required this.onTap,
     this.onRemove,
   });
 
-  final String? path;
+  final Uint8List? bytes;
   final String label;
   final VoidCallback onTap;
   final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
-    final hasPhoto = path != null && path!.isNotEmpty;
+    final hasPhoto = bytes != null && bytes!.isNotEmpty;
     return AspectRatio(
       aspectRatio: 3 / 4,
       child: Material(
@@ -121,7 +127,7 @@ class _PhotoSlot extends StatelessWidget {
               if (hasPhoto)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-                  child: Image.file(File(path!), fit: BoxFit.cover),
+                  child: Image.memory(bytes!, fit: BoxFit.cover),
                 )
               else
                 const Center(
@@ -160,7 +166,8 @@ class _PhotoSlot extends StatelessWidget {
                   child: IconButton(
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                    icon:
+                        const Icon(Icons.close, color: Colors.white, size: 20),
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.black45,
                     ),

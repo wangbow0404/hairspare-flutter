@@ -1,7 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/di/service_locator.dart';
 import '../../core/router/app_routes.dart';
 import '../../models/model_match_preference.dart';
 import '../../models/spare_signup_data.dart';
@@ -55,7 +58,7 @@ class _SpareSignupModelScreenState extends State<SpareSignupModelScreen> {
   String? _career;
   final Set<String> _treatments = {};
   final Set<String> _imageTags = {};
-  List<String> _photoPaths = [];
+  List<Uint8List> _photoBytes = [];
 
   bool get _allTermsAccepted =>
       _termsAccepted &&
@@ -81,6 +84,24 @@ class _SpareSignupModelScreenState extends State<SpareSignupModelScreen> {
     _referralController.dispose();
     _introController.dispose();
     super.dispose();
+  }
+
+  Future<String?> _uploadImageBytes(Uint8List bytes, String folder) async {
+    try {
+      final dio = sl<Dio>();
+      final formData = FormData.fromMap({
+        'file': MultipartFile.fromBytes(bytes, filename: 'upload.jpg'),
+      });
+      final response = await dio.post(
+        '/api/auth/upload-image',
+        data: formData,
+        queryParameters: {'folder': folder},
+      );
+      final data = response.data['data'] ?? response.data;
+      return data['url']?.toString();
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _submit() async {
@@ -110,7 +131,7 @@ class _SpareSignupModelScreenState extends State<SpareSignupModelScreen> {
       );
       return;
     }
-    if (_photoPaths.isEmpty) {
+    if (_photoBytes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('프로필 사진을 1장 이상 등록해 주세요.')),
       );
@@ -124,6 +145,21 @@ class _SpareSignupModelScreenState extends State<SpareSignupModelScreen> {
     }
 
     final auth = context.read<AuthProvider>();
+
+    // 사진 R2 업로드 (가입 전 선업로드)
+    final photoUrls = <String>[];
+    for (final bytes in _photoBytes) {
+      final url = await _uploadImageBytes(bytes, 'model-photos');
+      if (url == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('사진 업로드 중 오류가 발생했습니다. 다시 시도해 주세요.')),
+        );
+        return;
+      }
+      photoUrls.add(url);
+    }
+
     final profile = ModelSignupProfile(
       birthDate: _birthDate!,
       gender: _gender!,
@@ -134,7 +170,7 @@ class _SpareSignupModelScreenState extends State<SpareSignupModelScreen> {
       imageTags: _imageTags.toList(),
       career: _career!,
       intro: _introController.text.trim(),
-      photoPaths: _photoPaths,
+      photoUrls: photoUrls,
     );
 
     await auth.register(
@@ -197,8 +233,8 @@ class _SpareSignupModelScreenState extends State<SpareSignupModelScreen> {
             const SizedBox(height: AppTheme.spacing8),
             _sectionTitle('모델 프로필'),
             ModelPhotoUploadSection(
-              photoPaths: _photoPaths,
-              onChanged: (paths) => setState(() => _photoPaths = paths),
+              photoBytes: _photoBytes,
+              onChanged: (bytes) => setState(() => _photoBytes = bytes),
             ),
             const SizedBox(height: AppTheme.spacing6),
             SpareSignupBirthDateField(

@@ -1,9 +1,11 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/di/service_locator.dart';
 import '../../core/router/app_routes.dart';
 import '../../models/shop_signup_data.dart';
 import '../../models/user.dart';
@@ -218,6 +220,24 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
     }
   }
 
+  Future<String?> _uploadImageBytes(Uint8List bytes, String folder) async {
+    try {
+      final dio = sl<Dio>();
+      final formData = FormData.fromMap({
+        'file': MultipartFile.fromBytes(bytes, filename: 'upload.jpg'),
+      });
+      final response = await dio.post(
+        '/api/auth/upload-image',
+        data: formData,
+        queryParameters: {'folder': folder},
+      );
+      final data = response.data['data'] ?? response.data;
+      return data['url']?.toString();
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (kSignupPhoneVerificationEnabled && !_phoneVerified) {
@@ -245,6 +265,21 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
       return;
     }
 
+    final auth = context.read<AuthProvider>();
+
+    // 사업자등록증 R2 업로드 (가입 전 선업로드)
+    String? licenseUrl;
+    if (_businessLicenseBytes != null) {
+      licenseUrl = await _uploadImageBytes(_businessLicenseBytes!, 'shop-licenses');
+      if (licenseUrl == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('사업자등록증 업로드 중 오류가 발생했습니다. 다시 시도해 주세요.')),
+        );
+        return;
+      }
+    }
+
     final isProxy = _operatorType == ShopOperatorType.proxy;
     final profile = ShopSignupProfile(
       salonName: _salonNameController.text.trim(),
@@ -256,12 +291,12 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
         _businessNumberController.text,
       ),
       openDate: _openDateController.text.replaceAll(RegExp(r'[^0-9]'), ''),
+      businessLicenseUrl: licenseUrl,
       proxyName: isProxy ? _proxyNameController.text.trim() : null,
       proxyRelation: isProxy ? _proxyRelationController.text.trim() : null,
       proxyPhone: isProxy ? _proxyPhoneController.text.trim() : null,
     );
 
-    final auth = context.read<AuthProvider>();
     await auth.register(
       username: _usernameController.text.trim(),
       password: _passwordController.text,

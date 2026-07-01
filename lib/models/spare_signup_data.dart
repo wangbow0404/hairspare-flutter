@@ -37,7 +37,7 @@ class ModelSignupProfile {
     required this.imageTags,
     required this.career,
     required this.intro,
-    required this.photoPaths,
+    required this.photoUrls,
   });
 
   static const String defaultShootAgreement = '얼굴 공개 필수';
@@ -51,7 +51,7 @@ class ModelSignupProfile {
   final List<String> imageTags;
   final String career;
   final String intro;
-  final List<String> photoPaths;
+  final List<String> photoUrls;
 
   int get age => BirthDateUtils.ageFromBirthDate(birthDate);
 
@@ -67,7 +67,7 @@ class ModelSignupProfile {
         'career': career,
         'shootAgreement': defaultShootAgreement,
         'intro': intro,
-        'photoPaths': photoPaths,
+        'photoUrls': photoUrls,
       };
 }
 
