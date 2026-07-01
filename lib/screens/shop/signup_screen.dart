@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/router/app_routes.dart';
@@ -8,6 +10,7 @@ import '../../models/user.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/verification_service.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/business_registration_validator.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/region_helper.dart';
 import '../../widgets/common/shared_app_bar.dart';
@@ -31,6 +34,8 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
   final _passwordConfirmController = TextEditingController();
   final _salonNameController = TextEditingController();
   final _representativeNameController = TextEditingController();
+  final _businessNumberController = TextEditingController();
+  final _openDateController = TextEditingController();
   final _phoneController = TextEditingController();
   final _verificationCodeController = TextEditingController();
   final _emailController = TextEditingController();
@@ -55,6 +60,10 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
   String? _districtId;
   String? _regionLabel;
   ShopOperatorType _operatorType = ShopOperatorType.owner;
+
+  final ImagePicker _imagePicker = ImagePicker();
+  Uint8List? _businessLicenseBytes; // 사업자등록증 미리보기(웹/네이티브 공용)
+  String? _businessLicenseName;
 
   static final _passwordSpecialCharPattern =
       RegExp(r'[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\;/`~]');
@@ -81,6 +90,8 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
     _passwordConfirmController.dispose();
     _salonNameController.dispose();
     _representativeNameController.dispose();
+    _businessNumberController.dispose();
+    _openDateController.dispose();
     _phoneController.dispose();
     _verificationCodeController.dispose();
     _emailController.dispose();
@@ -93,6 +104,34 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
 
   String _normalizedPhone() =>
       _phoneController.text.replaceAll(RegExp(r'[^\d]'), '');
+
+  Future<void> _pickBusinessLicense() async {
+    try {
+      final x = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1920,
+        imageQuality: 85,
+      );
+      if (x == null) return;
+      final bytes = await x.readAsBytes(); // 웹·네이티브 모두 안전
+      if (bytes.length > 5 * 1024 * 1024) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('파일 크기는 5MB 이하여야 합니다.')),
+        );
+        return;
+      }
+      setState(() {
+        _businessLicenseBytes = bytes;
+        _businessLicenseName = x.name;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('이미지 선택 실패: $e')),
+      );
+    }
+  }
 
   void _showTermsPlaceholder(String title) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -207,6 +246,10 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
       region: _regionLabel!,
       regionId: _districtId ?? _provinceId,
       operatorType: _operatorType,
+      businessNumber: BusinessRegistrationValidator.normalizeNumber(
+        _businessNumberController.text,
+      ),
+      openDate: _openDateController.text.replaceAll(RegExp(r'[^0-9]'), ''),
       proxyName: isProxy ? _proxyNameController.text.trim() : null,
       proxyRelation: isProxy ? _proxyRelationController.text.trim() : null,
       proxyPhone: isProxy ? _proxyPhoneController.text.trim() : null,
@@ -416,6 +459,63 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
               proxyPhoneController: _proxyPhoneController,
             ),
             const SizedBox(height: AppTheme.spacing8),
+            SpareSignupSectionCard(
+              title: '사업자 정보',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SpareSignupLabeledField(
+                    controller: _businessNumberController,
+                    label: '사업자등록번호',
+                    hint: '숫자 10자리 (예: 1234567890)',
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(10),
+                    ],
+                    validator: BusinessRegistrationValidator.formValidator,
+                  ),
+                  const SizedBox(height: AppTheme.spacing4),
+                  SpareSignupLabeledField(
+                    controller: _openDateController,
+                    label: '개업일자',
+                    hint: '8자리 (예: 20200115)',
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(8),
+                    ],
+                    validator: (v) {
+                      final digits =
+                          (v ?? '').replaceAll(RegExp(r'[^0-9]'), '');
+                      if (digits.length != 8) {
+                        return '개업일자 8자리를 입력해 주세요 (예: 20200115)';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: AppTheme.spacing2),
+                  Text(
+                    '입력하신 사업자등록번호·대표자명·개업일자로 국세청 진위확인을 자동 진행합니다.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing4),
+                  _BusinessLicenseAttachment(
+                    bytes: _businessLicenseBytes,
+                    fileName: _businessLicenseName,
+                    onPick: _pickBusinessLicense,
+                    onRemove: () => setState(() {
+                      _businessLicenseBytes = null;
+                      _businessLicenseName = null;
+                    }),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing8),
             SpareSignupTermsCard(
               allRequiredAccepted: _allTermsAccepted,
               termsAccepted: _termsAccepted,
@@ -449,6 +549,80 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
           onPressed: _submit,
         ),
       ),
+    );
+  }
+}
+
+/// 사업자등록증 이미지 첨부 UI (웹·네이티브 공용 — 바이트 미리보기).
+class _BusinessLicenseAttachment extends StatelessWidget {
+  const _BusinessLicenseAttachment({
+    required this.bytes,
+    required this.fileName,
+    required this.onPick,
+    required this.onRemove,
+  });
+
+  final Uint8List? bytes;
+  final String? fileName;
+  final VoidCallback onPick;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    if (bytes == null) {
+      return InkWell(
+        onTap: onPick,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppTheme.borderGray300),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              const Icon(Icons.upload_file, color: AppTheme.textSecondary),
+              const SizedBox(height: 6),
+              Text(
+                '사업자등록증 첨부 (선택)',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.memory(
+            bytes!,
+            height: 160,
+            width: double.infinity,
+            fit: BoxFit.cover,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            const Icon(Icons.check_circle,
+                color: AppTheme.primaryGreen, size: 16),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                fileName ?? '첨부됨',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+              ),
+            ),
+            TextButton(onPressed: onRemove, child: const Text('삭제')),
+            TextButton(onPressed: onPick, child: const Text('변경')),
+          ],
+        ),
+      ],
     );
   }
 }

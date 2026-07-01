@@ -35,6 +35,9 @@ class ShopSignupProfile {
     required this.region,
     this.regionId,
     required this.operatorType,
+    this.businessNumber,
+    this.openDate,
+    this.businessLicenseUrl,
     this.proxyName,
     this.proxyRelation,
     this.proxyPhone,
@@ -45,6 +48,9 @@ class ShopSignupProfile {
   final String region;
   final String? regionId;
   final ShopOperatorType operatorType;
+  final String? businessNumber; // 하이픈 제거 10자리
+  final String? openDate;       // 개업일자 YYYYMMDD (국세청 진위확인용)
+  final String? businessLicenseUrl; // 사업자등록증 이미지 URL (저장소 연동 후)
   final String? proxyName;
   final String? proxyRelation;
   final String? proxyPhone;
@@ -55,6 +61,11 @@ class ShopSignupProfile {
         'region': region,
         if (regionId != null) 'regionId': regionId,
         'operatorType': operatorType.name,
+        if (businessNumber != null && businessNumber!.isNotEmpty)
+          'businessNumber': businessNumber,
+        if (openDate != null && openDate!.isNotEmpty) 'openDate': openDate,
+        if (businessLicenseUrl != null && businessLicenseUrl!.isNotEmpty)
+          'businessLicenseUrl': businessLicenseUrl,
         if (operatorType == ShopOperatorType.proxy) ...{
           if (proxyName != null) 'proxyName': proxyName,
           if (proxyRelation != null) 'proxyRelation': proxyRelation,
