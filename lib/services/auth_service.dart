@@ -380,21 +380,23 @@ class AuthService {
   /// 프로필 이미지 업로드
   Future<String> uploadProfileImage(File imageFile) async {
     try {
+      final bytes = await imageFile.readAsBytes();
       final formData = FormData.fromMap({
-        'image': await MultipartFile.fromFile(
-          imageFile.path,
+        'file': MultipartFile.fromBytes(
+          bytes,
           filename: 'profile-${DateTime.now().millisecondsSinceEpoch}.jpg',
         ),
       });
 
       final response = await _dio.post(
-        '/api/auth/profile-image/upload',
+        '/api/auth/upload-image',
         data: formData,
+        queryParameters: {'folder': 'profile-photos'},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data['data'] ?? response.data;
-        return data['imageUrl']?.toString() ?? data['url']?.toString() ?? '';
+        return data['url']?.toString() ?? '';
       } else {
         throw ServerException(
           '이미지 업로드 실패: ${response.statusMessage}',

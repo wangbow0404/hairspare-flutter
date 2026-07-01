@@ -121,7 +121,7 @@ class SpareProfileIdentitySection extends StatelessWidget {
                                     color: AppTheme.textPrimary,
                                   ),
                             ),
-                            if (designer != null) ...[
+                            if (designer != null || user?.isModelAccount == true) ...[
                               const SizedBox(width: AppTheme.spacing2),
                               Container(
                                 padding: AppTheme.spacingSymmetric(
@@ -135,7 +135,7 @@ class SpareProfileIdentitySection extends StatelessWidget {
                                       AppTheme.borderRadius(AppTheme.radiusFull),
                                 ),
                                 child: Text(
-                                  designer.roleLabel,
+                                  user?.isModelAccount == true ? '모델' : designer!.roleLabel,
                                   style: Theme.of(context)
                                       .textTheme
                                       .labelSmall
