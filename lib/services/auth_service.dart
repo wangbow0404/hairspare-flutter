@@ -155,6 +155,12 @@ class AuthService {
           throw ValidationException('회원가입 응답 형식이 올바르지 않습니다');
         }
         final user = User.fromJson(userData);
+        // 가입 직후 자동 로그인: 서버가 발급한 access token 저장
+        // (없으면 이후 본인인증 등 인증 필요한 화면에서 401로 튕김)
+        final accessToken = data['access_token'] ?? data['token'];
+        if (accessToken != null) {
+          await _apiClient.setAuthToken(accessToken.toString());
+        }
         return user;
       } else {
         throw ServerException(
