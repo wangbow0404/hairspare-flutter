@@ -102,13 +102,20 @@ class _ModelHomeProfileCardState extends State<ModelHomeProfileCard> {
                                     ),
                                   ),
                                   const SizedBox(height: 2),
-                                  Text(
-                                    '${profile.regionLabel} • ${profile.hairLength}',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: AppTheme.stitchTextSecondary,
+                                  if (profile.regionLabel.isNotEmpty ||
+                                      profile.hairLength.isNotEmpty)
+                                    Text(
+                                      [
+                                        profile.regionLabel,
+                                        profile.hairLength,
+                                      ]
+                                          .where((s) => s.isNotEmpty)
+                                          .join(' • '),
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: AppTheme.stitchTextSecondary,
+                                      ),
                                     ),
-                                  ),
                                 ],
                               ),
                             ),
@@ -136,15 +143,17 @@ class _ModelHomeProfileCardState extends State<ModelHomeProfileCard> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: AppTheme.spacing2),
-                        Text(
-                          profile.intro,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppTheme.stitchTextPrimary,
-                            height: 1.4,
+                        if (profile.intro.isNotEmpty) ...[
+                          const SizedBox(height: AppTheme.spacing2),
+                          Text(
+                            profile.intro,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.stitchTextPrimary,
+                              height: 1.4,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),

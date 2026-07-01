@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/router/app_navigation.dart';
-import '../../core/router/app_routes.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/glass_modal.dart';
 
-/// 회원가입 완료 — 본인인증 안내.
+/// 회원가입 완료 화면.
 class SpareSignupSuccessScreen extends StatelessWidget {
   const SpareSignupSuccessScreen({super.key});
 
@@ -38,12 +36,10 @@ class SpareSignupSuccessScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppTheme.spacing3),
-              Text(
-                isModel
-                    ? '모델 매칭 노출을 위해\n본인인증이 필수입니다.'
-                    : '본인인증을 완료하면\n공고 지원·모델 매칭 등 모든 기능을 이용할 수 있어요.',
+              const Text(
+                '이제 헤어스페어를 이용할 수 있어요.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   color: AppTheme.stitchTextSecondary,
                   height: 1.5,
@@ -54,7 +50,11 @@ class SpareSignupSuccessScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    context.push(AppRoutes.spareSignupSuccessVerification);
+                    if (isModel) {
+                      AppNavigation.goModelMainTab(context, 0);
+                    } else {
+                      AppNavigation.goSpareMainTab(context, 0);
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.stitchPrimaryContainer,
@@ -66,40 +66,11 @@ class SpareSignupSuccessScreen extends StatelessWidget {
                     ),
                   ),
                   child: const Text(
-                    '본인인증 하기',
+                    '홈으로 가기',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                 ),
               ),
-              if (!isModel) ...[
-                const SizedBox(height: AppTheme.spacing3),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () => AppNavigation.goSpareHome(context),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(52),
-                      side: const BorderSide(color: AppTheme.borderGray),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-                      ),
-                    ),
-                    child: const Text(
-                      '홈으로 가기',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.stitchTextPrimary,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing4),
-                TextButton(
-                  onPressed: () => context.go(AppRoutes.spareLogin),
-                  child: const Text('나중에 하기'),
-                ),
-              ],
             ],
           ),
         ),

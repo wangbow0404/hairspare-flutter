@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../mocks/mock_model_home_data.dart';
+import '../../models/model_home_data.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../view_models/matching_view_model.dart';
@@ -22,7 +22,6 @@ class ModelHomeScrollView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().currentUser;
-    final schedules = MockModelHomeData.upcomingSchedules;
 
     return CustomScrollView(
       controller: scrollController,
@@ -36,9 +35,16 @@ class ModelHomeScrollView extends StatelessWidget {
           child: Selector<MatchingViewModel, int>(
             selector: (_, vm) => vm.pendingCount,
             builder: (context, pendingCount, _) {
-              final profile = MockModelHomeData.profileForUser(
-                user,
+              final profile = ModelHomeProfileSummary(
+                name: user?.name ?? user?.username ?? '모델',
+                photoUrl: user?.profileImage,
+                regionLabel: '',
+                hairLength: '',
+                intro: '',
+                completionPercent: 0.0,
+                isIdentityVerified: false,
                 todayInterestCount: pendingCount,
+                matchingVisible: true,
               );
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -56,16 +62,18 @@ class ModelHomeScrollView extends StatelessWidget {
           ),
         ),
         ...ModelHomeInterestSection.buildSlivers(context),
-        SliverToBoxAdapter(
+        const SliverToBoxAdapter(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ModelHomeUpcomingScheduleSection(schedules: schedules),
-              const SizedBox(height: AppTheme.spacing6),
-              const CustomerServiceSection(),
-              SizedBox(height: MediaQuery.paddingOf(context).bottom + 24),
+              ModelHomeUpcomingScheduleSection(schedules: []),
+              SizedBox(height: AppTheme.spacing6),
+              CustomerServiceSection(),
             ],
           ),
+        ),
+        SliverToBoxAdapter(
+          child: SizedBox(height: MediaQuery.paddingOf(context).bottom + 24),
         ),
       ],
     );

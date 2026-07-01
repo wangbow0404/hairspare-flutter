@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/di/service_locator.dart';
-import '../../mocks/mock_model_home_data.dart';
 import '../../models/match_like.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/matching_service.dart';
@@ -93,11 +92,6 @@ class _ModelMatchingBodyState extends State<_ModelMatchingBody> {
   Widget build(BuildContext context) {
     return Consumer<MatchingViewModel>(
       builder: (context, vm, _) {
-        final profile = MockModelHomeData.profileForUser(
-          context.watch<AuthProvider>().currentUser,
-          todayInterestCount: vm.pendingCount,
-        );
-
         if (vm.isLoading && vm.receivedLikes.isEmpty && vm.matches.isEmpty) {
           return Scaffold(
             appBar: SpareSubpageAppBar(
@@ -144,7 +138,7 @@ class _ModelMatchingBodyState extends State<_ModelMatchingBody> {
                           if (_activeTab == 'received')
                             _SummaryCard(
                               todayCount: vm.pendingCount,
-                              isVisible: profile.matchingVisible,
+                              isVisible: true,
                             ),
                           if (_activeTab == 'received')
                             const SizedBox(height: AppTheme.spacing4),
