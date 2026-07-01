@@ -232,6 +232,12 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
       );
       return;
     }
+    if (_businessLicenseBytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('사업자등록증을 첨부해 주세요.')),
+      );
+      return;
+    }
     if (!_allRequiredTermsAccepted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('필수 약관에 동의해 주세요.')),
@@ -585,7 +591,7 @@ class _BusinessLicenseAttachment extends StatelessWidget {
               const Icon(Icons.upload_file, color: AppTheme.textSecondary),
               const SizedBox(height: 6),
               Text(
-                '사업자등록증 첨부 (선택)',
+                '사업자등록증 첨부 (필수)',
                 style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
               ),
             ],
