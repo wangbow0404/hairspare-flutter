@@ -42,32 +42,10 @@ class UpcomingShopsSection extends StatelessWidget {
     return DateFormat('M월 d일', 'ko_KR').format(openDate);
   }
 
-  List<Job> _ensureThreeItems(List<Job> jobs) {
-    if (jobs.length >= 3) return jobs.take(3).toList();
-    final result = List<Job>.from(jobs);
-    final now = DateTime.now();
-    while (result.length < 3) {
-      result.add(Job(
-        id: 'dummy-upcoming-${result.length}',
-        title: '오픈 예정 매장 ${result.length + 1}',
-        shopName: '헤어스튜디오 ${String.fromCharCode(65 + result.length)}',
-        date: now.toIso8601String().split('T')[0],
-        time: '10:00',
-        amount: 80000,
-        energy: 80,
-        requiredCount: 1,
-        regionId: 'region-1',
-        isUrgent: false,
-        isPremium: false,
-        createdAt: now.subtract(Duration(days: result.length)),
-      ));
-    }
-    return result;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final displayJobs = _ensureThreeItems(jobs);
+    if (jobs.isEmpty) return const SizedBox.shrink();
+    final displayJobs = jobs;
 
     return Container(
       width: double.infinity,

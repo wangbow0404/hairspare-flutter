@@ -56,6 +56,7 @@ class ProfileEditViewModel extends ChangeNotifier {
   File? pendingAvatarFile;
   String? existingAvatarUrl;
   String? userId;
+  DateTime? selectedBirthDate;
 
   Future<void> loadInitial() async {
     isLoading = true;
@@ -82,7 +83,14 @@ class ProfileEditViewModel extends ChangeNotifier {
           if (verifiedPhone != null) phoneController.text = verifiedPhone;
           final birth = verificationStatus['identityBirthDate']?.toString();
           if (birth != null && birth.length >= 4) {
-            birthYearController.text = birth.substring(0, 4);
+            final cleanBirth = birth.replaceAll('-', '');
+            birthYearController.text = cleanBirth.substring(0, 4);
+            final year = int.tryParse(cleanBirth.substring(0, 4));
+            final month = cleanBirth.length >= 6 ? int.tryParse(cleanBirth.substring(4, 6)) : null;
+            final day = cleanBirth.length >= 8 ? int.tryParse(cleanBirth.substring(6, 8)) : null;
+            if (year != null) {
+              selectedBirthDate = DateTime(year, month ?? 1, day ?? 1);
+            }
           }
           final verifiedGender =
               verificationStatus['identityGender']?.toString();
@@ -112,6 +120,12 @@ class ProfileEditViewModel extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  void setBirthDate(DateTime date) {
+    selectedBirthDate = date;
+    birthYearController.text = date.year.toString();
+    notifyListeners();
   }
 
   void setGender(String? value) {

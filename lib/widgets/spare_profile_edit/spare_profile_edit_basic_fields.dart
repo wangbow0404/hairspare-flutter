@@ -47,11 +47,61 @@ class SpareProfileEditBasicFields extends StatelessWidget {
                 : null,
           ),
           const SizedBox(height: AppTheme.spacing3),
-          SpareSignupTextField(
-            controller: vm.birthYearController,
-            label: '출생년도',
-            prefixIcon: Icons.calendar_today_outlined,
-            keyboardType: TextInputType.number,
+          GestureDetector(
+            onTap: () async {
+              final now = DateTime.now();
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: vm.selectedBirthDate ?? DateTime(now.year - 25),
+                firstDate: DateTime(1950),
+                lastDate: now,
+                locale: const Locale('ko', 'KR'),
+              );
+              if (picked != null) vm.setBirthDate(picked);
+            },
+            child: InputDecorator(
+              decoration: InputDecoration(
+                labelText: '생년월일',
+                prefixIcon: const Icon(
+                  Icons.calendar_today_outlined,
+                  size: 22,
+                  color: AppTheme.stitchPrimary,
+                ),
+                filled: true,
+                fillColor: AppTheme.backgroundWhite,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                  borderSide: const BorderSide(color: AppTheme.borderGray),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                  borderSide: const BorderSide(color: AppTheme.borderGray),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                  borderSide: const BorderSide(
+                    color: AppTheme.stitchPrimary,
+                    width: 1.5,
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing4,
+                  vertical: AppTheme.spacing3,
+                ),
+              ),
+              isEmpty: vm.selectedBirthDate == null,
+              child: Text(
+                vm.selectedBirthDate != null
+                    ? '${vm.selectedBirthDate!.year}년 '
+                        '${vm.selectedBirthDate!.month}월 '
+                        '${vm.selectedBirthDate!.day}일'
+                    : '',
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: AppTheme.stitchTextPrimary,
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: AppTheme.spacing3),
           DropdownButtonFormField<String>(
