@@ -62,6 +62,28 @@ class ErrorHandler {
         );
       }
 
+      // 중복 등 충돌 (아이디 중복 등) — 서버가 준 메시지를 그대로 보여줌
+      if (statusCode == 409) {
+        final message = _extractErrorMessage(responseData) ?? '이미 사용 중인 정보입니다.';
+        return ValidationException(
+          message,
+          code: 'CONFLICT',
+          originalError: error,
+        );
+      }
+
+      // 입력값 검증 실패 (FastAPI 422) — 어떤 항목이 왜 틀렸는지 사용자에게 알려줌
+      if (statusCode == 422) {
+        final message = _extractFastApiValidationMessage(responseData) ??
+            _extractErrorMessage(responseData) ??
+            '입력하신 정보를 다시 확인해주세요.';
+        return ValidationException(
+          message,
+          code: 'VALIDATION_ERROR',
+          originalError: error,
+        );
+      }
+
       // 서버 오류 — 응답 본문을 파싱하지 않음(스택/쿼리 노출 방지, SECURITY_PATCH_GUIDE P2)
       if (statusCode != null && statusCode >= 500) {
         return ServerException(
@@ -129,6 +151,67 @@ class ErrorHandler {
       code: 'UNKNOWN_ERROR',
       originalError: error,
     );
+  }
+
+  /// FastAPI 422 응답(`{"detail": [{"loc": [...], "msg": "...", "type": "..."}]}`)에서
+  /// 어떤 항목이 왜 틀렸는지 한국어 메시지로 변환.
+  static String? _extractFastApiValidationMessage(dynamic responseData) {
+    if (responseData is! Map) return null;
+    final detail = responseData['detail'];
+    if (detail is! List || detail.isEmpty) return null;
+    final first = detail.first;
+    if (first is! Map) return null;
+
+    final loc = first['loc'];
+    final field =
+        (loc is List && loc.isNotEmpty) ? loc.last.toString() : '';
+    final msg = (first['msg'] ?? '').toString().toLowerCase();
+    final label = _fieldLabelKo(field);
+
+    // 최소 길이 미달 (비밀번호 8자, 아이디 3자 등)
+    if (msg.contains('at least') ||
+        msg.contains('too short') ||
+        msg.contains('min_length') ||
+        msg.contains('shorter')) {
+      final n = RegExp(r'(\d+)').firstMatch(msg)?.group(1);
+      if (n != null) return '$label은(는) 최소 $n자 이상 입력해주세요.';
+      return '$label을(를) 더 길게 입력해주세요.';
+    }
+    // 최대 길이 초과
+    if (msg.contains('at most') || msg.contains('too long') || msg.contains('longer')) {
+      final n = RegExp(r'(\d+)').firstMatch(msg)?.group(1);
+      if (n != null) return '$label은(는) $n자 이하로 입력해주세요.';
+      return '$label이(가) 너무 깁니다.';
+    }
+    // 이메일 형식
+    if (field == 'email' || msg.contains('email')) {
+      return '이메일 형식이 올바르지 않습니다.';
+    }
+    // 필수값 누락
+    if (msg.contains('required') || msg.contains('missing')) {
+      return '$label을(를) 입력해주세요.';
+    }
+    return '$label 입력값을 확인해주세요.';
+  }
+
+  /// 백엔드 필드명 → 사용자에게 보여줄 한국어 라벨.
+  static String _fieldLabelKo(String field) {
+    switch (field) {
+      case 'username':
+        return '아이디';
+      case 'password':
+        return '비밀번호';
+      case 'email':
+        return '이메일';
+      case 'name':
+        return '이름';
+      case 'phone':
+        return '전화번호';
+      case 'role':
+        return '가입 유형';
+      default:
+        return '입력값';
+    }
   }
 
   /// 응답 데이터에서 에러 메시지 추출
