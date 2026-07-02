@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
+import '../../utils/api_config.dart';
 
 /// 네트워크 이미지 공용 위젯.
 ///
@@ -25,6 +26,16 @@ class AppNetworkImage extends StatelessWidget {
   final int? memCacheWidth;
   final IconData? fallbackIcon;
 
+  /// Flutter 웹(CanvasKit)은 fetch()로 이미지 로딩 → R2 직접 접근 시 CORS 차단.
+  /// 웹에서는 백엔드 image-proxy를 통해 우회.
+  static String _resolveUrl(String url) {
+    if (!kIsWeb) return url;
+    if (url.contains('.r2.dev/') && url.startsWith('https://')) {
+      return '${ApiConfig.getBaseUrl()}/api/auth/image-proxy?url=${Uri.encodeComponent(url)}';
+    }
+    return url;
+  }
+
   static bool _isMockPlaceholder(String url) => url.startsWith('mock://');
 
   static bool _isLocalFilePath(String url) {
@@ -38,19 +49,19 @@ class AppNetworkImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final url = imageUrl;
-    if (url == null || url.isEmpty) {
+    final rawUrl = imageUrl;
+    if (rawUrl == null || rawUrl.isEmpty) {
       return _Placeholder(seed: '', icon: fallbackIcon);
     }
 
-    if (_isMockPlaceholder(url)) {
-      return _Placeholder(seed: url, icon: fallbackIcon);
+    if (_isMockPlaceholder(rawUrl)) {
+      return _Placeholder(seed: rawUrl, icon: fallbackIcon);
     }
 
-    if (!kIsWeb && _isLocalFilePath(url)) {
-      final file = File(_filePathFromUrl(url));
+    if (!kIsWeb && _isLocalFilePath(rawUrl)) {
+      final file = File(_filePathFromUrl(rawUrl));
       if (!file.existsSync()) {
-        return _Placeholder(seed: url, icon: fallbackIcon);
+        return _Placeholder(seed: rawUrl, icon: fallbackIcon);
       }
       return Image.file(
         file,
@@ -58,9 +69,11 @@ class AppNetworkImage extends StatelessWidget {
         cacheWidth: memCacheWidth,
         filterQuality: FilterQuality.low,
         errorBuilder: (_, __, ___) =>
-            _Placeholder(seed: url, icon: fallbackIcon),
+            _Placeholder(seed: rawUrl, icon: fallbackIcon),
       );
     }
+
+    final url = _resolveUrl(rawUrl);
 
     return CachedNetworkImage(
       imageUrl: url,

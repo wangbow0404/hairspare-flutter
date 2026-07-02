@@ -1,8 +1,18 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../../models/job.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/api_config.dart';
 import '../../utils/work_schedule_utils.dart';
+
+String _proxyImageUrl(String url) {
+  if (!kIsWeb) return url;
+  if (url.contains('.r2.dev/') && url.startsWith('https://')) {
+    return '${ApiConfig.getBaseUrl()}/api/auth/image-proxy?url=${Uri.encodeComponent(url)}';
+  }
+  return url;
+}
 
 String formatShopJobAmount(int amount) {
   return '₩${amount.toString().replaceAllMapped(
@@ -148,7 +158,7 @@ class ShopJobsListJobCard extends StatelessWidget {
                     height: 200,
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: NetworkImage(job.images!.first),
+                        image: NetworkImage(_proxyImageUrl(job.images!.first)),
                         fit: BoxFit.cover,
                       ),
                     ),
