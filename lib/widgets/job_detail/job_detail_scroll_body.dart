@@ -418,7 +418,7 @@ class JobDetailScrollBody extends StatelessWidget {
               ),
             ),
             Text(
-              '금액: ${NumberFormat('#,###').format(job.amount)}원 · 예약금(에너지) ${job.energy}개',
+              '금액: ${NumberFormat('#,###').format(job.amount)}원',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: AppTheme.textSecondary,
               ),
@@ -491,14 +491,6 @@ class JobDetailScrollBody extends StatelessWidget {
                 ),
             label: '모집 인원',
             value: '${job.requiredCount}명',
-          ),
-          _buildQuickInfoItem(
-            context,
-            icon:
-                IconMapper.icon('zap', size: 16, color: AppTheme.yellow400) ??
-                const Icon(Icons.bolt, size: 16, color: AppTheme.yellow400),
-            label: '예약금',
-            value: '${job.energy} 에너지',
           ),
         ],
       ),
@@ -602,7 +594,7 @@ class JobDetailScrollBody extends StatelessWidget {
             context,
             step: 2,
             title: '지원하기 버튼 클릭',
-            description: '예약금(에너지) ${job.energy}개가 잠금되며, 출근 완료 시 반환됩니다.',
+            description: '지원하기 버튼을 눌러 지원을 완료하세요.',
           ),
           const SizedBox(height: AppTheme.spacing4),
           _buildStepItem(
@@ -784,53 +776,6 @@ class JobDetailScrollBody extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppTheme.spacing4),
-          // 예약금 안내
-          Container(
-            width: double.infinity,
-            padding: AppTheme.spacing(AppTheme.spacing4),
-            decoration: BoxDecoration(
-              color: AppTheme.yellow50,
-              borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
-              border: Border.all(color: AppTheme.yellow200, width: 2),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('⚡', style: TextStyle(fontSize: 24)),
-                const SizedBox(width: AppTheme.spacing3),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '예약금(에너지) 안내',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF78350F),
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spacing2),
-                      _buildEnergyInfoItem(
-                        context,
-                        '지원 시 예약금(에너지) ${job.energy}개가 잠금됩니다.',
-                      ),
-                      const SizedBox(height: AppTheme.spacing1),
-                      _buildEnergyInfoItem(context, '정상 출근 완료 시 예약금이 반환됩니다.'),
-                      const SizedBox(height: AppTheme.spacing1),
-                      _buildEnergyInfoItem(context, '노쇼(무단결근) 시 예약금이 차감됩니다.'),
-                      const SizedBox(height: AppTheme.spacing1),
-                      _buildEnergyInfoItem(
-                        context,
-                        '부득이한 사유로 취소 시 24시간 전 연락 필수',
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing4),
           // 매장 정보
           Container(
             width: double.infinity,
@@ -928,20 +873,6 @@ class JobDetailScrollBody extends StatelessWidget {
     );
   }
 
-  Widget _buildEnergyInfoItem(
-    BuildContext context,
-    String text, [
-    Color? textColor,
-  ]) {
-    return Text(
-      '• $text',
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-        fontSize: 13,
-        color: textColor ?? const Color(0xFF92400E),
-        height: 1.45,
-      ),
-    );
-  }
 
   Widget _buildContactButton(BuildContext context) {
     final vm = context.read<JobDetailViewModel>();

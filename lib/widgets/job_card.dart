@@ -217,10 +217,6 @@ class JobCard extends StatelessWidget {
                                   icon: Icons.people_alt_outlined,
                                   label: '${job.requiredCount}명',
                                 ),
-                                _JobInfoPill(
-                                  icon: Icons.bolt_outlined,
-                                  label: '에너지 ${job.energy}',
-                                ),
                               ],
                             ),
                           ],

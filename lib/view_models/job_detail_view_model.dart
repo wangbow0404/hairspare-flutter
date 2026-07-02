@@ -78,7 +78,6 @@ class JobDetailViewModel extends ChangeNotifier {
   Future<void> loadInitial() async {
     unawaited(_refreshVerification());
     unawaited(_refreshFavorite());
-    unawaited(_refreshEnergy());
     await loadJob();
     await _refreshApplicationState();
     await _refreshEngagement();
@@ -248,11 +247,6 @@ class JobDetailViewModel extends ChangeNotifier {
       return;
     }
     if (job == null) return;
-    if (energyBalance < job!.energy) {
-      showLowEnergySheet = true;
-      notifyListeners();
-      return;
-    }
     showConfirmModal = true;
     notifyListeners();
   }

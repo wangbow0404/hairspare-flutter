@@ -213,49 +213,6 @@ class JobDetailConfirmApplyModal extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: AppTheme.spacing6),
-                  Container(
-                    padding: AppTheme.spacing(AppTheme.spacing4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.stitchPrimaryContainer.withValues(alpha: 0.1),
-                      borderRadius: AppTheme.borderRadius(AppTheme.radius2xl),
-                    ),
-                    child: Column(
-                      children: [
-                        RichText(
-                          textAlign: TextAlign.center,
-                          text: TextSpan(
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  fontSize: 14,
-                                  color: AppTheme.textGray700,
-                                ),
-                            children: [
-                              const TextSpan(text: '예약금(에너지) '),
-                              TextSpan(
-                                text: '${job.energy}개',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.stitchPrimaryContainer,
-                                ),
-                              ),
-                              const TextSpan(text: '가 잠금됩니다'),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spacing2),
-                        Text(
-                          '출근 완료 시 반환됩니다',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                fontSize: 12,
-                                color: AppTheme.textSecondary,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing6),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(

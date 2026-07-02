@@ -12,7 +12,6 @@ import '../../utils/navigation_helper.dart';
 import '../../utils/shell_navigation.dart';
 import '../../models/spare_job_engagement.dart';
 import '../../widgets/schedule/schedule_conflict_dialog.dart';
-import '../../widgets/common/energy_recharge_choice_sheet.dart';
 import '../../widgets/job_detail/job_detail_bottom_bar.dart';
 import '../../widgets/job_detail/job_detail_modals.dart';
 import '../../widgets/job_detail/job_detail_scroll_body.dart';
@@ -49,13 +48,6 @@ class _JobDetailScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<JobDetailViewModel>();
-
-    if (vm.showLowEnergySheet) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        vm.dismissLowEnergySheet();
-        showEnergyRechargeChoiceSheet(context, needed: vm.job?.energy);
-      });
-    }
 
     if (vm.isLoading) {
       return const Scaffold(

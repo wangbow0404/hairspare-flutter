@@ -107,10 +107,6 @@ class _WorkProposalReviewSheetState extends State<WorkProposalReviewSheet> {
               _InfoRow(label: '일정', value: '$date · $timeLine'),
               const SizedBox(height: 10),
               _InfoRow(label: '금액', value: '$amount원'),
-              if (job != null && job.energy > 0) ...[
-                const SizedBox(height: 10),
-                _InfoRow(label: '예약금(에너지)', value: '${job.energy}개'),
-              ],
               const SizedBox(height: 24),
               Row(
                 children: [
