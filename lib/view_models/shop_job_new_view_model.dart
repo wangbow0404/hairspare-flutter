@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -46,7 +44,7 @@ class ShopJobNewViewModel extends ChangeNotifier {
 
   final List<String> roleOptions = const ['스텝', '디자이너'];
 
-  List<File> selectedImages = [];
+  List<XFile> selectedImages = [];
   String? selectedProvinceId;
   String? selectedDistrictId;
   DateTime? selectedDate;
@@ -364,7 +362,7 @@ class ShopJobNewViewModel extends ChangeNotifier {
 
   void removeImage(int index) {
     if (index < 0 || index >= selectedImages.length) return;
-    selectedImages = List<File>.from(selectedImages)..removeAt(index);
+    selectedImages = List<XFile>.from(selectedImages)..removeAt(index);
     notifyListeners();
   }
 
@@ -416,10 +414,7 @@ class ShopJobNewViewModel extends ChangeNotifier {
     selectedEndTime = null;
     _setRegionFromDistrictId(job.regionId);
     if (job.images != null) {
-      selectedImages = job.images!
-          .where((path) => File(path).existsSync())
-          .map(File.new)
-          .toList();
+      selectedImages = job.images!.map(XFile.new).toList();
     }
     notifyListeners();
   }
@@ -480,14 +475,13 @@ class ShopJobNewViewModel extends ChangeNotifier {
 
       if (images.isEmpty) return;
 
-      final files = images.map((x) => File(x.path)).toList();
       final remaining = 5 - selectedImages.length;
       if (remaining <= 0) {
         _m.showMessage('이미지는 최대 5장까지 등록할 수 있습니다');
         return;
       }
 
-      final toAdd = files.take(remaining).toList();
+      final toAdd = images.take(remaining).toList();
       for (final file in toAdd) {
         final size = await file.length();
         if (size > 10 * 1024 * 1024) {
@@ -519,14 +513,13 @@ class ShopJobNewViewModel extends ChangeNotifier {
         return;
       }
 
-      final file = File(image.path);
-      final size = await file.length();
+      final size = await image.length();
       if (size > 10 * 1024 * 1024) {
         _m.showMessage('이미지 크기는 10MB 이하여야 합니다');
         return;
       }
 
-      selectedImages = [...selectedImages, file];
+      selectedImages = [...selectedImages, image];
       notifyListeners();
     } catch (e) {
       _m.showError('이미지 선택 중 오류가 발생했습니다: $e');

@@ -334,7 +334,7 @@ class MockShopData {
   /// 샵 홈 상태 카드 — 오늘의 모델 매칭 건수 (mock).
   static Future<int> getTodayModelMatchingCount() async {
     await Future.delayed(const Duration(milliseconds: 80));
-    return 1;
+    return 0;
   }
 
   static Future<SpareProfile> getSpareById(String spareId) async {
