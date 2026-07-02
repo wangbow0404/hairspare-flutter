@@ -8,6 +8,7 @@ import '../../utils/icon_mapper.dart';
 import '../../utils/navigation_helper.dart';
 import '../../utils/schedule_work_session.dart';
 import '../../view_models/job_detail_view_model.dart';
+import '../common/app_network_image.dart';
 import '../common/job_thumbnail.dart';
 import 'job_detail_formatters.dart';
 import 'job_detail_header.dart';
@@ -99,90 +100,10 @@ class JobDetailScrollBody extends StatelessWidget {
   }
 
   Widget _buildHeroSection(BuildContext context, JobDetailViewModel vm) {
-    return SizedBox(
-      height: 288,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          JobThumbnail(
-            job: job,
-            width: double.infinity,
-            height: 288,
-            borderRadius: BorderRadius.zero,
-          ),
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withValues(alpha: 0.55),
-                  Colors.black.withValues(alpha: 0.15),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            top: AppTheme.spacing4,
-            left: AppTheme.spacing4,
-            child: Row(
-              children: [
-                if (job.isUrgent)
-                  Container(
-                    padding: AppTheme.spacingSymmetric(
-                      horizontal: AppTheme.spacing3,
-                      vertical: AppTheme.spacing2 - 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.urgentRed,
-                      borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-                    ),
-                    child: Text(
-                      '급구',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                if (job.isUrgent && job.isPremium)
-                  const SizedBox(width: AppTheme.spacing2),
-                if (!forShopOwner && job.isPremium)
-                  Container(
-                    padding: AppTheme.spacingSymmetric(
-                      horizontal: AppTheme.spacing3,
-                      vertical: AppTheme.spacing2 - 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.stitchPrimaryContainer,
-                      borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-                    ),
-                    child: Text(
-                      '프리미엄',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          if (!forShopOwner)
-            Positioned(
-              top: AppTheme.spacing4,
-              right: AppTheme.spacing4,
-              child: JobDetailHeroFavoriteButton(
-                isFavorite: vm.isFavorite,
-                isLoading: vm.isTogglingFavorite,
-                onTap: vm.toggleFavorite,
-              ),
-            ),
-        ],
-      ),
+    return _JobDetailHeroCarousel(
+      job: job,
+      vm: vm,
+      forShopOwner: forShopOwner,
     );
   }
 
@@ -967,6 +888,158 @@ class JobDetailScrollBody extends StatelessWidget {
           fontWeight: FontWeight.w500,
           color: textColor,
         ),
+      ),
+    );
+  }
+}
+
+/// 공고 상세 히어로 이미지 캐러셀. 이미지가 여러 장이면 좌우 스와이프로 넘길 수 있다.
+class _JobDetailHeroCarousel extends StatefulWidget {
+  const _JobDetailHeroCarousel({
+    required this.job,
+    required this.vm,
+    required this.forShopOwner,
+  });
+
+  final Job job;
+  final JobDetailViewModel vm;
+  final bool forShopOwner;
+
+  @override
+  State<_JobDetailHeroCarousel> createState() => _JobDetailHeroCarouselState();
+}
+
+class _JobDetailHeroCarouselState extends State<_JobDetailHeroCarousel> {
+  int _currentPage = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final images = widget.job.images ?? [];
+    final job = widget.job;
+    final vm = widget.vm;
+
+    return SizedBox(
+      height: 288,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // 이미지 영역
+          if (images.isNotEmpty)
+            PageView.builder(
+              itemCount: images.length,
+              onPageChanged: (page) => setState(() => _currentPage = page),
+              itemBuilder: (_, index) => AppNetworkImage(
+                imageUrl: images[index],
+                fit: BoxFit.cover,
+              ),
+            )
+          else
+            JobThumbnail(
+              job: job,
+              width: double.infinity,
+              height: 288,
+              borderRadius: BorderRadius.zero,
+            ),
+          // 상단→중앙 그라데이션 오버레이
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.55),
+                  Colors.black.withValues(alpha: 0.15),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+          // 급구 · 프리미엄 배지
+          Positioned(
+            top: AppTheme.spacing4,
+            left: AppTheme.spacing4,
+            child: Row(
+              children: [
+                if (job.isUrgent)
+                  Container(
+                    padding: AppTheme.spacingSymmetric(
+                      horizontal: AppTheme.spacing3,
+                      vertical: AppTheme.spacing2 - 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.urgentRed,
+                      borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
+                    ),
+                    child: Text(
+                      '급구',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                if (job.isUrgent && job.isPremium)
+                  const SizedBox(width: AppTheme.spacing2),
+                if (!widget.forShopOwner && job.isPremium)
+                  Container(
+                    padding: AppTheme.spacingSymmetric(
+                      horizontal: AppTheme.spacing3,
+                      vertical: AppTheme.spacing2 - 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.stitchPrimaryContainer,
+                      borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
+                    ),
+                    child: Text(
+                      '프리미엄',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // 찜 버튼 (스페어 전용)
+          if (!widget.forShopOwner)
+            Positioned(
+              top: AppTheme.spacing4,
+              right: AppTheme.spacing4,
+              child: JobDetailHeroFavoriteButton(
+                isFavorite: vm.isFavorite,
+                isLoading: vm.isTogglingFavorite,
+                onTap: vm.toggleFavorite,
+              ),
+            ),
+          // 페이지 인디케이터 (2장 이상)
+          if (images.length > 1)
+            Positioned(
+              bottom: AppTheme.spacing3,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  images.length,
+                  (i) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: i == _currentPage ? 16 : 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: i == _currentPage
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

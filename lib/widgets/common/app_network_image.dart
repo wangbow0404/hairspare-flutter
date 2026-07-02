@@ -80,7 +80,7 @@ class AppNetworkImage extends StatelessWidget {
         url,
         fit: fit,
         cacheWidth: memCacheWidth,
-        filterQuality: FilterQuality.low,
+        filterQuality: FilterQuality.medium,
         loadingBuilder: (_, child, progress) =>
             progress == null ? child : _Placeholder(seed: url, icon: fallbackIcon),
         errorBuilder: (_, __, ___) => _Placeholder(seed: url, icon: fallbackIcon),
@@ -91,7 +91,7 @@ class AppNetworkImage extends StatelessWidget {
       imageUrl: url,
       fit: fit,
       memCacheWidth: memCacheWidth,
-      filterQuality: FilterQuality.low,
+      filterQuality: FilterQuality.medium,
       fadeInDuration: Duration.zero,
       fadeOutDuration: Duration.zero,
       placeholder: (_, __) => _Placeholder(seed: url, icon: fallbackIcon),
