@@ -17,6 +17,7 @@ class CreateJobRequest {
     required this.wageType,
     required this.isUrgent,
     this.imageLocalPaths = const [],
+    this.imageUrls = const [],
     this.shopDisplayName,
   });
 
@@ -39,8 +40,11 @@ class CreateJobRequest {
   final String wageType;
   final bool isUrgent;
 
-  /// 로컬 파일 경로(추후 멀티파트 업로드 시 사용). 목업 단계에서는 개수만 본문에 반영.
+  /// 로컬 파일 경로 (업로드 전 임시 보관)
   final List<String> imageLocalPaths;
+
+  /// R2에 업로드된 이미지 URL 목록
+  final List<String> imageUrls;
 
   /// 미등록 시 서버/목업에서 기본 문구 사용
   final String? shopDisplayName;
@@ -60,6 +64,7 @@ class CreateJobRequest {
         'role': role,
         'wageType': wageType,
         'isUrgent': isUrgent,
+        'imageUrls': imageUrls,
         'imageCount': imageLocalPaths.length,
         if (shopDisplayName != null && shopDisplayName!.isNotEmpty)
           'shopName': shopDisplayName,

@@ -7,6 +7,7 @@ import '../core/services/global_messenger_service.dart';
 import '../models/create_job_request.dart';
 import '../models/job.dart';
 import '../models/region.dart';
+import '../services/auth_service.dart';
 import '../services/job_service.dart';
 import '../utils/error_handler.dart';
 import '../utils/region_helper.dart';
@@ -18,10 +19,12 @@ class ShopJobNewViewModel extends ChangeNotifier {
   ShopJobNewViewModel({
     ImagePicker? imagePicker,
     JobService? jobService,
+    AuthService? authService,
     Job? jobToEdit,
     Job? jobToCopy,
   })  : _imagePicker = imagePicker ?? sl<ImagePicker>(),
-        _jobService = jobService ?? sl<JobService>() {
+        _jobService = jobService ?? sl<JobService>(),
+        _authService = authService ?? sl<AuthService>() {
     if (jobToEdit != null) {
       _loadFromJob(jobToEdit);
     } else if (jobToCopy != null) {
@@ -35,6 +38,7 @@ class ShopJobNewViewModel extends ChangeNotifier {
 
   final ImagePicker _imagePicker;
   final JobService _jobService;
+  final AuthService _authService;
 
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
@@ -526,7 +530,7 @@ class ShopJobNewViewModel extends ChangeNotifier {
     }
   }
 
-  CreateJobRequest _buildRequest() {
+  CreateJobRequest _buildRequest({List<String> imageUrls = const []}) {
     return CreateJobRequest(
       title: titleController.text.trim(),
       description: descriptionController.text.trim(),
@@ -544,6 +548,7 @@ class ShopJobNewViewModel extends ChangeNotifier {
       wageType: wageType,
       isUrgent: isUrgent,
       imageLocalPaths: selectedImages.map((f) => f.path).toList(),
+      imageUrls: imageUrls,
     );
   }
 
@@ -592,7 +597,12 @@ class ShopJobNewViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final created = await _jobService.createJob(_buildRequest());
+      // 이미지가 있으면 R2에 먼저 업로드한 뒤 URL을 공고에 포함
+      List<String> imageUrls = const [];
+      if (selectedImages.isNotEmpty) {
+        imageUrls = await _authService.uploadJobImages(selectedImages);
+      }
+      final created = await _jobService.createJob(_buildRequest(imageUrls: imageUrls));
       _m.showSuccess('「${created.title}」 공고가 등록되었습니다');
       return true;
     } catch (e) {

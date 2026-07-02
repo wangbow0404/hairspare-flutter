@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../models/login_portal.dart';
 import '../models/spare_subtype.dart';
@@ -257,6 +258,7 @@ class AuthService {
         );
       }
     } on DioException catch (e) {
+      print('[updateProfile] DioException ${e.response?.statusCode}: ${e.response?.data}');
       throw ErrorHandler.handleDioException(e);
     } catch (e) {
       throw ErrorHandler.handleException(e);
@@ -472,5 +474,37 @@ class AuthService {
     } catch (e) {
       throw ErrorHandler.handleException(e);
     }
+  }
+
+  /// XFile 목록을 R2에 업로드하고 URL 목록을 반환합니다 (웹·모바일 모두 지원).
+  Future<List<String>> uploadJobImages(List<XFile> images) async {
+    final urls = <String>[];
+    for (final xfile in images) {
+      try {
+        final bytes = await xfile.readAsBytes();
+        final ext = xfile.name.split('.').last.toLowerCase();
+        final contentType = (ext == 'png') ? 'image/png' : 'image/jpeg';
+        final formData = FormData.fromMap({
+          'file': MultipartFile.fromBytes(
+            bytes,
+            filename: 'job-${DateTime.now().millisecondsSinceEpoch}.jpg',
+            contentType: DioMediaType.parse(contentType),
+          ),
+        });
+        final response = await _dio.post(
+          '/api/auth/upload-image',
+          data: formData,
+          queryParameters: {'folder': 'job-photos'},
+        );
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          final data = response.data['data'] ?? response.data;
+          final url = data['url']?.toString() ?? '';
+          if (url.isNotEmpty) urls.add(url);
+        }
+      } catch (_) {
+        // 개별 이미지 업로드 실패 시 건너뜀
+      }
+    }
+    return urls;
   }
 }
