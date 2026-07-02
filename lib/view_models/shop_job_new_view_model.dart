@@ -49,6 +49,8 @@ class ShopJobNewViewModel extends ChangeNotifier {
   final List<String> roleOptions = const ['스텝', '디자이너'];
 
   List<XFile> selectedImages = [];
+  /// 수정 모드에서 이미 저장된 이미지 URL 목록 (삭제하지 않는 한 유지)
+  List<String> existingImageUrls = [];
   String? selectedProvinceId;
   String? selectedDistrictId;
   DateTime? selectedDate;
@@ -400,6 +402,8 @@ class ShopJobNewViewModel extends ChangeNotifier {
     selectedEndTime =
         job.endTime != null ? _parseTime(job.endTime!) : null;
     _setRegionFromDistrictId(job.regionId);
+    // 기존 이미지 URL 보존 — 수정 시 새 이미지와 합산
+    existingImageUrls = List<String>.from(job.images ?? []);
     notifyListeners();
   }
 
@@ -568,8 +572,17 @@ class ShopJobNewViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final updated =
-          await _jobService.updateJob(editingJobId!, _buildRequest());
+      // 새로 선택한 이미지가 있으면 R2에 업로드
+      List<String> newUrls = const [];
+      if (selectedImages.isNotEmpty) {
+        newUrls = await _authService.uploadJobImages(selectedImages);
+      }
+      // 기존 URL + 신규 URL 합산
+      final allImageUrls = [...existingImageUrls, ...newUrls];
+      final updated = await _jobService.updateJob(
+        editingJobId!,
+        _buildRequest(imageUrls: allImageUrls),
+      );
       _m.showSuccess('「${updated.title}」 공고가 수정되었습니다');
       return true;
     } catch (e) {
