@@ -58,6 +58,8 @@ class AuthService {
         data: {
           'username': username,
           'password': password,
+          if (portal != null)
+            'login_type': portal == LoginPortal.shop ? 'shop' : 'spare',
         },
       );
 
