@@ -26,7 +26,9 @@ class SpareDesignerProfileService {
       final map = data is Map<String, dynamic>
           ? (data['data'] ?? data) as Map<String, dynamic>
           : <String, dynamic>{};
-      return SpareDesignerProfile.fromJson(map);
+      final profile = SpareDesignerProfile.fromJson(map);
+      await _saveMock(userId, profile);
+      return profile;
     } catch (_) {
       return _loadMock(userId);
     }
@@ -41,22 +43,17 @@ class SpareDesignerProfileService {
       return profile;
     }
 
-    try {
-      final response = await _apiClient.dio.put(
-        '/api/spares/me/profile',
-        data: profile.toJson(),
-      );
-      final data = response.data;
-      final map = data is Map<String, dynamic>
-          ? (data['data'] ?? data) as Map<String, dynamic>
-          : profile.toJson();
-      final saved = SpareDesignerProfile.fromJson(map);
-      await _saveMock(userId, saved);
-      return saved;
-    } catch (_) {
-      await _saveMock(userId, profile);
-      return profile;
-    }
+    final response = await _apiClient.dio.put(
+      '/api/spares/me/profile',
+      data: profile.toJson(),
+    );
+    final data = response.data;
+    final map = data is Map<String, dynamic>
+        ? (data['data'] ?? data) as Map<String, dynamic>
+        : profile.toJson();
+    final saved = SpareDesignerProfile.fromJson(map);
+    await _saveMock(userId, saved);
+    return saved;
   }
 
   Future<SpareDesignerProfile> _loadMock(String userId) async {
