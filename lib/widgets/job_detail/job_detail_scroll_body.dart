@@ -911,6 +911,29 @@ class _JobDetailHeroCarousel extends StatefulWidget {
 
 class _JobDetailHeroCarouselState extends State<_JobDetailHeroCarousel> {
   int _currentPage = 0;
+  late final PageController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _goTo(int page) {
+    final images = widget.job.images ?? [];
+    if (page < 0 || page >= images.length) return;
+    _controller.animateToPage(
+      page,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -923,14 +946,23 @@ class _JobDetailHeroCarouselState extends State<_JobDetailHeroCarousel> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // 이미지 영역
+          // 이미지 영역 — GestureDetector로 좌우 드래그 수동 처리
           if (images.isNotEmpty)
-            PageView.builder(
-              itemCount: images.length,
-              onPageChanged: (page) => setState(() => _currentPage = page),
-              itemBuilder: (_, index) => AppNetworkImage(
-                imageUrl: images[index],
-                fit: BoxFit.cover,
+            GestureDetector(
+              onHorizontalDragEnd: (details) {
+                final v = details.primaryVelocity ?? 0;
+                if (v < -200) _goTo(_currentPage + 1);
+                if (v > 200) _goTo(_currentPage - 1);
+              },
+              child: PageView.builder(
+                controller: _controller,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: images.length,
+                onPageChanged: (page) => setState(() => _currentPage = page),
+                itemBuilder: (_, index) => AppNetworkImage(
+                  imageUrl: images[index],
+                  fit: BoxFit.cover,
+                ),
               ),
             )
           else
@@ -1014,6 +1046,55 @@ class _JobDetailHeroCarouselState extends State<_JobDetailHeroCarousel> {
                 onTap: vm.toggleFavorite,
               ),
             ),
+          // 좌우 화살표 버튼 (2장 이상, 클릭으로 넘기기)
+          if (images.length > 1) ...[
+            if (_currentPage > 0)
+              Positioned(
+                left: AppTheme.spacing2,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: GestureDetector(
+                    onTap: () => _goTo(_currentPage - 1),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.chevron_left,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (_currentPage < images.length - 1)
+              Positioned(
+                right: AppTheme.spacing2,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: GestureDetector(
+                    onTap: () => _goTo(_currentPage + 1),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.chevron_right,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
           // 페이지 인디케이터 (2장 이상)
           if (images.length > 1)
             Positioned(
