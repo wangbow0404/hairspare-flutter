@@ -12,6 +12,7 @@ import '../../utils/region_helper.dart';
 import '../../utils/app_date_picker.dart';
 import '../../utils/work_schedule_utils.dart';
 import '../../view_models/shop_job_new_view_model.dart';
+import '../common/app_network_image.dart';
 import 'shop_job_new_form_sections.dart';
 import 'shop_job_new_input_decoration.dart';
 import 'shop_job_new_ui_kit.dart';
@@ -277,24 +278,61 @@ class ShopJobNewFormContent extends StatelessWidget {
               mainAxisSpacing: AppTheme.spacing3,
               childAspectRatio: 1,
             ),
-            itemCount:
-                vm.selectedImages.length +
-                (vm.selectedImages.length < 5 ? 1 : 0),
+            itemCount: () {
+                final total = vm.existingImageUrls.length + vm.selectedImages.length;
+                return total + (total < 5 ? 1 : 0);
+              }(),
             itemBuilder: (context, index) {
-              if (index < vm.selectedImages.length) {
+              final existingCount = vm.existingImageUrls.length;
+              final newCount = vm.selectedImages.length;
+              final total = existingCount + newCount;
+
+              if (index < existingCount) {
+                // 이미 저장된 R2 이미지 표시
+                final url = vm.existingImageUrls[index];
+                return Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: double.infinity,
+                        child: AppNetworkImage(imageUrl: url, fit: BoxFit.cover),
+                      ),
+                    ),
+                    Positioned(
+                      top: -4,
+                      right: -4,
+                      child: GestureDetector(
+                        onTap: () => vm.removeExistingImage(index),
+                        child: Container(
+                          padding: const EdgeInsets.all(AppTheme.spacing1),
+                          decoration: const BoxDecoration(
+                            color: AppTheme.urgentRed,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.close, size: 14, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              } else if (index < total) {
+                // 새로 선택한 로컬 이미지 표시
+                final fileIndex = index - existingCount;
                 return Stack(
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(AppTheme.radiusXl),
                       child: kIsWeb
                           ? Image.network(
-                              vm.selectedImages[index].path,
+                              vm.selectedImages[fileIndex].path,
                               fit: BoxFit.cover,
                               width: double.infinity,
                               height: double.infinity,
                             )
                           : Image.file(
-                              File(vm.selectedImages[index].path),
+                              File(vm.selectedImages[fileIndex].path),
                               fit: BoxFit.cover,
                               width: double.infinity,
                               height: double.infinity,
@@ -304,18 +342,14 @@ class ShopJobNewFormContent extends StatelessWidget {
                       top: -4,
                       right: -4,
                       child: GestureDetector(
-                        onTap: () => vm.removeImage(index),
+                        onTap: () => vm.removeImage(fileIndex),
                         child: Container(
                           padding: const EdgeInsets.all(AppTheme.spacing1),
                           decoration: const BoxDecoration(
                             color: AppTheme.urgentRed,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
-                            Icons.close,
-                            size: 14,
-                            color: Colors.white,
-                          ),
+                          child: const Icon(Icons.close, size: 14, color: Colors.white),
                         ),
                       ),
                     ),

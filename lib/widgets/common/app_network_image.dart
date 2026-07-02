@@ -75,6 +75,18 @@ class AppNetworkImage extends StatelessWidget {
 
     final url = _resolveUrl(rawUrl);
 
+    if (kIsWeb) {
+      return Image.network(
+        url,
+        fit: fit,
+        cacheWidth: memCacheWidth,
+        filterQuality: FilterQuality.low,
+        loadingBuilder: (_, child, progress) =>
+            progress == null ? child : _Placeholder(seed: url, icon: fallbackIcon),
+        errorBuilder: (_, __, ___) => _Placeholder(seed: url, icon: fallbackIcon),
+      );
+    }
+
     return CachedNetworkImage(
       imageUrl: url,
       fit: fit,

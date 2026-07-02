@@ -372,6 +372,12 @@ class ShopJobNewViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void removeExistingImage(int index) {
+    if (index < 0 || index >= existingImageUrls.length) return;
+    existingImageUrls = List<String>.from(existingImageUrls)..removeAt(index);
+    notifyListeners();
+  }
+
   void applySearchAddress(String newAddress) {
     address = newAddress;
     _trySetRegionFromAddress(newAddress);
@@ -483,7 +489,7 @@ class ShopJobNewViewModel extends ChangeNotifier {
 
       if (images.isEmpty) return;
 
-      final remaining = 5 - selectedImages.length;
+      final remaining = 5 - selectedImages.length - existingImageUrls.length;
       if (remaining <= 0) {
         _m.showMessage('이미지는 최대 5장까지 등록할 수 있습니다');
         return;
@@ -516,7 +522,7 @@ class ShopJobNewViewModel extends ChangeNotifier {
 
       if (image == null) return;
 
-      if (selectedImages.length >= 5) {
+      if (selectedImages.length + existingImageUrls.length >= 5) {
         _m.showMessage('이미지는 최대 5장까지 등록할 수 있습니다');
         return;
       }
