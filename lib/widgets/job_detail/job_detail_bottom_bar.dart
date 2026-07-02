@@ -73,7 +73,7 @@ class _LockedNotice extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            '예약금(에너지) 잠금됨',
+            '지원 완료',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -83,7 +83,7 @@ class _LockedNotice extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spacing2),
           Text(
-            '근무 완료 + 정산 완료 시 예약금이 반환됩니다.\n노쇼 시 예약금은 미용실에 귀속됩니다.',
+            '미용실의 승인을 기다려주세요.\n연락하기로 미용실과 소통할 수 있습니다.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontSize: 14,
               color: AppTheme.stitchTextSecondary,
