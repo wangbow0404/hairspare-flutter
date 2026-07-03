@@ -122,8 +122,10 @@ class _ShopSpareDetailScreenState extends State<ShopSpareDetailScreen> {
                   // 히어로 이미지
                   _SpareDetailHero(spare: spare),
                   // 흰 카드가 히어로 위로 -16px 올라오며 시작
-                  Container(
-                    margin: const EdgeInsets.only(top: -16),
+                  // Container는 음수 margin 불가 → Transform.translate 사용
+                  Transform.translate(
+                    offset: const Offset(0, -16),
+                    child: Container(
                     decoration: const BoxDecoration(
                       color: AppTheme.backgroundWhite,
                       borderRadius: BorderRadius.only(
@@ -140,6 +142,7 @@ class _ShopSpareDetailScreenState extends State<ShopSpareDetailScreen> {
                         _SpareDetailMetricsRow(spare: spare),
                       ],
                     ),
+                  ),
                   ),
                   // 섹션 카드들
                   Padding(
