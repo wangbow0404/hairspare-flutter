@@ -39,7 +39,8 @@ class JobService {
         status: 'published',
         ownerId: 'me',
       );
-      return (MockShopData.addMyJob(job), isFirst);
+      final created = await MockShopData.addMyJob(job);
+      return (created, isFirst);
     }
     try {
       final response = await _dio.post(
