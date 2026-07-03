@@ -20,12 +20,30 @@ class ShopApplicantCard extends StatelessWidget {
   final VoidCallback? onApprove;
   final VoidCallback? onReject;
 
+  static bool _isJobExpired(String date, String time) {
+    try {
+      final parts = time.split(':');
+      if (parts.length < 2) return false;
+      final jobStart = DateTime(
+        int.parse(date.substring(0, 4)),
+        int.parse(date.substring(5, 7)),
+        int.parse(date.substring(8, 10)),
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+      );
+      return jobStart.isBefore(DateTime.now());
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final spare = application.spare;
     final job = application.job;
     final status = ApplicationStatusUtils.normalize(application.status);
     final isPending = status == 'pending';
+    final jobExpired = _isJobExpired(job.date, job.time);
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
@@ -61,7 +79,10 @@ class ShopApplicantCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: AppTheme.spacing2),
-                        _StatusBadge(status: application.status),
+                        _StatusBadge(
+                          status: application.status,
+                          isExpired: jobExpired,
+                        ),
                       ],
                     ),
                     const SizedBox(height: AppTheme.spacing1),
@@ -87,6 +108,26 @@ class ShopApplicantCard extends StatelessWidget {
                       color: AppTheme.textTertiary,
                     ),
               ),
+              if (jobExpired) ...[
+                const SizedBox(width: AppTheme.spacing2),
+                Container(
+                  padding: AppTheme.spacingSymmetric(
+                    horizontal: AppTheme.spacing2,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.textTertiary.withValues(alpha: 0.15),
+                    borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
+                  ),
+                  child: Text(
+                    '마감',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppTheme.textTertiary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+              ],
               const SizedBox(width: AppTheme.spacing3),
               Text(
                 '${NumberFormat('#,###').format(job.amount)}원',
@@ -119,7 +160,7 @@ class ShopApplicantCard extends StatelessWidget {
                 child: const Text('프로필 보기'),
               ),
               const Spacer(),
-              if (isPending && onApprove != null && onReject != null) ...[
+              if (isPending && !jobExpired && onApprove != null && onReject != null) ...[
                 OutlinedButton(
                   onPressed: onReject,
                   style: OutlinedButton.styleFrom(
@@ -175,13 +216,20 @@ class _InitialAvatar extends StatelessWidget {
 }
 
 class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
+  const _StatusBadge({required this.status, required this.isExpired});
 
   final String status;
+  final bool isExpired;
 
   @override
   Widget build(BuildContext context) {
-    final color = ApplicationStatusUtils.foreground(status);
+    final label = isExpired
+        ? '만료됨'
+        : ApplicationStatusUtils.label(status);
+    final color = isExpired
+        ? AppTheme.textTertiary
+        : ApplicationStatusUtils.foreground(status);
+
     return Container(
       padding: AppTheme.spacingSymmetric(
         horizontal: AppTheme.spacing2,
@@ -192,7 +240,7 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
       ),
       child: Text(
-        ApplicationStatusUtils.label(status),
+        label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
               fontWeight: FontWeight.w600,
               color: color,
