@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/router/app_routes.dart';
 import '../../models/spare_profile.dart';
@@ -7,11 +8,10 @@ import '../../services/spare_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/navigation_helper.dart';
-import '../../utils/region_helper.dart';
 import '../../widgets/common/app_network_image.dart';
 import '../../widgets/common/spare_profile_thumbnail.dart';
 
-/// 샵 — 스페어 상세 (공고 상세와 동일 Stitch 레이아웃).
+/// 샵 — 스페어 상세 (지원자 이력서 뷰).
 class ShopSpareDetailScreen extends StatefulWidget {
   const ShopSpareDetailScreen({
     super.key,
@@ -107,12 +107,9 @@ class _ShopSpareDetailScreenState extends State<ShopSpareDetailScreen> {
     }
 
     final spare = _spare!;
-    final split = _SpareDetailHelpers.splitAvailableDaysAndHours(
-      spare.availableTimes,
-    );
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundWhite,
+      backgroundColor: AppTheme.backgroundGray,
       body: SafeArea(
         bottom: false,
         child: Stack(
@@ -122,34 +119,43 @@ class _ShopSpareDetailScreenState extends State<ShopSpareDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // 히어로 이미지
                   _SpareDetailHero(spare: spare),
-                  _SpareDetailTitleSection(spare: spare),
-                  _SpareDetailQuickInfoGrid(
-                    spare: spare,
-                    regionName: RegionHelper.getRegionName(spare.regionId),
-                    availableDays: split.days,
-                    availableHours: split.hours,
+                  // 흰 카드가 히어로 위로 -16px 올라오며 시작
+                  Container(
+                    margin: const EdgeInsets.only(top: -16),
+                    decoration: const BoxDecoration(
+                      color: AppTheme.backgroundWhite,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // 이름 + 역할 + 인증 뱃지
+                        _SpareDetailProfileHeader(spare: spare),
+                        // 3컬럼 지표 행
+                        _SpareDetailMetricsRow(spare: spare),
+                      ],
+                    ),
                   ),
+                  // 섹션 카드들
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
                       AppTheme.spacing4,
-                      AppTheme.spacing2,
+                      AppTheme.spacing4,
                       AppTheme.spacing4,
                       AppTheme.spacing4,
                     ),
                     child: Column(
                       children: [
-                        _SpareDetailPortfolioSection(spare: spare),
-                        const SizedBox(height: AppTheme.spacing3),
                         _SpareDetailSkillsSection(spare: spare),
                         const SizedBox(height: AppTheme.spacing3),
-                        _SpareDetailWorkInfoSection(
-                          regionName: RegionHelper.getRegionName(spare.regionId),
-                          days: split.days,
-                          hours: split.hours,
-                        ),
+                        _SpareDetailPortfolioSection(spare: spare),
                         const SizedBox(height: AppTheme.spacing3),
-                        _SpareDetailMatchingSection(spare: spare),
+                        _SpareDetailTrustSection(spare: spare),
                       ],
                     ),
                   ),
@@ -170,6 +176,10 @@ class _ShopSpareDetailScreenState extends State<ShopSpareDetailScreen> {
     );
   }
 }
+
+// ─────────────────────────────────────────
+// 히어로 이미지
+// ─────────────────────────────────────────
 
 class _SpareDetailHero extends StatelessWidget {
   const _SpareDetailHero({required this.spare});
@@ -197,10 +207,11 @@ class _SpareDetailHero extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withValues(alpha: 0.45),
+                  Colors.black.withValues(alpha: 0.5),
                   Colors.black.withValues(alpha: 0.1),
                   Colors.transparent,
                 ],
+                stops: const [0.0, 0.4, 1.0],
               ),
             ),
           ),
@@ -223,29 +234,42 @@ class _SpareDetailHero extends StatelessWidget {
   }
 }
 
-class _SpareDetailTitleSection extends StatelessWidget {
-  const _SpareDetailTitleSection({required this.spare});
+// ─────────────────────────────────────────
+// 이름 + 역할 + 인증 뱃지
+// ─────────────────────────────────────────
+
+class _SpareDetailProfileHeader extends StatelessWidget {
+  const _SpareDetailProfileHeader({required this.spare});
 
   final SpareProfile spare;
 
   @override
   Widget build(BuildContext context) {
     final roleLabel = spare.role == 'designer' ? '디자이너' : '스텝';
+    final hasBadge = spare.isVerified || spare.isLicenseVerified;
 
-    return Padding(
-      padding: const EdgeInsets.all(AppTheme.spacing6),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing6,
+        AppTheme.spacing6,
+        AppTheme.spacing6,
+        AppTheme.spacing4,
+      ),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppTheme.borderGray)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             spare.name,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w800,
-              color: AppTheme.stitchTextPrimary,
+              color: AppTheme.stitchPrimary,
             ),
           ),
-          const SizedBox(height: AppTheme.spacing2),
+          const SizedBox(height: AppTheme.spacing1),
           Text(
             '$roleLabel · 경력 ${spare.experience}년',
             style: const TextStyle(
@@ -253,131 +277,97 @@ class _SpareDetailTitleSection extends StatelessWidget {
               color: AppTheme.stitchTextSecondary,
             ),
           ),
-          const SizedBox(height: AppTheme.spacing1),
-          Text(
-            '완료 ${spare.completedJobs}건',
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppTheme.stitchTextSecondary,
+          if (hasBadge) ...[
+            const SizedBox(height: AppTheme.spacing3),
+            Wrap(
+              spacing: AppTheme.spacing2,
+              runSpacing: AppTheme.spacing2,
+              children: [
+                if (spare.isVerified) _VerificationBadge(label: '본인인증'),
+                if (spare.isLicenseVerified) _VerificationBadge(label: '면허인증'),
+              ],
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _SpareDetailQuickInfoGrid extends StatelessWidget {
-  const _SpareDetailQuickInfoGrid({
-    required this.spare,
-    required this.regionName,
-    required this.availableDays,
-    required this.availableHours,
-  });
+class _VerificationBadge extends StatelessWidget {
+  const _VerificationBadge({required this.label});
 
-  final SpareProfile spare;
-  final String regionName;
-  final String availableDays;
-  final String availableHours;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
-      child: GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisSpacing: AppTheme.spacing3,
-        mainAxisSpacing: AppTheme.spacing3,
-        childAspectRatio: 1.6,
-        children: [
-          _QuickInfoCard(
-            icon: Icons.location_on_outlined,
-            iconColor: AppTheme.stitchPrimaryContainer,
-            label: '가능 지역',
-            value: regionName,
-          ),
-          _QuickInfoCard(
-            icon: Icons.schedule_outlined,
-            iconColor: AppTheme.stitchPrimaryContainer,
-            label: '가능 시간',
-            value: availableHours == '—' ? availableDays : '$availableDays\n$availableHours',
-          ),
-          _QuickInfoCard(
-            icon: Icons.work_outline,
-            iconColor: AppTheme.green600,
-            label: '완료 공고',
-            value: '${spare.completedJobs}건',
-          ),
-          _QuickInfoCard(
-            icon: Icons.payments_outlined,
-            iconColor: AppTheme.yellow400,
-            label: '희망 시급',
-            value: (spare.hourlyRate ?? 0) > 0
-                ? '${_SpareDetailHelpers.formatWon(spare.hourlyRate!)}원'
-                : '협의',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuickInfoCard extends StatelessWidget {
-  const _QuickInfoCard({
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final Color iconColor;
   final String label;
-  final String value;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing3),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: AppTheme.backgroundGray,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        color: AppTheme.stitchPrimary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Text(
+        '✓ $label',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: AppTheme.stitchPrimary,
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────
+// 3컬럼 지표 행 (평점 / 완료 / 추천)
+// ─────────────────────────────────────────
+
+class _SpareDetailMetricsRow extends StatelessWidget {
+  const _SpareDetailMetricsRow({required this.spare});
+
+  final SpareProfile spare;
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicHeight(
+      child: Row(
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: iconColor),
-              const SizedBox(width: AppTheme.spacing2),
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.stitchTextSecondary,
+          Expanded(
+            child: _MetricCell(
+              label: '평점',
+              valueWidget: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.star, size: 16, color: Color(0xFFFACC15)),
+                  const SizedBox(width: 3),
+                  Text(
+                    spare.rating.toStringAsFixed(1),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.stitchTextPrimary,
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spacing2),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.stitchTextPrimary,
-              height: 1.3,
+              sub: '(리뷰 ${spare.reviewCount}개)',
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+          ),
+          const VerticalDivider(width: 1, color: AppTheme.borderGray),
+          Expanded(
+            child: _MetricCell(
+              label: '완료',
+              value: '${spare.completedJobs}건',
+            ),
+          ),
+          const VerticalDivider(width: 1, color: AppTheme.borderGray),
+          Expanded(
+            child: _MetricCell(
+              label: '추천',
+              value: '${spare.thumbsUpCount}개',
+            ),
           ),
         ],
       ),
@@ -385,20 +375,78 @@ class _QuickInfoCard extends StatelessWidget {
   }
 }
 
-class _SpareDetailSectionCard extends StatelessWidget {
-  const _SpareDetailSectionCard({
+class _MetricCell extends StatelessWidget {
+  const _MetricCell({
+    required this.label,
+    this.value,
+    this.valueWidget,
+    this.sub,
+  });
+
+  final String label;
+  final String? value;
+  final Widget? valueWidget;
+  final String? sub;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing4),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppTheme.stitchTextSecondary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing1),
+          valueWidget ??
+              Text(
+                value ?? '',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.stitchTextPrimary,
+                ),
+              ),
+          if (sub != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              sub!,
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppTheme.stitchTextSecondary,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────
+// 섹션 공통 카드 래퍼
+// ─────────────────────────────────────────
+
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({
     required this.title,
+    this.trailing,
     required this.child,
   });
 
   final String title;
+  final Widget? trailing;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppTheme.spacing4),
+      padding: const EdgeInsets.all(AppTheme.spacing4 + 4),
       decoration: BoxDecoration(
         color: AppTheme.backgroundWhite,
         borderRadius: BorderRadius.circular(16),
@@ -407,21 +455,82 @@ class _SpareDetailSectionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.stitchTextPrimary,
-            ),
+          Row(
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.stitchTextPrimary,
+                ),
+              ),
+              if (trailing != null) ...[
+                const Spacer(),
+                trailing!,
+              ],
+            ],
           ),
-          const SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing3),
           child,
         ],
       ),
     );
   }
 }
+
+// ─────────────────────────────────────────
+// 전문 기술
+// ─────────────────────────────────────────
+
+class _SpareDetailSkillsSection extends StatelessWidget {
+  const _SpareDetailSkillsSection({required this.spare});
+
+  final SpareProfile spare;
+
+  @override
+  Widget build(BuildContext context) {
+    return _SectionCard(
+      title: '전문 기술',
+      child: spare.specialties.isEmpty
+          ? const Text(
+              '등록된 전문 기술이 없습니다',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppTheme.stitchTextSecondary,
+              ),
+            )
+          : Wrap(
+              spacing: AppTheme.spacing2,
+              runSpacing: AppTheme.spacing2,
+              children: spare.specialties.map((skill) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing3 + 4,
+                    vertical: AppTheme.spacing2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.stitchPrimary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                  ),
+                  child: Text(
+                    skill,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.stitchPrimary,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────
+// 포트폴리오
+// ─────────────────────────────────────────
 
 class _SpareDetailPortfolioSection extends StatelessWidget {
   const _SpareDetailPortfolioSection({required this.spare});
@@ -432,12 +541,30 @@ class _SpareDetailPortfolioSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final images = spare.images ?? [];
 
-    return _SpareDetailSectionCard(
+    return _SectionCard(
       title: '포트폴리오',
+      trailing: images.isNotEmpty
+          ? TextButton(
+              onPressed: () {},
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                '전체보기',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.stitchPrimary,
+                ),
+              ),
+            )
+          : null,
       child: images.isEmpty
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: AppTheme.spacing6),
+          ? const Padding(
+              padding: EdgeInsets.symmetric(vertical: AppTheme.spacing4),
+              child: Center(
                 child: Text(
                   '등록된 포트폴리오가 없습니다',
                   style: TextStyle(
@@ -474,119 +601,26 @@ class _SpareDetailPortfolioSection extends StatelessWidget {
   }
 }
 
-class _SpareDetailSkillsSection extends StatelessWidget {
-  const _SpareDetailSkillsSection({required this.spare});
+// ─────────────────────────────────────────
+// 신뢰 정보 (노쇼이력·노쇼비율·가입일·최근활동·응답속도)
+// ─────────────────────────────────────────
+
+class _SpareDetailTrustSection extends StatelessWidget {
+  const _SpareDetailTrustSection({required this.spare});
 
   final SpareProfile spare;
 
-  @override
-  Widget build(BuildContext context) {
-    return _SpareDetailSectionCard(
-      title: '전문 기술',
-      child: spare.specialties.isEmpty
-          ? const Text(
-              '등록된 전문 기술이 없습니다',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppTheme.stitchTextSecondary,
-              ),
-            )
-          : Wrap(
-              spacing: AppTheme.spacing2,
-              runSpacing: AppTheme.spacing2,
-              children: spare.specialties.map((skill) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacing3,
-                    vertical: AppTheme.spacing1 + 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.stitchPrimary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                  ),
-                  child: Text(
-                    skill,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.stitchPrimary,
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-    );
+  static String _formatDate(DateTime dt) =>
+      DateFormat('yyyy년 M월 d일', 'ko_KR').format(dt);
+
+  static String _relativeTime(DateTime? dt) {
+    if (dt == null) return '알 수 없음';
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}분 전';
+    if (diff.inHours < 24) return '${diff.inHours}시간 전';
+    if (diff.inDays < 30) return '${diff.inDays}일 전';
+    return _formatDate(dt);
   }
-}
-
-class _SpareDetailWorkInfoSection extends StatelessWidget {
-  const _SpareDetailWorkInfoSection({
-    required this.regionName,
-    required this.days,
-    required this.hours,
-  });
-
-  final String regionName;
-  final String days;
-  final String hours;
-
-  @override
-  Widget build(BuildContext context) {
-    return _SpareDetailSectionCard(
-      title: '근무 정보',
-      child: Column(
-        children: [
-          _InfoRow(label: '가능 지역', value: regionName),
-          const SizedBox(height: AppTheme.spacing3),
-          _InfoRow(label: '가능 요일', value: days),
-          const SizedBox(height: AppTheme.spacing3),
-          _InfoRow(label: '가능 시간', value: hours),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 72,
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppTheme.stitchTextSecondary,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.stitchTextPrimary,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SpareDetailMatchingSection extends StatelessWidget {
-  const _SpareDetailMatchingSection({required this.spare});
-
-  final SpareProfile spare;
 
   @override
   Widget build(BuildContext context) {
@@ -595,30 +629,35 @@ class _SpareDetailMatchingSection extends StatelessWidget {
         ? (spare.noShowCount / spare.completedJobs * 100).round()
         : 0;
 
-    return _SpareDetailSectionCard(
-      title: '매칭 정보',
+    return _SectionCard(
+      title: '신뢰 정보',
       child: Column(
         children: [
-          _MatchingRow(
+          _TrustRow(
             label: '노쇼 이력',
             value: hasNoShow ? '${spare.noShowCount}회' : '없음',
             valueColor: hasNoShow ? AppTheme.urgentRed : AppTheme.green600,
           ),
-          const Divider(height: 24, color: AppTheme.borderGray),
-          _MatchingRow(
-            label: '노쇼율',
+          const _TrustDivider(),
+          _TrustRow(
+            label: '노쇼 비율',
             value: '$noShowRate%',
-            valueColor: hasNoShow ? AppTheme.urgentRed : AppTheme.green600,
+            valueColor: hasNoShow ? AppTheme.urgentRed : null,
           ),
-          const Divider(height: 24, color: AppTheme.borderGray),
-          const _MatchingRow(
+          const _TrustDivider(),
+          _TrustRow(
+            label: '가입일',
+            value: _formatDate(spare.createdAt),
+          ),
+          const _TrustDivider(),
+          _TrustRow(
+            label: '최근 활동',
+            value: _relativeTime(spare.lastActiveAt),
+          ),
+          const _TrustDivider(),
+          const _TrustRow(
             label: '응답 속도',
             value: '평균 1시간 이내',
-          ),
-          const Divider(height: 24, color: AppTheme.borderGray),
-          const _MatchingRow(
-            label: '평균 근무 시간',
-            value: '4.0시간',
           ),
         ],
       ),
@@ -626,8 +665,8 @@ class _SpareDetailMatchingSection extends StatelessWidget {
   }
 }
 
-class _MatchingRow extends StatelessWidget {
-  const _MatchingRow({
+class _TrustRow extends StatelessWidget {
+  const _TrustRow({
     required this.label,
     required this.value,
     this.valueColor,
@@ -639,28 +678,44 @@ class _MatchingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            color: AppTheme.stitchTextSecondary,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing1 + 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppTheme.stitchTextSecondary,
+            ),
           ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: valueColor ?? AppTheme.stitchTextPrimary,
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: valueColor ?? AppTheme.stitchTextPrimary,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
+
+class _TrustDivider extends StatelessWidget {
+  const _TrustDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Divider(height: 20, color: AppTheme.borderGray);
+  }
+}
+
+// ─────────────────────────────────────────
+// 하단 연락하기 바
+// ─────────────────────────────────────────
 
 class _SpareDetailBottomBar extends StatelessWidget {
   const _SpareDetailBottomBar({required this.onContact});
@@ -675,79 +730,34 @@ class _SpareDetailBottomBar extends StatelessWidget {
         border: const Border(top: BorderSide(color: AppTheme.borderGray)),
         boxShadow: AppTheme.shadowLg,
       ),
-      padding: const EdgeInsets.all(AppTheme.spacing4),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: FilledButton(
-            onPressed: onContact,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.stitchPrimaryContainer,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              ),
+      padding: EdgeInsets.fromLTRB(
+        AppTheme.spacing4,
+        AppTheme.spacing4,
+        AppTheme.spacing4,
+        AppTheme.spacing4 + MediaQuery.paddingOf(context).bottom,
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        height: 52,
+        child: FilledButton(
+          onPressed: onContact,
+          style: FilledButton.styleFrom(
+            backgroundColor: AppTheme.stitchPrimary,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: const Text(
-              '연락하기',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
+          ),
+          child: const Text(
+            '연락하기',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-abstract final class _SpareDetailHelpers {
-  static String formatWon(int amount) {
-    return amount.toString().replaceAllMapped(
-          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]},',
-        );
-  }
-
-  static ({String days, String hours}) splitAvailableDaysAndHours(
-    List<String> availableTimes,
-  ) {
-    if (availableTimes.isEmpty) return (days: '—', hours: '—');
-    const dayOnlyKeywords = [
-      '주말',
-      '평일',
-      '월',
-      '화',
-      '수',
-      '목',
-      '금',
-      '토',
-      '일',
-      '요일',
-    ];
-    final dayList = <String>[];
-    final timeList = <String>[];
-    for (final s in availableTimes) {
-      final t = s.trim();
-      if (t.isEmpty) continue;
-      final looksLikeTime = t.contains(':') ||
-          t.contains('~') ||
-          t.contains('시') && !t.contains('요일');
-      final looksLikeDayOnly =
-          dayOnlyKeywords.any((k) => t == k || t.startsWith(k) || t.contains(k));
-      if (looksLikeTime && !looksLikeDayOnly) {
-        timeList.add(t);
-      } else {
-        dayList.add(t);
-      }
-    }
-    return (
-      days: dayList.isEmpty ? '—' : dayList.join(', '),
-      hours: timeList.isEmpty ? '—' : timeList.join(', '),
     );
   }
 }
