@@ -24,7 +24,7 @@ jobs:
         run: flutter pub get
 
       - name: Flutter 웹 빌드
-        run: flutter build web --release --no-tree-shake-icons
+        run: flutter build web --release
 
       - name: Vercel CLI 설치
         run: npm install -g vercel@latest
