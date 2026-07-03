@@ -58,7 +58,7 @@ class _ShopSpareDetailScreenState extends State<ShopSpareDetailScreen> {
         jobTitle: '',
         shopName: '',
         spareId: spare.id,
-        spareName: spare.name ?? spare.username,
+        spareName: spare.name,
       );
       if (!mounted) return;
       NavigationHelper.navigateToChat(context, chatId);
