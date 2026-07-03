@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/di/service_locator.dart';
 import '../../core/router/app_routes.dart';
 import '../../models/spare_profile.dart';
+import '../../services/chat_service.dart';
 import '../../services/spare_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
@@ -16,9 +18,11 @@ class ShopSpareDetailScreen extends StatefulWidget {
   const ShopSpareDetailScreen({
     super.key,
     required this.spareId,
+    this.jobId,
   });
 
   final String spareId;
+  final String? jobId;
 
   @override
   State<ShopSpareDetailScreen> createState() => _ShopSpareDetailScreenState();
@@ -26,14 +30,45 @@ class ShopSpareDetailScreen extends StatefulWidget {
 
 class _ShopSpareDetailScreenState extends State<ShopSpareDetailScreen> {
   final SpareService _spareService = SpareService();
+  late final ChatService _chatService = sl<ChatService>();
   SpareProfile? _spare;
   bool _isLoading = true;
   String? _error;
+  bool _isContactLoading = false;
 
   @override
   void initState() {
     super.initState();
     _loadSpare();
+  }
+
+  Future<void> _handleContact() async {
+    final spare = _spare;
+    if (spare == null || _isContactLoading) return;
+    final jobId = widget.jobId;
+    if (jobId == null) {
+      // jobId 없으면 채팅 목록으로
+      if (mounted) context.push(AppRoutes.shopMessages);
+      return;
+    }
+    setState(() => _isContactLoading = true);
+    try {
+      final chatId = await _chatService.ensureChatForJobApplication(
+        jobId: jobId,
+        jobTitle: '',
+        shopName: '',
+        spareId: spare.id,
+        spareName: spare.name ?? spare.username,
+      );
+      if (!mounted) return;
+      NavigationHelper.navigateToChat(context, chatId);
+    } catch (e) {
+      if (!mounted) return;
+      final msg = ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    } finally {
+      if (mounted) setState(() => _isContactLoading = false);
+    }
   }
 
   Future<void> _loadSpare() async {
@@ -170,7 +205,8 @@ class _ShopSpareDetailScreenState extends State<ShopSpareDetailScreen> {
               right: 0,
               bottom: 0,
               child: _SpareDetailBottomBar(
-                onContact: () => context.push(AppRoutes.shopMessages),
+                onContact: _handleContact,
+                isLoading: _isContactLoading,
               ),
             ),
           ],
@@ -712,9 +748,10 @@ class _TrustDivider extends StatelessWidget {
 // ─────────────────────────────────────────
 
 class _SpareDetailBottomBar extends StatelessWidget {
-  const _SpareDetailBottomBar({required this.onContact});
+  const _SpareDetailBottomBar({required this.onContact, this.isLoading = false});
 
   final VoidCallback onContact;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -734,7 +771,7 @@ class _SpareDetailBottomBar extends StatelessWidget {
         width: double.infinity,
         height: 52,
         child: FilledButton(
-          onPressed: onContact,
+          onPressed: isLoading ? null : onContact,
           style: FilledButton.styleFrom(
             backgroundColor: AppTheme.stitchPrimary,
             foregroundColor: Colors.white,
@@ -743,13 +780,16 @@ class _SpareDetailBottomBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
             ),
           ),
-          child: const Text(
-            '연락하기',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          child: isLoading
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : const Text(
+                  '연락하기',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                ),
         ),
       ),
     );

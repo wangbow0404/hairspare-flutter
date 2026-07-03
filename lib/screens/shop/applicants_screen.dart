@@ -189,8 +189,8 @@ class _ShopApplicantsScreenState extends State<ShopApplicantsScreen>
     }
   }
 
-  void _openSpareProfile(String spareId) {
-    ShellNavigation.pushShopSpareDetail(context, spareId);
+  void _openSpareProfile(String spareId, {String? jobId}) {
+    ShellNavigation.pushShopSpareDetail(context, spareId, jobId: jobId);
   }
 
   @override
@@ -246,6 +246,7 @@ class _ShopApplicantsScreenState extends State<ShopApplicantsScreen>
                                 application: application,
                                 onTapProfile: () => _openSpareProfile(
                                   application.spare.id,
+                                  jobId: application.job.id,
                                 ),
                                 onApprove: canApprove
                                     ? () => _handleApprove(application.id)

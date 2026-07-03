@@ -88,7 +88,8 @@ abstract final class SharedLeafRoutes {
             if (spareId == null || spareId.isEmpty) {
               return const SizedBox.shrink();
             }
-            return ShopSpareDetailScreen(spareId: spareId);
+            final jobId = state.uri.queryParameters['jobId'];
+            return ShopSpareDetailScreen(spareId: spareId, jobId: jobId);
           },
         ),
         GoRoute(

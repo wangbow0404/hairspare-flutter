@@ -88,9 +88,12 @@ abstract final class ShellNavigation {
 
   static Future<void> pushShopSpareDetail(
     BuildContext context,
-    String spareId,
-  ) =>
-      push<void>(context, 'shop_spare/$spareId');
+    String spareId, {
+    String? jobId,
+  }) {
+    final uri = jobId == null ? 'shop_spare/$spareId' : 'shop_spare/$spareId?jobId=$jobId';
+    return push<void>(context, uri);
+  }
 
   static Future<void> pushSpaceDetail(BuildContext context, String spaceId) =>
       push<void>(context, 'space/$spaceId');
