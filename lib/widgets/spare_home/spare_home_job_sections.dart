@@ -44,20 +44,36 @@ class SpareHomeJobSections extends StatelessWidget {
       builder: (context, jobProvider, favoriteProvider, _) {
         final favoriteMap = _favoriteMap(favoriteProvider.favoriteJobIds);
         final allJobs = [...jobProvider.urgentJobs, ...jobProvider.normalJobs];
-        final topPopularJobs = JobPopularity.topPopular(allJobs);
-        final newJobs = List<Job>.from(allJobs)
-          ..sort(
-            (a, b) => b.createdAt.compareTo(a.createdAt),
-          );
+
+        // 섹션 간 중복 제거: 위 섹션에서 사용된 ID는 아래 섹션에서 제외
+        final shownIds = <String>{};
+
+        // 긴급 공고 ID를 먼저 예약
+        shownIds.addAll(jobProvider.urgentJobs.map((j) => j.id));
+
+        // 인기 공고: 긴급 공고 제외 후 선택
+        final topPopularJobs = JobPopularity.topPopular(
+          allJobs.where((j) => !shownIds.contains(j.id)).toList(),
+        );
+        shownIds.addAll(topPopularJobs.map((j) => j.id));
+
+        // 신규 공고: 앞 섹션에서 사용된 것 제외
+        final newJobs = List<Job>.from(allJobs.where((j) => !shownIds.contains(j.id)))
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
         final topNewJobs = newJobs.take(10).toList();
+        shownIds.addAll(topNewJobs.map((j) => j.id));
+
+        // 다가오는 샵: 오픈예정 결제 공고만 노출
         final allJobsForUpcoming = jobProvider.normalJobs.isNotEmpty
             ? jobProvider.normalJobs
             : jobProvider.urgentJobs;
-        final upcomingJobs = List<Job>.from(allJobsForUpcoming)
-          ..sort(
-            (a, b) => b.createdAt.compareTo(a.createdAt),
-          );
+        final upcomingJobs = List<Job>.from(
+          allJobsForUpcoming.where(
+            (j) => !shownIds.contains(j.id) && j.isOpeningSoon,
+          ),
+        )..sort((a, b) => b.createdAt.compareTo(a.createdAt));
         final topUpcomingJobs = upcomingJobs.take(3).toList();
+
         final popularJobIds = JobPopularity.popularJobIds(allJobs);
 
         return Column(

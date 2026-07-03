@@ -7,6 +7,7 @@ import '../../screens/shop/applicants_screen.dart';
 import '../../screens/shop/education_new_screen.dart';
 import '../../screens/shop/job_detail_screen.dart';
 import '../../screens/shop/job_new_screen.dart';
+import '../../screens/shop/job_opening_soon_upsell_screen.dart';
 import '../../screens/shop/job_urgent_payment_screen.dart';
 import '../../screens/shop/job_urgent_upsell_screen.dart';
 import '../../screens/shop/messages_screen.dart';
@@ -240,6 +241,19 @@ abstract final class SharedLeafRoutes {
             return ChangeNotifierProvider<ShopJobNewViewModel>.value(
               value: extra.viewModel,
               child: ShopJobUrgentPaymentScreen(formKey: extra.formKey),
+            );
+          },
+        ),
+        GoRoute(
+          path: 'shop_job_opening_soon_upsell',
+          builder: (BuildContext context, GoRouterState state) {
+            final extra = state.extra;
+            if (extra is! ShopJobOpeningSoonExtra) {
+              return const SizedBox.shrink();
+            }
+            return ShopJobOpeningSoonUpsellScreen(
+              jobId: extra.jobId,
+              jobTitle: extra.jobTitle,
             );
           },
         ),

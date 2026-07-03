@@ -23,6 +23,8 @@ class ShopJobUrgentUpsellScreen extends StatelessWidget {
     final ok = await vm.submit(formKey);
     if (!context.mounted) return;
     if (ok) {
+      await _maybeShowOpeningSoonUpsell(context, vm);
+      if (!context.mounted) return;
       Navigator.pop(context, true);
     }
   }
@@ -41,7 +43,23 @@ class ShopJobUrgentUpsellScreen extends StatelessWidget {
         false;
 
     if (!context.mounted || !paid) return;
+    await _maybeShowOpeningSoonUpsell(context, vm);
+    if (!context.mounted) return;
     Navigator.pop(context, true);
+  }
+
+  Future<void> _maybeShowOpeningSoonUpsell(
+    BuildContext context,
+    ShopJobNewViewModel vm,
+  ) async {
+    if (!vm.isFirstJob || vm.lastCreatedJobId == null) return;
+    await ShellNavigation.pushShopJobOpeningSoonUpsell(
+      context,
+      ShopJobOpeningSoonExtra(
+        jobId: vm.lastCreatedJobId!,
+        jobTitle: vm.lastCreatedJobTitle ?? '',
+      ),
+    );
   }
 
   @override

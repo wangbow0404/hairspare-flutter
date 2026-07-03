@@ -67,6 +67,11 @@ class ShopJobNewViewModel extends ChangeNotifier {
   /// 급구 여부. 폼에서는 설정하지 않으며 [setUrgentForRegistration]은 업셀 화면에서만 호출.
   bool isUrgent = false;
   String wageType = 'hourly';
+
+  /// 공고 등록 완료 후 업셀 화면에서 참조하는 값.
+  String? lastCreatedJobId;
+  String? lastCreatedJobTitle;
+  bool isFirstJob = false;
   String address =
       '경기도 파주시 청석로 272, 1004-575호(동패동, 센타프라자1)';
   bool isLoading = false;
@@ -621,7 +626,11 @@ class ShopJobNewViewModel extends ChangeNotifier {
       if (selectedImages.isNotEmpty) {
         imageUrls = await _authService.uploadJobImages(selectedImages);
       }
-      final created = await _jobService.createJob(_buildRequest(imageUrls: imageUrls));
+      final (created, firstJob) =
+          await _jobService.createJob(_buildRequest(imageUrls: imageUrls));
+      lastCreatedJobId = created.id;
+      lastCreatedJobTitle = created.title;
+      isFirstJob = firstJob;
       _m.showSuccess('「${created.title}」 공고가 등록되었습니다');
       return true;
     } catch (e) {

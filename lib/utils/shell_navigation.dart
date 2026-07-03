@@ -212,6 +212,12 @@ abstract final class ShellNavigation {
   ) =>
       push<bool>(context, 'shop_job_urgent_payment', extra: extra);
 
+  static Future<bool?> pushShopJobOpeningSoonUpsell(
+    BuildContext context,
+    ShopJobOpeningSoonExtra extra,
+  ) =>
+      push<bool>(context, 'shop_job_opening_soon_upsell', extra: extra);
+
   static Future<void> pushReviews(
     BuildContext context,
     ReviewsListRouteArgs args,

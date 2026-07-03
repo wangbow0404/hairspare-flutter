@@ -14,8 +14,11 @@ class JobService {
   final Dio _dio = sl<Dio>();
 
   /// 공고 등록
-  Future<Job> createJob(CreateJobRequest request) async {
+  /// 공고 등록. (Job, isFirstJob) 레코드 반환.
+  Future<(Job, bool)> createJob(CreateJobRequest request) async {
     if (ApiConfig.useMockData) {
+      final existingJobs = await MockShopData.getMyJobs();
+      final isFirst = existingJobs.isEmpty;
       final job = Job(
         id: 'mock-job-${DateTime.now().millisecondsSinceEpoch}',
         title: request.title,
@@ -31,11 +34,12 @@ class JobService {
         images: request.imageLocalPaths.isEmpty ? null : request.imageLocalPaths,
         isUrgent: request.isUrgent,
         isPremium: false,
+        isOpeningSoon: false,
         createdAt: DateTime.now(),
         status: 'published',
         ownerId: 'me',
       );
-      return MockShopData.addMyJob(job);
+      return (MockShopData.addMyJob(job), isFirst);
     }
     try {
       final response = await _dio.post(
@@ -49,12 +53,30 @@ class JobService {
             data is Map<String, dynamic> && data['job'] is Map<String, dynamic>
             ? data['job'] as Map<String, dynamic>
             : (data as Map<String, dynamic>);
-        return Job.fromJson(jobJson);
+        final isFirstJob = data is Map<String, dynamic>
+            ? (data['isFirstJob'] as bool? ?? false)
+            : false;
+        return (Job.fromJson(jobJson), isFirstJob);
       }
       throw ServerException(
         '공고 등록 실패: ${response.statusMessage}',
         statusCode: response.statusCode,
       );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 오픈예정 결제 완료 후 공고를 오픈예정 섹션에 노출 설정.
+  Future<void> setOpeningSoon(String jobId) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      return;
+    }
+    try {
+      await _dio.patch('/api/jobs/$jobId', data: {'isOpeningSoon': true});
     } on DioException catch (e) {
       throw ErrorHandler.handleDioException(e);
     } catch (e) {
@@ -137,24 +159,7 @@ class JobService {
     }
     // TODO: 서버에서도 근무일 경과 시 expired 전환·active 필터 지원 필요.
     try {
-      final queryParams = <String, dynamic>{
-        'ownerId': 'me', // 자신이 등록한 공고만 가져오기
-      };
-      if (regionIds != null && regionIds.isNotEmpty) {
-        queryParams['regionIds'] = regionIds;
-      }
-      if (isUrgent != null) queryParams['isUrgent'] = isUrgent;
-      if (dateFrom != null) queryParams['dateFrom'] = dateFrom;
-      if (dateTo != null) queryParams['dateTo'] = dateTo;
-      if (status != null) queryParams['status'] = status;
-      if (search != null && search.isNotEmpty) queryParams['search'] = search;
-      if (limit != null) queryParams['limit'] = limit;
-      if (offset != null) queryParams['offset'] = offset;
-
-      final response = await _dio.get(
-        '/api/jobs',
-        queryParameters: queryParams,
-      );
+      final response = await _dio.get('/api/jobs/my');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;

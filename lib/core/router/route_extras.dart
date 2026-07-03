@@ -35,6 +35,17 @@ final class ShopJobUrgentUpsellExtra {
   final GlobalKey<FormState> formKey;
 }
 
+/// 오픈예정 업셀 화면 — 이미 생성된 공고 ID와 제목만 전달.
+final class ShopJobOpeningSoonExtra {
+  const ShopJobOpeningSoonExtra({
+    required this.jobId,
+    required this.jobTitle,
+  });
+
+  final String jobId;
+  final String jobTitle;
+}
+
 /// 에너지 구매 결제.
 final class EnergyPurchaseCheckoutArgs {
   const EnergyPurchaseCheckoutArgs({

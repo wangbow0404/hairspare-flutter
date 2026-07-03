@@ -30,6 +30,7 @@ class Job {
     this.images,
     required this.isUrgent,
     required this.isPremium,
+    this.isOpeningSoon = false,
     this.countdown,
     required this.createdAt,
     this.ownerId,
@@ -64,6 +65,8 @@ class Job {
   final bool isUrgent;
   @JsonKey(defaultValue: false)
   final bool isPremium;
+  @JsonKey(defaultValue: false)
+  final bool isOpeningSoon;
   @LooseIntNullableConverter()
   final int? countdown;
   @DateTimeOrNowConverter()
@@ -92,6 +95,7 @@ class Job {
     List<String>? images,
     bool? isUrgent,
     bool? isPremium,
+    bool? isOpeningSoon,
     int? countdown,
     DateTime? createdAt,
     String? ownerId,
@@ -114,6 +118,7 @@ class Job {
       images: images ?? this.images,
       isUrgent: isUrgent ?? this.isUrgent,
       isPremium: isPremium ?? this.isPremium,
+      isOpeningSoon: isOpeningSoon ?? this.isOpeningSoon,
       countdown: countdown ?? this.countdown,
       createdAt: createdAt ?? this.createdAt,
       ownerId: ownerId ?? this.ownerId,
