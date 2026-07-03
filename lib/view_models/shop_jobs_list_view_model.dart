@@ -27,19 +27,47 @@ class ShopJobsListViewModel extends ChangeNotifier {
 
   final TextEditingController searchController = TextEditingController();
 
-  /// `all`(진행+마감) | `published` | `closed` | `expired` | `draft`
+  /// `all` | `published` | `closed` | `expired` | `draft`
   String statusFilter = 'all';
 
-  List<Job> jobs = [];
+  List<Job> _allJobs = [];
   Map<String, int> applicantCounts = {};
   bool isLoading = true;
-
-  /// 첫 로드 이후 검색·당겨서 새로고침 등 (목록 유지하며 갱신).
   bool isRefreshing = false;
   bool isLoadingMore = false;
+  bool hasMore = false;
 
-  /// 다음 페이지가 있는지 (마지막 응답 길이가 [pageSize] 미만이면 false).
-  bool hasMore = true;
+  /// job.status가 published여도 시작 시간이 지났으면 expired 반환.
+  static String effectiveStatus(Job job) {
+    if (job.status != 'published') return job.status;
+    try {
+      final parts = job.time.split(':');
+      if (parts.length < 2) return job.status;
+      final jobStart = DateTime(
+        int.parse(job.date.substring(0, 4)),
+        int.parse(job.date.substring(5, 7)),
+        int.parse(job.date.substring(8, 10)),
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+      );
+      return jobStart.isBefore(DateTime.now()) ? 'expired' : 'published';
+    } catch (_) {
+      return job.status;
+    }
+  }
+
+  /// 탭 + 검색어 적용 결과.
+  List<Job> get jobs {
+    var list = _allJobs;
+    if (statusFilter != 'all') {
+      list = list.where((j) => effectiveStatus(j) == statusFilter).toList();
+    }
+    final search = searchController.text.trim().toLowerCase();
+    if (search.isNotEmpty) {
+      list = list.where((j) => j.title.toLowerCase().contains(search)).toList();
+    }
+    return list;
+  }
 
   Timer? _searchDebounce;
 
@@ -64,61 +92,29 @@ class ShopJobsListViewModel extends ChangeNotifier {
     unawaited(refresh());
   }
 
-  /// 탭 변경: 목록을 비운 뒤 첫 페이지부터 다시 로드.
+  /// 탭 변경: API 재호출 없이 client-side 필터만 변경.
   Future<void> setStatusFilter(String value) async {
     if (statusFilter == value) return;
     statusFilter = value;
-    jobs.clear();
-    hasMore = true;
     notifyListeners();
-    await refresh();
   }
 
-  String get _searchParam {
-    final t = searchController.text.trim();
-    return t.isEmpty ? '' : t;
-  }
-
-  String? get _statusApiParam {
-    if (statusFilter == 'all') return 'active';
-    return statusFilter;
-  }
-
-  Future<List<Job>> _fetchPage({required int offset}) {
-    return _jobService.getMyJobs(
-      status: _statusApiParam,
-      search: _searchParam.isEmpty ? null : _searchParam,
-      limit: pageSize,
-      offset: offset,
-    );
-  }
-
-  /// 당겨서 새로고침·초기 로드·검색 공통: 오프셋 0부터 다시 채움.
+  /// 전체 공고를 새로 불러옴 (당겨서 새로고침·초기 로드·검색 공통).
   Future<void> refresh() async {
-    final empty = jobs.isEmpty;
-    if (empty) {
+    if (_allJobs.isEmpty) {
       isLoading = true;
-      isRefreshing = false;
     } else {
       isRefreshing = true;
-      isLoading = false;
     }
-    isLoadingMore = false;
-    hasMore = true;
     notifyListeners();
 
     try {
-      final batch = await _fetchPage(offset: 0);
-      jobs = List<Job>.from(batch);
-      hasMore = batch.length >= pageSize;
+      _allJobs = await _jobService.getMyJobs();
       await _loadApplicantCounts();
     } catch (e) {
       final ex = ErrorHandler.handleException(e);
-      _m.showError(
-        '공고 목록 조회 실패: ${ErrorHandler.getUserFriendlyMessage(ex)}',
-      );
-      jobs = [];
-      hasMore = false;
+      _m.showError('공고 목록 조회 실패: ${ErrorHandler.getUserFriendlyMessage(ex)}');
+      _allJobs = [];
     } finally {
       isLoading = false;
       isRefreshing = false;
@@ -128,27 +124,7 @@ class ShopJobsListViewModel extends ChangeNotifier {
 
   Future<void> loadInitial() => refresh();
 
-  /// 무한 스크롤: 바닥 근처에서 호출.
-  Future<void> loadMore() async {
-    if (!hasMore || isLoadingMore || isLoading || isRefreshing) return;
-    isLoadingMore = true;
-    notifyListeners();
-
-    try {
-      final batch = await _fetchPage(offset: jobs.length);
-      jobs = [...jobs, ...batch];
-      hasMore = batch.length >= pageSize;
-      await _loadApplicantCounts();
-    } catch (e) {
-      final ex = ErrorHandler.handleException(e);
-      _m.showError(
-        '추가 로드 실패: ${ErrorHandler.getUserFriendlyMessage(ex)}',
-      );
-    } finally {
-      isLoadingMore = false;
-      notifyListeners();
-    }
-  }
+  Future<void> loadMore() async {}
 
   Future<void> deleteJob(String jobId) async {
     try {
@@ -167,7 +143,7 @@ class ShopJobsListViewModel extends ChangeNotifier {
     try {
       final apps = await _applicationService.getShopApplications();
       applicantCounts = ShopApplicantCounts.perJobIds(
-        jobIds: jobs.map((j) => j.id),
+        jobIds: _allJobs.map((j) => j.id),
         applications: apps,
       );
       notifyListeners();

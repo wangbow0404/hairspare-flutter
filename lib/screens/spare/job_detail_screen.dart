@@ -102,21 +102,25 @@ class _JobDetailScaffold extends StatelessWidget {
                   }
                 },
                 onAccept: () => _acceptProposalWithConflictCheck(context, vm),
-                primaryLabel: vm.primaryActionLabel,
-                onPrimary: () {
-                  if (vm.engagement == SpareJobEngagement.open) {
-                    _tryOpenApplyFlow(context, vm);
-                    return;
-                  }
-                  final day = vm.linkedSchedule?.date;
-                  NavigationHelper.navigateToWorkCheck(
-                    context,
-                    initialDay:
-                        day != null ? DateTime.tryParse(day) : null,
-                    jobId: vm.jobId,
-                    scheduleId: vm.linkedSchedule?.id,
-                  );
-                },
+                primaryLabel: vm.isJobExpired && vm.engagement == SpareJobEngagement.open
+                    ? '마감된 공고'
+                    : vm.primaryActionLabel,
+                onPrimary: vm.isJobExpired && vm.engagement == SpareJobEngagement.open
+                    ? null
+                    : () {
+                        if (vm.engagement == SpareJobEngagement.open) {
+                          _tryOpenApplyFlow(context, vm);
+                          return;
+                        }
+                        final day = vm.linkedSchedule?.date;
+                        NavigationHelper.navigateToWorkCheck(
+                          context,
+                          initialDay:
+                              day != null ? DateTime.tryParse(day) : null,
+                          jobId: vm.jobId,
+                          scheduleId: vm.linkedSchedule?.id,
+                        );
+                      },
               ),
               if (vm.showVerificationModal)
                 JobDetailVerificationModal(

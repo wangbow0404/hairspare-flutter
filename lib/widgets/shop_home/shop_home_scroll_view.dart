@@ -155,7 +155,7 @@ class ShopHomeScrollView extends StatelessWidget {
                 Expanded(
                   child: dashboardCard(
                     value: '${vm.activeJobCount}',
-                    label: '활성 공고',
+                    label: '내 공고',
                     gradient: const LinearGradient(
                       colors: [Color(0xFF9333EA), Color(0xFFEC4899)],
                     ),

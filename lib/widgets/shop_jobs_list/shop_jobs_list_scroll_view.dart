@@ -319,7 +319,7 @@ class ShopJobsListScrollView extends StatelessWidget {
                       onReopen: () => _confirmReopen(context, vm, job),
                       onDelete: () => _confirmDelete(context, vm, job),
                       onManageApplicants: () => _openApplicants(context, job),
-                      onRepost: job.status == 'expired'
+                      onRepost: ShopJobsListViewModel.effectiveStatus(job) == 'expired'
                           ? () => _openRepostJob(context, vm, job)
                           : null,
                     );

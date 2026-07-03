@@ -10,6 +10,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/shell_navigation.dart';
 import '../../view_models/job_detail_view_model.dart';
+import '../../view_models/shop_jobs_list_view_model.dart';
 import '../../widgets/job_detail/job_detail_scroll_body.dart';
 import '../../widgets/shop_jobs_list/shop_job_detail_bottom_bar.dart';
 
@@ -377,7 +378,7 @@ class _ShopJobDetailBodyState extends State<_ShopJobDetailBody> {
               onReopen: () => widget.onReopen(job),
               onHide: () => widget.onHide(job),
               onUnhide: () => widget.onUnhide(job),
-              onRepost: job.status == 'expired'
+              onRepost: ShopJobsListViewModel.effectiveStatus(job) == 'expired'
                   ? () => widget.onRepost(job)
                   : null,
             ),

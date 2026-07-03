@@ -14,9 +14,7 @@ class JobDetailBottomBar extends StatelessWidget {
     this.onAccept,
     this.isSubmitting = false,
   }) : assert(
-         showProposalActions ||
-             (primaryLabel != null && onPrimary != null) ||
-             isLocked,
+         showProposalActions || primaryLabel != null || isLocked,
        );
 
   final bool isLocked;

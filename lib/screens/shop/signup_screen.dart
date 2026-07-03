@@ -249,31 +249,70 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
     }
   }
 
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: AppTheme.urgentRed),
+    );
+  }
+
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (kSignupPhoneVerificationEnabled && !_phoneVerified) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('휴대폰 인증을 완료해 주세요.')),
-      );
-      return;
+    final username = _usernameController.text.trim();
+    if (username.isEmpty) { _showError('아이디를 입력해 주세요'); return; }
+    if (username.length < 4) { _showError('아이디는 4자 이상이어야 합니다'); return; }
+
+    final password = _passwordController.text;
+    if (password.isEmpty) { _showError('비밀번호를 입력해 주세요'); return; }
+    if (password.length < 8) { _showError('비밀번호는 8자 이상이어야 합니다'); return; }
+    if (!_passwordSpecialCharPattern.hasMatch(password)) {
+      _showError('특수문자를 포함해 주세요'); return;
     }
+
+    final passwordConfirm = _passwordConfirmController.text;
+    if (passwordConfirm.isEmpty) { _showError('비밀번호 확인을 입력해 주세요'); return; }
+    if (passwordConfirm != password) { _showError('비밀번호가 일치하지 않습니다'); return; }
+
+    if (_salonNameController.text.trim().isEmpty) {
+      _showError('미용실 이름을 입력해 주세요'); return;
+    }
+    if (_representativeNameController.text.trim().isEmpty) {
+      _showError('대표자명을 입력해 주세요'); return;
+    }
+    if (_phoneController.text.trim().isEmpty) {
+      _showError('휴대폰 번호를 입력해 주세요'); return;
+    }
+
+    if (_operatorType == ShopOperatorType.proxy) {
+      if (_proxyNameController.text.trim().isEmpty) {
+        _showError('대리인 이름을 입력해 주세요'); return;
+      }
+      if (_proxyRelationController.text.trim().isEmpty) {
+        _showError('대리인 관계를 입력해 주세요'); return;
+      }
+      if (_proxyPhoneController.text.trim().isEmpty) {
+        _showError('대리인 연락처를 입력해 주세요'); return;
+      }
+    }
+
     if (!_regionSelected || _regionLabel == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('샵 위치를 선택해 주세요.')),
-      );
-      return;
+      _showError('샵 위치를 선택해 주세요'); return;
     }
+
+    final bizNumber = _businessNumberController.text.trim();
+    if (bizNumber.isEmpty) { _showError('사업자등록번호를 입력해 주세요'); return; }
+    final bizValidation = BusinessRegistrationValidator.formValidator(bizNumber);
+    if (bizValidation != null) { _showError(bizValidation); return; }
+
+    final openDate = _openDateController.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (openDate.length != 8) { _showError('개업일자 8자리를 입력해 주세요 (예: 20200115)'); return; }
+
     if (_businessLicenseBytes == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('사업자등록증을 첨부해 주세요.')),
-      );
-      return;
+      _showError('사업자등록증을 첨부해 주세요'); return;
     }
     if (!_allRequiredTermsAccepted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('필수 약관에 동의해 주세요.')),
-      );
-      return;
+      _showError('필수 약관에 동의해 주세요'); return;
+    }
+    if (kSignupPhoneVerificationEnabled && !_phoneVerified) {
+      _showError('휴대폰 인증을 완료해 주세요'); return;
     }
 
     final auth = context.read<AuthProvider>();
@@ -360,15 +399,6 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
                     controller: _usernameController,
                     label: '아이디',
                     hint: '아이디를 입력하세요',
-                    validator: (v) {
-                      if (v == null || v.isEmpty) {
-                        return '아이디를 입력해 주세요';
-                      }
-                      if (v.length < 4) {
-                        return '아이디는 4자 이상이어야 합니다';
-                      }
-                      return null;
-                    },
                   ),
                   const SizedBox(height: AppTheme.spacing4),
                   SpareSignupLabeledField(
@@ -387,18 +417,6 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
                       onPressed: () =>
                           setState(() => _obscurePassword = !_obscurePassword),
                     ),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) {
-                        return '비밀번호를 입력해 주세요';
-                      }
-                      if (v.length < 8) {
-                        return '비밀번호는 8자 이상이어야 합니다';
-                      }
-                      if (!_passwordSpecialCharPattern.hasMatch(v)) {
-                        return '특수문자를 포함해 주세요';
-                      }
-                      return null;
-                    },
                   ),
                   const SizedBox(height: AppTheme.spacing4),
                   SpareSignupLabeledField(
@@ -419,9 +437,6 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
                             _obscurePasswordConfirm = !_obscurePasswordConfirm,
                       ),
                     ),
-                    validator: (v) => v != _passwordController.text
-                        ? '비밀번호가 일치하지 않습니다'
-                        : null,
                   ),
                 ],
               ),
@@ -435,18 +450,12 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
                     controller: _salonNameController,
                     label: '미용실 이름',
                     hint: '상호명을 입력하세요',
-                    validator: (v) => v == null || v.trim().isEmpty
-                        ? '미용실 이름을 입력해 주세요'
-                        : null,
                   ),
                   const SizedBox(height: AppTheme.spacing4),
                   SpareSignupLabeledField(
                     controller: _representativeNameController,
                     label: '대표자명',
                     hint: '사업자등록증 대표자명',
-                    validator: (v) => v == null || v.trim().isEmpty
-                        ? '대표자명을 입력해 주세요'
-                        : null,
                   ),
                   const SizedBox(height: AppTheme.spacing4),
                   SpareSignupPhoneVerificationField(
@@ -457,9 +466,6 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
                     isLoading: _isPhoneVerifying,
                     onSendCode: _sendPhoneVerification,
                     onVerifyCode: _verifyPhoneCode,
-                    phoneValidator: (v) => v == null || v.trim().isEmpty
-                        ? '휴대폰 번호를 입력해 주세요'
-                        : null,
                   ),
                   const SizedBox(height: AppTheme.spacing4),
                   SpareSignupLabeledField(
@@ -519,7 +525,6 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
                       FilteringTextInputFormatter.digitsOnly,
                       LengthLimitingTextInputFormatter(10),
                     ],
-                    validator: BusinessRegistrationValidator.formValidator,
                   ),
                   const SizedBox(height: AppTheme.spacing4),
                   SpareSignupLabeledField(
@@ -531,14 +536,6 @@ class _ShopSignupScreenState extends State<ShopSignupScreen> {
                       FilteringTextInputFormatter.digitsOnly,
                       LengthLimitingTextInputFormatter(8),
                     ],
-                    validator: (v) {
-                      final digits =
-                          (v ?? '').replaceAll(RegExp(r'[^0-9]'), '');
-                      if (digits.length != 8) {
-                        return '개업일자 8자리를 입력해 주세요 (예: 20200115)';
-                      }
-                      return null;
-                    },
                   ),
                   const SizedBox(height: AppTheme.spacing2),
                   Text(

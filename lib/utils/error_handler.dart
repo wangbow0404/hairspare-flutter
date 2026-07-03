@@ -266,7 +266,9 @@ class ErrorHandler {
     }
 
     if (error is AuthenticationException) {
-      return '로그인이 필요합니다. 다시 로그인해주세요.';
+      return error.message.isNotEmpty
+          ? error.message
+          : '로그인이 필요합니다. 다시 로그인해주세요.';
     }
 
     if (error is PermissionException) {

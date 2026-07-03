@@ -30,11 +30,31 @@ class JobProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _jobs = await _jobService.getJobs(
+      final raw = await _jobService.getJobs(
         regionIds: regionIds,
         isUrgent: isUrgent,
         searchQuery: searchQuery,
       );
+
+      final now = DateTime.now();
+      bool notExpired(Job job) {
+        try {
+          final parts = job.time.split(':');
+          if (parts.length < 2) return true;
+          final start = DateTime(
+            int.parse(job.date.substring(0, 4)),
+            int.parse(job.date.substring(5, 7)),
+            int.parse(job.date.substring(8, 10)),
+            int.parse(parts[0]),
+            int.parse(parts[1]),
+          );
+          return start.isAfter(now);
+        } catch (_) {
+          return true;
+        }
+      }
+
+      _jobs = raw.where(notExpired).toList();
 
       // 급구와 일반 공고 분리
       _urgentJobs = _jobs.where((job) => job.isUrgent).toList();

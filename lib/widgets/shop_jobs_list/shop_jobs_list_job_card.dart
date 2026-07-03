@@ -139,7 +139,26 @@ class ShopJobsListJobCard extends StatelessWidget {
   final VoidCallback onManageApplicants;
   final VoidCallback? onRepost;
 
-  bool get _isExpired => job.status == 'expired';
+  bool get _isExpired {
+    if (job.status == 'expired') return true;
+    if (job.status != 'published') return false;
+    try {
+      final parts = job.time.split(':');
+      if (parts.length < 2) return false;
+      final jobStart = DateTime(
+        int.parse(job.date.substring(0, 4)),
+        int.parse(job.date.substring(5, 7)),
+        int.parse(job.date.substring(8, 10)),
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+      );
+      return jobStart.isBefore(DateTime.now());
+    } catch (_) {
+      return false;
+    }
+  }
+
+  String get _effectiveStatus => _isExpired && job.status == 'published' ? 'expired' : job.status;
 
   @override
   Widget build(BuildContext context) {
@@ -226,7 +245,7 @@ class ShopJobsListJobCard extends StatelessWidget {
                               spacing: AppTheme.spacing1,
                               runSpacing: AppTheme.spacing1,
                               children: [
-                                ShopJobStatusBadge(status: job.status),
+                                ShopJobStatusBadge(status: _effectiveStatus),
                                 if (job.isHidden)
                                   Container(
                                     padding: const EdgeInsets.symmetric(

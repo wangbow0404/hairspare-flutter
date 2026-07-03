@@ -115,44 +115,45 @@ class _SpareSignupModelScreenState extends State<SpareSignupModelScreen> {
     }
   }
 
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: AppTheme.urgentRed),
+    );
+  }
+
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (!_regionSelected || _gender == null || _hairLength == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('필수 프로필 항목을 선택해 주세요.')),
-      );
-      return;
+    final username = _usernameController.text.trim();
+    if (username.isEmpty) { _showError('아이디를 입력해 주세요'); return; }
+    if (username.length < 4) { _showError('아이디는 4자 이상이어야 합니다'); return; }
+
+    final password = _passwordController.text;
+    if (password.isEmpty) { _showError('비밀번호를 입력해 주세요'); return; }
+    if (password.length < 6) { _showError('비밀번호는 6자 이상이어야 합니다'); return; }
+
+    final passwordConfirm = _passwordConfirmController.text;
+    if (passwordConfirm.isEmpty) { _showError('비밀번호 확인을 입력해 주세요'); return; }
+    if (passwordConfirm != password) { _showError('비밀번호가 일치하지 않습니다'); return; }
+
+    if (_nameController.text.trim().isEmpty) { _showError('이름을 입력해 주세요'); return; }
+    if (_phoneController.text.trim().isEmpty) { _showError('휴대폰 번호를 입력해 주세요'); return; }
+
+    if (_photoBytes.isEmpty) { _showError('프로필 사진을 1장 이상 등록해 주세요'); return; }
+
+    if (_birthDate == null) { _showError('생년월일을 선택해 주세요'); return; }
+    if (!BirthDateUtils.isValidSignupBirthDate(_birthDate!)) {
+      _showError('만 14세 이상만 가입할 수 있습니다'); return;
     }
-    if (_birthDate == null ||
-        !BirthDateUtils.isValidSignupBirthDate(_birthDate!)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('생년월일을 올바르게 선택해 주세요. (만 14세 이상)')),
-      );
-      return;
-    }
-    if (_career == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('모델 경력을 선택해 주세요.')),
-      );
-      return;
-    }
-    if (_treatments.isEmpty || _imageTags.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('선호 시술과 모델 이미지를 선택해 주세요.')),
-      );
-      return;
-    }
-    if (_photoBytes.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('프로필 사진을 1장 이상 등록해 주세요.')),
-      );
-      return;
-    }
+
+    if (_gender == null) { _showError('성별을 선택해 주세요'); return; }
+    if (!_regionSelected || _regionLabel == null) { _showError('활동 지역을 선택해 주세요'); return; }
+    if (_hairLength == null) { _showError('현재 기장을 선택해 주세요'); return; }
+    if (_treatments.isEmpty) { _showError('선호 시술을 선택해 주세요'); return; }
+    if (_imageTags.isEmpty) { _showError('모델 이미지를 선택해 주세요'); return; }
+    if (_career == null) { _showError('모델 경력을 선택해 주세요'); return; }
+    if (_introController.text.trim().isEmpty) { _showError('한줄 소개를 입력해 주세요'); return; }
+
     if (!_allTermsAccepted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('필수 약관에 동의해 주세요.')),
-      );
-      return;
+      _showError('필수 약관에 동의해 주세요'); return;
     }
 
     final auth = context.read<AuthProvider>();
@@ -305,8 +306,6 @@ class _SpareSignupModelScreenState extends State<SpareSignupModelScreen> {
               hint: '50자 내외로 자신을 소개해 주세요',
               prefixIcon: Icons.notes_outlined,
               maxLines: 2,
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? '한줄 소개를 입력해 주세요' : null,
             ),
             const SizedBox(height: AppTheme.spacing8),
             DecoratedBox(
@@ -383,11 +382,6 @@ class _SpareSignupModelScreenState extends State<SpareSignupModelScreen> {
         controller: _usernameController,
         label: '아이디 *',
         prefixIcon: Icons.person_outline,
-        validator: (v) {
-          if (v == null || v.isEmpty) return '아이디를 입력해 주세요';
-          if (v.length < 4) return '아이디는 4자 이상이어야 합니다';
-          return null;
-        },
       ),
       const SizedBox(height: AppTheme.spacing4),
       SpareSignupTextField(
@@ -401,11 +395,6 @@ class _SpareSignupModelScreenState extends State<SpareSignupModelScreen> {
           ),
           onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
         ),
-        validator: (v) {
-          if (v == null || v.isEmpty) return '비밀번호를 입력해 주세요';
-          if (v.length < 6) return '비밀번호는 6자 이상이어야 합니다';
-          return null;
-        },
       ),
       const SizedBox(height: AppTheme.spacing4),
       SpareSignupTextField(
@@ -421,16 +410,12 @@ class _SpareSignupModelScreenState extends State<SpareSignupModelScreen> {
             () => _obscurePasswordConfirm = !_obscurePasswordConfirm,
           ),
         ),
-        validator: (v) =>
-            v != _passwordController.text ? '비밀번호가 일치하지 않습니다' : null,
       ),
       const SizedBox(height: AppTheme.spacing4),
       SpareSignupTextField(
         controller: _nameController,
         label: '이름 *',
         prefixIcon: Icons.badge_outlined,
-        validator: (v) =>
-            v == null || v.trim().isEmpty ? '이름을 입력해 주세요' : null,
       ),
       const SizedBox(height: AppTheme.spacing4),
       SpareSignupTextField(
@@ -438,8 +423,6 @@ class _SpareSignupModelScreenState extends State<SpareSignupModelScreen> {
         label: '휴대폰 *',
         prefixIcon: Icons.phone_outlined,
         keyboardType: TextInputType.phone,
-        validator: (v) =>
-            v == null || v.trim().isEmpty ? '휴대폰 번호를 입력해 주세요' : null,
       ),
       const SizedBox(height: AppTheme.spacing4),
       SpareSignupTextField(

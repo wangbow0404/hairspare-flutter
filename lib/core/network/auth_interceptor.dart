@@ -61,7 +61,7 @@ class AuthInterceptor extends Interceptor {
     final statusCode = err.response?.statusCode;
     final requestOptions = err.requestOptions;
 
-    if (statusCode != 401 || _isRefreshRequest(requestOptions)) {
+    if (statusCode != 401 || _isRefreshRequest(requestOptions) || _isLoginRequest(requestOptions)) {
       handler.next(err);
       return;
     }
@@ -95,6 +95,9 @@ class AuthInterceptor extends Interceptor {
 
   bool _isRefreshRequest(RequestOptions options) =>
       options.path.endsWith(_refreshPath) || options.path == _refreshPath;
+
+  bool _isLoginRequest(RequestOptions options) =>
+      options.path.contains('/api/auth/login');
 
   Future<void> _ensureRefreshedAccessToken() async {
     if (_isRefreshing) {

@@ -99,6 +99,25 @@ class JobDetailViewModel extends ChangeNotifier {
   bool get usesSchedulePrimaryAction =>
       engagement != SpareJobEngagement.open;
 
+  bool get isJobExpired {
+    final j = job;
+    if (j == null || j.date.isEmpty || j.time.isEmpty) return false;
+    try {
+      final timeParts = j.time.split(':');
+      if (timeParts.length < 2) return false;
+      final jobStart = DateTime(
+        int.parse(j.date.substring(0, 4)),
+        int.parse(j.date.substring(5, 7)),
+        int.parse(j.date.substring(8, 10)),
+        int.parse(timeParts[0]),
+        int.parse(timeParts[1]),
+      );
+      return jobStart.isBefore(DateTime.now());
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> _refreshApplicationState() async {
     if (shopOwnerMode) return;
     try {
