@@ -246,8 +246,6 @@ class _SpareDetailProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final roleLabel = spare.role == 'designer' ? '디자이너' : '스텝';
-    final hasBadge = spare.isVerified || spare.isLicenseVerified;
-
     return Container(
       padding: const EdgeInsets.fromLTRB(
         AppTheme.spacing6,
@@ -277,16 +275,9 @@ class _SpareDetailProfileHeader extends StatelessWidget {
               color: AppTheme.stitchTextSecondary,
             ),
           ),
-          if (hasBadge) ...[
+          if (spare.isVerified) ...[
             const SizedBox(height: AppTheme.spacing3),
-            Wrap(
-              spacing: AppTheme.spacing2,
-              runSpacing: AppTheme.spacing2,
-              children: [
-                if (spare.isVerified) _VerificationBadge(label: '본인인증'),
-                if (spare.isLicenseVerified) _VerificationBadge(label: '면허인증'),
-              ],
-            ),
+            _VerificationBadge(label: '본인인증'),
           ],
         ],
       ),
