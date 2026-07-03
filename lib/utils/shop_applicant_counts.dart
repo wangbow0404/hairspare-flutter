@@ -45,10 +45,30 @@ abstract final class ShopApplicantCounts {
     };
   }
 
+  static bool _isJobExpired(Application a) {
+    try {
+      final date = a.job.date;
+      final parts = a.job.time.split(':');
+      if (parts.length < 2) return false;
+      final jobStart = DateTime(
+        int.parse(date.substring(0, 4)),
+        int.parse(date.substring(5, 7)),
+        int.parse(date.substring(8, 10)),
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+      );
+      return jobStart.isBefore(DateTime.now());
+    } catch (_) {
+      return false;
+    }
+  }
+
   static int pending(Iterable<Application> applications) =>
       applications
           .where(
-            (a) => ApplicationStatusUtils.normalize(a.status) == 'pending',
+            (a) =>
+                ApplicationStatusUtils.normalize(a.status) == 'pending' &&
+                !_isJobExpired(a),
           )
           .length;
 
