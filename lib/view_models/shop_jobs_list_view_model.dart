@@ -7,6 +7,7 @@ import '../core/services/global_messenger_service.dart';
 import '../models/job.dart';
 import '../services/application_service.dart';
 import '../services/job_service.dart';
+import '../utils/app_exception.dart';
 import '../utils/error_handler.dart';
 import '../utils/shop_applicant_counts.dart';
 
@@ -126,11 +127,16 @@ class ShopJobsListViewModel extends ChangeNotifier {
 
   Future<void> loadMore() async {}
 
-  Future<void> deleteJob(String jobId) async {
+  /// 승인된 지원자가 있어 사유가 필요하면 [ValidationException](code: REASON_REQUIRED)를
+  /// 그대로 던진다 — 호출부(화면)에서 사유 입력 다이얼로그를 띄우도록.
+  Future<void> deleteJob(String jobId, {String? reason}) async {
     try {
-      await _jobService.deleteJob(jobId);
+      await _jobService.deleteJob(jobId, reason: reason);
       await refresh();
       _m.showSuccess('공고가 삭제되었습니다');
+    } on ValidationException catch (e) {
+      if (e.code == 'REASON_REQUIRED') rethrow;
+      _m.showError('삭제 실패: ${ErrorHandler.getUserFriendlyMessage(e)}');
     } catch (e) {
       final ex = ErrorHandler.handleException(e);
       _m.showError(

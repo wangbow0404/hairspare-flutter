@@ -23,6 +23,7 @@ abstract final class SpareNotificationNavigation {
       case 'schedule_reminder':
       case 'schedule_confirmed':
       case 'schedule_cancelled':
+      case 'job_cancelled':
         NavigationHelper.navigateToWorkCheck(
           context,
           initialDay: _parseScheduleDay(notification),

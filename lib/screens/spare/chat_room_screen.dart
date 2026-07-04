@@ -321,6 +321,42 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     }
   }
 
+  Widget _buildAvatarBubble({
+    required String? imageUrl,
+    required String fallbackLetter,
+    required List<Color> gradientColors,
+  }) {
+    final hasImage = imageUrl != null && imageUrl.isNotEmpty;
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        gradient: hasImage
+            ? null
+            : LinearGradient(colors: gradientColors),
+        borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
+        image: hasImage
+            ? DecorationImage(
+                image: NetworkImage(imageUrl),
+                fit: BoxFit.cover,
+              )
+            : null,
+      ),
+      child: hasImage
+          ? null
+          : Center(
+              child: Text(
+                fallbackLetter,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+    );
+  }
+
   String _formatTime(DateTime dateTime) {
     final now = DateTime.now();
     final diff = now.difference(dateTime);
@@ -490,30 +526,15 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             if (!isMyMessage && showProfile)
-                              Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      AppTheme.stitchPrimaryContainer,
-                                      AppTheme.stitchPrimary,
-                                    ],
-                                  ),
-                                  borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    message.senderName.isNotEmpty
-                                        ? message.senderName[0]
-                                        : '?',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
+                              _buildAvatarBubble(
+                                imageUrl: otherUserAvatarUrl,
+                                fallbackLetter: message.senderName.isNotEmpty
+                                    ? message.senderName[0]
+                                    : '?',
+                                gradientColors: [
+                                  AppTheme.stitchPrimaryContainer,
+                                  AppTheme.stitchPrimary,
+                                ],
                               )
                             else if (!isMyMessage)
                               const SizedBox(width: 32),
@@ -573,28 +594,18 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                             ),
                             const SizedBox(width: AppTheme.spacing2),
                             if (isMyMessage && showProfile)
-                              Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [AppTheme.primaryPurple, AppTheme.primaryPurpleDarker],
-                                  ),
-                                  borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-                                ),
-                                child: Center(
-                                    child: Text(
-                                        () {
-                                          final name = authProvider.currentUser?.name;
-                                          return (name != null && name.isNotEmpty) ? name[0] : '나';
-                                        }(),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
+                              _buildAvatarBubble(
+                                imageUrl: currentUser?.profileImage,
+                                fallbackLetter: () {
+                                  final name = currentUser?.name;
+                                  return (name != null && name.isNotEmpty)
+                                      ? name[0]
+                                      : '나';
+                                }(),
+                                gradientColors: const [
+                                  AppTheme.primaryPurple,
+                                  AppTheme.primaryPurpleDarker,
+                                ],
                               )
                             else if (isMyMessage)
                               const SizedBox(width: 32),

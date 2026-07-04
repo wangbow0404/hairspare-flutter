@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../models/job.dart';
 import '../../theme/app_theme.dart';
 import '../common/shared_app_bar.dart';
+import '../../utils/app_exception.dart';
 import '../../utils/icon_mapper.dart';
 import '../../utils/shell_navigation.dart';
 import '../../view_models/shop_jobs_list_view_model.dart';
@@ -40,9 +41,57 @@ class ShopJobsListScrollView extends StatelessWidget {
         ],
       ),
     );
-    if (ok == true && context.mounted) {
+    if (ok != true || !context.mounted) return;
+
+    try {
       await vm.deleteJob(job.id);
+    } on ValidationException catch (e) {
+      if (e.code != 'REASON_REQUIRED' || !context.mounted) return;
+      final reason = await _promptDeleteReason(context);
+      if (reason != null && reason.trim().isNotEmpty && context.mounted) {
+        await vm.deleteJob(job.id, reason: reason.trim());
+      }
     }
+  }
+
+  Future<String?> _promptDeleteReason(BuildContext context) {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('삭제 사유 입력'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '이미 승인된 지원자가 있는 공고입니다.\n삭제 사유를 입력하면 지원자에게 전달됩니다.',
+            ),
+            const SizedBox(height: AppTheme.spacing3),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                hintText: '예: 매장 사정으로 인해 근무가 취소되었습니다',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, controller.text),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.urgentRed),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _openRepostJob(

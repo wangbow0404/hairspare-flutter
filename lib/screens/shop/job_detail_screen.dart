@@ -7,6 +7,7 @@ import '../../models/job.dart';
 import '../../services/application_service.dart';
 import '../../services/job_service.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/app_exception.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/shell_navigation.dart';
 import '../../view_models/job_detail_view_model.dart';
@@ -72,6 +73,29 @@ class _ShopJobDetailScreenState extends State<ShopJobDetailScreen> {
       if (!mounted) return;
       _messenger.showSuccess('공고가 삭제되었습니다');
       Navigator.pop(context, true);
+    } on ValidationException catch (e) {
+      if (e.code == 'REASON_REQUIRED') {
+        setState(() => _actionBusy = false);
+        if (!mounted) return;
+        final reason = await _promptDeleteReason();
+        if (reason == null || reason.trim().isEmpty || !mounted) return;
+        setState(() => _actionBusy = true);
+        try {
+          await _jobService.deleteJob(job.id, reason: reason.trim());
+          if (!mounted) return;
+          _messenger.showSuccess('공고가 삭제되었습니다');
+          Navigator.pop(context, true);
+        } catch (e2) {
+          final ex = ErrorHandler.handleException(e2);
+          _messenger.showError(
+            '삭제 실패: ${ErrorHandler.getUserFriendlyMessage(ex)}',
+          );
+        }
+      } else {
+        _messenger.showError(
+          '삭제 실패: ${ErrorHandler.getUserFriendlyMessage(e)}',
+        );
+      }
     } catch (e) {
       final ex = ErrorHandler.handleException(e);
       _messenger.showError(
@@ -80,6 +104,46 @@ class _ShopJobDetailScreenState extends State<ShopJobDetailScreen> {
     } finally {
       if (mounted) setState(() => _actionBusy = false);
     }
+  }
+
+  Future<String?> _promptDeleteReason() {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('삭제 사유 입력'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '이미 승인된 지원자가 있는 공고입니다.\n삭제 사유를 입력하면 지원자에게 전달됩니다.',
+            ),
+            const SizedBox(height: AppTheme.spacing3),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                hintText: '예: 매장 사정으로 인해 근무가 취소되었습니다',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, controller.text),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.urgentRed),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _confirmHide(Job job) async {

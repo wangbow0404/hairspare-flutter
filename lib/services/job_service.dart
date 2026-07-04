@@ -415,15 +415,19 @@ class JobService {
     }
   }
 
-  /// 공고 삭제
-  Future<void> deleteJob(String jobId) async {
+  /// 공고 삭제.
+  /// 이미 승인된 지원자가 있으면 백엔드가 [reason] 없이는 REASON_REQUIRED로 거부한다.
+  Future<void> deleteJob(String jobId, {String? reason}) async {
     if (ApiConfig.useMockData) {
       final ok = await MockShopData.deleteMyJob(jobId);
       if (!ok) throw NotFoundException('공고를 찾을 수 없습니다');
       return;
     }
     try {
-      final response = await _dio.delete('/api/jobs/$jobId');
+      final response = await _dio.delete(
+        '/api/jobs/$jobId',
+        data: reason != null ? {'reason': reason} : null,
+      );
 
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw ServerException(
@@ -432,6 +436,19 @@ class JobService {
         );
       }
     } on DioException catch (e) {
+      final errorBody = e.response?.data;
+      final code = errorBody is Map
+          ? (errorBody['error']?['code'] as String?)
+          : null;
+      if (code == 'REASON_REQUIRED') {
+        final message = errorBody is Map
+            ? (errorBody['error']?['message'] as String?)
+            : null;
+        throw ValidationException(
+          message ?? '삭제 사유를 입력해주세요',
+          code: 'REASON_REQUIRED',
+        );
+      }
       throw ErrorHandler.handleDioException(e);
     } catch (e) {
       throw ErrorHandler.handleException(e);
