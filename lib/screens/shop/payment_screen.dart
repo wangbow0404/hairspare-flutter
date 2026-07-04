@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/di/service_locator.dart';
 import '../../core/router/app_navigation.dart';
+import '../../services/payment_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/icon_mapper.dart';
@@ -17,6 +19,7 @@ class ShopPaymentScreen extends StatefulWidget {
 }
 
 class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
+  final PaymentService _paymentService = sl<PaymentService>();
   bool _isLoading = true;
   Map<String, dynamic>? _subscription;
   List<Map<String, dynamic>> _paymentHistory = [];
@@ -30,7 +33,8 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
   Future<void> _loadPaymentData() async {
     setState(() => _isLoading = true);
     try {
-      // TODO: 구독 정보 및 결제 내역 API 연동
+      // 구독 결제 시스템 준비 전이라 항상 무료 상태로 표시한다.
+      final payments = await _paymentService.getPayments();
       setState(() {
         _subscription = {
           'name': '무료',
@@ -38,32 +42,16 @@ class _ShopPaymentScreenState extends State<ShopPaymentScreen> {
           'isActive': false,
           'dailyFreeChats': 0,
         };
-        _paymentHistory = [
-          {
-            'id': 'pay-1',
-            'type': 'subscription',
-            'amount': 99000,
-            'status': 'success',
-            'description': '프리미엄 구독 (1개월)',
-            'createdAt': DateTime.now().subtract(const Duration(days: 5)),
-          },
-          {
-            'id': 'pay-2',
-            'type': 'premium_job',
-            'amount': 5000,
-            'status': 'success',
-            'description': '프리미엄 고정 공고',
-            'createdAt': DateTime.now().subtract(const Duration(days: 2)),
-          },
-          {
-            'id': 'pay-3',
-            'type': 'chat',
-            'amount': 2000,
-            'status': 'pending',
-            'description': '추가 채팅 1회',
-            'createdAt': DateTime.now().subtract(const Duration(days: 1)),
-          },
-        ];
+        _paymentHistory = payments
+            .map((p) => {
+                  'id': p.id,
+                  'type': p.type,
+                  'amount': p.amount,
+                  'status': p.status,
+                  'description': p.description ?? '',
+                  'createdAt': p.createdAt,
+                })
+            .toList();
         _isLoading = false;
       });
     } catch (e) {

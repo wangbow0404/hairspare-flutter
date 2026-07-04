@@ -73,7 +73,7 @@ class ShopHomeViewModel extends ChangeNotifier {
           regionIds: nearbyIds,
           limit: 10,
         ),
-        MockShopData.getSpares(sortBy: 'popular'),
+        _spareService.getSpares(sortBy: 'popular'),
       ]);
 
       final jobs = results[1] as List<Job>;
