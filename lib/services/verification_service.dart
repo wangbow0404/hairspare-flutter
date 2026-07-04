@@ -131,27 +131,66 @@ class VerificationService {
     }
   }
 
-  /// 샵 사업자 인증 신청 제출
-  Future<void> submitShopBusinessVerification(
+  /// 이미지 파일을 R2에 업로드하고 URL을 받는다 (사업자등록증·신분증 공용).
+  Future<String> _uploadVerificationImage(File file, String folder) async {
+    final response = await _dio.post(
+      '/api/auth/upload-image',
+      data: FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          file.path,
+          filename: '$folder-${DateTime.now().millisecondsSinceEpoch}.jpg',
+        ),
+      }),
+      queryParameters: {'folder': folder},
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = response.data['data'] ?? response.data;
+      final url = data is Map ? data['url']?.toString() : null;
+      if (url == null || url.isEmpty) {
+        throw ServerException('이미지 업로드 응답이 올바르지 않습니다');
+      }
+      return url;
+    }
+    throw ServerException(
+      '이미지 업로드 실패: ${response.statusMessage}',
+      statusCode: response.statusCode,
+    );
+  }
+
+  /// 샵 사업자 인증 신청(최초) / 재신청(수정) 제출.
+  /// 등록증·신분증 이미지를 먼저 업로드해 URL을 받은 뒤 JSON으로 전송한다.
+  Future<ShopBusinessVerificationSnapshot> submitShopBusinessVerification(
     ShopBusinessVerificationSubmit submit,
   ) async {
     if (ApiConfig.useMockData) {
       await Future<void>.delayed(const Duration(milliseconds: 500));
-      return;
+      return const ShopBusinessVerificationSnapshot(status: 'pending');
     }
     try {
-      // Phase 2: license 업로드와 동일하게 FormData multipart 전송.
-      // final formData = FormData.fromMap({
-      //   'businessNumber': submit.businessNumber,
-      //   ...
-      //   'businessRegistration': await MultipartFile.fromFile(...),
-      //   if (submit.idCardLocalPath != null)
-      //     'idCard': await MultipartFile.fromFile(...),
-      // });
-      // await _dio.post('/api/shop/business-verification', data: formData);
+      final businessLicenseUrl = await _uploadVerificationImage(
+        File(submit.businessRegistrationLocalPath),
+        'shop-licenses',
+      );
+      String? idCardUrl;
+      if (submit.idCardLocalPath != null && submit.idCardLocalPath!.isNotEmpty) {
+        idCardUrl = await _uploadVerificationImage(
+          File(submit.idCardLocalPath!),
+          'shop-id-cards',
+        );
+      }
+
       final response = await _dio.post(
         '/api/shop/business-verification',
-        data: submit.toJson(),
+        data: {
+          'businessNumber': submit.businessNumber,
+          'businessName': submit.businessName,
+          'representativeName': submit.representativeName,
+          'businessType': submit.businessType,
+          'businessCategory': submit.businessCategory,
+          'address': submit.address,
+          'businessLicenseUrl': businessLicenseUrl,
+          if (idCardUrl != null) 'idCardUrl': idCardUrl,
+        },
       );
       if (response.statusCode != 200 &&
           response.statusCode != 201 &&
@@ -161,6 +200,19 @@ class VerificationService {
           statusCode: response.statusCode,
         );
       }
+      final data = response.data['data'] ?? response.data;
+      final map = data is Map<String, dynamic> ? data : <String, dynamic>{};
+      return ShopBusinessVerificationSnapshot(
+        status: map['status']?.toString() ?? 'pending',
+        rejectionReason: map['rejectionReason']?.toString(),
+        verifiedAt: map['verifiedAt']?.toString(),
+        businessNumber: map['businessNumber']?.toString(),
+        businessName: map['businessName']?.toString(),
+        representativeName: map['representativeName']?.toString(),
+        businessType: map['businessType']?.toString(),
+        businessCategory: map['businessCategory']?.toString(),
+        address: map['address']?.toString(),
+      );
     } on DioException catch (e) {
       throw ErrorHandler.handleDioException(e);
     } catch (e) {

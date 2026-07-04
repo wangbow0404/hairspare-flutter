@@ -8,6 +8,7 @@ import 'package:hairspare/core/di/service_locator.dart';
 import 'package:hairspare/core/services/global_messenger_service.dart';
 import 'package:hairspare/models/business_registration_ocr_result.dart';
 import 'package:hairspare/models/business_registration_validation.dart';
+import 'package:hairspare/models/shop_business_verification_snapshot.dart';
 import 'package:hairspare/models/shop_business_verification_submit.dart';
 import 'package:hairspare/services/verification_service.dart';
 import 'package:hairspare/utils/business_registration_validator.dart';
@@ -191,6 +192,18 @@ class ShopVerificationViewModel extends ChangeNotifier {
 
   Future<void> _loadBusinessSnapshot() async {
     final snap = await _verificationService.getShopBusinessVerification();
+    _applySnapshot(snap);
+    // 승인/거절 여부와 무관하게 폼에 기존 값을 미리 채워둔다 — '수정하기'를
+    // 눌렀을 때 처음부터 다시 입력하지 않도록.
+    businessNumberController.text = snap.businessNumber ?? '';
+    businessNameController.text = snap.businessName ?? '';
+    representativeNameController.text = snap.representativeName ?? '';
+    businessTypeController.text = snap.businessType ?? '';
+    businessCategoryController.text = snap.businessCategory ?? '';
+    addressController.text = snap.address ?? '';
+  }
+
+  void _applySnapshot(ShopBusinessVerificationSnapshot snap) {
     businessPhase = ShopBusinessVerificationUiPhase.fromStatus(snap.status);
     rejectionReason = snap.rejectionReason;
     verifiedAt = snap.verifiedAt;
@@ -200,6 +213,19 @@ class ShopVerificationViewModel extends ChangeNotifier {
     snapshotBusinessType = snap.businessType;
     snapshotBusinessCategory = snap.businessCategory;
     snapshotAddress = snap.address;
+  }
+
+  /// 승인된 사업자 정보를 다시 수정하고 싶을 때(폼 강제 표시).
+  bool isEditingApprovedBusinessInfo = false;
+
+  void startEditingBusinessInfo() {
+    isEditingApprovedBusinessInfo = true;
+    notifyListeners();
+  }
+
+  void cancelEditingBusinessInfo() {
+    isEditingApprovedBusinessInfo = false;
+    notifyListeners();
   }
 
   Future<void> _loadIdentityStatus() async {
@@ -429,10 +455,13 @@ class ShopVerificationViewModel extends ChangeNotifier {
         idCardLocalPath: idCardFile?.path,
         ocrRequestId: ocrResult?.requestId,
       );
-      await _verificationService.submitShopBusinessVerification(submit);
-      businessPhase = ShopBusinessVerificationUiPhase.pending;
+      final snap = await _verificationService.submitShopBusinessVerification(submit);
+      _applySnapshot(snap);
+      isEditingApprovedBusinessInfo = false;
       _m.showSuccess(
-        '사업자 인증 신청이 완료되었습니다. 검토 후 결과를 알려드리겠습니다.',
+        businessPhase == ShopBusinessVerificationUiPhase.approved
+            ? '사업자 정보가 확인되어 반영되었습니다.'
+            : '사업자 인증 신청이 완료되었습니다. 검토 후 결과를 알려드리겠습니다.',
       );
     } catch (e) {
       final ex = ErrorHandler.handleException(e);

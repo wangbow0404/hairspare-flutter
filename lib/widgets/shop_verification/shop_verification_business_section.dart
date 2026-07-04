@@ -11,7 +11,8 @@ import 'package:hairspare/widgets/shop_verification/shop_verification_ui_kit.dar
 
 bool showShopBusinessForm(ShopVerificationViewModel vm) {
   return vm.businessPhase == ShopBusinessVerificationUiPhase.notStarted ||
-      vm.businessPhase == ShopBusinessVerificationUiPhase.rejected;
+      vm.businessPhase == ShopBusinessVerificationUiPhase.rejected ||
+      vm.isEditingApprovedBusinessInfo;
 }
 
 class ShopVerificationOverviewSection extends StatelessWidget {
@@ -77,18 +78,28 @@ class ShopVerificationBusinessSection extends StatelessWidget {
       );
     }
 
-    if (vm.businessPhase == ShopBusinessVerificationUiPhase.approved) {
+    if (vm.businessPhase == ShopBusinessVerificationUiPhase.approved &&
+        !vm.isEditingApprovedBusinessInfo) {
       return ShopVerificationSectionCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '인증된 사업자 정보',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '인증된 사업자 정보',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                TextButton(
+                  onPressed: vm.startEditingBusinessInfo,
+                  child: const Text('수정하기'),
+                ),
+              ],
             ),
-            const SizedBox(height: AppTheme.spacing4),
+            const SizedBox(height: AppTheme.spacing2),
             ShopVerificationFieldRow(
               label: '사업자등록번호',
               value: vm.snapshotBusinessNumber ?? '',
@@ -129,11 +140,22 @@ class ShopVerificationBusinessSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const ShopVerificationStepHeader(
-                icon: Icons.business_outlined,
-                iconColor: AppTheme.primaryPurple,
-                title: '사업자 정보',
-                subtitle: '등록증 사진을 먼저 올리면 자동으로 입력됩니다.',
+              Row(
+                children: [
+                  const Expanded(
+                    child: ShopVerificationStepHeader(
+                      icon: Icons.business_outlined,
+                      iconColor: AppTheme.primaryPurple,
+                      title: '사업자 정보',
+                      subtitle: '등록증 사진을 먼저 올리면 자동으로 입력됩니다.',
+                    ),
+                  ),
+                  if (vm.isEditingApprovedBusinessInfo)
+                    TextButton(
+                      onPressed: vm.cancelEditingBusinessInfo,
+                      child: const Text('취소'),
+                    ),
+                ],
               ),
               const SizedBox(height: AppTheme.spacing5),
               Text(
@@ -262,7 +284,7 @@ class ShopVerificationBusinessSection extends StatelessWidget {
               ),
               const SizedBox(height: AppTheme.spacing4),
               ShopVerificationPrimaryButton(
-                label: '인증 신청하기',
+                label: vm.isEditingApprovedBusinessInfo ? '수정 내용 제출하기' : '인증 신청하기',
                 backgroundColor: AppTheme.primaryGreen,
                 isLoading: vm.isSubmittingBusiness,
                 onPressed: vm.isSubmittingBusiness || vm.isScanningRegistration
