@@ -365,29 +365,6 @@ class _SpareDetailMetricsRow extends StatelessWidget {
         children: [
           Expanded(
             child: _MetricCell(
-              label: '평점',
-              valueWidget: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.star, size: 16, color: Color(0xFFFACC15)),
-                  const SizedBox(width: 3),
-                  Text(
-                    spare.rating.toStringAsFixed(1),
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.stitchTextPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              sub: '(리뷰 ${spare.reviewCount}개)',
-            ),
-          ),
-          const VerticalDivider(width: 1, color: AppTheme.borderGray),
-          Expanded(
-            child: _MetricCell(
               label: '완료',
               value: '${spare.completedJobs}건',
             ),
@@ -408,15 +385,11 @@ class _SpareDetailMetricsRow extends StatelessWidget {
 class _MetricCell extends StatelessWidget {
   const _MetricCell({
     required this.label,
-    this.value,
-    this.valueWidget,
-    this.sub,
+    required this.value,
   });
 
   final String label;
-  final String? value;
-  final Widget? valueWidget;
-  final String? sub;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
@@ -432,25 +405,14 @@ class _MetricCell extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppTheme.spacing1),
-          valueWidget ??
-              Text(
-                value ?? '',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.stitchTextPrimary,
-                ),
-              ),
-          if (sub != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              sub!,
-              style: const TextStyle(
-                fontSize: 11,
-                color: AppTheme.stitchTextSecondary,
-              ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.stitchTextPrimary,
             ),
-          ],
+          ),
         ],
       ),
     );
@@ -643,13 +605,11 @@ class _SpareDetailTrustSection extends StatelessWidget {
   static String _formatDate(DateTime dt) =>
       DateFormat('yyyy년 M월 d일', 'ko_KR').format(dt);
 
-  static String _relativeTime(DateTime? dt) {
-    if (dt == null) return '알 수 없음';
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 60) return '${diff.inMinutes}분 전';
-    if (diff.inHours < 24) return '${diff.inHours}시간 전';
-    if (diff.inDays < 30) return '${diff.inDays}일 전';
-    return _formatDate(dt);
+  static String _formatResponseTime(int? minutes) {
+    if (minutes == null) return '응답 기록 없음';
+    if (minutes < 60) return '평균 $minutes분 이내';
+    final hours = (minutes / 60).round();
+    return '평균 $hours시간 이내';
   }
 
   @override
@@ -681,13 +641,8 @@ class _SpareDetailTrustSection extends StatelessWidget {
           ),
           const _TrustDivider(),
           _TrustRow(
-            label: '최근 활동',
-            value: _relativeTime(spare.lastActiveAt),
-          ),
-          const _TrustDivider(),
-          const _TrustRow(
             label: '응답 속도',
-            value: '평균 1시간 이내',
+            value: _formatResponseTime(spare.responseTimeMinutes),
           ),
         ],
       ),

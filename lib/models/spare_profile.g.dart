@@ -14,7 +14,6 @@ SpareProfile _$SpareProfileFromJson(Map<String, dynamic> json) => SpareProfile(
   images: _nullableStringListFromJson(json['images']),
   regionId: json['regionId'] as String? ?? '',
   experience: const LooseIntAsZeroConverter().fromJson(json['experience']),
-  rating: const LooseDoubleAsZeroConverter().fromJson(json['rating']),
   reviewCount: const LooseIntAsZeroConverter().fromJson(json['reviewCount']),
   thumbsUpCount: const LooseIntAsZeroConverter().fromJson(
     json['thumbsUpCount'],
@@ -33,8 +32,8 @@ SpareProfile _$SpareProfileFromJson(Map<String, dynamic> json) => SpareProfile(
     json['completedJobs'],
   ),
   createdAt: const DateTimeOrNowConverter().fromJson(json['createdAt']),
-  lastActiveAt: const DateTimeNullableConverter().fromJson(
-    json['lastActiveAt'],
+  responseTimeMinutes: const LooseIntNullableConverter().fromJson(
+    json['responseTimeMinutes'],
   ),
 );
 
@@ -48,7 +47,6 @@ Map<String, dynamic> _$SpareProfileToJson(
   'images': instance.images,
   'regionId': instance.regionId,
   'experience': const LooseIntAsZeroConverter().toJson(instance.experience),
-  'rating': const LooseDoubleAsZeroConverter().toJson(instance.rating),
   'reviewCount': const LooseIntAsZeroConverter().toJson(instance.reviewCount),
   'thumbsUpCount': const LooseIntAsZeroConverter().toJson(
     instance.thumbsUpCount,
@@ -63,7 +61,7 @@ Map<String, dynamic> _$SpareProfileToJson(
     instance.completedJobs,
   ),
   'createdAt': const DateTimeOrNowConverter().toJson(instance.createdAt),
-  'lastActiveAt': const DateTimeNullableConverter().toJson(
-    instance.lastActiveAt,
+  'responseTimeMinutes': const LooseIntNullableConverter().toJson(
+    instance.responseTimeMinutes,
   ),
 };

@@ -134,21 +134,6 @@ class StitchListSpareCard extends StatelessWidget {
                                 color: AppTheme.stitchPrimary,
                               ),
                             ),
-                            const SizedBox(width: AppTheme.spacing2),
-                            const Text(
-                              '·',
-                              style: TextStyle(
-                                color: AppTheme.stitchTextSecondary,
-                              ),
-                            ),
-                            const SizedBox(width: AppTheme.spacing2),
-                            Text(
-                              '★ ${spare.rating.toStringAsFixed(1)}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.stitchTextSecondary,
-                              ),
-                            ),
                           ],
                         ),
                       ],

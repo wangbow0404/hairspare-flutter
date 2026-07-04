@@ -25,7 +25,6 @@ class SpareProfile {
     this.images,
     required this.regionId,
     required this.experience,
-    required this.rating,
     required this.reviewCount,
     required this.thumbsUpCount,
     required this.specialties,
@@ -36,7 +35,7 @@ class SpareProfile {
     required this.noShowCount,
     required this.completedJobs,
     required this.createdAt,
-    this.lastActiveAt,
+    this.responseTimeMinutes,
   });
 
   factory SpareProfile.fromJson(Map<String, dynamic> json) =>
@@ -55,8 +54,6 @@ class SpareProfile {
   final String regionId;
   @LooseIntAsZeroConverter()
   final int experience;
-  @LooseDoubleAsZeroConverter()
-  final double rating;
   @LooseIntAsZeroConverter()
   final int reviewCount;
   @LooseIntAsZeroConverter()
@@ -77,8 +74,9 @@ class SpareProfile {
   final int completedJobs;
   @DateTimeOrNowConverter()
   final DateTime createdAt;
-  @DateTimeNullableConverter()
-  final DateTime? lastActiveAt;
+  /// 채팅 응답까지 걸린 평균 시간(분). 응답 이력이 없으면 null.
+  @LooseIntNullableConverter()
+  final int? responseTimeMinutes;
 
   Map<String, dynamic> toJson() => _$SpareProfileToJson(this);
 }
