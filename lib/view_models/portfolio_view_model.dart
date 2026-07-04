@@ -66,23 +66,48 @@ class PortfolioViewModel extends ChangeNotifier {
       imageQuality: 88,
     );
     if (picked == null) return;
+    await _addPickedFiles([picked]);
+  }
 
-    final file = File(picked.path);
-    final length = await file.length();
-    if (length > 12 * 1024 * 1024) {
-      _messenger.showError('이미지는 12MB 이하여야 합니다.');
-      return;
+  /// 갤러리에서 여러 장을 한 번에 선택해 순차 업로드한다.
+  Future<void> pickMultipleAndAdd() async {
+    final picked = await _imagePicker.pickMultiImage(
+      maxWidth: 1920,
+      maxHeight: 1920,
+      imageQuality: 88,
+    );
+    if (picked.isEmpty) return;
+    await _addPickedFiles(picked);
+  }
+
+  Future<void> _addPickedFiles(List<XFile> picked) async {
+    final validPaths = <String>[];
+    for (final p in picked) {
+      final length = await File(p.path).length();
+      if (length > 12 * 1024 * 1024) {
+        _messenger.showError('${p.name} — 이미지는 12MB 이하여야 합니다.');
+        continue;
+      }
+      validPaths.add(p.path);
     }
+    if (validPaths.isEmpty) return;
 
     _isSaving = true;
     notifyListeners();
+    var addedCount = 0;
     try {
-      _images = await _portfolioService.addLocalImage(
-        ownerId: ownerId,
-        ownerRole: ownerRole,
-        localPath: picked.path,
+      for (final path in validPaths) {
+        _images = await _portfolioService.addLocalImage(
+          ownerId: ownerId,
+          ownerRole: ownerRole,
+          localPath: path,
+        );
+        addedCount++;
+        notifyListeners();
+      }
+      _messenger.showSuccess(
+        addedCount > 1 ? '사진 $addedCount장이 추가되었습니다.' : '사진이 추가되었습니다.',
       );
-      _messenger.showSuccess('사진이 추가되었습니다.');
     } catch (e) {
       _messenger.showError(ErrorHandler.handleException(e).message);
     } finally {

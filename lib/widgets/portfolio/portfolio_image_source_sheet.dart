@@ -27,10 +27,10 @@ Future<void> showPortfolioImageSourceSheet(BuildContext context) async {
                     color: AppTheme.textPrimary,
                   ) ??
                   const Icon(Icons.photo_library_outlined),
-              title: const Text('갤러리에서 선택'),
+              title: const Text('갤러리에서 선택 (여러 장 가능)'),
               onTap: () {
                 Navigator.pop(ctx);
-                unawaited(vm.pickAndAdd(ImageSource.gallery));
+                unawaited(vm.pickMultipleAndAdd());
               },
             ),
             ListTile(
