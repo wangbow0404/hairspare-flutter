@@ -375,7 +375,7 @@ class ChallengeService {
   Future<String> uploadChallengeProfileImage(File imageFile) async {
     try {
       final formData = FormData.fromMap({
-        'image': await MultipartFile.fromFile(
+        'file': await MultipartFile.fromFile(
           imageFile.path,
           filename: 'challenge-profile-${DateTime.now().millisecondsSinceEpoch}.jpg',
         ),
@@ -392,6 +392,75 @@ class ChallengeService {
       } else {
         throw ServerException(
           '이미지 업로드 실패: ${response.statusMessage}',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 챌린지 영상 파일 업로드 → R2 URL 반환
+  Future<String> uploadChallengeVideo(File videoFile) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          videoFile.path,
+          filename: 'challenge-${DateTime.now().millisecondsSinceEpoch}.mp4',
+        ),
+      });
+
+      final response = await _dio.post(
+        '/api/challenges/upload-video',
+        data: formData,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data['data'] ?? response.data;
+        return data['url']?.toString() ?? '';
+      } else {
+        throw ServerException(
+          '영상 업로드 실패: ${response.statusMessage}',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 챌린지 영상 게시글 생성
+  Future<Challenge> createChallenge({
+    required String videoUrl,
+    required String title,
+    String? description,
+    List<String>? tags,
+    String? thumbnailUrl,
+    bool isPublic = true,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/api/challenges',
+        data: {
+          'videoUrl': videoUrl,
+          'title': title,
+          if (description != null) 'description': description,
+          if (tags != null) 'tags': tags,
+          if (thumbnailUrl != null) 'thumbnailUrl': thumbnailUrl,
+          'isPublic': isPublic,
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data['data'] ?? response.data;
+        return Challenge.fromJson(data);
+      } else {
+        throw ServerException(
+          '챌린지 등록 실패: ${response.statusMessage}',
           statusCode: response.statusCode,
         );
       }

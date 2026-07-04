@@ -1,5 +1,10 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
 
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+import 'package:hairspare/core/di/service_locator.dart';
+import 'package:hairspare/core/services/global_messenger_service.dart';
 import 'package:hairspare/models/challenge_profile.dart';
 import 'package:hairspare/services/challenge_service.dart';
 import 'package:hairspare/theme/app_theme.dart';
@@ -26,15 +31,103 @@ class ChallengeProfileVideosTab extends StatefulWidget {
 
 class _ChallengeProfileVideosTabState extends State<ChallengeProfileVideosTab> {
   final ChallengeService _challengeService = ChallengeService();
+  final ImagePicker _imagePicker = ImagePicker();
   List<MyChallenge> _videos = [];
   bool _isLoading = true;
+  bool _isUploading = false;
   String _filter = 'all';
   String _sortBy = 'latest';
+
+  GlobalMessengerService get _messenger => sl<GlobalMessengerService>();
 
   @override
   void initState() {
     super.initState();
     _loadVideos();
+  }
+
+  Future<void> _showUploadSheet() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: AppTheme.backgroundWhite,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: IconMapper.icon('image', size: 24, color: AppTheme.textPrimary) ??
+                  const Icon(Icons.video_library_outlined),
+              title: const Text('갤러리에서 영상 선택'),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: IconMapper.icon('camera', size: 24, color: AppTheme.textPrimary) ??
+                  const Icon(Icons.videocam_outlined),
+              title: const Text('카메라로 촬영'),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null || !mounted) return;
+
+    final picked = await _imagePicker.pickVideo(source: source);
+    if (picked == null || !mounted) return;
+
+    final file = File(picked.path);
+    final length = await file.length();
+    if (length > 100 * 1024 * 1024) {
+      _messenger.showError('영상은 100MB 이하여야 합니다.');
+      return;
+    }
+    if (!mounted) return;
+
+    final title = await _promptVideoTitle();
+    if (title == null || title.trim().isEmpty || !mounted) return;
+
+    setState(() => _isUploading = true);
+    try {
+      final videoUrl = await _challengeService.uploadChallengeVideo(file);
+      await _challengeService.createChallenge(
+        videoUrl: videoUrl,
+        title: title.trim(),
+      );
+      _messenger.showSuccess('영상이 업로드되었습니다.');
+      await _loadVideos();
+    } catch (e) {
+      final appException = ErrorHandler.handleException(e);
+      _messenger.showError(ErrorHandler.getUserFriendlyMessage(appException));
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
+    }
+  }
+
+  Future<String?> _promptVideoTitle() {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('영상 제목'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 40,
+          decoration: const InputDecoration(hintText: '영상 제목을 입력해주세요'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, controller.text),
+            child: const Text('업로드'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _loadVideos() async {
@@ -67,6 +160,23 @@ class _ChallengeProfileVideosTabState extends State<ChallengeProfileVideosTab> {
   Widget build(BuildContext context) {
     final showPrivateFilter = widget.isOwnProfile;
 
+    return Stack(
+      children: [
+        _buildBody(showPrivateFilter),
+        if (widget.isOwnProfile)
+          Positioned(
+            right: AppTheme.spacing4,
+            bottom: AppTheme.spacing4,
+            child: _UploadVideoButton(
+              isUploading: _isUploading,
+              onTap: _isUploading ? null : _showUploadSheet,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildBody(bool showPrivateFilter) {
     return Column(
       children: [
         Container(
@@ -281,6 +391,46 @@ class _DropdownShell extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: child,
+    );
+  }
+}
+
+class _UploadVideoButton extends StatelessWidget {
+  const _UploadVideoButton({
+    required this.isUploading,
+    required this.onTap,
+  });
+
+  final bool isUploading;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppTheme.primaryPurple,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+      ),
+      elevation: 4,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        child: Container(
+          width: 56,
+          height: 56,
+          alignment: Alignment.center,
+          child: isUploading
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                )
+              : const Icon(Icons.add, color: Colors.white, size: 28),
+        ),
+      ),
     );
   }
 }
