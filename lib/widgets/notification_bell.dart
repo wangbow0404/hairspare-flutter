@@ -216,16 +216,45 @@ class _NotificationBellState extends State<NotificationBell> {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  trailing: notification.isRead
-                                      ? null
-                                      : Container(
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (!notification.isRead)
+                                        Container(
                                           width: 8,
                                           height: 8,
+                                          margin: const EdgeInsets.only(
+                                            right: AppTheme.spacing2,
+                                          ),
                                           decoration: const BoxDecoration(
                                             color: AppTheme.primaryBlue,
                                             shape: BoxShape.circle,
                                           ),
                                         ),
+                                      InkWell(
+                                        borderRadius: AppTheme.borderRadius(
+                                          AppTheme.radiusFull,
+                                        ),
+                                        onTap: () {
+                                          Provider.of<NotificationProvider>(
+                                            context,
+                                            listen: false,
+                                          ).deleteNotification(
+                                            notification.id,
+                                            audience: widget.role,
+                                          );
+                                        },
+                                        child: const Padding(
+                                          padding: EdgeInsets.all(4),
+                                          child: Icon(
+                                            Icons.close,
+                                            size: 16,
+                                            color: AppTheme.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                   onTap: () {
                                     _handleNotificationTap(notification);
                                     if (inOverlay) _hideOverlay();

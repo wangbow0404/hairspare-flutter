@@ -94,6 +94,10 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
                     child: SpareNotificationTile(
                       notification: n,
                       onTap: () => _handleNotificationTap(n),
+                      onDelete: () => notificationProvider.deleteNotification(
+                        n.id,
+                        audience: _audience(context),
+                      ),
                     ),
                   ),
                 ),
@@ -117,6 +121,10 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
                     child: SpareNotificationTile(
                       notification: n,
                       onTap: () => _handleNotificationTap(n),
+                      onDelete: () => notificationProvider.deleteNotification(
+                        n.id,
+                        audience: _audience(context),
+                      ),
                     ),
                   ),
                 ),

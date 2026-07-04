@@ -10,11 +10,13 @@ class SpareNotificationTile extends StatelessWidget {
     super.key,
     required this.notification,
     required this.onTap,
+    this.onDelete,
     this.compact = false,
   });
 
   final AppNotification notification;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
   final bool compact;
 
   @override
@@ -72,6 +74,22 @@ class SpareNotificationTile extends StatelessWidget {
                             decoration: const BoxDecoration(
                               color: AppTheme.stitchPrimaryContainer,
                               shape: BoxShape.circle,
+                            ),
+                          ),
+                        if (onDelete != null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: AppTheme.spacing2),
+                            child: InkWell(
+                              onTap: onDelete,
+                              borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
+                              child: const Padding(
+                                padding: EdgeInsets.all(2),
+                                child: Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color: AppTheme.textTertiary,
+                                ),
+                              ),
                             ),
                           ),
                       ],
