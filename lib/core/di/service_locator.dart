@@ -26,6 +26,7 @@ import '../../services/job_service.dart';
 import '../../services/matching_service.dart';
 import '../../services/model_designer_match_service.dart';
 import '../../services/model_match_service.dart';
+import '../../services/model_self_profile_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/payment_service.dart';
 import '../../services/point_service.dart';
@@ -75,6 +76,7 @@ void configureDependencies() {
   sl.registerLazySingleton<ApplicationService>(() => ApplicationService());
   sl.registerLazySingleton<ChallengeService>(() => ChallengeService());
   sl.registerLazySingleton<PaymentService>(() => PaymentService());
+  sl.registerLazySingleton<ModelSelfProfileService>(() => ModelSelfProfileService());
   sl.registerLazySingleton<PortfolioService>(() => PortfolioService());
   sl.registerLazySingleton<ReviewService>(() => ReviewService());
   sl.registerLazySingleton<SearchService>(() => SearchService());

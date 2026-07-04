@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/router/app_routes.dart';
 import '../../core/router/spare_profile_navigation.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
@@ -273,7 +275,11 @@ class SpareProfileIdentitySection extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () async {
-                    await SpareProfileNavigation.pushProfileEdit(context);
+                    if (user?.isModelAccount == true) {
+                      await context.push<void>(AppRoutes.modelHomeProfileEdit);
+                    } else {
+                      await SpareProfileNavigation.pushProfileEdit(context);
+                    }
                     if (context.mounted) {
                       await context
                           .read<SpareProfileViewModel>()

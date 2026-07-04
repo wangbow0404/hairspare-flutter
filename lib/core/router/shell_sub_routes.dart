@@ -35,6 +35,7 @@ import '../../screens/spare/my_applications_screen.dart';
 import '../../screens/spare/my_space_bookings_screen.dart';
 import '../../screens/spare/payment_screen.dart';
 import '../../screens/spare/profile_edit_screen.dart';
+import '../../screens/spare/model_profile_edit_screen.dart';
 import '../../screens/spare/referral_screen.dart';
 import '../../screens/spare/region_select_screen.dart';
 import '../../screens/spare/settings_screen.dart';
@@ -299,7 +300,7 @@ abstract final class ShellSubRoutes {
   static List<RouteBase> modelHomeChildRoutes() => <RouteBase>[
         GoRoute(
           path: 'profile_edit',
-          builder: (_, __) => const ProfileEditScreen(),
+          builder: (_, __) => const ModelProfileEditScreen(),
         ),
         GoRoute(
           path: 'education',
