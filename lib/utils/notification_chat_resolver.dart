@@ -10,6 +10,9 @@ abstract final class NotificationChatResolver {
     AppNotification notification, {
     required String audience,
   }) {
+    final chatId = notification.relatedChatId?.trim();
+    if (chatId != null && chatId.isNotEmpty) return chatId;
+
     final shopId = notification.relatedUserId?.trim();
     if (shopId == null || shopId.isEmpty) return null;
 

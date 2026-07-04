@@ -18,6 +18,7 @@ AppNotification _$AppNotificationFromJson(Map<String, dynamic> json) =>
       relatedUserId: json['relatedUserId'] as String?,
       relatedScheduleId: json['relatedScheduleId'] as String?,
       relatedBookingId: json['relatedBookingId'] as String?,
+      relatedChatId: json['relatedChatId'] as String?,
       scheduleTime: json['scheduleTime'] as String?,
       scheduleDate: json['scheduleDate'] as String?,
     );
@@ -34,6 +35,7 @@ Map<String, dynamic> _$AppNotificationToJson(AppNotification instance) =>
       'relatedUserId': instance.relatedUserId,
       'relatedScheduleId': instance.relatedScheduleId,
       'relatedBookingId': instance.relatedBookingId,
+      'relatedChatId': instance.relatedChatId,
       'scheduleTime': instance.scheduleTime,
       'scheduleDate': instance.scheduleDate,
     };

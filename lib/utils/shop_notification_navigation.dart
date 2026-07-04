@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/notification.dart';
 import '../utils/shell_navigation.dart';
 import 'message_notification_navigation.dart';
+import 'navigation_helper.dart';
 
 /// 샵 알림 탭 시 목적 화면 라우팅.
 abstract final class ShopNotificationNavigation {
@@ -20,10 +21,15 @@ abstract final class ShopNotificationNavigation {
         }
         return;
       case 'application_received':
+      // 구버전 알림 호환용 타입명
+      case 'application':
+      case 'pending_applicant':
         ShellNavigation.pushShopApplicants(context);
         return;
       case 'job_closing':
       case 'job':
+      // 구버전 알림 호환용 타입명
+      case 'deadline':
         if (notification.relatedJobId != null) {
           ShellNavigation.pushShopJobDetail(
             context,
@@ -32,6 +38,8 @@ abstract final class ShopNotificationNavigation {
         }
         return;
       case 'message_received':
+      // 구버전 알림 호환용 타입명
+      case 'chat':
         MessageNotificationNavigation.open(
           context,
           notification,
@@ -39,6 +47,7 @@ abstract final class ShopNotificationNavigation {
         );
         return;
       default:
+        NavigationHelper.navigateToNotificationsList(context);
         return;
     }
   }

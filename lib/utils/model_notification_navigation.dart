@@ -15,6 +15,7 @@ abstract final class ModelNotificationNavigation {
       case 'deposit_payment':
         appRouter.go(AppRoutes.modelSchedule);
       case 'message_received':
+      case 'chat':
         MessageNotificationNavigation.open(
           context,
           notification,

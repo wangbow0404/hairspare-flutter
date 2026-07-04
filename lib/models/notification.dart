@@ -17,6 +17,7 @@ class AppNotification {
     this.relatedUserId,
     this.relatedScheduleId,
     this.relatedBookingId,
+    this.relatedChatId,
     this.scheduleTime,
     this.scheduleDate,
   });
@@ -40,6 +41,7 @@ class AppNotification {
   final String? relatedUserId;
   final String? relatedScheduleId;
   final String? relatedBookingId;
+  final String? relatedChatId;
   final String? scheduleTime;
   final String? scheduleDate;
 
@@ -60,6 +62,7 @@ class AppNotification {
       relatedUserId: relatedUserId,
       relatedScheduleId: relatedScheduleId,
       relatedBookingId: relatedBookingId,
+      relatedChatId: relatedChatId,
       scheduleTime: scheduleTime,
       scheduleDate: scheduleDate,
     );

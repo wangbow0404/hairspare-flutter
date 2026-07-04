@@ -43,6 +43,8 @@ abstract final class SpareNotificationNavigation {
         }
         return;
       case 'message_received':
+      // 구버전 알림 호환용 타입명
+      case 'chat':
         MessageNotificationNavigation.open(
           context,
           notification,
@@ -50,6 +52,7 @@ abstract final class SpareNotificationNavigation {
         );
         return;
       default:
+        NavigationHelper.navigateToNotificationsList(context);
         return;
     }
   }
