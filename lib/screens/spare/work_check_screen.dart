@@ -223,15 +223,19 @@ class _WorkCheckScaffoldState extends State<_WorkCheckScaffold> {
           bottom: false,
           child: Stack(
             children: [
-              CustomScrollView(
-                controller: widget.scrollController,
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: WorkCheckScrollContent(
-                      isModelMode: true,
+              RefreshIndicator(
+                onRefresh: vm.loadData,
+                child: CustomScrollView(
+                  controller: widget.scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: WorkCheckScrollContent(
+                        isModelMode: true,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               if (vm.showRatingModal && vm.ratedShopName != null)
                 ScheduleWorkCompleteReviewModal(
@@ -257,19 +261,23 @@ class _WorkCheckScaffoldState extends State<_WorkCheckScaffold> {
         bottom: false,
         child: Stack(
           children: [
-            CustomScrollView(
-              controller: widget.scrollController,
-              slivers: [
-                WorkCheckSliverAppBar(
-                  searchController: widget.searchController,
-                  showBackButton: !widget.isTabRoot,
-                ),
-                SliverToBoxAdapter(
-                  child: WorkCheckScrollContent(
-                    isModelMode: widget.isModelMode,
+            RefreshIndicator(
+              onRefresh: vm.loadData,
+              child: CustomScrollView(
+                controller: widget.scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  WorkCheckSliverAppBar(
+                    searchController: widget.searchController,
+                    showBackButton: !widget.isTabRoot,
                   ),
-                ),
-              ],
+                  SliverToBoxAdapter(
+                    child: WorkCheckScrollContent(
+                      isModelMode: widget.isModelMode,
+                    ),
+                  ),
+                ],
+              ),
             ),
             if (vm.showRatingModal && vm.ratedShopName != null)
               ScheduleWorkCompleteReviewModal(

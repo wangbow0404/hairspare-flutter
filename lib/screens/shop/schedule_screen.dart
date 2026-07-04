@@ -80,12 +80,16 @@ class _ShopScheduleScaffold extends StatelessWidget {
             Expanded(
               child: Stack(
                 children: [
-                  const CustomScrollView(
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: ShopScheduleScrollContent(),
-                      ),
-                    ],
+                  RefreshIndicator(
+                    onRefresh: vm.loadData,
+                    child: const CustomScrollView(
+                      physics: AlwaysScrollableScrollPhysics(),
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: ShopScheduleScrollContent(),
+                        ),
+                      ],
+                    ),
                   ),
                   if (vm.showThumbsUpModal && vm.selectedSchedule != null)
                     ShopScheduleThumbsUpModal(
