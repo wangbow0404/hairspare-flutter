@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 
 import '../core/di/service_locator.dart';
@@ -23,7 +25,10 @@ class PortfolioService {
       );
     }
     try {
-      final response = await _dio.get('/api/users/$ownerId/portfolio');
+      final response = await _dio.get(
+        '/api/users/$ownerId/portfolio',
+        queryParameters: {'ownerRole': ownerRole},
+      );
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
         final list = data is Map ? data['images'] : data;
@@ -54,13 +59,32 @@ class PortfolioService {
       );
     }
     try {
-      final form = FormData.fromMap({
-        'image': await MultipartFile.fromFile(localPath),
-        'ownerRole': ownerRole,
-      });
+      // 1단계: 파일을 R2에 업로드해 URL을 받는다.
+      final bytes = await File(localPath).readAsBytes();
+      final uploadResponse = await _dio.post(
+        '/api/auth/upload-image',
+        data: FormData.fromMap({
+          'file': MultipartFile.fromBytes(
+            bytes,
+            filename: 'portfolio-${DateTime.now().millisecondsSinceEpoch}.jpg',
+          ),
+        }),
+        queryParameters: {'folder': 'portfolio-photos'},
+      );
+      final uploadData = uploadResponse.data['data'] ?? uploadResponse.data;
+      final imageUrl = uploadData is Map ? uploadData['url']?.toString() ?? '' : '';
+      if (imageUrl.isEmpty) {
+        throw ServerException(
+          '이미지 업로드 실패',
+          statusCode: uploadResponse.statusCode,
+        );
+      }
+
+      // 2단계: 업로드된 URL을 포트폴리오 목록에 추가한다.
       final response = await _dio.post(
         '/api/users/$ownerId/portfolio',
-        data: form,
+        data: {'imageUrl': imageUrl},
+        queryParameters: {'ownerRole': ownerRole},
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data['data'] ?? response.data;
@@ -99,6 +123,7 @@ class PortfolioService {
     try {
       final response = await _dio.delete(
         '/api/users/$ownerId/portfolio/$index',
+        queryParameters: {'ownerRole': ownerRole},
       );
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
