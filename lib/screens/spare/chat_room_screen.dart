@@ -283,6 +283,44 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     }
   }
 
+  Future<void> _handleLeaveChat(BuildContext context, Chat chat) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('대화를 종료하시겠습니까?'),
+        content: const Text('종료하신 대화는 삭제되며, 다시 확인할 수 없습니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('나가기', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await _chatService.deleteChat(chat.id);
+      if (!context.mounted) return;
+      Provider.of<ChatProvider>(context, listen: false)
+          .removeChatLocally(chat.id);
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!context.mounted) return;
+      final appException = ErrorHandler.handleException(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ErrorHandler.getUserFriendlyMessage(appException)),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
+    }
+  }
+
   String _formatTime(DateTime dateTime) {
     final now = DateTime.now();
     final diff = now.difference(dateTime);
@@ -345,6 +383,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     final jobSubtitle = chat.jobTitle?.trim().isNotEmpty == true
         ? chat.jobTitle!
         : null;
+    final otherUserAvatarUrl = isShop ? chat.spareProfileImage : chat.shopProfileImage;
     final isModelDesignerChat = _isModelDesignerChat(currentUser);
 
     return Scaffold(
@@ -355,7 +394,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         showTrailingIcons: false,
         title: otherUserName,
         subtitle: jobSubtitle,
+        avatarUrl: otherUserAvatarUrl ?? '',
         actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: '나가기',
+            onPressed: () => _handleLeaveChat(context, chat),
+          ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             onSelected: (value) async {

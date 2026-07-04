@@ -20,6 +20,8 @@ class SpareAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;
   /// 제목 아래 보조 문구 (공고명 등)
   final String? subtitle;
+  /// 제목 좌측에 표시할 프로필 사진 (채팅방 상대방 등). null이면 기본 아이콘.
+  final String? avatarUrl;
   /// 검색·메시지·알림 아이콘 (채팅방 등에서는 false)
   final bool showTrailingIcons;
   /// 우측에 표시할 커스텀 액션 위젯 (예: 공유 버튼)
@@ -33,6 +35,7 @@ class SpareAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.showBackButton = false,
     this.title,
     this.subtitle,
+    this.avatarUrl,
     this.showTrailingIcons = true,
     this.actions,
     this.onBackPressed,
@@ -89,33 +92,61 @@ class SpareAppBar extends StatelessWidget implements PreferredSizeWidget {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(left: AppTheme.spacing1),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text(
-                          title!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textPrimary,
-                                  ),
-                        ),
-                        if (subtitle != null && subtitle!.isNotEmpty)
-                          Text(
-                            subtitle!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      fontSize: 12,
-                                      color: AppTheme.textSecondary,
-                                    ),
+                        if (avatarUrl != null) ...[
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: AppTheme.backgroundGray,
+                            backgroundImage: avatarUrl!.isNotEmpty
+                                ? NetworkImage(avatarUrl!)
+                                : null,
+                            child: avatarUrl!.isEmpty
+                                ? const Icon(
+                                    Icons.person,
+                                    size: 18,
+                                    color: AppTheme.textSecondary,
+                                  )
+                                : null,
                           ),
+                          const SizedBox(width: AppTheme.spacing2),
+                        ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                title!,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.textPrimary,
+                                    ),
+                              ),
+                              if (subtitle != null && subtitle!.isNotEmpty)
+                                Text(
+                                  subtitle!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        fontSize: 12,
+                                        color: AppTheme.textSecondary,
+                                      ),
+                                ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),

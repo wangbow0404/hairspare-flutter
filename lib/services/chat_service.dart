@@ -12,8 +12,10 @@ class Chat {
   final String id;
   final String shopId;
   final String shopName;
+  final String? shopProfileImage;
   final String spareId;
   final String spareName;
+  final String? spareProfileImage;
   final String? jobId;
   final String? jobTitle;
   final LastMessage? lastMessage;
@@ -23,8 +25,10 @@ class Chat {
     required this.id,
     required this.shopId,
     required this.shopName,
+    this.shopProfileImage,
     required this.spareId,
     required this.spareName,
+    this.spareProfileImage,
     this.jobId,
     this.jobTitle,
     this.lastMessage,
@@ -40,12 +44,18 @@ class Chat {
           json['shopName']?.toString() ??
           json['shop']?['name']?.toString() ??
           '미용실',
+      shopProfileImage:
+          json['shopProfileImage']?.toString() ??
+          json['shop']?['profileImage']?.toString(),
       spareId:
           json['spareId']?.toString() ?? json['spare']?['id']?.toString() ?? '',
       spareName:
           json['spareName']?.toString() ??
           json['spare']?['name']?.toString() ??
           '스페어',
+      spareProfileImage:
+          json['spareProfileImage']?.toString() ??
+          json['spare']?['profileImage']?.toString(),
       jobId: json['jobId']?.toString(),
       jobTitle:
           json['jobTitle']?.toString() ?? json['job']?['title']?.toString(),
