@@ -91,7 +91,7 @@ abstract final class AppRoutes {
   static const shopHomeModelMatch = '/shop/home/model_match';
   static const shopHomeModelMatchSwipe = '/shop/home/model_match/swipe';
   static String shopHomeSpareDetail(String spareId) =>
-      '/shop/home/spare/$spareId';
+      '/shop/home/shop_spare/$spareId';
   static const shopMessages = '/shop/home/messages';
   static const shopSearch = '/shop/home/search';
   static const shopNotifications = '/shop/home/notifications';
