@@ -1,6 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import '../../core/di/service_locator.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/error_handler.dart';
@@ -18,8 +23,10 @@ class _ShopProfileEditScreenState extends State<ShopProfileEditScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  final AuthService _authService = sl<AuthService>();
   bool _isLoading = true;
   bool _isSaving = false;
+  File? _pendingAvatarFile;
 
   @override
   void initState() {
@@ -53,6 +60,40 @@ class _ShopProfileEditScreenState extends State<ShopProfileEditScreen> {
     }
   }
 
+  Future<void> _pickAvatar() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('갤러리에서 선택'),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text('카메라로 촬영'),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null || !mounted) return;
+
+    final picked = await ImagePicker().pickImage(
+      source: source,
+      maxWidth: 1920,
+      maxHeight: 1920,
+      imageQuality: 88,
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _pendingAvatarFile = File(picked.path));
+  }
+
   Future<void> _handleSave() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -63,7 +104,25 @@ class _ShopProfileEditScreenState extends State<ShopProfileEditScreen> {
     });
 
     try {
-      // TODO: 프로필 업데이트 API 호출 (AuthProvider)
+      String? profileImageUrl;
+      if (_pendingAvatarFile != null) {
+        profileImageUrl =
+            await _authService.uploadProfileImage(_pendingAvatarFile!);
+      }
+
+      final updatedUser = await _authService.updateProfile(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        phone: _phoneController.text.trim().isNotEmpty
+            ? _phoneController.text.trim()
+            : null,
+        profileImage: profileImageUrl,
+      );
+      if (mounted) {
+        await Provider.of<AuthProvider>(context, listen: false)
+            .setUser(updatedUser);
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -139,40 +198,50 @@ class _ShopProfileEditScreenState extends State<ShopProfileEditScreen> {
                               ),
                             ],
                           ),
-                          child: user?.profileImage != null
+                          child: _pendingAvatarFile != null
                               ? ClipOval(
-                                  child: Image.network(
-                                    user!.profileImage!,
+                                  child: Image.file(
+                                    _pendingAvatarFile!,
                                     fit: BoxFit.cover,
                                   ),
                                 )
-                              : const Icon(
-                                  Icons.person,
-                                  size: 48,
-                                  color: Colors.white,
-                                ),
+                              : user?.profileImage != null
+                                  ? ClipOval(
+                                      child: Image.network(
+                                        user!.profileImage!,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.person,
+                                      size: 48,
+                                      color: Colors.white,
+                                    ),
                         ),
                         Positioned(
                           bottom: 0,
                           right: 0,
-                          child: Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: AppTheme.primaryPurple,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.2),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.camera_alt,
-                              size: 16,
-                              color: Colors.white,
+                          child: GestureDetector(
+                            onTap: _pickAvatar,
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryPurple,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                size: 16,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -180,9 +249,7 @@ class _ShopProfileEditScreenState extends State<ShopProfileEditScreen> {
                     ),
                     const SizedBox(height: AppTheme.spacing2),
                     TextButton(
-                      onPressed: () {
-                        // TODO: 사진 변경 기능
-                      },
+                      onPressed: _pickAvatar,
                       child: const Text(
                         '사진 변경',
                         style: TextStyle(color: AppTheme.primaryPurple),
