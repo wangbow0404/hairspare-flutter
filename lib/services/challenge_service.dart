@@ -147,14 +147,15 @@ class ChallengeService {
   }
 
   /// 크리에이터 영상 이후 유사 추천
+  /// 추천 챌린지 피드 조회. [excludeCreatorId]가 없으면 전체 추천 피드.
   Future<List<Challenge>> getSimilarChallenges({
-    required String excludeCreatorId,
+    String? excludeCreatorId,
     List<String>? referenceTags,
     List<String> excludeIds = const [],
   }) async {
     if (ApiConfig.useMockData) {
       return MockSpareData.getSimilarChallenges(
-        excludeCreatorId: excludeCreatorId,
+        excludeCreatorId: excludeCreatorId ?? '',
         referenceTags: referenceTags,
         excludeIds: excludeIds,
       );
@@ -163,7 +164,8 @@ class ChallengeService {
       final response = await _dio.get(
         '/api/challenges/recommended',
         queryParameters: {
-          'excludeCreatorId': excludeCreatorId,
+          if (excludeCreatorId != null && excludeCreatorId.isNotEmpty)
+            'excludeCreatorId': excludeCreatorId,
           if (referenceTags != null && referenceTags.isNotEmpty)
             'tags': referenceTags.join(','),
           if (excludeIds.isNotEmpty) 'excludeIds': excludeIds.join(','),

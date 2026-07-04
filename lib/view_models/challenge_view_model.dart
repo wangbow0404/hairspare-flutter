@@ -87,9 +87,9 @@ class ChallengeViewModel extends ChangeNotifier {
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
       debugPrint('크리에이터 피드 로드 오류: $appException');
-      challenges = _generateMockChallenges()
-          .where((c) => c.creatorId != creatorId)
-          .toList();
+      _m.showError(ErrorHandler.getUserFriendlyMessage(appException));
+      creatorChallenges = [];
+      challenges = [];
       _creatorQueueExhausted = true;
       loadInitialChallenges();
     } finally {
@@ -138,63 +138,23 @@ class ChallengeViewModel extends ChangeNotifier {
     challenges = recommendationChallenges;
   }
 
-  void loadChallengesInternal() {
+  Future<void> loadChallengesInternal() async {
     _isCreatorProfileFeed = false;
     focusCreatorId = null;
-    challenges = _generateMockChallenges();
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      challenges = await _challengeService.getSimilarChallenges();
+    } catch (e) {
+      final appException = ErrorHandler.handleException(e);
+      debugPrint('챌린지 피드 로드 오류: $appException');
+      _m.showError(ErrorHandler.getUserFriendlyMessage(appException));
+      challenges = [];
+    }
     isLoading = false;
     loadInitialChallenges();
     notifyListeners();
-  }
-
-  static String _mockCreatorAvatar(int index) {
-    const avatars = ['💇', '✂️', '💅', '✨', '🎨', '👩‍🎨', '💄', '🌟'];
-    return avatars[index % avatars.length];
-  }
-
-  List<Challenge> _generateMockChallenges() {
-    // 샘플 mp4는 지역/네트워크에 따라 차단되는 경우가 있어,
-    // 재생 안정성이 높은 Google 샘플 버킷 URL을 사용합니다.
-    const videoPool = <String>[
-      'assets/videos/mock_challenge_1.mp4',
-      'assets/videos/mock_challenge_2.mp4',
-    ];
-    return List.generate(20, (index) {
-      // 짝수: 제품, 홀수: 교육 — 모든 피드에 태그 칩이 보이도록.
-      final hasProduct = index.isEven;
-
-      return Challenge(
-        id: 'challenge_$index',
-        title: '챌린지 ${index + 1}',
-        description: '챌린지 ${index + 1} 설명입니다',
-        creatorName: '크리에이터 ${index + 1}',
-        creatorId: 'creator_$index',
-        creatorAvatar: _mockCreatorAvatar(index),
-        videoUrl: videoPool[index % videoPool.length],
-        thumbnailUrl: null,
-        likes: Random().nextInt(1000),
-        comments: Random().nextInt(100),
-        shares: Random().nextInt(50),
-        views: Random().nextInt(10000),
-        isLiked: false,
-        isDisliked: false,
-        isSubscribed: false,
-        subscriberCount: Random().nextInt(5000),
-        tags: ['태그${index + 1}', '미용'],
-        productUrl: hasProduct ? 'https://example.com/product/$index' : null,
-        productName: hasProduct ? '제품 ${index + 1}' : null,
-        productThumbnailUrl: hasProduct ? null : null,
-        educationId: hasProduct ? null : 'edu_$index',
-        educationName: hasProduct ? null : '교육 ${index + 1}',
-        educationUrl: hasProduct
-            ? null
-            : 'https://example.com/education/$index',
-        educationThumbnailUrl: hasProduct ? null : null,
-        taggedType: hasProduct ? 'product' : 'education',
-        musicName: '음악 ${index + 1}',
-        musicArtist: '아티스트 ${index + 1}',
-      );
-    });
   }
 
   Future<void> loadSubscribedChallenges() async {
@@ -218,7 +178,7 @@ class ChallengeViewModel extends ChangeNotifier {
     feedSwitchToken++;
 
     if (index == 0) {
-      loadChallengesInternal();
+      await loadChallengesInternal();
     } else {
       await loadSubscribedChallenges();
       if (subscribedChallenges.isEmpty) {
