@@ -22,7 +22,7 @@ class ShopMatchingTipsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFF8E53),
+      backgroundColor: AppTheme.backgroundWhite,
       appBar: const SpareSubpageAppBar(
         title: '매칭 꿀팁',
         showToolbarActions: false,
