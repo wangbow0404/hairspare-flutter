@@ -48,7 +48,7 @@ class _MatchingTipsEducationHero extends StatelessWidget {
           end: Alignment.bottomCenter,
           colors: [
             AppTheme.primaryPurpleLight.withValues(alpha: 0.55),
-            AppTheme.backgroundGray,
+            AppTheme.backgroundWhite,
           ],
         ),
       ),
