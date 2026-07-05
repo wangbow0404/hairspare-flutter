@@ -45,7 +45,11 @@ class _PopularJobsSectionState extends State<PopularJobsSection> {
       return const SizedBox.shrink();
     }
 
-    final repeatedJobs = [...widget.jobs, ...widget.jobs, ...widget.jobs];
+    // 무한 스크롤처럼 보이게 하려고 3번 반복하는데, 실제 인기 공고가 적으면
+    // 같은 공고가 바로 옆에 또 나와서 중복처럼 보임 — 3개 이상일 때만 반복.
+    final repeatedJobs = widget.jobs.length >= 3
+        ? [...widget.jobs, ...widget.jobs, ...widget.jobs]
+        : widget.jobs;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing6),
