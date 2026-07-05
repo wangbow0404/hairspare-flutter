@@ -11,13 +11,13 @@ abstract final class SpareHomeQuickMenu {
       CategoryItem(
         emoji: '',
         icon: Icons.work_outline,
-        label: '공고별',
+        label: '공고정보',
         onTap: () => context.push(AppRoutes.spareHomeJobs),
       ),
       CategoryItem(
         emoji: '',
         icon: Icons.calendar_month_outlined,
-        label: '스케줄표',
+        label: '내 스케줄',
         onTap: () => context.push(AppRoutes.spareHomeWorkCheck),
       ),
       CategoryItem(
@@ -29,7 +29,7 @@ abstract final class SpareHomeQuickMenu {
       CategoryItem(
         emoji: '',
         icon: Icons.favorite_outline_rounded,
-        label: '모델매칭',
+        label: '모델검색',
         onTap: () => context.push(AppRoutes.spareHomeModelMatch),
       ),
     ];

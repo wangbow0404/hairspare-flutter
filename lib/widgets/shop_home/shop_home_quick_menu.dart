@@ -12,14 +12,14 @@ abstract final class ShopHomeQuickMenu {
       CategoryItem(
         emoji: '',
         icon: Icons.groups_2_outlined,
-        label: '인력별',
+        label: '스페어정보',
         color: AppTheme.primaryPurple,
         onTap: () => context.push(AppRoutes.shopHomeSpares),
       ),
       CategoryItem(
         emoji: '',
         icon: Icons.event_note_outlined,
-        label: '스케줄표',
+        label: '내 스케줄',
         color: AppTheme.primaryBlue,
         onTap: () => context.push(AppRoutes.shopHomeSchedule),
       ),
@@ -33,7 +33,7 @@ abstract final class ShopHomeQuickMenu {
       CategoryItem(
         emoji: '',
         icon: Icons.favorite_outline,
-        label: '모델매칭',
+        label: '모델검색',
         color: AppTheme.primaryPink,
         onTap: () => context.push(AppRoutes.shopHomeModelMatch),
       ),

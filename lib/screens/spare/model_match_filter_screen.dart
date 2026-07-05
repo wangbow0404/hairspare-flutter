@@ -22,7 +22,6 @@ class _ModelMatchFilterScreenState extends State<ModelMatchFilterScreen> {
   final Set<String> _hairLengths = {};
   final Set<String> _treatments = {};
   final Set<String> _imageStyles = {};
-  double _distanceKm = ModelMatchOptions.defaultDistanceKm;
 
   void _toggle(Set<String> set, String value) {
     setState(() {
@@ -37,7 +36,6 @@ class _ModelMatchFilterScreenState extends State<ModelMatchFilterScreen> {
       treatments: Set.of(_treatments),
       imageStyles: Set.of(_imageStyles),
       career: _career,
-      distanceKm: _distanceKm,
     );
     final swipeRoute = GoRouterState.of(context).uri.path.startsWith('/shop')
         ? AppRoutes.shopHomeModelMatchSwipe
@@ -111,10 +109,6 @@ class _ModelMatchFilterScreenState extends State<ModelMatchFilterScreen> {
                   ),
               ],
             ),
-          ),
-          _DistanceSection(
-            distanceKm: _distanceKm,
-            onChanged: (v) => setState(() => _distanceKm = v),
           ),
           const SizedBox(height: AppTheme.spacing4),
           const Text(
@@ -192,87 +186,3 @@ class _MultiChips extends StatelessWidget {
   }
 }
 
-class _DistanceSection extends StatelessWidget {
-  const _DistanceSection({required this.distanceKm, required this.onChanged});
-
-  final double distanceKm;
-  final ValueChanged<double> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Expanded(
-              child: Text(
-                '매칭 거리',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.stitchTextPrimary,
-                ),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spacing3,
-                vertical: AppTheme.spacing1,
-              ),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryPurpleLight,
-                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-              ),
-              child: Text(
-                '${distanceKm.round()} km 이내',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.stitchPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            activeTrackColor: AppTheme.stitchPrimary,
-            inactiveTrackColor: AppTheme.borderGray,
-            thumbColor: AppTheme.stitchPrimary,
-            overlayColor: AppTheme.stitchPrimary.withValues(alpha: 0.12),
-            trackHeight: 4,
-          ),
-          child: Slider(
-            value: distanceKm,
-            min: ModelMatchOptions.minDistanceKm,
-            max: ModelMatchOptions.maxDistanceKm,
-            onChanged: onChanged,
-          ),
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing1),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '1km',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.stitchTextSecondary,
-                ),
-              ),
-              Text(
-                '50km',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.stitchTextSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}

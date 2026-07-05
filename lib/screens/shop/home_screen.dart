@@ -7,6 +7,7 @@ import '../../providers/chat_provider.dart';
 import '../../providers/favorite_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/shell_navigation.dart';
 import '../../view_models/shop_home_view_model.dart';
 import '../../widgets/common/app_screen_safe_area.dart';
 import '../../widgets/shop_home/shop_home_scroll_view.dart';
@@ -89,6 +90,13 @@ class _ShopHomeLoadedBodyState extends State<_ShopHomeLoadedBody> {
       body: AppScreenSafeArea(
         bottom: false,
         child: ShopHomeScrollView(scrollController: widget.scrollController),
+      ),
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'shop_home_new_job_fab',
+        backgroundColor: AppTheme.primaryPurple,
+        tooltip: '공고 올리기',
+        onPressed: () => ShellNavigation.pushShopJobNew(context),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
