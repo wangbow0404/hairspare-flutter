@@ -117,25 +117,6 @@ class StitchListSpareCard extends StatelessWidget {
                             }).toList(),
                           ),
                         ],
-                        const SizedBox(height: AppTheme.spacing2),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.thumb_up_alt_outlined,
-                              size: 14,
-                              color: AppTheme.stitchPrimary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '따봉 ${spare.thumbsUpCount}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.stitchPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                   ),

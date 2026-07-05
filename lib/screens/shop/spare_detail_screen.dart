@@ -350,7 +350,7 @@ class _VerificationBadge extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────
-// 3컬럼 지표 행 (평점 / 완료 / 추천)
+// 지표 행 (완료)
 // ─────────────────────────────────────────
 
 class _SpareDetailMetricsRow extends StatelessWidget {
@@ -367,13 +367,6 @@ class _SpareDetailMetricsRow extends StatelessWidget {
             child: _MetricCell(
               label: '완료',
               value: '${spare.completedJobs}건',
-            ),
-          ),
-          const VerticalDivider(width: 1, color: AppTheme.borderGray),
-          Expanded(
-            child: _MetricCell(
-              label: '추천',
-              value: '${spare.thumbsUpCount}개',
             ),
           ),
         ],

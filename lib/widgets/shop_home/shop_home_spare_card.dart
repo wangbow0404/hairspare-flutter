@@ -29,8 +29,7 @@ class ShopHomeSpareFeatureCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final metaLine =
-        '경력 ${spare.experience}년 · 완료 ${spare.completedJobs}건 · '
-        '따봉 ${spare.thumbsUpCount}';
+        '경력 ${spare.experience}년 · 완료 ${spare.completedJobs}건';
 
     return SizedBox(
       width: cardWidth,
@@ -245,8 +244,7 @@ class ShopHomeSpareListTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '경력 ${spare.experience}년 · 완료 ${spare.completedJobs}건 · '
-                      '따봉 ${spare.thumbsUpCount}',
+                      '경력 ${spare.experience}년 · 완료 ${spare.completedJobs}건',
                       style: HomeTextStyles.homeCardMeta,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

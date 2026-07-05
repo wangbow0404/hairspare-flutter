@@ -194,45 +194,10 @@ class SpareCard extends StatelessWidget {
                     const SizedBox(height: AppTheme.spacing2),
                     Row(
                       children: [
-                        const Icon(
-                          Icons.thumb_up,
-                          size: 14,
-                          color: AppTheme.primaryPurple,
-                        ),
-                        const SizedBox(width: AppTheme.spacing1),
-                        Text(
-                          '따봉 ${spare.thumbsUpCount}개',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppTheme.primaryPurple,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                        const SizedBox(width: AppTheme.spacing2),
-                        const Text(
-                          '•',
-                          style: TextStyle(color: AppTheme.textSecondary),
-                        ),
-                        const SizedBox(width: AppTheme.spacing2),
                         Text(
                           '리뷰 ${spare.reviewCount}개',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: AppTheme.textSecondary,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ] else ...[
-                    const SizedBox(height: AppTheme.spacing1),
-                    Row(
-                      children: [
-                        const Icon(Icons.thumb_up, size: 12, color: AppTheme.primaryPurple),
-                        const SizedBox(width: 4),
-                        Text(
-                          '따봉 ${spare.thumbsUpCount}',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: AppTheme.primaryPurple,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 10,
                               ),
                         ),
                       ],
