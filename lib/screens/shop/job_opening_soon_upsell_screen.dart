@@ -10,10 +10,10 @@ import 'package:hairspare/utils/api_config.dart';
 import 'package:hairspare/utils/error_handler.dart';
 import 'package:hairspare/widgets/shop_job_new/shop_job_new_ui_kit.dart';
 
-/// 오픈예정 노출 수수료 (원).
+/// 하이패스 노출 수수료 (원).
 const int kShopOpeningSoonFee = 5000;
 
-/// 공고 등록 직후 — 첫 공고인 샵에게만 노출되는 오픈예정 업셀 화면.
+/// 공고 등록 직후 — 첫 공고인 샵에게만 노출되는 하이패스 업셀 화면.
 class ShopJobOpeningSoonUpsellScreen extends StatefulWidget {
   const ShopJobOpeningSoonUpsellScreen({
     super.key,
@@ -66,7 +66,7 @@ class _ShopJobOpeningSoonUpsellScreenState
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: const ShopJobNewAppBar(title: '오픈예정 매장 등록'),
+      appBar: const ShopJobNewAppBar(title: '하이패스 등록'),
       body: Column(
         children: [
           Expanded(
@@ -95,10 +95,13 @@ class _ShopJobOpeningSoonUpsellScreenState
                         ),
                         SizedBox(height: AppTheme.spacing3),
                         ShopJobNewGuideBullet(
-                          text: '결제 완료 후 홈 화면 오픈예정 매장 섹션에 바로 노출됩니다.',
+                          text: '결제 완료 후 홈 화면 하이패스 구역에 바로 노출됩니다.',
                         ),
                         ShopJobNewGuideBullet(
                           text: '스페어들이 미리 찜하고 지원 준비를 할 수 있습니다.',
+                        ),
+                        ShopJobNewGuideBullet(
+                          text: '하이패스는 첫 공고를 등록하는 샵에게만 제공되는 특별 혜택입니다.',
                         ),
                         ShopJobNewGuideBullet(
                           text: '실제 PG 연동 전까지는 mock 결제로 처리됩니다.',
@@ -180,7 +183,7 @@ class _ShopJobOpeningSoonUpsellScreenState
                                     ),
                                     const SizedBox(width: AppTheme.spacing2),
                                     Text(
-                                      '$feeLabel원 결제하고 오픈예정 등록',
+                                      '$feeLabel원 결제하고 하이패스 등록',
                                       style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w700,
@@ -238,7 +241,7 @@ class _OpeningSoonHeroBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '오픈예정 매장 노출',
+                  '하이패스',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -247,7 +250,7 @@ class _OpeningSoonHeroBanner extends StatelessWidget {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  '스페어들이 오픈 전부터 주목하게 만드세요',
+                  '첫 공고를 올린 사장님께만 드리는 특별 혜택이에요',
                   style: TextStyle(
                     fontSize: 13,
                     color: Color(0xE6FFFFFF),
@@ -293,7 +296,7 @@ class _OpeningSoonJobSummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spacing2),
           const Text(
-            '첫 번째 공고 등록을 축하드립니다!\n오픈예정 섹션에 노출하면 더 많은 스페어에게 알릴 수 있어요.',
+            '첫 번째 공고 등록을 축하드립니다!\n하이패스로 노출하면 더 많은 스페어에게 빠르게 알릴 수 있어요.',
             style: TextStyle(
               fontSize: 13,
               color: AppTheme.textSecondary,
@@ -319,7 +322,7 @@ class _OpeningSoonBreakdownCard extends StatelessWidget {
           const Row(
             children: [
               Text(
-                '오픈예정 노출 수수료',
+                '하이패스 노출 수수료',
                 style: TextStyle(
                   fontSize: 14,
                   color: AppTheme.textSecondary,

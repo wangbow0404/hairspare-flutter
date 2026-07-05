@@ -5,7 +5,7 @@ import '../theme/app_theme.dart';
 import '../utils/icon_mapper.dart';
 import 'common/job_thumbnail.dart';
 
-/// 오픈 예정 매장 섹션 (다크 테마, 한 줄 가로 스크롤)
+/// 하이패스 공고 섹션 (다크 테마, 한 줄 가로 스크롤)
 class UpcomingShopsSection extends StatelessWidget {
   final List<Job> jobs;
   final Function(Job)? onJobTap;
@@ -37,11 +37,6 @@ class UpcomingShopsSection extends StatelessWidget {
     }
   }
 
-  String _getOpenDate(DateTime createdAt) {
-    final openDate = createdAt.add(const Duration(hours: 24));
-    return DateFormat('M월 d일', 'ko_KR').format(openDate);
-  }
-
   @override
   Widget build(BuildContext context) {
     if (jobs.isEmpty) return const SizedBox.shrink();
@@ -61,7 +56,7 @@ class UpcomingShopsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            '오픈 예정 매장',
+            '하이패스 공고',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -70,7 +65,7 @@ class UpcomingShopsSection extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spacing1),
           const Text(
-            '기대되는 매장을 미리 찜해보세요',
+            '지금 막 올라온 특별한 신규 공고예요',
             style: TextStyle(fontSize: 14, color: _textMuted),
           ),
           const SizedBox(height: AppTheme.spacing4),
@@ -88,7 +83,6 @@ class UpcomingShopsSection extends StatelessWidget {
                   job: job,
                   isFavorite: isFavorite,
                   timeTag: _getTimeTag(job.time),
-                  openDate: _getOpenDate(job.createdAt),
                   amount: _formatAmount(job.amount),
                   onTap: () => onJobTap?.call(job),
                   onFavoriteToggle: () =>
@@ -108,7 +102,6 @@ class _UpcomingCard extends StatelessWidget {
     required this.job,
     required this.isFavorite,
     required this.timeTag,
-    required this.openDate,
     required this.amount,
     this.onTap,
     this.onFavoriteToggle,
@@ -117,7 +110,6 @@ class _UpcomingCard extends StatelessWidget {
   final Job job;
   final bool isFavorite;
   final String timeTag;
-  final String openDate;
   final String amount;
   final VoidCallback? onTap;
   final VoidCallback? onFavoriteToggle;
@@ -169,7 +161,7 @@ class _UpcomingCard extends StatelessWidget {
                         ],
                       ),
                       child: const Text(
-                        'OPEN',
+                        '하이패스',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
@@ -238,15 +230,6 @@ class _UpcomingCard extends StatelessWidget {
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '오픈 $openDate',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFFD8B4FE), // purple-300
-                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
