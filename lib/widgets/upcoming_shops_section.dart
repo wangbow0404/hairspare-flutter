@@ -3,9 +3,10 @@ import 'package:intl/intl.dart';
 import '../models/job.dart';
 import '../theme/app_theme.dart';
 import '../utils/icon_mapper.dart';
+import '../utils/region_helper.dart';
 import 'common/job_thumbnail.dart';
 
-/// 하이패스 공고 섹션 (다크 테마, 한 줄 가로 스크롤)
+/// 하이패스 공고 섹션 (다크 배경 + 화이트 카드, 한 줄 가로 스크롤)
 class UpcomingShopsSection extends StatelessWidget {
   final List<Job> jobs;
   final Function(Job)? onJobTap;
@@ -37,6 +38,46 @@ class UpcomingShopsSection extends StatelessWidget {
     }
   }
 
+  String _getDayTag(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final target = DateTime(date.year, date.month, date.day);
+      final diff = target.difference(today).inDays;
+      if (diff == 0) return '오늘';
+      if (diff == 1) return '내일';
+      if (diff < 0 || diff > 6) {
+        return DateFormat('M월 d일', 'ko_KR').format(date);
+      }
+      const weekdays = ['월', '화', '수', '목', '금', '토', '일'];
+      return '이번주 ${weekdays[date.weekday - 1]}';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  int? _toMinutes(String? hhmm) {
+    if (hhmm == null || !hhmm.contains(':')) return null;
+    final parts = hhmm.split(':');
+    final h = int.tryParse(parts[0]);
+    final m = int.tryParse(parts.length > 1 ? parts[1] : '0');
+    if (h == null || m == null) return null;
+    return h * 60 + m;
+  }
+
+  String _getDurationLabel(String? time, String? endTime) {
+    final start = _toMinutes(time);
+    var end = _toMinutes(endTime);
+    if (start == null || end == null) return '';
+    if (end <= start) end += 24 * 60;
+    final hours = (end - start) / 60;
+    final rounded = hours.roundToDouble();
+    final label =
+        (hours - rounded).abs() < 0.01 ? '${rounded.toInt()}' : '$hours';
+    return ' ($label시간)';
+  }
+
   @override
   Widget build(BuildContext context) {
     if (jobs.isEmpty) return const SizedBox.shrink();
@@ -55,22 +96,32 @@ class UpcomingShopsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '하이패스 공고',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
+          Row(
+            children: [
+              Image.asset(
+                'assets/images/brand/hipass_mark.png',
+                width: 28,
+                height: 28,
+              ),
+              const SizedBox(width: AppTheme.spacing2),
+              const Text(
+                '하이패스 프리미엄 공고',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: AppTheme.spacing1),
           const Text(
-            '지금 막 올라온 특별한 신규 공고예요',
+            '지금 가장 빠르게 매칭되는 공고',
             style: TextStyle(fontSize: 14, color: _textMuted),
           ),
           const SizedBox(height: AppTheme.spacing4),
           SizedBox(
-            height: 230,
+            height: 268,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: displayJobs.length,
@@ -83,6 +134,8 @@ class UpcomingShopsSection extends StatelessWidget {
                   job: job,
                   isFavorite: isFavorite,
                   timeTag: _getTimeTag(job.time),
+                  dayTag: _getDayTag(job.date),
+                  durationLabel: _getDurationLabel(job.time, job.endTime),
                   amount: _formatAmount(job.amount),
                   onTap: () => onJobTap?.call(job),
                   onFavoriteToggle: () =>
@@ -102,6 +155,8 @@ class _UpcomingCard extends StatelessWidget {
     required this.job,
     required this.isFavorite,
     required this.timeTag,
+    required this.dayTag,
+    required this.durationLabel,
     required this.amount,
     this.onTap,
     this.onFavoriteToggle,
@@ -110,163 +165,217 @@ class _UpcomingCard extends StatelessWidget {
   final Job job;
   final bool isFavorite;
   final String timeTag;
+  final String dayTag;
+  final String durationLabel;
   final String amount;
   final VoidCallback? onTap;
   final VoidCallback? onFavoriteToggle;
 
-  static const Color _surfaceDark = Color(0xFF374151);
-  static const Color _textMuted = Color(0xFFD1D5DB);
-
   @override
   Widget build(BuildContext context) {
+    final region = RegionHelper.getRegionName(job.regionId).trim();
+
     return SizedBox(
-      width: 170,
+      width: 190,
       child: Material(
-        color: _surfaceDark,
+        color: AppTheme.backgroundWhite,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Stack(
-                children: [
-                  JobThumbnail(
-                    job: job,
-                    width: 170,
-                    height: 104,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(AppTheme.radiusLg),
-                      topRight: Radius.circular(AppTheme.radiusLg),
-                    ),
-                  ),
-                  Positioned(
-                    top: AppTheme.spacing2,
-                    left: AppTheme.spacing2,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: AppTheme.stitchHeroGradient,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.stitchPrimary.withValues(alpha: 0.5),
-                            blurRadius: 8,
-                          ),
-                        ],
-                      ),
-                      child: const Text(
-                        '하이패스',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: AppTheme.spacing1,
-                    right: AppTheme.spacing1,
-                    child: Material(
-                      color: Colors.black.withValues(alpha: 0.32),
-                      shape: const CircleBorder(),
-                      child: InkWell(
-                        onTap: onFavoriteToggle,
-                        customBorder: const CircleBorder(),
-                        child: Padding(
-                          padding: const EdgeInsets.all(6),
-                          child: IconMapper.icon(
-                                'heart',
-                                size: 16,
-                                color: isFavorite
-                                    ? AppTheme.urgentRed
-                                    : Colors.white,
-                              ) ??
-                              Icon(
-                                isFavorite
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                size: 16,
-                                color: isFavorite
-                                    ? AppTheme.urgentRed
-                                    : Colors.white,
-                              ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+              border: Border.all(
+                color: AppTheme.stitchPrimaryContainer.withValues(alpha: 0.6),
               ),
-              Padding(
-                padding: const EdgeInsets.all(AppTheme.spacing3),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.stitchPrimaryContainer.withValues(alpha: 0.35),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Stack(
                   children: [
-                    Row(
-                      children: [
-                        _Tag(label: timeTag, color: AppTheme.stitchPrimary),
-                        const SizedBox(width: 4),
-                        _Tag(
-                          label: '장기',
-                          color: Colors.white.withValues(alpha: 0.18),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      job.shopName.isEmpty ? '매장명' : job.shopName,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                    JobThumbnail(
+                      job: job,
+                      width: 190,
+                      height: 116,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(AppTheme.radiusLg),
+                        topRight: Radius.circular(AppTheme.radiusLg),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$amount원~',
-                      style: const TextStyle(fontSize: 11, color: _textMuted),
+                    Positioned(
+                      left: AppTheme.spacing2,
+                      bottom: AppTheme.spacing2,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.18),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.bolt,
+                              size: 12,
+                              color: AppTheme.stitchPrimary,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              'HIPASS',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.stitchPrimary,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: AppTheme.spacing1,
+                      right: AppTheme.spacing1,
+                      child: Material(
+                        color: Colors.black.withValues(alpha: 0.32),
+                        shape: const CircleBorder(),
+                        child: InkWell(
+                          onTap: onFavoriteToggle,
+                          customBorder: const CircleBorder(),
+                          child: Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: IconMapper.icon(
+                                  'heart',
+                                  size: 16,
+                                  color: isFavorite
+                                      ? AppTheme.urgentRed
+                                      : Colors.white,
+                                ) ??
+                                Icon(
+                                  isFavorite
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  size: 16,
+                                  color: isFavorite
+                                      ? AppTheme.urgentRed
+                                      : Colors.white,
+                                ),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.all(AppTheme.spacing3),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        job.shopName.isEmpty ? '매장명' : job.shopName,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (region.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on_outlined,
+                              size: 13,
+                              color: AppTheme.textTertiary,
+                            ),
+                            const SizedBox(width: 2),
+                            Expanded(
+                              child: Text(
+                                region,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.textSecondary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.schedule,
+                            size: 13,
+                            color: AppTheme.textTertiary,
+                          ),
+                          const SizedBox(width: 2),
+                          Expanded(
+                            child: Text(
+                              '$dayTag $timeTag$durationLabel',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.textSecondary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppTheme.spacing2),
+                      const Divider(height: 1, color: AppTheme.borderGray),
+                      const SizedBox(height: AppTheme.spacing2),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            '일급',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                          Text(
+                            '$amount원',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.stitchPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Tag extends StatelessWidget {
-  const _Tag({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: Colors.white,
         ),
       ),
     );
