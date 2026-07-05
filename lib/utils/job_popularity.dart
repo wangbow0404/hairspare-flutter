@@ -74,7 +74,16 @@ abstract final class JobPopularity {
           ),
         ),
       );
-    return ranked.take(limit).toList();
+
+    // 같은 샵의 공고가 인기 공고에 여러 개 올라가지 않도록 샵당 1개만 선택.
+    final seenShops = <String>{};
+    final deduped = <Job>[];
+    for (final job in ranked) {
+      if (!seenShops.add(job.shopName)) continue;
+      deduped.add(job);
+      if (deduped.length >= limit) break;
+    }
+    return deduped;
   }
 
   static Set<String> popularJobIds(
