@@ -1085,7 +1085,7 @@ class _WorkRewardSection extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spacing2),
           Text(
-            '노쇼 없이 10일 연속 근무하면 에너지 1개를 받아요!',
+            '노쇼 없이 10회 연속 근무하면 에너지 1개를 받아요!',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontSize: 14,
               color: AppTheme.textSecondary,
@@ -1117,7 +1117,7 @@ class _WorkRewardSection extends StatelessWidget {
                               ),
                         ),
                         Text(
-                          '$displayDays / 10일',
+                          '$displayDays / 10회',
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 fontSize: 14,
