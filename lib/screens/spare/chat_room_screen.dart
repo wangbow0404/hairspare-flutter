@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:hairspare/core/di/service_locator.dart';
 import 'package:intl/intl.dart';
@@ -45,6 +47,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   bool _isSending = false;
   final List<String> _recentOutgoingForContactCheck = [];
   static const int _recentOutgoingWindow = 8;
+  Timer? _pollTimer;
+  bool _isPolling = false;
 
   String _mySenderRole(User? user) {
     if (user?.role == UserRole.shop) return 'shop';
@@ -95,9 +99,65 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(
+      const Duration(seconds: 3),
+      (_) => _pollNewMessages(),
+    );
+  }
+
+  Future<void> _pollNewMessages() async {
+    if (!mounted || _isPolling) return;
+    _isPolling = true;
+    try {
+      final chatWithMessages = await _chatService.getChatById(widget.chatId);
+      if (!mounted) return;
+
+      final existingIds = _messages.map((m) => m.id).toSet();
+      final incoming = chatWithMessages.messages;
+      final hasNew = incoming.any((m) => !existingIds.contains(m.id));
+      if (!hasNew) return;
+
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final currentUser = authProvider.currentUser;
+      final newFromOther = incoming.any(
+        (m) => !existingIds.contains(m.id) &&
+            !_isMyMessage(m, currentUser, chatWithMessages.chat),
+      );
+
+      setState(() {
+        _chat = chatWithMessages.chat;
+        _messages = incoming;
+      });
+
+      if (newFromOther) {
+        await context.read<ChatProvider>().markChatAsRead(
+              widget.chatId,
+              viewerRole: _mySenderRole(currentUser),
+            );
+      }
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    } catch (_) {
+      // 폴링 실패는 조용히 무시 — 다음 주기에 다시 시도
+    } finally {
+      _isPolling = false;
+    }
   }
 
   Future<void> _loadChat() async {
@@ -139,6 +199,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
         }
       });
+
+      _startPolling();
     } catch (e) {
       if (mounted) {
         setState(() {
