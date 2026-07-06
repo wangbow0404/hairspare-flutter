@@ -24,11 +24,8 @@ class FavoriteService {
                 : []);
         return favoritesJson
             .whereType<Map<String, dynamic>>()
-            .map((json) {
-              // favorites API는 { id, jobId, createdAt, job: {...} } 형태일 수 있음
-              final jobData = json['job'] ?? json;
-              return Job.fromJson(jobData);
-            })
+            .where((json) => json['job'] != null)
+            .map((json) => Job.fromJson(json['job'] as Map<String, dynamic>))
             .toList();
       } else {
         throw ServerException(
