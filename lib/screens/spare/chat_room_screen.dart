@@ -557,20 +557,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (!isMyMessage && showProfile)
-                                      Padding(
-                                        padding: const EdgeInsets.only(bottom: AppTheme.spacing1),
-                                        child: Text(
-                                          message.senderName,
-                                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500,
-                                            color: isMyMessage
-                                                ? Colors.white.withValues(alpha: 0.7)
-                                                : AppTheme.textSecondary,
-                                          ),
-                                        ),
-                                      ),
                                     Text(
                                       message.content,
                                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
