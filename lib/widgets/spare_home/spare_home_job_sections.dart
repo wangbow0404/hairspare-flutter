@@ -115,6 +115,13 @@ class SpareHomeJobSections extends StatelessWidget {
                 ),
               ),
             ),
+            UpcomingShopsSection(
+              jobs: topUpcomingJobs,
+              favoriteMap: favoriteMap,
+              onJobTap: (job) => _openJobDetail(context, job),
+              onFavoriteToggle: (jobId, isFav) =>
+                  onToggleFavorite(context, jobId, isFav),
+            ),
             NewJobsSection(
               jobs: topNewJobs,
               favoriteMap: favoriteMap,
@@ -126,13 +133,6 @@ class SpareHomeJobSections extends StatelessWidget {
                   sort: JobsListSortMode.latest.name,
                 ),
               ),
-            ),
-            UpcomingShopsSection(
-              jobs: topUpcomingJobs,
-              favoriteMap: favoriteMap,
-              onJobTap: (job) => _openJobDetail(context, job),
-              onFavoriteToggle: (jobId, isFav) =>
-                  onToggleFavorite(context, jobId, isFav),
             ),
             NormalJobsSection(
               jobs: jobProvider.normalJobs,
