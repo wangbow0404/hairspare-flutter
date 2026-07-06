@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/router/app_routes.dart';
 import '../../providers/energy_provider.dart';
 import '../../providers/schedule_provider.dart';
 import '../../theme/app_theme.dart';
@@ -54,25 +56,28 @@ class SpareProfileQuickStats extends StatelessWidget {
                 color: AppTheme.borderGray,
               ),
               Expanded(
-                child: Column(
-                  children: [
-                    Text(
-                      scheduleProvider.isLoading ? '-' : scheduleProvider.scheduledCount.toString(),
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.stitchPrimaryContainer,
-                          ),
-                    ),
-                    const SizedBox(height: AppTheme.spacing1),
-                    Text(
-                      '진행중',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            fontSize: 12,
-                            color: AppTheme.textSecondary,
-                          ),
-                    ),
-                  ],
+                child: InkWell(
+                  onTap: () => context.push(AppRoutes.spareProfileWorkCheck),
+                  child: Column(
+                    children: [
+                      Text(
+                        scheduleProvider.isLoading ? '-' : scheduleProvider.scheduledCount.toString(),
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.stitchPrimaryContainer,
+                            ),
+                      ),
+                      const SizedBox(height: AppTheme.spacing1),
+                      Text(
+                        '진행중',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary,
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               Container(
