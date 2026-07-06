@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../models/job.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/api_config.dart';
+import '../../utils/region_helper.dart';
 import '../../utils/work_schedule_utils.dart';
 
 String _proxyImageUrl(String url) {
@@ -327,7 +328,7 @@ class ShopJobsListJobCard extends StatelessWidget {
                                 const SizedBox(width: AppTheme.spacing1),
                                 Expanded(
                                   child: Text(
-                                    job.regionId.replaceAll('-', ' '),
+                                    RegionHelper.getRegionName(job.regionId),
                                     style: const TextStyle(
                                       fontSize: 14,
                                       color: AppTheme.textSecondary,
