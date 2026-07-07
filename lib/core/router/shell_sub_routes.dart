@@ -35,6 +35,8 @@ import '../../screens/spare/my_applications_screen.dart';
 import '../../screens/spare/my_space_bookings_screen.dart';
 import '../../screens/spare/payment_screen.dart';
 import '../../screens/spare/profile_edit_screen.dart';
+import '../../screens/spare/model_application_create_screen.dart';
+import '../../screens/spare/model_application_list_screen.dart';
 import '../../screens/spare/model_profile_edit_screen.dart';
 import '../../screens/spare/referral_screen.dart';
 import '../../screens/spare/region_select_screen.dart';
@@ -305,6 +307,14 @@ abstract final class ShellSubRoutes {
         GoRoute(
           path: 'education',
           builder: (_, __) => const EducationScreen(),
+        ),
+        GoRoute(
+          path: 'application_posts',
+          builder: (_, __) => const ModelApplicationListScreen(),
+        ),
+        GoRoute(
+          path: 'application_posts/new',
+          builder: (_, __) => const ModelApplicationCreateScreen(),
         ),
         ...SharedLeafRoutes.all(),
       ];

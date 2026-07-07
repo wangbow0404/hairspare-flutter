@@ -112,6 +112,8 @@ abstract final class AppRoutes {
   static const modelHome = '/model/home';
   static const modelHomeProfileEdit = '/model/home/profile_edit';
   static const modelHomeEducation = '/model/home/education';
+  static const modelHomeApplicationPosts = '/model/home/application_posts';
+  static const modelHomeApplicationPostsNew = '/model/home/application_posts/new';
   static String modelHomeMatchLike(String likeId) =>
       '/model/home/match_like/$likeId';
   static String modelMatchingMatchLike(String likeId) =>

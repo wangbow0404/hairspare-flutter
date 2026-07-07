@@ -8,6 +8,7 @@ import '../../view_models/matching_view_model.dart';
 import '../../widgets/customer_service_section.dart';
 import '../../utils/app_screen_insets.dart';
 import 'model_home_app_bar.dart';
+import 'model_home_application_card.dart';
 import 'model_home_interest_section.dart';
 import 'model_home_profile_card.dart';
 import 'model_home_status_strip.dart';
@@ -51,6 +52,8 @@ class ModelHomeScrollView extends StatelessWidget {
                 children: [
                   const SizedBox(height: AppTheme.spacing4),
                   ModelHomeProfileCard(profile: profile),
+                  const SizedBox(height: AppTheme.spacing4),
+                  const ModelHomeApplicationCard(),
                   const SizedBox(height: AppTheme.spacing4),
                   ModelHomeStatusStrip(
                     isIdentityVerified: profile.isIdentityVerified,
