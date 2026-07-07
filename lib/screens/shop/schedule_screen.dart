@@ -14,7 +14,10 @@ import '../../widgets/shop_schedule/shop_schedule_scroll_content.dart';
 
 /// Shop용 스케줄 화면. 상태는 [ShopScheduleViewModel], 본문은 `lib/widgets/shop_schedule/` 위젯으로 분리.
 class ShopScheduleScreen extends StatefulWidget {
-  const ShopScheduleScreen({super.key});
+  const ShopScheduleScreen({super.key, this.focusJobId});
+
+  /// 알림 등에서 특정 공고의 스케줄로 바로 이동할 때 사용.
+  final String? focusJobId;
 
   @override
   State<ShopScheduleScreen> createState() => _ShopScheduleScreenState();
@@ -24,10 +27,19 @@ class _ShopScheduleScreenState extends State<ShopScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => ShopScheduleViewModel(
-        scheduleService: sl(),
-        spareService: sl(),
-      )..loadInitial(),
+      create: (_) {
+        final vm = ShopScheduleViewModel(
+          scheduleService: sl(),
+          spareService: sl(),
+        );
+        final focusJobId = widget.focusJobId;
+        if (focusJobId != null) {
+          vm.loadInitial().then((_) => vm.selectScheduleByJobId(focusJobId));
+        } else {
+          vm.loadInitial();
+        }
+        return vm;
+      },
       child: const _ShopScheduleScaffold(),
     );
   }

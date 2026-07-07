@@ -191,6 +191,22 @@ class ShopScheduleViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 알림 등에서 특정 공고의 스케줄로 바로 이동할 때 사용 — 해당 날짜로 달력을
+  /// 옮기고 스케줄을 선택된 상태로 만든다.
+  void selectScheduleByJobId(String jobId) {
+    final matches = schedules.where((s) => s.jobId == jobId).toList();
+    if (matches.isEmpty) return;
+    matches.sort((a, b) => a.status == 'scheduled' ? -1 : 1);
+    final target = matches.first;
+    final parsedDate = DateTime.tryParse(target.date);
+    if (parsedDate != null) {
+      selectedDate = parsedDate;
+      currentMonth = DateTime(parsedDate.year, parsedDate.month);
+    }
+    selectedSchedule = target;
+    notifyListeners();
+  }
+
   String? settlementBlockedMessageFor(Schedule schedule) {
     if (ScheduleSpaceRental.isSpaceRental(schedule)) return null;
     return ScheduleWorkSession.settlementBlockedMessage(schedule);

@@ -65,6 +65,13 @@ abstract final class ShellNavigation {
   static Future<T?> pushShopJobDetail<T>(BuildContext context, String jobId) =>
       push<T>(context, 'shop_job/$jobId');
 
+  /// 알림 등에서 특정 공고의 스케줄로 바로 이동 (해당 스케줄이 선택된 상태로 열림).
+  static Future<T?> pushShopSchedule<T>(
+    BuildContext context, {
+    String? focusJobId,
+  }) =>
+      push<T>(context, 'schedule', extra: focusJobId);
+
   static Future<bool?> pushShopJobNew(
     BuildContext context, {
     Job? jobToEdit,

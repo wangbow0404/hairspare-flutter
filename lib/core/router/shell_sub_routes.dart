@@ -208,7 +208,9 @@ abstract final class ShellSubRoutes {
         ),
         GoRoute(
           path: 'schedule',
-          builder: (_, __) => const ShopScheduleScreen(),
+          builder: (_, state) => ShopScheduleScreen(
+            focusJobId: state.extra as String?,
+          ),
         ),
         GoRoute(
           path: 'points',
@@ -266,7 +268,9 @@ abstract final class ShellSubRoutes {
         ),
         GoRoute(
           path: 'schedule',
-          builder: (_, __) => const ShopScheduleScreen(),
+          builder: (_, state) => ShopScheduleScreen(
+            focusJobId: state.extra as String?,
+          ),
         ),
         GoRoute(
           path: 'jobs',

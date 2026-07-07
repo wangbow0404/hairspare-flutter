@@ -37,6 +37,12 @@ abstract final class ShopNotificationNavigation {
           );
         }
         return;
+      case 'settlement_reminder':
+        ShellNavigation.pushShopSchedule(
+          context,
+          focusJobId: notification.relatedJobId,
+        );
+        return;
       case 'message_received':
       // 구버전 알림 호환용 타입명
       case 'chat':
