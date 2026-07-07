@@ -4,7 +4,7 @@ import 'schedule_work_session.dart';
 
 /// 스케줄 취소 정책 버전.
 enum ScheduleCancellationPolicyVersion {
-  /// 근무 시작 24시간 전까지만 앱 취소 허용.
+  /// 근무 시작 48시간 전까지만 앱 취소 허용.
   v1StrictD1,
 
   /// 확정(scheduled) 일방 취소 — 시작 전까지 허용 + 역할별 패널티.
@@ -106,7 +106,7 @@ abstract final class ScheduleCancellationPolicy {
       ScheduleCancellationPolicyVersion.v2Unilateral;
 
   /// v1 호환 — v2에서는 미사용(시작 전까지 취소 허용).
-  static const int minHoursBeforeCancel = 24;
+  static const int minHoursBeforeCancel = 48;
 
   static const int shopUnilateralCancelLimit30d = 3;
   static const int shopJobPostingSuspensionDays = 7;

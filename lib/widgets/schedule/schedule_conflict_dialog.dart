@@ -332,8 +332,8 @@ class _StitchCancellationPolicySection extends StatelessWidget {
   const _StitchCancellationPolicySection();
 
   static const List<String> _policyLines = [
-    '근무 시작 24시간 전: 위약금 없이 취소 가능',
-    '근무 시작 24시간 이내: 패널티 부여',
+    '근무 시작 48시간 전: 위약금 없이 취소 가능',
+    '근무 시작 48시간 이내: 패널티 부여',
     '제안 대기 중인 근무는 자유롭게 취소 가능',
   ];
 
