@@ -217,56 +217,64 @@ class _ModelSearchCard extends StatelessWidget {
     return Material(
       color: AppTheme.backgroundWhite,
       borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
         onTap: () => Navigator.of(context).push<void>(
           MaterialPageRoute(
             builder: (_) => ModelSearchProfileScreen(item: item),
           ),
         ),
-        child: Container(
-          padding: const EdgeInsets.all(AppTheme.spacing3),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-            border: Border.all(color: AppTheme.borderGray),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: AspectRatio(
+          aspectRatio: 3 / 4,
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                child: SizedBox(
-                  width: 72,
-                  height: 72,
-                  child: AppNetworkImage(
-                    imageUrl: item.model.primaryImage,
-                    fit: BoxFit.cover,
-                    fallbackIcon: Icons.person_outline,
+              AppNetworkImage(
+                imageUrl: item.model.primaryImage,
+                fit: BoxFit.cover,
+                fallbackIcon: Icons.person_outline,
+              ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.82),
+                      Colors.black.withValues(alpha: 0.15),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 0.45, 1.0],
                   ),
                 ),
               ),
-              const SizedBox(width: AppTheme.spacing3),
-              Expanded(
+              Positioned(
+                left: AppTheme.spacing4,
+                right: AppTheme.spacing4,
+                bottom: AppTheme.spacing4,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       item.model.name.isEmpty ? '모델' : item.model.name,
                       style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppTheme.spacing2),
                     Row(
                       children: [
-                        const Icon(Icons.schedule, size: 13, color: AppTheme.textTertiary),
-                        const SizedBox(width: 3),
+                        const Icon(Icons.schedule, size: 16, color: Colors.white70),
+                        const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             '$dateLabel · ${item.startTime}~${item.endTime}',
-                            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                            style: const TextStyle(fontSize: 13, color: Colors.white70),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -274,23 +282,29 @@ class _ModelSearchCard extends StatelessWidget {
                       ],
                     ),
                     if (item.keywords.isNotEmpty) ...[
-                      const SizedBox(height: AppTheme.spacing1),
+                      const SizedBox(height: AppTheme.spacing3),
                       Wrap(
-                        spacing: 4,
-                        runSpacing: 4,
+                        spacing: AppTheme.spacing2,
+                        runSpacing: AppTheme.spacing2,
                         children: item.keywords.take(3).map((k) {
                           return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppTheme.spacing3,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: AppTheme.purple100,
-                              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
+                              ),
                             ),
                             child: Text(
                               k,
                               style: const TextStyle(
-                                fontSize: 11,
-                                color: AppTheme.purple700,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w600,
+                                color: Colors.white,
                               ),
                             ),
                           );
@@ -300,7 +314,6 @@ class _ModelSearchCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppTheme.textTertiary),
             ],
           ),
         ),
