@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/di/service_locator.dart';
 import '../../models/model_application_search_item.dart';
+import '../../models/model_match_preference.dart';
 import '../../services/model_match_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
@@ -10,6 +11,7 @@ import '../../widgets/common/app_network_image.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../widgets/custom_date_picker_dialog.dart';
 import '../../widgets/stitch/stitch_empty_state.dart';
+import '../../widgets/stitch/stitch_filter_chip.dart';
 import 'model_search_profile_screen.dart';
 
 /// 모델검색 — "날짜로 찾기": 날짜를 고르면 그날 신청 등록된 모델 목록을 보여준다.
@@ -24,6 +26,7 @@ class _ModelDateSearchScreenState extends State<ModelDateSearchScreen> {
   final ModelMatchService _service = sl<ModelMatchService>();
 
   DateTime? _selectedDate;
+  Set<String> _selectedKeywords = {};
   List<ModelApplicationSearchItem> _items = [];
   bool _isLoading = true;
   String? _error;
@@ -43,7 +46,10 @@ class _ModelDateSearchScreenState extends State<ModelDateSearchScreen> {
       final dateStr = _selectedDate != null
           ? DateFormat('yyyy-MM-dd').format(_selectedDate!)
           : null;
-      final items = await _service.getApplicationPostsByDate(date: dateStr);
+      final items = await _service.getApplicationPostsByDate(
+        date: dateStr,
+        keywords: _selectedKeywords,
+      );
       if (!mounted) return;
       setState(() {
         _items = items;
@@ -77,6 +83,21 @@ class _ModelDateSearchScreenState extends State<ModelDateSearchScreen> {
     _load();
   }
 
+  Future<void> _openFilterSheet() async {
+    final result = await showModalBottomSheet<Set<String>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.backgroundWhite,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => _ConditionFilterSheet(initial: _selectedKeywords),
+    );
+    if (result == null) return;
+    setState(() => _selectedKeywords = result);
+    _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,7 +106,12 @@ class _ModelDateSearchScreenState extends State<ModelDateSearchScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing4),
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing4,
+              AppTheme.spacing4,
+              AppTheme.spacing4,
+              AppTheme.spacing2,
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -107,6 +133,36 @@ class _ModelDateSearchScreenState extends State<ModelDateSearchScreen> {
                   ),
                 ],
               ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing4,
+              0,
+              AppTheme.spacing4,
+              AppTheme.spacing2,
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _openFilterSheet,
+                icon: const Icon(Icons.tune),
+                label: Text(
+                  _selectedKeywords.isEmpty
+                      ? '조건 선택'
+                      : '조건 선택 (${_selectedKeywords.length})',
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _selectedKeywords.isEmpty
+                      ? AppTheme.textPrimary
+                      : AppTheme.stitchPrimary,
+                  side: BorderSide(
+                    color: _selectedKeywords.isEmpty
+                        ? AppTheme.borderGray
+                        : AppTheme.stitchPrimary,
+                  ),
+                ),
+              ),
             ),
           ),
           Expanded(
@@ -248,6 +304,157 @@ class _ModelSearchCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// "날짜로 찾기"에서 날짜와 함께 좁힐 조건(기장·선호시술·이미지 스타일) 선택 시트.
+class _ConditionFilterSheet extends StatefulWidget {
+  const _ConditionFilterSheet({required this.initial});
+
+  final Set<String> initial;
+
+  @override
+  State<_ConditionFilterSheet> createState() => _ConditionFilterSheetState();
+}
+
+class _ConditionFilterSheetState extends State<_ConditionFilterSheet> {
+  late final Set<String> _selected = Set.of(widget.initial);
+
+  void _toggle(String value) {
+    setState(() {
+      if (!_selected.add(value)) _selected.remove(value);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: AppTheme.spacing4,
+          right: AppTheme.spacing4,
+          top: AppTheme.spacing3,
+          bottom: AppTheme.spacing4 + MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.borderGray,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const Text(
+                '어떤 조건의 모델을 찾으세요?',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing5),
+              _FilterSection(
+                title: '기장',
+                options: ModelMatchOptions.hairLengths,
+                selected: _selected,
+                onToggle: _toggle,
+              ),
+              _FilterSection(
+                title: '선호하는 시술',
+                options: ModelMatchOptions.treatments,
+                selected: _selected,
+                onToggle: _toggle,
+              ),
+              _FilterSection(
+                title: '모델 이미지',
+                options: ModelMatchOptions.imageStyles,
+                selected: _selected,
+                onToggle: _toggle,
+              ),
+              const SizedBox(height: AppTheme.spacing2),
+              Row(
+                children: [
+                  if (_selected.isNotEmpty)
+                    TextButton(
+                      onPressed: () => setState(_selected.clear),
+                      child: const Text('초기화'),
+                    ),
+                  const Spacer(),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spacing2),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(context, _selected),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.stitchPrimary,
+                  ),
+                  child: const Text('적용하기'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterSection extends StatelessWidget {
+  const _FilterSection({
+    required this.title,
+    required this.options,
+    required this.selected,
+    required this.onToggle,
+  });
+
+  final String title;
+  final List<String> options;
+  final Set<String> selected;
+  final ValueChanged<String> onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing2),
+          Wrap(
+            spacing: AppTheme.spacing2,
+            runSpacing: AppTheme.spacing2,
+            children: [
+              for (final o in options)
+                StitchFilterChip(
+                  label: o,
+                  isSelected: selected.contains(o),
+                  onTap: () => onToggle(o),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }

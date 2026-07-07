@@ -43,14 +43,19 @@ class ModelMatchService {
     }
   }
 
-  /// "날짜검색" — 특정 날짜(없으면 오늘 이후 전체)에 모델 신청 글이 있는 모델 목록.
+  /// "날짜검색" — 특정 날짜(없으면 오늘 이후 전체) + 조건(기장·시술·이미지) 키워드로
+  /// 모델 신청 글이 있는 모델 목록을 조회.
   Future<List<ModelApplicationSearchItem>> getApplicationPostsByDate({
     String? date,
+    Set<String> keywords = const {},
   }) async {
     try {
       final response = await _dio.get(
         '/api/models/application-posts/discovery',
-        queryParameters: {if (date != null) 'date': date},
+        queryParameters: {
+          if (date != null) 'date': date,
+          if (keywords.isNotEmpty) 'keywords': keywords.join(','),
+        },
       );
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
