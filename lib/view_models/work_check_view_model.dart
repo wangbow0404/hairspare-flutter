@@ -331,7 +331,9 @@ class WorkCheckViewModel extends ChangeNotifier {
     final dateStr = DateFormat('yyyy-MM-dd').format(date);
     return checkedDays.contains(dateStr) ||
         schedules.any(
-          (s) => s.date == dateStr && s.status == 'completed',
+          (s) =>
+              s.date == dateStr &&
+              (s.status == 'completed' || s.checkInTime != null),
         );
   }
 

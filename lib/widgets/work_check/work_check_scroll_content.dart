@@ -549,6 +549,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                     final isProposed = schedule.status == 'proposed';
                     final isSelected = vm.selectedScheduleId == schedule.id;
                     final isScheduleChecked = schedule.status == 'completed';
+                    final hasCheckedIn = schedule.checkInTime != null;
                     final scheduleDateStr = schedule.date;
                     final hasNewSchedule =
                         !vm.viewedDates.contains(scheduleDateStr) &&
@@ -729,8 +730,7 @@ class WorkCheckScrollContent extends StatelessWidget {
                                               ],
                                             ),
                                           ],
-                                          if (isScheduleChecked &&
-                                              schedule.checkInTime != null) ...[
+                                          if (hasCheckedIn) ...[
                                             const SizedBox(
                                               height: AppTheme.spacing3,
                                             ),
@@ -784,6 +784,31 @@ class WorkCheckScrollContent extends StatelessWidget {
                                               size: 20,
                                               color: Colors.white,
                                             ),
+                                      )
+                                    else if (hasCheckedIn)
+                                      Container(
+                                        padding: AppTheme.spacingSymmetric(
+                                          horizontal: AppTheme.spacing3,
+                                          vertical: AppTheme.spacing1,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.primaryBlue
+                                              .withValues(alpha: 0.12),
+                                          borderRadius: AppTheme.borderRadius(
+                                            AppTheme.radiusFull,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '체크인 완료',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelSmall
+                                              ?.copyWith(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
+                                                color: AppTheme.primaryBlue,
+                                              ),
+                                        ),
                                       )
                                     else
                                       Container(
