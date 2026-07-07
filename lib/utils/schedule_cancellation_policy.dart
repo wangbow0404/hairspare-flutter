@@ -108,6 +108,11 @@ abstract final class ScheduleCancellationPolicy {
   /// v1 호환 — v2에서는 미사용(시작 전까지 취소 허용).
   static const int minHoursBeforeCancel = 48;
 
+  /// v2 — 매칭 확정된(scheduled) 근무를 스페어가 이 시간 이내에 일방적으로
+  /// 취소하면 노쇼와 동일하게 취급(관리자 검토 큐 등록). 상호 합의된 취소는
+  /// 관리자가 반려 처리해 페널티를 취소할 수 있다.
+  static const int lateCancelCutoffHours = 48;
+
   static const int shopUnilateralCancelLimit30d = 3;
   static const int shopJobPostingSuspensionDays = 7;
 
@@ -126,7 +131,9 @@ abstract final class ScheduleCancellationPolicy {
     }
     return switch (actor) {
       CancellationActor.spare => [
-        '확정된 근무를 취소하면 예약 에너지는 환불되지 않습니다.',
+        '근무 시작 $lateCancelCutoffHours시간 전 취소는 위약금 없이 가능합니다.',
+        '근무 시작 $lateCancelCutoffHours시간 이내 취소는 노쇼와 동일하게 처리되어 '
+            '예약 에너지가 환불되지 않고 페널티가 적용될 수 있습니다.',
         '취소 시 해당 매장·스페어 채팅방에 자동으로 알림이 전송됩니다.',
         '근무 시작 시각 이후에는 앱에서 취소할 수 없습니다.',
         '무단 결근(노쇼) 시 추가 패널티가 적용될 수 있습니다.',
@@ -290,14 +297,29 @@ abstract final class ScheduleCancellationPolicy {
         : ShopCancellationWarningLevel.none;
 
     if (actor == CancellationActor.spare) {
+      final isLateCancel = hoursUntilStart < lateCancelCutoffHours;
+      if (!isLateCancel) {
+        return CancellationEligibility(
+          status: CancellationEligibilityStatus.allowed,
+          hoursUntilStart: hoursUntilStart,
+          penaltyTier: CancellationPenaltyTier.none,
+          penaltySummary:
+              '근무 시작 $lateCancelCutoffHours시간 전 취소라 위약금 없이 취소됩니다.',
+        );
+      }
+      final lateSummary = StringBuffer(
+        '근무 시작 $lateCancelCutoffHours시간 이내 취소는 노쇼와 동일하게 '
+        '처리되어 관리자 검토 후 페널티가 적용될 수 있습니다.',
+      );
+      if (energyForfeit > 0) {
+        lateSummary.write(' 예약 에너지 ${energyForfeit}E도 환불되지 않습니다.');
+      }
       return CancellationEligibility(
         status: CancellationEligibilityStatus.allowed,
         hoursUntilStart: hoursUntilStart,
         penaltyTier: CancellationPenaltyTier.spareEnergyForfeit,
         energyForfeit: energyForfeit,
-        penaltySummary: energyForfeit > 0
-            ? '예약 에너지 ${energyForfeit}E는 환불되지 않습니다.'
-            : '예약 에너지는 환불되지 않습니다.',
+        penaltySummary: lateSummary.toString(),
       );
     }
 
