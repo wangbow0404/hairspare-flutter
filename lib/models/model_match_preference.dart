@@ -10,6 +10,7 @@ abstract final class ModelMatchOptions {
     '커트',
     '전체염색',
     '탈색',
+    '클리닉',
     '레이어드컷',
     '히피펌',
     '볼륨매직',
