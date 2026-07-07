@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/di/service_locator.dart';
+import '../../models/schedule.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/chat_service.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/error_handler.dart';
 import '../../utils/icon_mapper.dart';
 import '../../utils/schedule_work_session.dart';
 import '../../utils/navigation_helper.dart';
@@ -17,6 +22,30 @@ class WorkCheckScrollContent extends StatelessWidget {
   const WorkCheckScrollContent({super.key, this.isModelMode = false});
 
   final bool isModelMode;
+
+  Future<void> _openChat(BuildContext context, Schedule schedule) async {
+    final user = Provider.of<AuthProvider>(context, listen: false).currentUser;
+    if (user == null) return;
+    try {
+      final chatId = await sl<ChatService>().ensureChatForJobApplication(
+        jobId: schedule.jobId,
+        jobTitle: schedule.job?.title ?? '공고',
+        shopName: schedule.job?.shopName ?? '매장',
+        spareId: user.id,
+        spareName: user.name ?? user.username,
+      );
+      if (context.mounted) NavigationHelper.navigateToChat(context, chatId);
+    } catch (e) {
+      if (!context.mounted) return;
+      final ex = ErrorHandler.handleException(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ErrorHandler.getUserFriendlyMessage(ex)),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -762,6 +791,66 @@ class WorkCheckScrollContent extends StatelessWidget {
                                               ),
                                             ),
                                           ],
+                                          const SizedBox(
+                                            height: AppTheme.spacing3,
+                                          ),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: OutlinedButton.icon(
+                                                  onPressed: () =>
+                                                      NavigationHelper
+                                                          .navigateToJobDetail(
+                                                    context,
+                                                    schedule.jobId,
+                                                  ),
+                                                  icon: const Icon(
+                                                    Icons.description_outlined,
+                                                    size: 16,
+                                                  ),
+                                                  label: const Text('공고 상세'),
+                                                  style: OutlinedButton.styleFrom(
+                                                    padding:
+                                                        const EdgeInsets
+                                                            .symmetric(
+                                                      vertical: 8,
+                                                    ),
+                                                    side: const BorderSide(
+                                                      color:
+                                                          AppTheme.borderGray,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(
+                                                width: AppTheme.spacing2,
+                                              ),
+                                              Expanded(
+                                                child: OutlinedButton.icon(
+                                                  onPressed: () => _openChat(
+                                                    context,
+                                                    schedule,
+                                                  ),
+                                                  icon: const Icon(
+                                                    Icons.chat_bubble_outline,
+                                                    size: 16,
+                                                  ),
+                                                  label: const Text('채팅하기'),
+                                                  style: OutlinedButton.styleFrom(
+                                                    padding:
+                                                        const EdgeInsets
+                                                            .symmetric(
+                                                      vertical: 8,
+                                                    ),
+                                                    side: const BorderSide(
+                                                      color:
+                                                          AppTheme.borderGray,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ],
                                       ),
                                     ),
