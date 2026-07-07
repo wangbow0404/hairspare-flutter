@@ -121,47 +121,55 @@ class _ModelDateSearchScreenState extends State<ModelDateSearchScreen> {
                     label: Text(
                       _selectedDate != null
                           ? DateFormat('M월 d일 (E)', 'ko_KR').format(_selectedDate!)
-                          : '날짜 선택 (전체: 오늘 이후)',
+                          : '날짜 선택',
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
-                if (_selectedDate != null) ...[
-                  const SizedBox(width: AppTheme.spacing2),
-                  TextButton(
-                    onPressed: _clearDate,
-                    child: const Text('전체보기'),
+                const SizedBox(width: AppTheme.spacing2),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _openFilterSheet,
+                    icon: const Icon(Icons.tune),
+                    label: Text(
+                      _selectedKeywords.isEmpty
+                          ? '조건 선택'
+                          : '조건 선택 (${_selectedKeywords.length})',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _selectedKeywords.isEmpty
+                          ? AppTheme.textPrimary
+                          : AppTheme.stitchPrimary,
+                      side: BorderSide(
+                        color: _selectedKeywords.isEmpty
+                            ? AppTheme.borderGray
+                            : AppTheme.stitchPrimary,
+                      ),
+                    ),
                   ),
-                ],
+                ),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppTheme.spacing4,
-              0,
-              AppTheme.spacing4,
-              AppTheme.spacing2,
-            ),
-            child: SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _openFilterSheet,
-                icon: const Icon(Icons.tune),
-                label: Text(
-                  _selectedKeywords.isEmpty
-                      ? '조건 선택'
-                      : '조건 선택 (${_selectedKeywords.length})',
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: _selectedKeywords.isEmpty
-                      ? AppTheme.textPrimary
-                      : AppTheme.stitchPrimary,
-                  side: BorderSide(
-                    color: _selectedKeywords.isEmpty
-                        ? AppTheme.borderGray
-                        : AppTheme.stitchPrimary,
+          if (_selectedDate != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing4,
+                0,
+                AppTheme.spacing4,
+                AppTheme.spacing2,
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: _clearDate,
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                ),
+                  child: const Text('전체 날짜 다시 보기'),
               ),
             ),
           ),
