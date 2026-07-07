@@ -5,6 +5,8 @@ import '../../screens/spare/education_screen.dart' show Education;
 import '../../screens/common/portfolio_screen.dart';
 import '../../screens/shop/applicants_screen.dart';
 import '../../screens/spare/challenge_screen.dart';
+import '../../screens/spare/model_date_search_screen.dart';
+import '../../screens/spare/model_match_entry_screen.dart';
 import '../../screens/spare/model_match_filter_screen.dart';
 import '../../screens/spare/challenge_profile_screen.dart';
 import '../../screens/shop/education_screen.dart';
@@ -84,6 +86,14 @@ abstract final class ShellSubRoutes {
       ];
 
   static List<RouteBase> modelMatchChildRoutes() => <RouteBase>[
+        GoRoute(
+          path: 'filter',
+          builder: (_, __) => const ModelMatchFilterScreen(),
+        ),
+        GoRoute(
+          path: 'by_date',
+          builder: (_, __) => const ModelDateSearchScreen(),
+        ),
         GoRoute(
           path: 'swipe',
           builder: (BuildContext context, GoRouterState state) {
@@ -241,7 +251,7 @@ abstract final class ShellSubRoutes {
         ),
         GoRoute(
           path: 'model_match',
-          builder: (_, __) => const ModelMatchFilterScreen(),
+          builder: (_, __) => const ModelMatchEntryScreen(),
           routes: <RouteBase>[
             ...ShellSubRoutes.modelMatchChildRoutes(),
             ...SharedLeafRoutes.all(),

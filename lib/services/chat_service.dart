@@ -283,14 +283,13 @@ class ChatService {
       );
     }
     try {
+      // 백엔드 /api/chats/ensure는 jobId 없이 shopId·spareId만 보내면
+      // 1:1 채팅방을 찾거나 만든다. shopId는 생략하면 호출자(현재 로그인 사용자)로
+      // 자동 채워지므로, 모델은 항상 spareId 슬롯에 넣어주면 된다.
       final response = await _dio.post(
         '/api/chats/ensure',
         data: {
-          'modelId': modelId,
-          'modelName': modelName,
-          'spareId': spareId,
-          'spareName': spareName,
-          'type': 'model_match',
+          'spareId': modelId,
         },
       );
       if (response.statusCode == 200 || response.statusCode == 201) {

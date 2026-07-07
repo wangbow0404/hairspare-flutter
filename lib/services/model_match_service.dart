@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../core/di/service_locator.dart';
 import '../mocks/mock_model_match_data.dart';
 import '../models/hair_model.dart';
+import '../models/model_application_search_item.dart';
 import '../models/model_discovery_item.dart';
 import '../models/model_match_preference.dart';
 import '../utils/api_config.dart';
@@ -32,6 +33,32 @@ class ModelMatchService {
         return list
             .whereType<Map<String, dynamic>>()
             .map(HairModel.fromJson)
+            .toList();
+      }
+      return const [];
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// "날짜검색" — 특정 날짜(없으면 오늘 이후 전체)에 모델 신청 글이 있는 모델 목록.
+  Future<List<ModelApplicationSearchItem>> getApplicationPostsByDate({
+    String? date,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/api/models/application-posts/discovery',
+        queryParameters: {if (date != null) 'date': date},
+      );
+      if (response.statusCode == 200) {
+        final data = response.data['data'] ?? response.data;
+        final items = data is Map ? data['items'] : null;
+        if (items is! List) return [];
+        return items
+            .whereType<Map<String, dynamic>>()
+            .map(ModelApplicationSearchItem.fromJson)
             .toList();
       }
       return const [];

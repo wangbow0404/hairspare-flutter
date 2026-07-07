@@ -47,7 +47,7 @@ import '../../screens/spare/find_password_screen.dart';
 import '../../screens/spare/home_screen.dart';
 import '../../screens/spare/jobs_list_screen.dart';
 import '../../screens/spare/login_screen.dart';
-import '../../screens/spare/model_match_filter_screen.dart';
+import '../../screens/spare/model_match_entry_screen.dart';
 import '../../screens/spare/messages_screen.dart';
 import '../../screens/spare/model_home_screen.dart';
 import '../../screens/spare/model_matching_status_screen.dart';
@@ -239,7 +239,7 @@ final class AppRouter {
                             BuildContext context,
                             GoRouterState state,
                           ) =>
-                              const ModelMatchFilterScreen(),
+                              const ModelMatchEntryScreen(),
                           routes: <RouteBase>[
                         ...ShellSubRoutes.modelMatchChildRoutes(),
                         ...SharedLeafRoutes.all(),
