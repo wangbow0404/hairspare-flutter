@@ -246,12 +246,12 @@ class ShopScheduleViewModel extends ChangeNotifier {
         try {
           await _spareService.giveThumbsUpToSpare(selectedSchedule!.spareId);
         } catch (e) {
-          debugPrint('따봉 전송 실패: $e');
+          debugPrint('응원 전송 실패: $e');
         }
       }
 
       final message = giveThumbsUp
-          ? '정산이 완료되었습니다.\n정산 금액: ${NumberFormat('#,###').format(result['amount'])}원\n\n👍 따봉을 보냈습니다!\n\n등급이 업데이트되었습니다.'
+          ? '정산이 완료되었습니다.\n정산 금액: ${NumberFormat('#,###').format(result['amount'])}원\n\n👍 응원을 보냈습니다!\n\n등급이 업데이트되었습니다.'
           : '정산이 완료되었습니다.\n정산 금액: ${NumberFormat('#,###').format(result['amount'])}원\n\n등급이 업데이트되었습니다.';
 
       _m.showSuccess(

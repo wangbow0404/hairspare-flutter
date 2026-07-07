@@ -101,7 +101,7 @@ extension ShopTierExtension on ShopTier {
     }
   }
 
-  /// 등급별 최소 따봉 수
+  /// 등급별 최소 응원 수
   int get minThumbsUp {
     switch (this) {
       case ShopTier.bronze:
@@ -169,7 +169,7 @@ extension ShopTierExtension on ShopTier {
     return (nextTier.minCompletedSchedules - currentCompleted).clamp(0, double.infinity).toInt();
   }
 
-  /// 다음 등급까지 필요한 따봉 수
+  /// 다음 등급까지 필요한 응원 수
   int? getNextTierRequiredThumbsUp(int currentThumbsUp) {
     final nextTier = getNextTier();
     if (nextTier == null) return null;
@@ -197,7 +197,7 @@ extension ShopTierExtension on ShopTier {
     final nextTier = getNextTier();
     if (nextTier == null) return 1.0; // 최고 등급
 
-    // 완료 스케줄과 따봉 중 더 빠르게 달성 가능한 기준으로 진행률 계산
+    // 완료 스케줄과 응원 중 더 빠르게 달성 가능한 기준으로 진행률 계산
     final scheduleProgress = (completedSchedules - minCompletedSchedules) /
         (nextTier.minCompletedSchedules - minCompletedSchedules);
     final thumbsUpProgress = (thumbsUp - minThumbsUp) /
@@ -310,7 +310,7 @@ class ShopTierInfo {
     return currentTier.getNextTierRequiredSchedules(completedSchedules);
   }
 
-  /// 다음 등급까지 필요한 따봉 수
+  /// 다음 등급까지 필요한 응원 수
   int? get requiredThumbsUpForNextTier {
     return currentTier.getNextTierRequiredThumbsUp(thumbsUpReceived);
   }

@@ -940,7 +940,7 @@ class MockShopData {
 
   static final Set<String> _thumbsUpGivenSpareIds = {};
 
-  /// 샵 → 스페어 따봉 (mock, 중복 전송 방지).
+  /// 샵 → 스페어 응원 (mock, 중복 전송 방지).
   static Future<void> giveThumbsUpToSpare(String spareId) async {
     await Future.delayed(const Duration(milliseconds: 150));
     if (_thumbsUpGivenSpareIds.contains(spareId)) return;

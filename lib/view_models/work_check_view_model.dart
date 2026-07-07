@@ -464,7 +464,7 @@ class WorkCheckViewModel extends ChangeNotifier {
       try {
         await _reviewService.sendThumbsUp(jobId: ratedJobId!);
       } catch (e) {
-        debugPrint('따봉 데이터 전송 실패: $e');
+        debugPrint('응원 데이터 전송 실패: $e');
       }
 
       schedules = schedules.map((s) {

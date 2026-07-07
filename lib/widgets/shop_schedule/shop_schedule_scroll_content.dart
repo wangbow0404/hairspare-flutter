@@ -175,7 +175,7 @@ class ShopScheduleScrollContent extends StatelessWidget {
               const SizedBox(height: AppTheme.spacing2),
               Text(
                 vm.tierInfo?.currentTier.getNextTier() != null
-                    ? '완료 스케줄 ${vm.tierInfo!.currentTier.getNextTier()!.minCompletedSchedules}개 또는 따봉 ${vm.tierInfo!.currentTier.getNextTier()!.minThumbsUp}개를 달성하면 다음 등급으로 올라가요!'
+                    ? '완료 스케줄 ${vm.tierInfo!.currentTier.getNextTier()!.minCompletedSchedules}개 또는 응원 ${vm.tierInfo!.currentTier.getNextTier()!.minThumbsUp}개를 달성하면 다음 등급으로 올라가요!'
                     : '최고 등급입니다!',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontSize: 14,
@@ -939,7 +939,7 @@ class ShopScheduleScrollContent extends StatelessWidget {
                           ),
                           const SizedBox(height: AppTheme.spacing1),
                           Text(
-                            '정산을 완료하고 따봉을 보내면 등급이 올라가요!',
+                            '정산을 완료하고 응원을 보내면 등급이 올라가요!',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               fontSize: 14,
                               color: AppTheme.textGray700,
@@ -964,7 +964,7 @@ class ShopScheduleScrollContent extends StatelessWidget {
                       Expanded(
                         child: Text(
                           vm.tierInfo?.currentTier.getNextTier() != null
-                              ? '${vm.tierInfo!.currentTier.getNextTier()!.name} 등급까지 ${vm.tierInfo!.requiredSchedulesForNextTier ?? 0}개 완료 또는 ${vm.tierInfo!.requiredThumbsUpForNextTier ?? 0}개 따봉이 필요해요!'
+                              ? '${vm.tierInfo!.currentTier.getNextTier()!.name} 등급까지 ${vm.tierInfo!.requiredSchedulesForNextTier ?? 0}개 완료 또는 ${vm.tierInfo!.requiredThumbsUpForNextTier ?? 0}개 응원이 필요해요!'
                               : '최고 등급입니다! 계속 유지해보세요!',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             fontSize: 14,
@@ -1012,7 +1012,7 @@ class ShopScheduleScrollContent extends StatelessWidget {
               const SizedBox(height: AppTheme.spacing4),
               shopScheduleInfoItem(context, '정산은 근무 종료 시간 이후에만 가능합니다.'),
               const SizedBox(height: AppTheme.spacing3),
-              shopScheduleInfoItem(context, '완료 스케줄 수 또는 받은 따봉 수가 기준을 충족하면 등급이 올라갑니다.'),
+              shopScheduleInfoItem(context, '완료 스케줄 수 또는 받은 응원 수가 기준을 충족하면 등급이 올라갑니다.'),
               const SizedBox(height: AppTheme.spacing3),
               shopScheduleInfoItem(context, '등급이 올라가면 공고 등록 수, 노출 우선순위 등 다양한 혜택을 받을 수 있습니다.'),
               const SizedBox(height: AppTheme.spacing3),

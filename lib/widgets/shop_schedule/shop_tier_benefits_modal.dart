@@ -52,7 +52,7 @@ void showShopTierBenefitsModal(BuildContext context, ShopTierInfo tierInfo) {
                     style: Theme.of(dialogContext).textTheme.bodyMedium,
                   ),
                   Text(
-                    '받은 따봉: ${tierInfo.thumbsUpReceived}개',
+                    '받은 응원: ${tierInfo.thumbsUpReceived}개',
                     style: Theme.of(dialogContext).textTheme.bodyMedium,
                   ),
                   Text(
@@ -116,7 +116,7 @@ void showShopTierBenefitsModal(BuildContext context, ShopTierInfo tierInfo) {
                 style: Theme.of(dialogContext).textTheme.bodySmall,
               ),
               Text(
-                '• 또는 따봉 ${tierInfo.currentTier.getNextTier()!.minThumbsUp}개 이상',
+                '• 또는 응원 ${tierInfo.currentTier.getNextTier()!.minThumbsUp}개 이상',
                 style: Theme.of(dialogContext).textTheme.bodySmall,
               ),
               const SizedBox(height: AppTheme.spacing2),

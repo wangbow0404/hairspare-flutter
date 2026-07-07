@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../../models/schedule.dart';
 import '../../theme/app_theme.dart';
 
-/// 정산 확인 바텀시트 — 정산과 따봉을 각각 독립 버튼으로 제공.
+/// 정산 확인 바텀시트 — 정산과 응원을 각각 독립 버튼으로 제공.
 class ShopScheduleThumbsUpModal extends StatefulWidget {
   const ShopScheduleThumbsUpModal({
     super.key,
@@ -114,7 +114,7 @@ class _ShopScheduleThumbsUpModalState extends State<ShopScheduleThumbsUpModal> {
                       ),
                       const SizedBox(height: AppTheme.spacing2),
                       Text(
-                        '따봉은 보내지 않아도 정산할 수 있어요.',
+                        '응원은 보내지 않아도 정산할 수 있어요.',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppTheme.textSecondary,
                           height: 1.4,
@@ -374,7 +374,7 @@ class _SettlementThumbsUpButton extends StatelessWidget {
             const Text('👍', style: TextStyle(fontSize: 22)),
             const SizedBox(width: AppTheme.spacing2),
             Text(
-              '따봉 보내기',
+              '응원 보내기',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: AppTheme.primaryPurpleDark,

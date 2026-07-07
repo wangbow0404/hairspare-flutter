@@ -33,7 +33,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
       // API에서 등급 정보 가져오기 시도
       final schedules = await _scheduleService.getSchedules(ownerId: 'me');
       final completedSchedules = schedules.where((s) => s.status == 'completed').length;
-      // TODO: 실제 따봉 수를 API에서 가져오기
+      // TODO: 실제 응원 수를 API에서 가져오기
       final thumbsUpReceived = (completedSchedules * 0.8).round();
       
       setState(() {
@@ -192,7 +192,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
               Expanded(
                 child: _buildStatItem(
                   icon: Icons.thumb_up,
-                  label: '받은 따봉',
+                  label: '받은 응원',
                   value: '${_tierInfo!.thumbsUpReceived}개',
                   color: AppTheme.primaryPurple,
                 ),
@@ -318,7 +318,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
                 ),
               ),
               Text(
-                '필요: 완료 ${_tierInfo!.requiredSchedulesForNextTier ?? 0}개 또는 따봉 ${_tierInfo!.requiredThumbsUpForNextTier ?? 0}개',
+                '필요: 완료 ${_tierInfo!.requiredSchedulesForNextTier ?? 0}개 또는 응원 ${_tierInfo!.requiredThumbsUpForNextTier ?? 0}개',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppTheme.textSecondary,
                 ),
@@ -380,15 +380,15 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
           const SizedBox(height: AppTheme.spacing3),
           _buildGuideItem(
             icon: Icons.thumb_up_outlined,
-            title: '따봉 받기',
-            description: '스페어로부터 따봉을 받으면 등급 상승에 도움이 됩니다.\n서비스 품질을 높여 많은 따봉을 받아보세요.',
+            title: '응원 받기',
+            description: '스페어로부터 응원을 받으면 등급 상승에 도움이 됩니다.\n서비스 품질을 높여 많은 응원을 받아보세요.',
             color: AppTheme.primaryPurple,
           ),
           const SizedBox(height: AppTheme.spacing3),
           _buildGuideItem(
             icon: Icons.info_outline,
             title: '등급 조건',
-            description: '완료 스케줄 수 또는 따봉 수 중 하나만 충족해도\n다음 등급으로 상승할 수 있습니다.',
+            description: '완료 스케줄 수 또는 응원 수 중 하나만 충족해도\n다음 등급으로 상승할 수 있습니다.',
             color: AppTheme.primaryBlue,
           ),
         ],
@@ -544,7 +544,7 @@ class _ShopVipStatusScreenState extends State<ShopVipStatusScreen> {
                     ),
                   ),
                   Text(
-                    '• 또는 따봉 ${tier.minThumbsUp}개 이상',
+                    '• 또는 응원 ${tier.minThumbsUp}개 이상',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppTheme.textSecondary,
                     ),

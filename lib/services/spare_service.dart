@@ -140,7 +140,7 @@ class SpareService {
     }
   }
 
-  /// 스페어에게 따봉 주기 (Shop 전용)
+  /// 스페어에게 응원 주기 (Shop 전용)
   Future<void> giveThumbsUpToSpare(String spareId) async {
     if (ApiConfig.useMockData) {
       return MockShopData.giveThumbsUpToSpare(spareId);
@@ -152,7 +152,7 @@ class SpareService {
 
       if (response.statusCode != 200 && response.statusCode != 201) {
         throw ServerException(
-          '따봉 전송 실패: ${response.statusMessage}',
+          '응원 전송 실패: ${response.statusMessage}',
           statusCode: response.statusCode,
         );
       }
@@ -163,7 +163,7 @@ class SpareService {
     }
   }
 
-  /// 스페어 따봉 취소 (Shop 전용)
+  /// 스페어 응원 취소 (Shop 전용)
   Future<void> removeThumbsUpFromSpare(String spareId) async {
     try {
       final response = await _dio.delete(
@@ -172,7 +172,7 @@ class SpareService {
 
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw ServerException(
-          '따봉 취소 실패: ${response.statusMessage}',
+          '응원 취소 실패: ${response.statusMessage}',
           statusCode: response.statusCode,
         );
       }
@@ -183,7 +183,7 @@ class SpareService {
     }
   }
 
-  /// 스페어 따봉 상태 확인 (Shop 전용)
+  /// 스페어 응원 상태 확인 (Shop 전용)
   Future<bool> hasThumbsUpForSpare(String spareId) async {
     try {
       final response = await _dio.get(

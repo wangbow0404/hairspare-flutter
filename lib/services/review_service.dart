@@ -133,7 +133,7 @@ class ReviewService {
     }
   }
 
-  /// 따봉 전송 (work check용)
+  /// 응원 전송 (work check용)
   Future<void> sendThumbsUp({
     required String jobId,
   }) async {
@@ -151,7 +151,7 @@ class ReviewService {
 
       if (response.statusCode != 200 && response.statusCode != 201) {
         throw ServerException(
-          '따봉 전송 실패: ${response.statusMessage}',
+          '응원 전송 실패: ${response.statusMessage}',
           statusCode: response.statusCode,
         );
       }
