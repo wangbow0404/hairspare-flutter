@@ -272,11 +272,11 @@ class ErrorHandler {
     }
 
     if (error is PermissionException) {
-      return '접근 권한이 없습니다.';
+      return error.message.isNotEmpty ? error.message : '접근 권한이 없습니다.';
     }
 
     if (error is NotFoundException) {
-      return '요청한 데이터를 찾을 수 없습니다.';
+      return error.message.isNotEmpty ? error.message : '요청한 데이터를 찾을 수 없습니다.';
     }
 
     if (error is ValidationException) {
