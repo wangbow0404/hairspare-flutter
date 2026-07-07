@@ -597,34 +597,39 @@ class ShopScheduleScrollContent extends StatelessWidget {
                     : '${schedule.startTime}~';
                 final isSpaceRental = ScheduleSpaceRental.isSpaceRental(schedule);
                 final isScheduleCompleted = schedule.status == 'completed';
+                final isScheduleCancelled = schedule.status == 'cancelled';
                 final isNoShowReportable = !isSpaceRental &&
                     ScheduleWorkSession.isNoShowReportable(schedule);
                 final scheduleStatusLabel = isSpaceRental
                     ? ScheduleSpaceRental.statusLabel(schedule, DateTime.now())
                     : isScheduleCompleted
                         ? '정산 완료'
-                        : switch (ScheduleWorkSession.phase(schedule, DateTime.now())) {
-                            ScheduleWorkPhase.beforeStart => '근무 예정',
-                            ScheduleWorkPhase.inProgress => '근무 중',
-                            ScheduleWorkPhase.afterEnd => '정산 대기',
-                          };
+                        : isScheduleCancelled
+                            ? '취소됨'
+                            : switch (ScheduleWorkSession.phase(schedule, DateTime.now())) {
+                                ScheduleWorkPhase.beforeStart => '근무 예정',
+                                ScheduleWorkPhase.inProgress => '근무 중',
+                                ScheduleWorkPhase.afterEnd => '정산 대기',
+                              };
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      onTap: isScheduleCompleted
-                          ? () async {
-                              final reason =
-                                  await ShopSettlementCancelDialog.show(context);
-                              if (reason == null || reason.isEmpty) return;
-                              await vm.requestSettlementCancel(
-                                schedule.id,
-                                reason,
-                              );
-                            }
-                          : () => vm.handleScheduleClick(schedule),
+                      onTap: isScheduleCancelled
+                          ? null
+                          : isScheduleCompleted
+                              ? () async {
+                                  final reason =
+                                      await ShopSettlementCancelDialog.show(context);
+                                  if (reason == null || reason.isEmpty) return;
+                                  await vm.requestSettlementCancel(
+                                    schedule.id,
+                                    reason,
+                                  );
+                                }
+                              : () => vm.handleScheduleClick(schedule),
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                       child: Container(
                         padding: AppTheme.spacing(AppTheme.spacing4),
@@ -737,7 +742,9 @@ class ShopScheduleScrollContent extends StatelessWidget {
                                       vertical: AppTheme.spacing1,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.purple100,
+                                      color: isScheduleCancelled
+                                          ? AppTheme.borderGray
+                                          : AppTheme.purple100,
                                       borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                                     ),
                                     child: Text(
@@ -745,7 +752,9 @@ class ShopScheduleScrollContent extends StatelessWidget {
                                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500,
-                                        color: AppTheme.purple700,
+                                        color: isScheduleCancelled
+                                            ? AppTheme.textSecondary
+                                            : AppTheme.purple700,
                                       ),
                                     ),
                                   ),
