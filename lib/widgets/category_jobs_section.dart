@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hairspare/widgets/job/urgent_job_card_theme.dart';
+import 'package:intl/intl.dart';
 import '../models/job.dart';
 import '../theme/app_theme.dart';
 import 'common/job_thumbnail.dart';
@@ -140,6 +141,13 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
   int getDaysLeft(Job job) {
     if (job.countdown == null) return 0;
     return (job.countdown! / 86400).floor();
+  }
+
+  /// 근무 날짜 "M월 d일 (요일)" 표기.
+  String formatJobDateLabel(Job job) {
+    final date = DateTime.tryParse(job.date);
+    if (date == null) return '';
+    return DateFormat('M월 d일 (E)', 'ko_KR').format(date);
   }
 
   /// 금액 포맷팅
@@ -284,6 +292,20 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
               right: 64,
               child: UrgentJobBadge(),
             ),
+
+          // 근무 날짜
+          Positioned(
+            bottom: AppTheme.spacing3,
+            right: AppTheme.spacing4,
+            child: Text(
+              formatJobDateLabel(job),
+              style: const TextStyle(
+                color: AppTheme.textTertiary,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
 
           // 공고 내용
           Padding(
