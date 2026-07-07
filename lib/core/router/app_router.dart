@@ -13,6 +13,7 @@ import '../../screens/admin/admin_noshow_screen.dart';
 import '../../screens/admin/admin_payment_detail_screen.dart';
 import '../../screens/admin/admin_payments_screen.dart';
 import '../../screens/admin/admin_reports_screen.dart';
+import '../../screens/admin/admin_settlement_cancel_requests_screen.dart';
 import '../../screens/admin/admin_settings_screen.dart';
 import '../../screens/admin/admin_user_detail_screen.dart';
 import '../../screens/admin/admin_users_screen.dart';
@@ -583,6 +584,11 @@ final class AppRouter {
               path: AppRoutes.adminCheckin,
               builder: (BuildContext context, GoRouterState state) =>
                   const AdminCheckinScreen(),
+            ),
+            GoRoute(
+              path: AppRoutes.adminSettlementCancelRequests,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminSettlementCancelRequestsScreen(),
             ),
             GoRoute(
               path: AppRoutes.adminVerifications,

@@ -190,6 +190,29 @@ class ScheduleService {
     }
   }
 
+  /// 이미 정산 완료된 근무의 취소를 관리자에게 요청 (관리자 검토 후 처리됨).
+  Future<void> requestSettlementCancel(
+    String scheduleId, {
+    required String reason,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/api/schedules/$scheduleId/settlement-cancel-request',
+        data: {'reason': reason},
+      );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw ServerException(
+          '정산취소 요청 실패: ${response.statusMessage}',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
   /// 스케줄 변경 요청(날짜/시간 조정)
   Future<void> requestScheduleChange({
     required String scheduleId,

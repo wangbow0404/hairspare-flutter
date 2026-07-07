@@ -12,6 +12,7 @@ import '../../utils/navigation_helper.dart';
 import '../../utils/schedule_space_rental.dart';
 import '../../utils/schedule_work_session.dart';
 import '../../view_models/shop_schedule_view_model.dart';
+import 'shop_settlement_cancel_dialog.dart';
 
 /// 스케줄 탭 스크롤 본문 (히어로·등급·달력·리스트·정산 CTA·안내).
 class ShopScheduleScrollContent extends StatelessWidget {
@@ -611,7 +612,15 @@ class ShopScheduleScrollContent extends StatelessWidget {
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: isScheduleCompleted
-                          ? null
+                          ? () async {
+                              final reason =
+                                  await ShopSettlementCancelDialog.show(context);
+                              if (reason == null || reason.isEmpty) return;
+                              await vm.requestSettlementCancel(
+                                schedule.id,
+                                reason,
+                              );
+                            }
                           : () => vm.handleScheduleClick(schedule),
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                       child: Container(

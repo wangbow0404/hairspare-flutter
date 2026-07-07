@@ -279,4 +279,20 @@ class ShopScheduleViewModel extends ChangeNotifier {
     selectedSchedule = null;
     notifyListeners();
   }
+
+  /// 이미 정산 완료된 근무를 취소해달라고 관리자에게 요청 (실제 취소는 관리자 승인 후 처리됨).
+  Future<bool> requestSettlementCancel(String scheduleId, String reason) async {
+    try {
+      await _scheduleService.requestSettlementCancel(scheduleId, reason: reason);
+      _m.showSuccess('정산취소 요청을 접수했습니다. 관리자 확인 후 처리됩니다.');
+      return true;
+    } catch (error) {
+      _m.showError(
+        ErrorHandler.getUserFriendlyMessage(
+          ErrorHandler.handleException(error),
+        ),
+      );
+      return false;
+    }
+  }
 }

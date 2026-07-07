@@ -451,6 +451,56 @@ class AdminService {
     }
   }
 
+  /// 정산취소 요청 목록 조회 (샵이 이미 정산된 근무의 취소를 요청한 건)
+  Future<List<dynamic>> getSettlementCancelRequests({String? status}) async {
+    try {
+      final response = await _dio.get(
+        '/api/admin/settlement-cancel-requests',
+        queryParameters: {if (status != null) 'status': status},
+      );
+      if (response.statusCode == 200) {
+        final data = response.data['data'] ?? response.data;
+        return (data is Map ? data['requests'] : null) ?? [];
+      }
+      throw ServerException(
+        '정산취소 요청 목록 조회 실패: ${response.statusMessage}',
+        statusCode: response.statusCode,
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 정산취소 요청 승인 — 실제로 스케줄이 취소되고 스페어 노쇼 횟수가 올라간다.
+  Future<void> approveSettlementCancelRequest(String id, {String? adminNote}) async {
+    try {
+      await _dio.post(
+        '/api/admin/settlement-cancel-requests/$id/approve',
+        data: {if (adminNote != null) 'adminNote': adminNote},
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 정산취소 요청 반려
+  Future<void> rejectSettlementCancelRequest(String id, {String? adminNote}) async {
+    try {
+      await _dio.post(
+        '/api/admin/settlement-cancel-requests/$id/reject',
+        data: {if (adminNote != null) 'adminNote': adminNote},
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
   // ──────────────────────────────────────────────────────────────────
   // M2. 인증 심사 큐
   // ──────────────────────────────────────────────────────────────────
