@@ -6,6 +6,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/icon_mapper.dart';
 import '../../utils/schedule_work_session.dart';
 import '../../utils/navigation_helper.dart';
+import '../../utils/region_helper.dart';
 import '../../utils/schedule_session_audience.dart';
 import '../../view_models/work_check_view_model.dart';
 import 'work_check_action_bar.dart';
@@ -698,6 +699,36 @@ class WorkCheckScrollContent extends StatelessWidget {
                                                   color: AppTheme.textTertiary,
                                                 ),
                                           ),
+                                          if (schedule.job?.regionId != null &&
+                                              schedule
+                                                  .job!.regionId.isNotEmpty) ...[
+                                            const SizedBox(
+                                              height: AppTheme.spacing1 / 2,
+                                            ),
+                                            Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.location_on_outlined,
+                                                  size: 13,
+                                                  color: AppTheme.textTertiary,
+                                                ),
+                                                const SizedBox(width: 2),
+                                                Text(
+                                                  RegionHelper.getRegionName(
+                                                    schedule.job!.regionId,
+                                                  ),
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        fontSize: 12,
+                                                        color: AppTheme
+                                                            .textTertiary,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
                                           if (isScheduleChecked &&
                                               schedule.checkInTime != null) ...[
                                             const SizedBox(
