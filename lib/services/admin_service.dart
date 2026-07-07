@@ -501,6 +501,56 @@ class AdminService {
     }
   }
 
+  /// 노쇼 신고 목록 조회 (샵이 신고한 건)
+  Future<List<dynamic>> getNoShowReports({String? status}) async {
+    try {
+      final response = await _dio.get(
+        '/api/admin/no-show-reports',
+        queryParameters: {if (status != null) 'status': status},
+      );
+      if (response.statusCode == 200) {
+        final data = response.data['data'] ?? response.data;
+        return (data is Map ? data['reports'] : null) ?? [];
+      }
+      throw ServerException(
+        '노쇼 신고 목록 조회 실패: ${response.statusMessage}',
+        statusCode: response.statusCode,
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 노쇼 신고 확정 — 스페어 노쇼 횟수가 올라가고 통보된다.
+  Future<void> confirmNoShowReport(String id, {String? adminNote}) async {
+    try {
+      await _dio.post(
+        '/api/admin/no-show-reports/$id/confirm',
+        data: {if (adminNote != null) 'adminNote': adminNote},
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 노쇼 신고 반려
+  Future<void> dismissNoShowReport(String id, {String? adminNote}) async {
+    try {
+      await _dio.post(
+        '/api/admin/no-show-reports/$id/dismiss',
+        data: {if (adminNote != null) 'adminNote': adminNote},
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
   // ──────────────────────────────────────────────────────────────────
   // M2. 인증 심사 큐
   // ──────────────────────────────────────────────────────────────────

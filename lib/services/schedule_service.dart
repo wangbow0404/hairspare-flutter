@@ -190,6 +190,29 @@ class ScheduleService {
     }
   }
 
+  /// 출근 시각이 지났는데 체크인이 없는 스케줄을 노쇼로 신고 (관리자 확정 후 반영됨).
+  Future<void> reportNoShow(
+    String scheduleId, {
+    required String reason,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/api/schedules/$scheduleId/no-show-report',
+        data: {'reason': reason},
+      );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw ServerException(
+          '노쇼 신고 실패: ${response.statusMessage}',
+          statusCode: response.statusCode,
+        );
+      }
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
   /// 이미 정산 완료된 근무의 취소를 관리자에게 요청 (관리자 검토 후 처리됨).
   Future<void> requestSettlementCancel(
     String scheduleId, {

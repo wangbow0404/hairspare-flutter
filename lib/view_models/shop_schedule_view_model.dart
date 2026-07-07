@@ -295,4 +295,21 @@ class ShopScheduleViewModel extends ChangeNotifier {
       return false;
     }
   }
+
+  /// 출근 시각이 지났는데 체크인이 없는 스케줄을 노쇼로 신고.
+  Future<bool> reportNoShow(String scheduleId, String reason) async {
+    try {
+      await _scheduleService.reportNoShow(scheduleId, reason: reason);
+      _m.showSuccess('노쇼 신고를 접수했습니다. 해당 스케줄은 취소 처리되었습니다.');
+      await _loadSchedules();
+      return true;
+    } catch (error) {
+      _m.showError(
+        ErrorHandler.getUserFriendlyMessage(
+          ErrorHandler.handleException(error),
+        ),
+      );
+      return false;
+    }
+  }
 }

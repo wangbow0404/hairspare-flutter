@@ -12,6 +12,7 @@ import '../../utils/navigation_helper.dart';
 import '../../utils/schedule_space_rental.dart';
 import '../../utils/schedule_work_session.dart';
 import '../../view_models/shop_schedule_view_model.dart';
+import 'shop_no_show_report_dialog.dart';
 import 'shop_settlement_cancel_dialog.dart';
 
 /// 스케줄 탭 스크롤 본문 (히어로·등급·달력·리스트·정산 CTA·안내).
@@ -596,6 +597,8 @@ class ShopScheduleScrollContent extends StatelessWidget {
                     : '${schedule.startTime}~';
                 final isSpaceRental = ScheduleSpaceRental.isSpaceRental(schedule);
                 final isScheduleCompleted = schedule.status == 'completed';
+                final isNoShowReportable = !isSpaceRental &&
+                    ScheduleWorkSession.isNoShowReportable(schedule);
                 final scheduleStatusLabel = isSpaceRental
                     ? ScheduleSpaceRental.statusLabel(schedule, DateTime.now())
                     : isScheduleCompleted
@@ -724,23 +727,48 @@ class ShopScheduleScrollContent extends StatelessWidget {
                                     const Icon(Icons.check, size: 20, color: Colors.white),
                               )
                             else
-                              Container(
-                                padding: AppTheme.spacingSymmetric(
-                                  horizontal: AppTheme.spacing3,
-                                  vertical: AppTheme.spacing1,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.purple100,
-                                  borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-                                ),
-                                child: Text(
-                                  scheduleStatusLabel,
-                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppTheme.purple700,
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: AppTheme.spacingSymmetric(
+                                      horizontal: AppTheme.spacing3,
+                                      vertical: AppTheme.spacing1,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.purple100,
+                                      borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
+                                    ),
+                                    child: Text(
+                                      scheduleStatusLabel,
+                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppTheme.purple700,
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  if (isNoShowReportable) ...[
+                                    const SizedBox(height: AppTheme.spacing1),
+                                    InkWell(
+                                      onTap: () async {
+                                        final reason =
+                                            await ShopNoShowReportDialog.show(context);
+                                        if (reason == null || reason.isEmpty) return;
+                                        await vm.reportNoShow(schedule.id, reason);
+                                      },
+                                      child: Text(
+                                        '노쇼 신고',
+                                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppTheme.urgentRed,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                           ],
                         ),

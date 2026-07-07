@@ -106,6 +106,18 @@ abstract final class ScheduleWorkSession {
     return phase(schedule, clock) == ScheduleWorkPhase.afterEnd;
   }
 
+  /// 노쇼 신고 유예시간(분) — 백엔드 _NO_SHOW_GRACE_MINUTES와 동일하게 유지.
+  static const int noShowGraceMinutes = 30;
+
+  /// 노쇼 신고 가능 여부 — 시작 시각+유예시간이 지났는데 체크인이 없는 경우만.
+  static bool isNoShowReportable(Schedule schedule, [DateTime? now]) {
+    final clock = now ?? DateTime.now();
+    if (schedule.status != 'scheduled') return false;
+    if (schedule.checkInTime != null) return false;
+    final start = startDateTime(schedule);
+    return clock.isAfter(start.add(const Duration(minutes: noShowGraceMinutes)));
+  }
+
   /// 정산 버튼 탭 시 표시할 안내. [canSettle]이면 `null`.
   static String? settlementBlockedMessage(Schedule schedule, [DateTime? now]) {
     final clock = now ?? DateTime.now();

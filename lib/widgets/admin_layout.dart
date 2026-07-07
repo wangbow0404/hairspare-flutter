@@ -89,6 +89,7 @@ class _AdminLayoutState extends State<AdminLayout> {
         AdminNavItem(route: AppRoutes.adminContent, label: '콘텐츠 모더레이션', icon: Icons.video_library, badgeKey: 'flaggedContent'),
         AdminNavItem(route: AppRoutes.adminNoshow, label: '노쇼 관리', icon: Icons.warning),
         AdminNavItem(route: AppRoutes.adminSettlementCancelRequests, label: '정산취소 요청', icon: Icons.receipt_long),
+        AdminNavItem(route: AppRoutes.adminNoShowReports, label: '노쇼 신고', icon: Icons.person_off),
       ],
     ),
     AdminNavGroup(
