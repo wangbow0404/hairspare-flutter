@@ -157,7 +157,7 @@ class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
                     left: AppTheme.spacing4,
                     right: AppTheme.spacing4,
                     bottom: -_cardOverlap,
-                    child: _MainInfoCard(model: model, item: widget.item),
+                    child: _NameOverlapCard(model: model),
                   ),
                 ],
               ),
@@ -169,6 +169,11 @@ class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
                 AppTheme.spacing4,
                 0,
               ),
+              child: _DetailsCard(model: model, item: widget.item),
+            ),
+            const SizedBox(height: AppTheme.spacing3),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
               child: _MetadataGrid(model: model),
             ),
           ],
@@ -293,9 +298,78 @@ class _GlassIconButton extends StatelessWidget {
   }
 }
 
-/// 히어로 이미지 아래로 겹쳐지는 메인 정보 카드 — 이름·위치·소개·태그·예약시간.
-class _MainInfoCard extends StatelessWidget {
-  const _MainInfoCard({required this.model, required this.item});
+/// 히어로 이미지 아래로 살짝 겹쳐지는 이름 카드 — 이름·나이·위치만 표시.
+/// 소개·태그·예약시간처럼 길이가 들쭉날쭉한 내용은 여기 넣지 않는다 —
+/// 카드 높이가 늘어나 사진을 다 가려버리는 문제가 있었음(테스트 데이터처럼
+/// 소개글·메모가 길 때 카드가 히어로 이미지 전체를 덮어버렸었다).
+class _NameOverlapCard extends StatelessWidget {
+  const _NameOverlapCard({required this.model});
+
+  final HairModel model;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing5,
+        vertical: AppTheme.spacing4,
+      ),
+      decoration: BoxDecoration(
+        color: AppTheme.backgroundWhite,
+        borderRadius: BorderRadius.circular(AppTheme.radius2xl),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryPurple.withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          Flexible(
+            child: Text(
+              model.name.isEmpty ? '모델' : model.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+          ),
+          if (model.age > 0) ...[
+            const SizedBox(width: AppTheme.spacing2),
+            Text(
+              '${model.age}',
+              style: const TextStyle(fontSize: 16, color: AppTheme.textSecondary),
+            ),
+          ],
+          if (model.region.isNotEmpty) ...[
+            const SizedBox(width: AppTheme.spacing3),
+            const Icon(Icons.place_outlined, size: 15, color: AppTheme.textTertiary),
+            const SizedBox(width: 2),
+            Flexible(
+              child: Text(
+                model.region,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// 소개·태그·예약시간·메모 등 나머지 정보 — 사진과 안 겹치는 일반 카드.
+class _DetailsCard extends StatelessWidget {
+  const _DetailsCard({required this.model, required this.item});
 
   final HairModel model;
   final ModelApplicationSearchItem item;
@@ -305,60 +379,14 @@ class _MainInfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing5),
       decoration: BoxDecoration(
-        color: AppTheme.backgroundWhite.withValues(alpha: 0.97),
+        color: AppTheme.backgroundWhite,
         borderRadius: BorderRadius.circular(AppTheme.radius2xl),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primaryPurple.withValues(alpha: 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-        border: Border.all(color: Colors.white, width: 1),
+        border: Border.all(color: AppTheme.borderGray),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Flexible(
-                child: Text(
-                  model.name.isEmpty ? '모델' : model.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-              ),
-              if (model.age > 0) ...[
-                const SizedBox(width: AppTheme.spacing2),
-                Text(
-                  '${model.age}',
-                  style: const TextStyle(fontSize: 16, color: AppTheme.textSecondary),
-                ),
-              ],
-            ],
-          ),
-          if (model.region.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.place_outlined, size: 16, color: AppTheme.textTertiary),
-                const SizedBox(width: 4),
-                Text(
-                  model.region,
-                  style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
-                ),
-              ],
-            ),
-          ],
           if (model.intro != null && model.intro!.isNotEmpty) ...[
-            const SizedBox(height: AppTheme.spacing3),
             Text(
               model.intro!,
               style: const TextStyle(
@@ -368,11 +396,11 @@ class _MainInfoCard extends StatelessWidget {
                 height: 1.4,
               ),
             ),
+            const SizedBox(height: AppTheme.spacing3),
           ],
           if (model.hairLength.isNotEmpty ||
               model.imageTags.isNotEmpty ||
               model.preferredTreatments.isNotEmpty) ...[
-            const SizedBox(height: AppTheme.spacing3),
             Wrap(
               spacing: AppTheme.spacing2,
               runSpacing: AppTheme.spacing2,
@@ -382,8 +410,8 @@ class _MainInfoCard extends StatelessWidget {
                 for (final t in model.imageTags.take(2)) _ProfileTag(label: t),
               ],
             ),
+            const SizedBox(height: AppTheme.spacing4),
           ],
-          const SizedBox(height: AppTheme.spacing4),
           Container(
             padding: const EdgeInsets.all(AppTheme.spacing3),
             decoration: BoxDecoration(
