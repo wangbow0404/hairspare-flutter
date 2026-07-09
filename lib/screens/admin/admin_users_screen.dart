@@ -32,6 +32,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   bool _hasLoadError = false;
   String _search = '';
   String _memberCategoryFilter = '';
+  String _statusFilter = ''; // '' | active | suspended | deleted
+  String _sort = 'latest';
   int _currentPage = 1;
   int _totalPages = 1;
   int _total = 0;
@@ -39,6 +41,34 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   Timer? _searchDebounceTimer;
 
   static const _roleTabs = AdminMemberRole.filterTabs;
+
+  static const _statusTabs = ['전체', '정상', '정지됨', '삭제됨'];
+  static const _statusMap = {
+    '전체': '',
+    '정상': 'active',
+    '정지됨': 'suspended',
+    '삭제됨': 'deleted',
+  };
+
+  static const _sortTabs = ['최신가입순', '오래된가입순'];
+  static const _sortMap = {
+    '최신가입순': 'latest',
+    '오래된가입순': 'oldest',
+  };
+
+  String _selectedStatusTab() {
+    for (final entry in _statusMap.entries) {
+      if (entry.value == _statusFilter) return entry.key;
+    }
+    return '전체';
+  }
+
+  String _selectedSortTab() {
+    for (final entry in _sortMap.entries) {
+      if (entry.value == _sort) return entry.key;
+    }
+    return '최신가입순';
+  }
 
   @override
   void initState() {
@@ -74,6 +104,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         memberCategory:
             _memberCategoryFilter.isEmpty ? null : _memberCategoryFilter,
         search: _search.isEmpty ? null : _search,
+        accountStatus: _statusFilter.isEmpty ? null : _statusFilter,
+        sort: _sort,
         page: _currentPage,
         limit: 20,
       );
@@ -314,6 +346,30 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   onTabChanged: (tab) {
                     setState(() {
                       _memberCategoryFilter = AdminMemberRole.filterToQuery(tab);
+                      _currentPage = 1;
+                    });
+                    _loadUsers();
+                  },
+                ),
+                const SizedBox(height: AdminStitchTheme.stackTight),
+                AdminStitchFilterChips(
+                  tabs: _statusTabs,
+                  selectedTab: _selectedStatusTab(),
+                  onTabChanged: (tab) {
+                    setState(() {
+                      _statusFilter = _statusMap[tab] ?? '';
+                      _currentPage = 1;
+                    });
+                    _loadUsers();
+                  },
+                ),
+                const SizedBox(height: AdminStitchTheme.stackTight),
+                AdminStitchFilterChips(
+                  tabs: _sortTabs,
+                  selectedTab: _selectedSortTab(),
+                  onTabChanged: (tab) {
+                    setState(() {
+                      _sort = _sortMap[tab] ?? 'latest';
                       _currentPage = 1;
                     });
                     _loadUsers();

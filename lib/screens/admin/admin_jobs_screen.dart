@@ -31,18 +31,23 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
   String _search = '';
   String _statusFilter = '';
   String _urgentFilter = '';
+  String _hipassFilter = ''; // '' | 'true'
+  String _sort = 'latest';
+  DateTime? _dateFrom;
+  DateTime? _dateTo;
   int _currentPage = 1;
   int _totalPages = 1;
   int _total = 0;
   Timer? _updateTimer;
   Timer? _searchDebounceTimer;
 
-  static const _statusTabs = ['전체', '게시중', '마감', '완료'];
+  static const _statusTabs = ['전체', '게시중', '마감', '완료', '숨김'];
   static const _statusMap = {
     '전체': '',
     '게시중': 'published',
     '마감': 'closed',
     '완료': 'completed',
+    '숨김': 'hidden',
   };
 
   static const _urgentTabs = ['전체', '급구', '일반'];
@@ -50,6 +55,20 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
     '전체': '',
     '급구': 'true',
     '일반': 'false',
+  };
+
+  static const _hipassTabs = ['전체', '하이패스'];
+  static const _hipassMap = {
+    '전체': '',
+    '하이패스': 'true',
+  };
+
+  static const _sortTabs = ['최신순', '오래된순', '금액높은순', '금액낮은순'];
+  static const _sortMap = {
+    '최신순': 'latest',
+    '오래된순': 'oldest',
+    '금액높은순': 'amount_high',
+    '금액낮은순': 'amount_low',
   };
 
   @override
@@ -82,6 +101,10 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
       final result = await _adminService.getJobs(
         status: _statusFilter.isEmpty ? null : _statusFilter,
         isUrgent: _urgentFilter.isEmpty ? null : (_urgentFilter == 'true'),
+        isOpeningSoon: _hipassFilter.isEmpty ? null : (_hipassFilter == 'true'),
+        dateFrom: _dateFrom == null ? null : _fmtDate(_dateFrom!),
+        dateTo: _dateTo == null ? null : _fmtDate(_dateTo!),
+        sort: _sort,
         search: _search.isEmpty ? null : _search,
         page: _currentPage,
         limit: 20,
@@ -145,6 +168,59 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
     return '전체';
   }
 
+  String _selectedHipassTab() {
+    for (final entry in _hipassMap.entries) {
+      if (entry.value == _hipassFilter) return entry.key;
+    }
+    return '전체';
+  }
+
+  String _selectedSortTab() {
+    for (final entry in _sortMap.entries) {
+      if (entry.value == _sort) return entry.key;
+    }
+    return '최신순';
+  }
+
+  String _fmtDate(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  String get _dateRangeLabel {
+    if (_dateFrom == null && _dateTo == null) return '근무일 기간';
+    final f = _dateFrom == null ? '처음' : DateFormat('M/d').format(_dateFrom!);
+    final t = _dateTo == null ? '끝' : DateFormat('M/d').format(_dateTo!);
+    return '$f ~ $t';
+  }
+
+  Future<void> _pickDateRange() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 2),
+      initialDateRange: (_dateFrom != null && _dateTo != null)
+          ? DateTimeRange(start: _dateFrom!, end: _dateTo!)
+          : null,
+      locale: const Locale('ko', 'KR'),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _dateFrom = picked.start;
+      _dateTo = picked.end;
+      _currentPage = 1;
+    });
+    _loadJobs();
+  }
+
+  void _clearDateRange() {
+    setState(() {
+      _dateFrom = null;
+      _dateTo = null;
+      _currentPage = 1;
+    });
+    _loadJobs();
+  }
+
   @override
   Widget build(BuildContext context) {
     return AdminStitchListScreenShell(
@@ -198,6 +274,45 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
               _loadJobs();
             },
           ),
+          const SizedBox(height: AdminStitchTheme.stackTight),
+          AdminStitchFilterChips(
+            tabs: _hipassTabs,
+            selectedTab: _selectedHipassTab(),
+            onTabChanged: (tab) {
+              setState(() {
+                _hipassFilter = _hipassMap[tab] ?? '';
+                _currentPage = 1;
+              });
+              _loadJobs();
+            },
+          ),
+          const SizedBox(height: AdminStitchTheme.stackTight),
+          AdminStitchFilterChips(
+            tabs: _sortTabs,
+            selectedTab: _selectedSortTab(),
+            onTabChanged: (tab) {
+              setState(() {
+                _sort = _sortMap[tab] ?? 'latest';
+                _currentPage = 1;
+              });
+              _loadJobs();
+            },
+          ),
+          const SizedBox(height: AdminStitchTheme.stackTight),
+          Row(
+            children: [
+              OutlinedButton.icon(
+                onPressed: _pickDateRange,
+                icon: const Icon(Icons.calendar_today, size: 16),
+                label: Text(_dateRangeLabel),
+              ),
+              if (_dateFrom != null || _dateTo != null)
+                TextButton(
+                  onPressed: _clearDateRange,
+                  child: const Text('초기화'),
+                ),
+            ],
+          ),
           if (_total > 0) ...[
             const SizedBox(height: AdminStitchTheme.sectionGap),
             Text(
@@ -211,6 +326,43 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
         ],
       ),
       body: _buildBody(),
+    );
+  }
+
+  Widget _badge(String text, Color color) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+      );
+
+  Widget? _jobBadges(Map<String, dynamic> job) {
+    final badges = <Widget>[];
+    if (job['isOpeningSoon'] == true) {
+      badges.add(_badge('하이패스', const Color(0xFFD4AF37)));
+    }
+    if (job['isUrgent'] == true) {
+      badges.add(_badge('급구', AppTheme.urgentRed));
+    }
+    if (badges.isEmpty) return null;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        for (var i = 0; i < badges.length; i++) ...[
+          if (i > 0) const SizedBox(height: 4),
+          badges[i],
+        ],
+      ],
     );
   }
 
@@ -252,26 +404,7 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
                 title: job['title']?.toString() ?? '제목 없음',
                 subtitle: '$shopName · $regionName · $amount · $statusLabel',
                 icon: Icons.work_outline,
-                trailing: job['isUrgent'] == true
-                    ? Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.urgentRed.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
-                        ),
-                        child: const Text(
-                          '급구',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.urgentRed,
-                          ),
-                        ),
-                      )
-                    : null,
+                trailing: _jobBadges(job),
                 onTap: jobId != null
                     ? () => context.push(
                           AppRoutes.adminJobDetail(jobId),

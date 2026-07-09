@@ -82,6 +82,8 @@ class AdminService {
     String? memberCategory,
     String? search,
     String? signupMethod,
+    String? accountStatus,
+    String? sort,
     int page = 1,
     int limit = 20,
   }) async {
@@ -108,6 +110,10 @@ class AdminService {
       if (signupMethod != null && signupMethod.isNotEmpty && signupMethod != 'all') {
         queryParams['signupMethod'] = signupMethod;
       }
+      if (accountStatus != null && accountStatus.isNotEmpty) {
+        queryParams['accountStatus'] = accountStatus;
+      }
+      if (sort != null && sort.isNotEmpty) queryParams['sort'] = sort;
 
       debugPrint('[AdminService.getUsers] GET /api/admin/users, params: $queryParams');
 
@@ -216,6 +222,10 @@ class AdminService {
   Future<Map<String, dynamic>> getJobs({
     String? status,
     bool? isUrgent,
+    bool? isOpeningSoon,
+    String? dateFrom,
+    String? dateTo,
+    String? sort,
     String? search,
     int page = 1,
     int limit = 20,
@@ -228,6 +238,10 @@ class AdminService {
       };
       if (status != null && status.isNotEmpty) queryParams['status'] = status;
       if (isUrgent != null) queryParams['isUrgent'] = isUrgent;
+      if (isOpeningSoon != null) queryParams['isOpeningSoon'] = isOpeningSoon;
+      if (dateFrom != null && dateFrom.isNotEmpty) queryParams['dateFrom'] = dateFrom;
+      if (dateTo != null && dateTo.isNotEmpty) queryParams['dateTo'] = dateTo;
+      if (sort != null && sort.isNotEmpty) queryParams['sort'] = sort;
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
 
       final response = await _dio.get(
