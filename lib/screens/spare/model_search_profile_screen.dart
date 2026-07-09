@@ -29,7 +29,7 @@ class ModelSearchProfileScreen extends StatefulWidget {
 }
 
 class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
-  static const double _heroHeight = 300;
+  static const double _heroHeight = 460;
   static const double _cardOverlap = 56;
 
   bool _isSendingHeart = false;
@@ -39,7 +39,8 @@ class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
     if (_isSendingHeart || _heartSent) return;
     setState(() => _isSendingHeart = true);
     try {
-      final user = Provider.of<AuthProvider>(context, listen: false).currentUser ??
+      final user =
+          Provider.of<AuthProvider>(context, listen: false).currentUser ??
           MockAuthData.spareUser();
       // fromProfile은 서버가 실제로 쓰지 않고(targetModelId만 전송됨) 서버가
       // 직접 User/SpareExtProfile을 조회해 구성하므로, 여기서 포트폴리오·
@@ -80,103 +81,124 @@ class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
     final model = widget.item.model;
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: AppTheme.spacing3 + 90),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: _cardOverlap),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  SizedBox(
-                    height: _heroHeight,
-                    width: double.infinity,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        AppNetworkImage(
-                          imageUrl: model.primaryImage,
-                          fit: BoxFit.cover,
-                          fallbackIcon: Icons.person_outline,
-                        ),
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.black.withValues(alpha: 0.35),
-                                Colors.transparent,
-                                Colors.black.withValues(alpha: 0.25),
-                              ],
-                              stops: const [0.0, 0.45, 1.0],
+      // 다른 프로필류 화면(spare_detail_screen.dart)과 동일하게 top SafeArea를
+      // 적용해서, 사진이 상태바(시간·배터리) 뒤까지 뻗어나가 겹치지 않게 한다.
+      body: SafeArea(
+        top: true,
+        bottom: false,
+        child: SingleChildScrollView(
+          // Scaffold가 bottomNavigationBar 높이만큼은 이미 자동으로 본문
+          // 영역을 줄여주므로, 여기서 추가로 큰 여백을 또 넣을 필요가 없다
+          // (전에 여기 넣었던 여백이 하단에 여백이 심하게 남던 원인이었음).
+          padding: const EdgeInsets.only(bottom: AppTheme.spacing3),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: _cardOverlap),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    SizedBox(
+                      height: _heroHeight,
+                      width: double.infinity,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          AppNetworkImage(
+                            imageUrl: model.primaryImage,
+                            fit: BoxFit.cover,
+                            fallbackIcon: Icons.person_outline,
+                          ),
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.black.withValues(alpha: 0.35),
+                                  Colors.transparent,
+                                  Colors.black.withValues(alpha: 0.25),
+                                ],
+                                stops: const [0.0, 0.45, 1.0],
+                              ),
                             ),
                           ),
-                        ),
-                        Positioned(
-                          top: MediaQuery.paddingOf(context).top + AppTheme.spacing2,
-                          left: AppTheme.spacing4,
-                          right: AppTheme.spacing4,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              _GlassIconButton(
-                                icon: Icons.arrow_back_ios_new,
-                                onTap: () => Navigator.maybePop(context),
-                              ),
-                              Row(
-                                children: [
-                                  _GlassIconButton(
-                                    icon: Icons.search,
-                                    onTap: () => AppBarNavigation.pushSearch(context),
-                                  ),
-                                  const SizedBox(width: AppTheme.spacing2),
-                                  _GlassIconButton(
-                                    icon: Icons.chat_bubble_outline,
-                                    onTap: () => AppBarNavigation.pushMessages(context),
-                                    badge: context.watch<ChatProvider>().totalUnreadCount > 0,
-                                  ),
-                                  const SizedBox(width: AppTheme.spacing2),
-                                  _GlassIconButton.custom(
-                                    child: NotificationBell(
-                                      role: MessagingAudience.resolve(context),
-                                      iconColor: Colors.white,
+                          Positioned(
+                            top: AppTheme.spacing3,
+                            left: AppTheme.spacing4,
+                            right: AppTheme.spacing4,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _GlassIconButton(
+                                  icon: Icons.arrow_back_ios_new,
+                                  onTap: () => Navigator.maybePop(context),
+                                ),
+                                Row(
+                                  children: [
+                                    _GlassIconButton(
+                                      icon: Icons.search,
+                                      onTap: () =>
+                                          AppBarNavigation.pushSearch(context),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                    const SizedBox(width: AppTheme.spacing2),
+                                    _GlassIconButton(
+                                      icon: Icons.chat_bubble_outline,
+                                      onTap: () =>
+                                          AppBarNavigation.pushMessages(
+                                            context,
+                                          ),
+                                      badge:
+                                          context
+                                              .watch<ChatProvider>()
+                                              .totalUnreadCount >
+                                          0,
+                                    ),
+                                    const SizedBox(width: AppTheme.spacing2),
+                                    _GlassIconButton.custom(
+                                      child: NotificationBell(
+                                        role: MessagingAudience.resolve(
+                                          context,
+                                        ),
+                                        iconColor: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Positioned(
-                    left: AppTheme.spacing4,
-                    right: AppTheme.spacing4,
-                    bottom: -_cardOverlap,
-                    child: _NameOverlapCard(model: model),
-                  ),
-                ],
+                    Positioned(
+                      left: AppTheme.spacing4,
+                      right: AppTheme.spacing4,
+                      bottom: -_cardOverlap,
+                      child: _NameOverlapCard(model: model),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.spacing4,
-                AppTheme.spacing2,
-                AppTheme.spacing4,
-                0,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing4,
+                  AppTheme.spacing2,
+                  AppTheme.spacing4,
+                  0,
+                ),
+                child: _DetailsCard(model: model, item: widget.item),
               ),
-              child: _DetailsCard(model: model, item: widget.item),
-            ),
-            const SizedBox(height: AppTheme.spacing2),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
-              child: _MetadataGrid(model: model),
-            ),
-          ],
+              const SizedBox(height: AppTheme.spacing2),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing4,
+                ),
+                child: _MetadataGrid(model: model),
+              ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: Container(
@@ -209,7 +231,10 @@ class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
                   ? const SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : Icon(
                       _heartSent ? Icons.favorite : Icons.favorite_border,
@@ -224,7 +249,10 @@ class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
                 backgroundColor: Colors.transparent,
                 shadowColor: Colors.transparent,
                 foregroundColor: Colors.white,
-                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusXl),
                 ),
@@ -239,13 +267,16 @@ class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
 
 /// 히어로 이미지 위에 뜨는 반투명 원형 아이콘 버튼.
 class _GlassIconButton extends StatelessWidget {
-  const _GlassIconButton({required this.icon, required this.onTap, this.badge = false})
-      : child = null;
+  const _GlassIconButton({
+    required this.icon,
+    required this.onTap,
+    this.badge = false,
+  }) : child = null;
 
   const _GlassIconButton.custom({required this.child})
-      : icon = null,
-        onTap = null,
-        badge = false;
+    : icon = null,
+      onTap = null,
+      badge = false;
 
   final IconData? icon;
   final VoidCallback? onTap;
@@ -254,8 +285,7 @@ class _GlassIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = child ??
-        Icon(icon, size: 20, color: Colors.white);
+    final content = child ?? Icon(icon, size: 20, color: Colors.white);
 
     return Container(
       width: 40,
@@ -345,19 +375,29 @@ class _NameOverlapCard extends StatelessWidget {
             const SizedBox(width: AppTheme.spacing2),
             Text(
               '${model.age}',
-              style: const TextStyle(fontSize: 16, color: AppTheme.textSecondary),
+              style: const TextStyle(
+                fontSize: 16,
+                color: AppTheme.textSecondary,
+              ),
             ),
           ],
           if (model.region.isNotEmpty) ...[
             const SizedBox(width: AppTheme.spacing3),
-            const Icon(Icons.place_outlined, size: 15, color: AppTheme.textTertiary),
+            const Icon(
+              Icons.place_outlined,
+              size: 15,
+              color: AppTheme.textTertiary,
+            ),
             const SizedBox(width: 2),
             Flexible(
               child: Text(
                 model.region,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppTheme.textSecondary,
+                ),
               ),
             ),
           ],
@@ -409,7 +449,11 @@ class _DetailsCard extends StatelessWidget {
                     color: AppTheme.backgroundWhite,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.schedule, size: 18, color: AppTheme.primaryPurple),
+                  child: const Icon(
+                    Icons.schedule,
+                    size: 18,
+                    color: AppTheme.primaryPurple,
+                  ),
                 ),
                 const SizedBox(width: AppTheme.spacing3),
                 Expanded(
@@ -418,7 +462,10 @@ class _DetailsCard extends StatelessWidget {
                     children: [
                       const Text(
                         '예약 가능 시간',
-                        style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.textSecondary,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -496,7 +543,11 @@ class _MetadataGrid extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(item.icon, color: AppTheme.primaryPurple.withValues(alpha: 0.6), size: 24),
+              Icon(
+                item.icon,
+                color: AppTheme.primaryPurple.withValues(alpha: 0.6),
+                size: 24,
+              ),
               Text(
                 item.label,
                 style: const TextStyle(
