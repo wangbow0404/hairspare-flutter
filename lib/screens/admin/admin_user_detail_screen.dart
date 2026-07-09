@@ -9,6 +9,7 @@ import '../../utils/admin_member_role.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
 import '../../widgets/admin/admin_stitch_widgets.dart';
+import '../../widgets/common/app_network_image.dart';
 
 /// M1. 회원 상세 — Stitch User Details mockup
 class AdminUserDetailScreen extends StatefulWidget {
@@ -81,8 +82,10 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
   String _formatDate(String? dateString) {
     if (dateString == null || dateString.isEmpty) return '-';
     try {
-      return DateFormat('yyyy년 M월 d일 HH:mm', 'ko_KR')
-          .format(DateTime.parse(dateString).toLocal());
+      return DateFormat(
+        'yyyy년 M월 d일 HH:mm',
+        'ko_KR',
+      ).format(DateTime.parse(dateString).toLocal());
     } catch (e) {
       return dateString;
     }
@@ -115,26 +118,26 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
             child: _isLoading && _user == null
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null && _user == null
-                    ? Center(
-                        child: Text(
-                          _error!,
-                          style: const TextStyle(color: AppTheme.urgentRed),
-                        ),
-                      )
-                    : _user != null
-                        ? _AdminUserDetailBody(
-                            user: _user!,
-                            tabController: _tabController,
-                            formatDate: _formatDate,
-                            signupLabel: _getSignupLabel(_user!['accounts']),
-                            bottomInset: MediaQuery.paddingOf(context).bottom,
-                            onSuspend: _suspendUser,
-                            onUnsuspend: _unsuspendUser,
-                            onAdjustEnergy: _adjustEnergy,
-                            onAdjustPoints: _adjustPoints,
-                            onDelete: _deleteUser,
-                          )
-                        : const SizedBox.shrink(),
+                ? Center(
+                    child: Text(
+                      _error!,
+                      style: const TextStyle(color: AppTheme.urgentRed),
+                    ),
+                  )
+                : _user != null
+                ? _AdminUserDetailBody(
+                    user: _user!,
+                    tabController: _tabController,
+                    formatDate: _formatDate,
+                    signupLabel: _getSignupLabel(_user!['accounts']),
+                    bottomInset: MediaQuery.paddingOf(context).bottom,
+                    onSuspend: _suspendUser,
+                    onUnsuspend: _unsuspendUser,
+                    onAdjustEnergy: _adjustEnergy,
+                    onAdjustPoints: _adjustPoints,
+                    onDelete: _deleteUser,
+                  )
+                : const SizedBox.shrink(),
           ),
         ],
       ),
@@ -152,16 +155,18 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
     try {
       await _adminService.unsuspendUser(widget.userId, reason: reason);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('회원 정지가 해제되었습니다')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('회원 정지가 해제되었습니다')));
       _loadUser();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e)),
+            ErrorHandler.getUserFriendlyMessage(
+              ErrorHandler.handleException(e),
+            ),
           ),
           backgroundColor: AppTheme.urgentRed,
         ),
@@ -181,16 +186,18 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
     try {
       await _adminService.suspendUser(widget.userId, reason: reason);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('회원이 정지되었습니다')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('회원이 정지되었습니다')));
       _loadUser();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e)),
+            ErrorHandler.getUserFriendlyMessage(
+              ErrorHandler.handleException(e),
+            ),
           ),
           backgroundColor: AppTheme.urgentRed,
         ),
@@ -221,16 +228,18 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
     try {
       await _adminService.adjustEnergy(widget.userId, delta, reason: reason);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('에너지가 조정되었습니다')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('에너지가 조정되었습니다')));
       _loadUser();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e)),
+            ErrorHandler.getUserFriendlyMessage(
+              ErrorHandler.handleException(e),
+            ),
           ),
           backgroundColor: AppTheme.urgentRed,
         ),
@@ -248,10 +257,16 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.visibility_off_outlined, color: Color(0xFFF5F3FF)),
+              leading: const Icon(
+                Icons.visibility_off_outlined,
+                color: Color(0xFFF5F3FF),
+              ),
               title: const Text(
                 '비활성화 (삭제)',
-                style: TextStyle(color: Color(0xFFF5F3FF), fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: Color(0xFFF5F3FF),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               subtitle: const Text(
                 '로그인이 차단되고 개인정보 화면 노출이 줄어듭니다. 공고·채팅·스케줄 등 기록은 유지되어 복구 가능합니다.',
@@ -261,10 +276,16 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
             ),
             const Divider(height: 1, color: Color(0xFF3D3B56)),
             ListTile(
-              leading: const Icon(Icons.delete_forever, color: AppTheme.urgentRed),
+              leading: const Icon(
+                Icons.delete_forever,
+                color: AppTheme.urgentRed,
+              ),
               title: const Text(
                 '완전 삭제',
-                style: TextStyle(color: AppTheme.urgentRed, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: AppTheme.urgentRed,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               subtitle: const Text(
                 '계정 자체를 영구히 삭제합니다. 되돌릴 수 없습니다.',
@@ -291,16 +312,18 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
       try {
         await _adminService.deleteUser(widget.userId);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('회원 계정이 비활성화되었습니다')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('회원 계정이 비활성화되었습니다')));
         _loadUser();
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e)),
+              ErrorHandler.getUserFriendlyMessage(
+                ErrorHandler.handleException(e),
+              ),
             ),
             backgroundColor: AppTheme.urgentRed,
           ),
@@ -337,16 +360,18 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
     try {
       await _adminService.deleteUser(widget.userId, permanent: true);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('회원 계정이 완전히 삭제되었습니다')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('회원 계정이 완전히 삭제되었습니다')));
       context.pop();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e)),
+            ErrorHandler.getUserFriendlyMessage(
+              ErrorHandler.handleException(e),
+            ),
           ),
           backgroundColor: AppTheme.urgentRed,
         ),
@@ -365,16 +390,18 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
     try {
       await _adminService.adjustPoints(widget.userId, 10, reason: reason);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('포인트가 지급되었습니다')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('포인트가 지급되었습니다')));
       _loadUser();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e)),
+            ErrorHandler.getUserFriendlyMessage(
+              ErrorHandler.handleException(e),
+            ),
           ),
           backgroundColor: AppTheme.urgentRed,
         ),
@@ -442,11 +469,22 @@ class _AdminUserDetailBody extends StatelessWidget {
                   AdminStitchTheme.pageMargin,
                   bottomInset + 72,
                 ),
-                child: AdminUserBasicTab(
-                  user: user,
-                  formatDate: formatDate,
-                  roleLabel: AdminMemberRole.detailRoleLabel(user),
-                  categoryLabel: AdminMemberRole.categoryLabel(user),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AdminUserBasicTab(
+                      user: user,
+                      formatDate: formatDate,
+                      roleLabel: AdminMemberRole.detailRoleLabel(user),
+                      categoryLabel: AdminMemberRole.categoryLabel(user),
+                    ),
+                    const SizedBox(height: AdminStitchTheme.sectionGap),
+                    AdminUserPhotosSection(
+                      userId: user['id']?.toString() ?? '',
+                      profileImage: user['profileImage']?.toString(),
+                      photos: (user['photos'] as List?) ?? const [],
+                    ),
+                  ],
                 ),
               ),
               SingleChildScrollView(
@@ -487,7 +525,10 @@ class _AdminUserDetailBody extends StatelessWidget {
                   AdminStitchTheme.pageMargin,
                   bottomInset + 72,
                 ),
-                child: AdminUserVerificationTab(user: user, formatDate: formatDate),
+                child: AdminUserVerificationTab(
+                  user: user,
+                  formatDate: formatDate,
+                ),
               ),
             ],
           ),
@@ -555,6 +596,7 @@ class AdminUserProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = user['name']?.toString() ?? '';
     final email = user['email']?.toString() ?? '';
+    final profileImage = user['profileImage']?.toString();
     final initial = name.isNotEmpty ? name[0] : '?';
     final roleLabel = AdminMemberRole.badgeLabel(user);
     final statusLabel = user['accountStatusLabel']?.toString() ?? '정상';
@@ -604,13 +646,19 @@ class AdminUserProfileCard extends StatelessWidget {
                     ],
                   ),
                   alignment: Alignment.center,
-                  child: Text(
-                    initial,
-                    style: AdminStitchTheme.headlineMobile.copyWith(
-                      color: AdminStitchTheme.onPrimary,
-                      fontSize: 28,
-                    ),
-                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: (profileImage != null && profileImage.isNotEmpty)
+                      ? AppNetworkImage(
+                          imageUrl: profileImage,
+                          fit: BoxFit.cover,
+                        )
+                      : Text(
+                          initial,
+                          style: AdminStitchTheme.headlineMobile.copyWith(
+                            color: AdminStitchTheme.onPrimary,
+                            fontSize: 28,
+                          ),
+                        ),
                 ),
                 const SizedBox(height: 16),
                 Wrap(
@@ -675,10 +723,17 @@ class AdminUserProfileCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 TextButton.icon(
                   onPressed: onDelete,
-                  icon: const Icon(Icons.person_remove_outlined, size: 18, color: AppTheme.urgentRed),
+                  icon: const Icon(
+                    Icons.person_remove_outlined,
+                    size: 18,
+                    color: AppTheme.urgentRed,
+                  ),
                   label: const Text(
                     '회원 계정 삭제',
-                    style: TextStyle(color: AppTheme.urgentRed, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: AppTheme.urgentRed,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -990,6 +1045,210 @@ class AdminUserBasicTab extends StatelessWidget {
   }
 }
 
+/// 회원이 실제로 올린 사진(프로필·모델 프로필·포트폴리오) 모아보기 —
+/// 부적절한 사진은 관리자가 이 화면에서 바로 삭제할 수 있다.
+class AdminUserPhotosSection extends StatefulWidget {
+  const AdminUserPhotosSection({
+    super.key,
+    required this.userId,
+    required this.profileImage,
+    required this.photos,
+  });
+
+  final String userId;
+  final String? profileImage;
+  final List photos;
+
+  @override
+  State<AdminUserPhotosSection> createState() => _AdminUserPhotosSectionState();
+}
+
+class _AdminUserPhotosSectionState extends State<AdminUserPhotosSection> {
+  final _adminService = AdminService();
+  late List<Map<String, dynamic>> _items;
+
+  @override
+  void initState() {
+    super.initState();
+    _items = _buildItems();
+  }
+
+  @override
+  void didUpdateWidget(covariant AdminUserPhotosSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.userId != widget.userId ||
+        oldWidget.profileImage != widget.profileImage ||
+        oldWidget.photos != widget.photos) {
+      _items = _buildItems();
+    }
+  }
+
+  List<Map<String, dynamic>> _buildItems() {
+    final items = <Map<String, dynamic>>[];
+    if (widget.profileImage != null && widget.profileImage!.isNotEmpty) {
+      items.add({'source': 'profile', 'url': widget.profileImage});
+    }
+    for (final p in widget.photos) {
+      if (p is Map && p['url'] != null) {
+        items.add({'source': p['source'], 'url': p['url']});
+      }
+    }
+    return items;
+  }
+
+  String _sourceLabel(String source) {
+    switch (source) {
+      case 'profile':
+        return '프로필';
+      case 'model':
+        return '모델 프로필';
+      case 'portfolio':
+        return '포트폴리오';
+      default:
+        return source;
+    }
+  }
+
+  Future<void> _deletePhoto(Map<String, dynamic> item) async {
+    final confirmed = await AdminActionDialog.confirm(
+      context,
+      title: '사진 삭제',
+      message: '이 사진을 삭제할까요? 삭제하면 복구할 수 없습니다.',
+      confirmLabel: '삭제',
+      isDanger: true,
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await _adminService.deleteUserPhoto(
+        widget.userId,
+        source: item['source'] as String,
+        url: item['url'] as String,
+      );
+      if (!mounted) return;
+      setState(() => _items.remove(item));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('사진이 삭제되었습니다')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ErrorHandler.getUserFriendlyMessage(
+              ErrorHandler.handleException(e),
+            ),
+          ),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AdminStitchTheme.componentPadding),
+      decoration: AdminStitchTheme.cardDecoration,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('올린 사진', style: AdminStitchTheme.sectionHeader),
+          const SizedBox(height: 4),
+          Text(
+            '부적절한 사진은 삭제 버튼으로 바로 지울 수 있어요.',
+            style: AdminStitchTheme.bodyMd.copyWith(
+              color: AdminStitchTheme.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AdminStitchTheme.stackTight),
+          if (_items.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Text(
+                  '올린 사진이 없습니다',
+                  style: AdminStitchTheme.bodyMd.copyWith(
+                    color: AdminStitchTheme.textSecondary,
+                  ),
+                ),
+              ),
+            )
+          else
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _items.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: AdminStitchTheme.stackTight,
+                mainAxisSpacing: AdminStitchTheme.stackTight,
+                childAspectRatio: 1,
+              ),
+              itemBuilder: (context, index) {
+                final item = _items[index];
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(
+                    AdminStitchTheme.radiusXl,
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      AppNetworkImage(
+                        imageUrl: item['url'] as String,
+                        fit: BoxFit.cover,
+                      ),
+                      Positioned(
+                        left: 4,
+                        bottom: 4,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.55),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            _sourceLabel(item['source'] as String),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 4,
+                        top: 4,
+                        child: GestureDetector(
+                          onTap: () => _deletePhoto(item),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class AdminUserActivityTab extends StatefulWidget {
   const AdminUserActivityTab({
     super.key,
@@ -1052,7 +1311,9 @@ class _AdminUserActivityTabState extends State<AdminUserActivityTab> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e));
+        _error = ErrorHandler.getUserFriendlyMessage(
+          ErrorHandler.handleException(e),
+        );
         _isLoading = false;
       });
     }
@@ -1100,14 +1361,19 @@ class _AdminUserActivityTabState extends State<AdminUserActivityTab> {
         else if (_error != null)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),
-            child: Text(_error!, style: const TextStyle(color: AppTheme.urgentRed)),
+            child: Text(
+              _error!,
+              style: const TextStyle(color: AppTheme.urgentRed),
+            ),
           )
         else if (filtered.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Text(
               '해당 유형의 활동 내역이 없습니다',
-              style: AdminStitchTheme.bodyMd.copyWith(color: AdminStitchTheme.textSecondary),
+              style: AdminStitchTheme.bodyMd.copyWith(
+                color: AdminStitchTheme.textSecondary,
+              ),
             ),
           )
         else
@@ -1121,7 +1387,9 @@ class _AdminUserActivityTabState extends State<AdminUserActivityTab> {
                   if (i > 0)
                     Divider(
                       height: 16,
-                      color: AdminStitchTheme.borderDefault.withValues(alpha: 0.5),
+                      color: AdminStitchTheme.borderDefault.withValues(
+                        alpha: 0.5,
+                      ),
                     ),
                   Builder(
                     builder: (context) {

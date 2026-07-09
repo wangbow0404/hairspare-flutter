@@ -20,7 +20,7 @@ class AdminService {
         final data = response.data;
         // Next.js API 응답 형식 확인: { "stats": {...} } 또는 { "data": { "stats": {...} } }
         debugPrint('[AdminService] Raw response: $data');
-        
+
         if (data is Map<String, dynamic>) {
           // Next.js API는 { "stats": {...} } 형식으로 반환
           if (data['stats'] != null) {
@@ -39,7 +39,7 @@ class AdminService {
             return innerData;
           }
         }
-        
+
         debugPrint('[AdminService] Returning raw data');
         return data as Map<String, dynamic>;
       } else {
@@ -97,17 +97,16 @@ class AdminService {
       );
     }
     try {
-      final queryParams = <String, dynamic>{
-        'page': page,
-        'limit': limit,
-      };
+      final queryParams = <String, dynamic>{'page': page, 'limit': limit};
       if (memberCategory != null && memberCategory.isNotEmpty) {
         queryParams['memberCategory'] = memberCategory;
       } else if (role != null && role.isNotEmpty) {
         queryParams['role'] = role;
       }
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
-      if (signupMethod != null && signupMethod.isNotEmpty && signupMethod != 'all') {
+      if (signupMethod != null &&
+          signupMethod.isNotEmpty &&
+          signupMethod != 'all') {
         queryParams['signupMethod'] = signupMethod;
       }
       if (accountStatus != null && accountStatus.isNotEmpty) {
@@ -115,7 +114,9 @@ class AdminService {
       }
       if (sort != null && sort.isNotEmpty) queryParams['sort'] = sort;
 
-      debugPrint('[AdminService.getUsers] GET /api/admin/users, params: $queryParams');
+      debugPrint(
+        '[AdminService.getUsers] GET /api/admin/users, params: $queryParams',
+      );
 
       final response = await _dio.get(
         '/api/admin/users',
@@ -124,7 +125,9 @@ class AdminService {
 
       if (response.statusCode == 200) {
         final raw = response.data;
-        debugPrint('[AdminService.getUsers] Raw response type: ${raw.runtimeType}');
+        debugPrint(
+          '[AdminService.getUsers] Raw response type: ${raw.runtimeType}',
+        );
         if (raw is Map) {
           debugPrint('[AdminService.getUsers] Raw keys: ${raw.keys.toList()}');
         }
@@ -133,18 +136,24 @@ class AdminService {
         // API가 {users, pagination} 직접 반환 또는 {data: {users, pagination}} 래핑
         dynamic usersRaw;
         if (data is Map) {
-          usersRaw = data['users'] ??
-              (data['data'] is List ? data['data'] : (data['data'] is Map ? data['data']['users'] : null)) ??
+          usersRaw =
+              data['users'] ??
+              (data['data'] is List
+                  ? data['data']
+                  : (data['data'] is Map ? data['data']['users'] : null)) ??
               data['items'];
         } else {
           usersRaw = null;
         }
-        final usersList = usersRaw is List ? usersRaw : (usersRaw != null ? [usersRaw] : []);
+        final usersList = usersRaw is List
+            ? usersRaw
+            : (usersRaw != null ? [usersRaw] : []);
         final usersCount = usersList.length;
         debugPrint('[AdminService.getUsers] Parsed users count: $usersCount');
 
         final pagination = data is Map
-            ? (data['pagination'] ?? {'page': 1, 'limit': 20, 'total': 0, 'totalPages': 1})
+            ? (data['pagination'] ??
+                  {'page': 1, 'limit': 20, 'total': 0, 'totalPages': 1})
             : {'page': 1, 'limit': 20, 'total': 0, 'totalPages': 1};
         return {'users': usersList, 'pagination': pagination};
       } else {
@@ -184,7 +193,8 @@ class AdminService {
 
   /// 회원 활동내역(공고·지원·스케줄·에너지·노쇼·정산취소·신고) 조회
   Future<List<Map<String, dynamic>>> getUserActivities(String userId) async {
-    if (ApiConfig.useMockData) return await MockAdminData.getUserActivities(userId);
+    if (ApiConfig.useMockData)
+      return await MockAdminData.getUserActivities(userId);
     try {
       final response = await _dio.get('/api/admin/users/$userId/activities');
       if (response.statusCode == 200) {
@@ -209,7 +219,27 @@ class AdminService {
     }
     try {
       await _dio.delete(
-        permanent ? '/api/admin/users/$userId/permanent' : '/api/admin/users/$userId',
+        permanent
+            ? '/api/admin/users/$userId/permanent'
+            : '/api/admin/users/$userId',
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 회원이 올린 사진 중 하나 삭제. source: 'profile' | 'model' | 'portfolio'
+  Future<void> deleteUserPhoto(
+    String userId, {
+    required String source,
+    required String url,
+  }) async {
+    try {
+      await _dio.delete(
+        '/api/admin/users/$userId/photos',
+        data: {'source': source, 'url': url},
       );
     } on DioException catch (e) {
       throw ErrorHandler.handleDioException(e);
@@ -230,16 +260,15 @@ class AdminService {
     int page = 1,
     int limit = 20,
   }) async {
-    if (ApiConfig.useMockData) return await MockAdminData.getJobs(page: page, limit: limit);
+    if (ApiConfig.useMockData)
+      return await MockAdminData.getJobs(page: page, limit: limit);
     try {
-      final queryParams = <String, dynamic>{
-        'page': page,
-        'limit': limit,
-      };
+      final queryParams = <String, dynamic>{'page': page, 'limit': limit};
       if (status != null && status.isNotEmpty) queryParams['status'] = status;
       if (isUrgent != null) queryParams['isUrgent'] = isUrgent;
       if (isOpeningSoon != null) queryParams['isOpeningSoon'] = isOpeningSoon;
-      if (dateFrom != null && dateFrom.isNotEmpty) queryParams['dateFrom'] = dateFrom;
+      if (dateFrom != null && dateFrom.isNotEmpty)
+        queryParams['dateFrom'] = dateFrom;
       if (dateTo != null && dateTo.isNotEmpty) queryParams['dateTo'] = dateTo;
       if (sort != null && sort.isNotEmpty) queryParams['sort'] = sort;
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
@@ -288,7 +317,8 @@ class AdminService {
 
   /// 결제 상세 정보 조회
   Future<Map<String, dynamic>> getPaymentDetail(String paymentId) async {
-    if (ApiConfig.useMockData) return await MockAdminData.getPaymentDetail(paymentId);
+    if (ApiConfig.useMockData)
+      return await MockAdminData.getPaymentDetail(paymentId);
     try {
       final response = await _dio.get('/api/admin/payments/$paymentId');
       if (response.statusCode == 200) {
@@ -314,12 +344,10 @@ class AdminService {
     int page = 1,
     int limit = 20,
   }) async {
-    if (ApiConfig.useMockData) return await MockAdminData.getPayments(page: page, limit: limit);
+    if (ApiConfig.useMockData)
+      return await MockAdminData.getPayments(page: page, limit: limit);
     try {
-      final queryParams = <String, dynamic>{
-        'page': page,
-        'limit': limit,
-      };
+      final queryParams = <String, dynamic>{'page': page, 'limit': limit};
       if (status != null && status.isNotEmpty) queryParams['status'] = status;
       if (type != null && type.isNotEmpty) queryParams['type'] = type;
 
@@ -350,12 +378,13 @@ class AdminService {
     int page = 1,
     int limit = 20,
   }) async {
-    if (ApiConfig.useMockData) return await MockAdminData.getEnergyTransactions(page: page, limit: limit);
+    if (ApiConfig.useMockData)
+      return await MockAdminData.getEnergyTransactions(
+        page: page,
+        limit: limit,
+      );
     try {
-      final queryParams = <String, dynamic>{
-        'page': page,
-        'limit': limit,
-      };
+      final queryParams = <String, dynamic>{'page': page, 'limit': limit};
       if (type != null && type.isNotEmpty) queryParams['type'] = type;
 
       final response = await _dio.get(
@@ -408,13 +437,27 @@ class AdminService {
         final data = response.data['data'] ?? response.data;
         return data is Map<String, dynamic>
             ? data
-            : {'applications': [], 'pagination': {'page': 1, 'limit': 20, 'total': 0, 'totalPages': 1}};
+            : {
+                'applications': [],
+                'pagination': {
+                  'page': 1,
+                  'limit': 20,
+                  'total': 0,
+                  'totalPages': 1,
+                },
+              };
       } else {
-        throw ServerException('지원 목록 조회 실패: ${response.statusMessage}', statusCode: response.statusCode);
+        throw ServerException(
+          '지원 목록 조회 실패: ${response.statusMessage}',
+          statusCode: response.statusCode,
+        );
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
-        return {'applications': [], 'pagination': {'page': 1, 'limit': 20, 'total': 0, 'totalPages': 1}};
+        return {
+          'applications': [],
+          'pagination': {'page': 1, 'limit': 20, 'total': 0, 'totalPages': 1},
+        };
       }
       throw ErrorHandler.handleDioException(e);
     } catch (e) {
@@ -429,14 +472,13 @@ class AdminService {
     int page = 1,
     int limit = 20,
   }) async {
-    if (ApiConfig.useMockData) return await MockAdminData.getSchedules(page: page, limit: limit);
+    if (ApiConfig.useMockData)
+      return await MockAdminData.getSchedules(page: page, limit: limit);
     try {
-      final queryParams = <String, dynamic>{
-        'page': page,
-        'limit': limit,
-      };
+      final queryParams = <String, dynamic>{'page': page, 'limit': limit};
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
-      if (dateFilter != null && dateFilter.isNotEmpty) queryParams['dateFilter'] = dateFilter;
+      if (dateFilter != null && dateFilter.isNotEmpty)
+        queryParams['dateFilter'] = dateFilter;
 
       final response = await _dio.get(
         '/api/admin/schedules',
@@ -447,7 +489,15 @@ class AdminService {
         final data = response.data['data'] ?? response.data;
         return data is Map<String, dynamic>
             ? data
-            : {'schedules': [], 'pagination': {'page': 1, 'limit': 20, 'total': 0, 'totalPages': 1}};
+            : {
+                'schedules': [],
+                'pagination': {
+                  'page': 1,
+                  'limit': 20,
+                  'total': 0,
+                  'totalPages': 1,
+                },
+              };
       } else {
         throw ServerException(
           '체크인 목록 조회 실패: ${response.statusMessage}',
@@ -473,12 +523,10 @@ class AdminService {
     int page = 1,
     int limit = 20,
   }) async {
-    if (ApiConfig.useMockData) return await MockAdminData.getNoShowHistory(page: page, limit: limit);
+    if (ApiConfig.useMockData)
+      return await MockAdminData.getNoShowHistory(page: page, limit: limit);
     try {
-      final queryParams = <String, dynamic>{
-        'page': page,
-        'limit': limit,
-      };
+      final queryParams = <String, dynamic>{'page': page, 'limit': limit};
 
       final response = await _dio.get(
         '/api/admin/noshow',
@@ -524,7 +572,10 @@ class AdminService {
   }
 
   /// 정산취소 요청 승인 — 실제로 스케줄이 취소되고 스페어 노쇼 횟수가 올라간다.
-  Future<void> approveSettlementCancelRequest(String id, {String? adminNote}) async {
+  Future<void> approveSettlementCancelRequest(
+    String id, {
+    String? adminNote,
+  }) async {
     try {
       await _dio.post(
         '/api/admin/settlement-cancel-requests/$id/approve',
@@ -538,7 +589,10 @@ class AdminService {
   }
 
   /// 정산취소 요청 반려
-  Future<void> rejectSettlementCancelRequest(String id, {String? adminNote}) async {
+  Future<void> rejectSettlementCancelRequest(
+    String id, {
+    String? adminNote,
+  }) async {
     try {
       await _dio.post(
         '/api/admin/settlement-cancel-requests/$id/reject',
@@ -645,9 +699,10 @@ class AdminService {
       return;
     }
     try {
-      await _dio.post('/api/admin/verifications/$id/approve', data: {
-        if (note != null) 'note': note,
-      });
+      await _dio.post(
+        '/api/admin/verifications/$id/approve',
+        data: {if (note != null) 'note': note},
+      );
     } on DioException catch (e) {
       throw ErrorHandler.handleDioException(e);
     } catch (e) {
@@ -662,9 +717,10 @@ class AdminService {
       return;
     }
     try {
-      await _dio.post('/api/admin/verifications/$id/reject', data: {
-        'reason': reason,
-      });
+      await _dio.post(
+        '/api/admin/verifications/$id/reject',
+        data: {'reason': reason},
+      );
     } on DioException catch (e) {
       throw ErrorHandler.handleDioException(e);
     } catch (e) {
@@ -745,11 +801,14 @@ class AdminService {
       return;
     }
     try {
-      await _dio.post('/api/admin/reports/$id/resolve', data: {
-        'action': action,
-        if (reason != null) 'reason': reason,
-        if (durationDays != null) 'durationDays': durationDays,
-      });
+      await _dio.post(
+        '/api/admin/reports/$id/resolve',
+        data: {
+          'action': action,
+          if (reason != null) 'reason': reason,
+          if (durationDays != null) 'durationDays': durationDays,
+        },
+      );
     } on DioException catch (e) {
       throw ErrorHandler.handleDioException(e);
     } catch (e) {
@@ -877,12 +936,22 @@ class AdminService {
   }
 
   // ── M1 회원 mutation ──
-  Future<void> suspendUser(String userId, {required String reason, DateTime? until}) async {
+  Future<void> suspendUser(
+    String userId, {
+    required String reason,
+    DateTime? until,
+  }) async {
     if (ApiConfig.useMockData) {
       await MockAdminData.setUserSuspended(userId, suspended: true);
       return;
     }
-    await _dio.post('/api/admin/users/$userId/suspend', data: {'reason': reason, if (until != null) 'until': until.toIso8601String()});
+    await _dio.post(
+      '/api/admin/users/$userId/suspend',
+      data: {
+        'reason': reason,
+        if (until != null) 'until': until.toIso8601String(),
+      },
+    );
   }
 
   Future<void> unsuspendUser(String userId, {required String reason}) async {
@@ -890,119 +959,278 @@ class AdminService {
       await MockAdminData.setUserSuspended(userId, suspended: false);
       return;
     }
-    await _dio.post('/api/admin/users/$userId/unsuspend', data: {'reason': reason});
+    await _dio.post(
+      '/api/admin/users/$userId/unsuspend',
+      data: {'reason': reason},
+    );
   }
 
-  Future<void> adjustEnergy(String userId, int delta, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
-    await _dio.post('/api/admin/users/$userId/energy', data: {'delta': delta, 'reason': reason});
+  Future<void> adjustEnergy(
+    String userId,
+    int delta, {
+    required String reason,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.post(
+      '/api/admin/users/$userId/energy',
+      data: {'delta': delta, 'reason': reason},
+    );
   }
 
-  Future<void> adjustPoints(String userId, int delta, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
-    await _dio.post('/api/admin/users/$userId/points', data: {'delta': delta, 'reason': reason});
+  Future<void> adjustPoints(
+    String userId,
+    int delta, {
+    required String reason,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.post(
+      '/api/admin/users/$userId/points',
+      data: {'delta': delta, 'reason': reason},
+    );
   }
 
   // ── M3 공고 mutation ──
-  Future<void> hideJob(String jobId, {required String reason, bool hide = true}) async {
-    if (ApiConfig.useMockData) { await MockAdminData.setJobHidden(jobId, hide: hide); return; }
-    await _dio.patch('/api/admin/jobs/$jobId/hide', data: {'hide': hide, 'reason': reason});
+  Future<void> hideJob(
+    String jobId, {
+    required String reason,
+    bool hide = true,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await MockAdminData.setJobHidden(jobId, hide: hide);
+      return;
+    }
+    await _dio.patch(
+      '/api/admin/jobs/$jobId/hide',
+      data: {'hide': hide, 'reason': reason},
+    );
   }
 
   Future<void> forceCloseJob(String jobId, {required String reason}) async {
-    if (ApiConfig.useMockData) { await MockAdminData.setJobClosed(jobId); return; }
+    if (ApiConfig.useMockData) {
+      await MockAdminData.setJobClosed(jobId);
+      return;
+    }
     await _dio.patch('/api/admin/jobs/$jobId/close', data: {'reason': reason});
   }
 
   Future<void> deleteJob(String jobId, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
     await _dio.delete('/api/admin/jobs/$jobId', data: {'reason': reason});
   }
 
   // ── M4 스케줄 mutation ──
-  Future<void> forceCompleteSchedule(String scheduleId, {required String reason}) async {
-    if (ApiConfig.useMockData) { await MockAdminData.setScheduleState(scheduleId, 'completed'); return; }
-    await _dio.post('/api/admin/schedules/$scheduleId/complete', data: {'reason': reason});
+  Future<void> forceCompleteSchedule(
+    String scheduleId, {
+    required String reason,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await MockAdminData.setScheduleState(scheduleId, 'completed');
+      return;
+    }
+    await _dio.post(
+      '/api/admin/schedules/$scheduleId/complete',
+      data: {'reason': reason},
+    );
   }
 
-  Future<void> forceCancelSchedule(String scheduleId, {required String reason}) async {
-    if (ApiConfig.useMockData) { await MockAdminData.setScheduleState(scheduleId, 'cancelled'); return; }
-    await _dio.post('/api/admin/schedules/$scheduleId/cancel', data: {'reason': reason});
+  Future<void> forceCancelSchedule(
+    String scheduleId, {
+    required String reason,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await MockAdminData.setScheduleState(scheduleId, 'cancelled');
+      return;
+    }
+    await _dio.post(
+      '/api/admin/schedules/$scheduleId/cancel',
+      data: {'reason': reason},
+    );
   }
 
-  Future<void> markNoShow(String scheduleId, {required String reason, required String party}) async {
-    if (ApiConfig.useMockData) { await MockAdminData.setScheduleState(scheduleId, 'noshow'); return; }
-    await _dio.post('/api/admin/schedules/$scheduleId/noshow', data: {'reason': reason, 'party': party});
+  Future<void> markNoShow(
+    String scheduleId, {
+    required String reason,
+    required String party,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await MockAdminData.setScheduleState(scheduleId, 'noshow');
+      return;
+    }
+    await _dio.post(
+      '/api/admin/schedules/$scheduleId/noshow',
+      data: {'reason': reason, 'party': party},
+    );
   }
 
   // ── M5 모델 매칭 ──
-  Future<Map<String, dynamic>> getMatches({String? status, int page = 1, int limit = 20}) async {
+  Future<Map<String, dynamic>> getMatches({
+    String? status,
+    int page = 1,
+    int limit = 20,
+  }) async {
     if (ApiConfig.useMockData) return MockAdminData.getMatches(status: status);
-    final response = await _dio.get('/api/admin/matches', queryParameters: {'page': page, 'limit': limit, if (status != null) 'status': status});
+    final response = await _dio.get(
+      '/api/admin/matches',
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+        if (status != null) 'status': status,
+      },
+    );
     return response.data['data'] ?? response.data;
   }
 
-  Future<void> forceCancelMatch(String matchId, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
-    await _dio.post('/api/admin/matches/$matchId/cancel', data: {'reason': reason});
+  Future<void> forceCancelMatch(
+    String matchId, {
+    required String reason,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.post(
+      '/api/admin/matches/$matchId/cancel',
+      data: {'reason': reason},
+    );
   }
 
   // ── M6 공간 대여 ──
   Future<Map<String, dynamic>> getSpaces({String? status}) async {
     if (ApiConfig.useMockData) return MockAdminData.getSpaces(status: status);
-    final response = await _dio.get('/api/admin/spaces', queryParameters: {if (status != null) 'status': status});
+    final response = await _dio.get(
+      '/api/admin/spaces',
+      queryParameters: {if (status != null) 'status': status},
+    );
     return response.data['data'] ?? response.data;
   }
 
   Future<Map<String, dynamic>> getSpaceBookings({String? status}) async {
-    if (ApiConfig.useMockData) return MockAdminData.getSpaceBookings(status: status);
-    final response = await _dio.get('/api/admin/space-bookings', queryParameters: {if (status != null) 'status': status});
+    if (ApiConfig.useMockData)
+      return MockAdminData.getSpaceBookings(status: status);
+    final response = await _dio.get(
+      '/api/admin/space-bookings',
+      queryParameters: {if (status != null) 'status': status},
+    );
     return response.data['data'] ?? response.data;
   }
 
-  Future<void> forceCancelBooking(String bookingId, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
-    await _dio.post('/api/admin/space-bookings/$bookingId/cancel', data: {'reason': reason});
+  Future<void> forceCancelBooking(
+    String bookingId, {
+    required String reason,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.post(
+      '/api/admin/space-bookings/$bookingId/cancel',
+      data: {'reason': reason},
+    );
   }
 
   // ── M7 교육 ──
   Future<Map<String, dynamic>> getEducations({String? status}) async {
-    if (ApiConfig.useMockData) return MockAdminData.getEducations(status: status);
-    final response = await _dio.get('/api/admin/educations', queryParameters: {if (status != null) 'status': status});
+    if (ApiConfig.useMockData)
+      return MockAdminData.getEducations(status: status);
+    final response = await _dio.get(
+      '/api/admin/educations',
+      queryParameters: {if (status != null) 'status': status},
+    );
     return response.data['data'] ?? response.data;
   }
 
-  Future<void> hideEducation(String educationId, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
-    await _dio.patch('/api/admin/educations/$educationId/hide', data: {'reason': reason});
+  Future<void> hideEducation(
+    String educationId, {
+    required String reason,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.patch(
+      '/api/admin/educations/$educationId/hide',
+      data: {'reason': reason},
+    );
   }
 
-  Future<void> refundEnrollment(String enrollmentId, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
-    await _dio.post('/api/admin/enrollments/$enrollmentId/refund', data: {'reason': reason});
+  Future<void> refundEnrollment(
+    String enrollmentId, {
+    required String reason,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.post(
+      '/api/admin/enrollments/$enrollmentId/refund',
+      data: {'reason': reason},
+    );
   }
 
   // ── M8 결제 mutation ──
-  Future<void> refundPayment(String paymentId, {required int amount, required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
-    await _dio.post('/api/admin/payments/$paymentId/refund', data: {'amount': amount, 'reason': reason});
+  Future<void> refundPayment(
+    String paymentId, {
+    required int amount,
+    required String reason,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.post(
+      '/api/admin/payments/$paymentId/refund',
+      data: {'amount': amount, 'reason': reason},
+    );
   }
 
   // ── M9 에너지 mutation ──
-  Future<void> grantEnergy(String userId, int amount, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
-    await _dio.post('/api/admin/energy/grant', data: {'userId': userId, 'amount': amount, 'reason': reason});
+  Future<void> grantEnergy(
+    String userId,
+    int amount, {
+    required String reason,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.post(
+      '/api/admin/energy/grant',
+      data: {'userId': userId, 'amount': amount, 'reason': reason},
+    );
   }
 
-  Future<void> deductEnergy(String userId, int amount, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
-    await _dio.post('/api/admin/energy/deduct', data: {'userId': userId, 'amount': amount, 'reason': reason});
+  Future<void> deductEnergy(
+    String userId,
+    int amount, {
+    required String reason,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.post(
+      '/api/admin/energy/deduct',
+      data: {'userId': userId, 'amount': amount, 'reason': reason},
+    );
   }
 
   // ── M10 포인트·미션 ──
   Future<Map<String, dynamic>> getPointTransactions({String? type}) async {
-    if (ApiConfig.useMockData) return MockAdminData.getPointTransactions(type: type);
-    final response = await _dio.get('/api/admin/points', queryParameters: {if (type != null) 'type': type});
+    if (ApiConfig.useMockData)
+      return MockAdminData.getPointTransactions(type: type);
+    final response = await _dio.get(
+      '/api/admin/points',
+      queryParameters: {if (type != null) 'type': type},
+    );
     return response.data['data'] ?? response.data;
   }
 
@@ -1012,9 +1240,19 @@ class AdminService {
     return response.data['data'] ?? response.data;
   }
 
-  Future<void> grantPoints(String userId, int amount, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
-    await _dio.post('/api/admin/points/grant', data: {'userId': userId, 'amount': amount, 'reason': reason});
+  Future<void> grantPoints(
+    String userId,
+    int amount, {
+    required String reason,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.post(
+      '/api/admin/points/grant',
+      data: {'userId': userId, 'amount': amount, 'reason': reason},
+    );
   }
 
   // ── M11 구독 ──
@@ -1031,42 +1269,96 @@ class AdminService {
   }
 
   Future<void> verifyCreator(String creatorId, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
-    await _dio.post('/api/admin/creators/$creatorId/verify', data: {'reason': reason});
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.post(
+      '/api/admin/creators/$creatorId/verify',
+      data: {'reason': reason},
+    );
   }
 
   // ── M13 제재 ──
   Future<Map<String, dynamic>> getSanctions({String? status}) async {
-    if (ApiConfig.useMockData) return MockAdminData.getSanctions(status: status);
-    final response = await _dio.get('/api/admin/sanctions', queryParameters: {if (status != null) 'status': status});
+    if (ApiConfig.useMockData)
+      return MockAdminData.getSanctions(status: status);
+    final response = await _dio.get(
+      '/api/admin/sanctions',
+      queryParameters: {if (status != null) 'status': status},
+    );
     return response.data['data'] ?? response.data;
   }
 
-  Future<void> applySanction(String userId, {required String type, required String reason, int? durationDays}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
-    await _dio.post('/api/admin/sanctions', data: {'userId': userId, 'type': type, 'reason': reason, if (durationDays != null) 'durationDays': durationDays});
+  Future<void> applySanction(
+    String userId, {
+    required String type,
+    required String reason,
+    int? durationDays,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.post(
+      '/api/admin/sanctions',
+      data: {
+        'userId': userId,
+        'type': type,
+        'reason': reason,
+        if (durationDays != null) 'durationDays': durationDays,
+      },
+    );
   }
 
   Future<void> liftSanction(String sanctionId, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
-    await _dio.delete('/api/admin/sanctions/$sanctionId', data: {'reason': reason});
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.delete(
+      '/api/admin/sanctions/$sanctionId',
+      data: {'reason': reason},
+    );
   }
 
   // ── M14 콘텐츠 ──
-  Future<Map<String, dynamic>> getContentItems({String? type, String? flagged}) async {
-    if (ApiConfig.useMockData) return MockAdminData.getContentItems(type: type, flagged: flagged);
-    final response = await _dio.get('/api/admin/content', queryParameters: {if (type != null) 'type': type, if (flagged != null) 'flagged': flagged});
+  Future<Map<String, dynamic>> getContentItems({
+    String? type,
+    String? flagged,
+  }) async {
+    if (ApiConfig.useMockData)
+      return MockAdminData.getContentItems(type: type, flagged: flagged);
+    final response = await _dio.get(
+      '/api/admin/content',
+      queryParameters: {
+        if (type != null) 'type': type,
+        if (flagged != null) 'flagged': flagged,
+      },
+    );
     return response.data['data'] ?? response.data;
   }
 
   Future<void> hideContent(String contentId, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
-    await _dio.patch('/api/admin/content/$contentId/hide', data: {'reason': reason});
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.patch(
+      '/api/admin/content/$contentId/hide',
+      data: {'reason': reason},
+    );
   }
 
   Future<void> deleteContent(String contentId, {required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
-    await _dio.delete('/api/admin/content/$contentId', data: {'reason': reason});
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.delete(
+      '/api/admin/content/$contentId',
+      data: {'reason': reason},
+    );
   }
 
   // ── M16 알림 ──
@@ -1076,15 +1368,34 @@ class AdminService {
     return response.data['data'] ?? response.data;
   }
 
-  Future<void> broadcastNotification({required String audience, required String title, required String body, required String reason}) async {
-    if (ApiConfig.useMockData) { await Future.delayed(const Duration(milliseconds: 250)); return; }
-    await _dio.post('/api/admin/notifications/broadcast', data: {'audience': audience, 'title': title, 'body': body, 'reason': reason});
+  Future<void> broadcastNotification({
+    required String audience,
+    required String title,
+    required String body,
+    required String reason,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.post(
+      '/api/admin/notifications/broadcast',
+      data: {
+        'audience': audience,
+        'title': title,
+        'body': body,
+        'reason': reason,
+      },
+    );
   }
 
   // ── M17 레퍼런스 ──
   Future<Map<String, dynamic>> getReferenceData({String? tab}) async {
     if (ApiConfig.useMockData) return MockAdminData.getReferenceData(tab: tab);
-    final response = await _dio.get('/api/admin/reference', queryParameters: {if (tab != null) 'tab': tab});
+    final response = await _dio.get(
+      '/api/admin/reference',
+      queryParameters: {if (tab != null) 'tab': tab},
+    );
     return response.data['data'] ?? response.data;
   }
 }
