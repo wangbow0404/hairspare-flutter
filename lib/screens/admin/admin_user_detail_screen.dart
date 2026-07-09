@@ -435,110 +435,138 @@ class _AdminUserDetailBody extends StatelessWidget {
   final VoidCallback onAdjustPoints;
   final VoidCallback onDelete;
 
+  static const double _tabBarHeight = 48;
+
+  /// 탭 내용을 CustomScrollView로 감싸 바깥 [NestedScrollView]와 스크롤이
+  /// 하나로 이어지게 한다 — SliverOverlapInjector가 헤더(프로필카드+탭바)가
+  /// 차지한 만큼의 여백을 이 탭 안에도 똑같이 반영해준다.
+  Widget _scrollableTab(Widget child) {
+    return Builder(
+      builder: (context) => CustomScrollView(
+        slivers: [
+          SliverOverlapInjector(
+            handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+          ),
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(
+              AdminStitchTheme.pageMargin,
+              AdminStitchTheme.sectionGap,
+              AdminStitchTheme.pageMargin,
+              bottomInset + 72,
+            ),
+            sliver: SliverToBoxAdapter(child: child),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isSuspended = user['accountStatus'] == 'suspended';
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AdminStitchTheme.pageMargin,
-          ),
-          child: AdminUserProfileCard(
-            user: user,
-            signupLabel: signupLabel,
-            isSuspended: isSuspended,
-            onSuspend: onSuspend,
-            onUnsuspend: onUnsuspend,
-            onAdjustEnergy: onAdjustEnergy,
-            onDelete: onDelete,
+    return NestedScrollView(
+      headerSliverBuilder: (context, innerBoxIsScrolled) => [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AdminStitchTheme.pageMargin,
+            ),
+            child: AdminUserProfileCard(
+              user: user,
+              signupLabel: signupLabel,
+              isSuspended: isSuspended,
+              onSuspend: onSuspend,
+              onUnsuspend: onUnsuspend,
+              onAdjustEnergy: onAdjustEnergy,
+              onDelete: onDelete,
+            ),
           ),
         ),
-        const SizedBox(height: AdminStitchTheme.sectionGap),
-        AdminUserDetailTabBar(controller: tabController),
-        Expanded(
-          child: TabBarView(
-            controller: tabController,
-            children: [
-              SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(
-                  AdminStitchTheme.pageMargin,
-                  AdminStitchTheme.sectionGap,
-                  AdminStitchTheme.pageMargin,
-                  bottomInset + 72,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    AdminUserBasicTab(
-                      user: user,
-                      formatDate: formatDate,
-                      roleLabel: AdminMemberRole.detailRoleLabel(user),
-                      categoryLabel: AdminMemberRole.categoryLabel(user),
-                    ),
-                    const SizedBox(height: AdminStitchTheme.sectionGap),
-                    AdminUserPhotosSection(
-                      userId: user['id']?.toString() ?? '',
-                      profileImage: user['profileImage']?.toString(),
-                      photos: (user['photos'] as List?) ?? const [],
-                    ),
-                    const SizedBox(height: AdminStitchTheme.sectionGap),
-                    AdminUserChallengeSection(
-                      userId: user['id']?.toString() ?? '',
-                    ),
-                  ],
-                ),
-              ),
-              SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(
-                  AdminStitchTheme.pageMargin,
-                  AdminStitchTheme.sectionGap,
-                  AdminStitchTheme.pageMargin,
-                  bottomInset + 72,
-                ),
-                child: AdminUserActivityTab(user: user, formatDate: formatDate),
-              ),
-              SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(
-                  AdminStitchTheme.pageMargin,
-                  AdminStitchTheme.sectionGap,
-                  AdminStitchTheme.pageMargin,
-                  bottomInset + 72,
-                ),
-                child: AdminUserWalletTab(
-                  user: user,
-                  onAdjustEnergy: onAdjustEnergy,
-                  onAdjustPoints: onAdjustPoints,
-                ),
-              ),
-              SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(
-                  AdminStitchTheme.pageMargin,
-                  AdminStitchTheme.sectionGap,
-                  AdminStitchTheme.pageMargin,
-                  bottomInset + 72,
-                ),
-                child: AdminUserSanctionTab(user: user, formatDate: formatDate),
-              ),
-              SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(
-                  AdminStitchTheme.pageMargin,
-                  AdminStitchTheme.sectionGap,
-                  AdminStitchTheme.pageMargin,
-                  bottomInset + 72,
-                ),
-                child: AdminUserVerificationTab(
-                  user: user,
-                  formatDate: formatDate,
-                ),
-              ),
-            ],
+        const SliverToBoxAdapter(
+          child: SizedBox(height: AdminStitchTheme.sectionGap),
+        ),
+        SliverOverlapAbsorber(
+          handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+          sliver: SliverPersistentHeader(
+            pinned: true,
+            delegate: _StickyTabBarDelegate(
+              height: _tabBarHeight,
+              child: AdminUserDetailTabBar(controller: tabController),
+            ),
           ),
         ),
       ],
+      body: TabBarView(
+        controller: tabController,
+        children: [
+          _scrollableTab(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AdminUserBasicTab(
+                  user: user,
+                  formatDate: formatDate,
+                  roleLabel: AdminMemberRole.detailRoleLabel(user),
+                  categoryLabel: AdminMemberRole.categoryLabel(user),
+                ),
+                const SizedBox(height: AdminStitchTheme.sectionGap),
+                AdminUserPhotosSection(
+                  userId: user['id']?.toString() ?? '',
+                  profileImage: user['profileImage']?.toString(),
+                  photos: (user['photos'] as List?) ?? const [],
+                ),
+                const SizedBox(height: AdminStitchTheme.sectionGap),
+                AdminUserChallengeSection(userId: user['id']?.toString() ?? ''),
+              ],
+            ),
+          ),
+          _scrollableTab(
+            AdminUserActivityTab(user: user, formatDate: formatDate),
+          ),
+          _scrollableTab(
+            AdminUserWalletTab(
+              user: user,
+              onAdjustEnergy: onAdjustEnergy,
+              onAdjustPoints: onAdjustPoints,
+            ),
+          ),
+          _scrollableTab(
+            AdminUserSanctionTab(user: user, formatDate: formatDate),
+          ),
+          _scrollableTab(
+            AdminUserVerificationTab(user: user, formatDate: formatDate),
+          ),
+        ],
+      ),
     );
+  }
+}
+
+class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
+  const _StickyTabBarDelegate({required this.child, required this.height});
+
+  final Widget child;
+  final double height;
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return ColoredBox(color: AdminStitchTheme.bgSubtle, child: child);
+  }
+
+  @override
+  bool shouldRebuild(covariant _StickyTabBarDelegate oldDelegate) {
+    return child != oldDelegate.child || height != oldDelegate.height;
   }
 }
 
