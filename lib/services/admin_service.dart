@@ -248,6 +248,61 @@ class AdminService {
     }
   }
 
+  /// 챌린지 크리에이터 프로필 조회. 크리에이터가 아니면 null 반환.
+  Future<Map<String, dynamic>?> getUserChallengeProfile(String userId) async {
+    try {
+      final response = await _dio.get(
+        '/api/admin/users/$userId/challenge-profile',
+      );
+      final data = response.data['data'] ?? response.data;
+      return data['profile'] as Map<String, dynamic>?;
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 회원이 올린 챌린지 영상 목록 (숨김 처리된 것 포함 전체)
+  Future<List<Map<String, dynamic>>> getUserChallengeVideos(
+    String userId,
+  ) async {
+    try {
+      final response = await _dio.get(
+        '/api/admin/users/$userId/challenge-videos',
+      );
+      final data = response.data['data'] ?? response.data;
+      final videos = data['videos'] as List? ?? [];
+      return videos.whereType<Map<String, dynamic>>().toList();
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 챌린지 영상 숨김 (is_public=false)
+  Future<void> hideChallengeVideo(String videoId) async {
+    try {
+      await _dio.patch('/api/admin/challenge-videos/$videoId/hide');
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 챌린지 영상 삭제
+  Future<void> deleteChallengeVideo(String videoId) async {
+    try {
+      await _dio.delete('/api/admin/challenge-videos/$videoId');
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
   /// 공고 목록 조회
   Future<Map<String, dynamic>> getJobs({
     String? status,
