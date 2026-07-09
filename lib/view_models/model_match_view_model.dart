@@ -9,8 +9,6 @@ import '../models/model_match_preference.dart';
 import '../providers/auth_provider.dart';
 import '../services/matching_service.dart';
 import '../services/model_match_service.dart';
-import '../services/portfolio_service.dart';
-import '../services/spare_designer_profile_service.dart';
 import '../utils/error_handler.dart';
 
 /// 매칭 시도 결과.
@@ -33,15 +31,11 @@ class ModelMatchViewModel extends ChangeNotifier {
   ModelMatchViewModel({
     required ModelMatchService matchService,
     required MatchingService matchingService,
-    SpareDesignerProfileService? designerProfileService,
   })  : _matchService = matchService,
-        _matchingService = matchingService,
-        _designerProfileService =
-            designerProfileService ?? sl<SpareDesignerProfileService>();
+        _matchingService = matchingService;
 
   final ModelMatchService _matchService;
   final MatchingService _matchingService;
-  final SpareDesignerProfileService _designerProfileService;
 
   ModelMatchPreference _preference = const ModelMatchPreference();
   ModelMatchPreference get preference => _preference;
@@ -136,38 +130,16 @@ class ModelMatchViewModel extends ChangeNotifier {
     }
 
     try {
-      final consumed = await _matchService.consumeMatch();
-      if (!consumed) {
-        _remainingMatches = 0;
-        notifyListeners();
-        return MatchAttemptResult(MatchAttemptStatus.limitReached, model: model);
-      }
-
       final user = sl<AuthProvider>().currentUser ?? MockAuthData.spareUser();
-      final portfolio = await sl<PortfolioService>().getImageUrls(
-        ownerId: user.id,
-        ownerRole: user.role.name,
-      );
-      final designerProfile =
-          await _designerProfileService.getProfile(user.id);
-      final intro = designerProfile.matchingIntro.trim().isNotEmpty
-          ? designerProfile.matchingIntro.trim()
-          : '${user.name ?? user.username} ${designerProfile.roleLabel}';
+      // fromProfile은 서버가 실제로 쓰지 않고(targetModelId만 전송됨) 서버가
+      // 직접 User/SpareExtProfile을 조회해 구성한다 — 여기서 굳이 포트폴리오·
+      // 디자이너 프로필을 미리 불러올 필요가 없어 제거(불필요한 네트워크 왕복
+      // 2회 + 아래 quota 이중 차감 버그의 원인이었던 consumeMatch() 제거).
       final fromProfile = MatchProfile(
         id: user.id,
         role: 'spare',
         displayName: user.name ?? user.username,
-        subtitle: designerProfile.matchSubtitle,
-        intro: intro,
-        tags: designerProfile.matchTags,
-        region: designerProfile.regionLabel,
-        treatment: designerProfile.specialties.isNotEmpty
-            ? designerProfile.specialties.first
-            : designerProfile.roleLabel,
-        portfolioImages: portfolio,
-        avatarUrl: portfolio.isNotEmpty
-            ? portfolio.first
-            : user.profileImage,
+        subtitle: '',
       );
 
       await _matchingService.sendLikeToModel(
@@ -176,6 +148,10 @@ class ModelMatchViewModel extends ChangeNotifier {
       );
 
       _remainingMatches = await _matchService.remainingMatchesToday();
+      if (_remainingMatches <= 0) {
+        notifyListeners();
+        return MatchAttemptResult(MatchAttemptStatus.limitReached, model: model);
+      }
       _currentIndex += 1;
       notifyListeners();
 
