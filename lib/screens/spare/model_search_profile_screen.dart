@@ -2,16 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/di/service_locator.dart';
+import '../../mocks/mock_auth_data.dart';
+import '../../models/match_profile.dart';
 import '../../models/model_application_search_item.dart';
 import '../../providers/auth_provider.dart';
-import '../../services/chat_service.dart';
+import '../../services/matching_service.dart';
+import '../../services/portfolio_service.dart';
+import '../../services/spare_designer_profile_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
-import '../../utils/navigation_helper.dart';
 import '../../widgets/common/app_network_image.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
 
-/// "날짜검색" 결과에서 모델 하나를 골랐을 때 보여주는 프로필 화면 — 채팅하기 포함.
+/// "날짜검색" 결과에서 모델 하나를 골랐을 때 보여주는 프로필 화면 — 하트 보내기 포함.
+/// 채팅은 모델이 하트를 수락해야 열린다("받은 관심" 화면에서 모델이 수락 → 채팅 시작).
 class ModelSearchProfileScreen extends StatefulWidget {
   const ModelSearchProfileScreen({super.key, required this.item});
 
@@ -23,21 +27,49 @@ class ModelSearchProfileScreen extends StatefulWidget {
 }
 
 class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
-  bool _isStartingChat = false;
+  bool _isSendingHeart = false;
+  bool _heartSent = false;
 
-  Future<void> _startChat() async {
-    if (_isStartingChat) return;
-    setState(() => _isStartingChat = true);
+  Future<void> _sendHeart() async {
+    if (_isSendingHeart || _heartSent) return;
+    setState(() => _isSendingHeart = true);
     try {
-      final user = Provider.of<AuthProvider>(context, listen: false).currentUser;
-      final chatId = await sl<ChatService>().ensureChatForModel(
-        modelId: widget.item.model.id,
-        modelName: widget.item.model.name,
-        spareId: user?.id ?? '',
-        spareName: user?.name ?? user?.username ?? '',
+      final user = Provider.of<AuthProvider>(context, listen: false).currentUser ??
+          MockAuthData.spareUser();
+      final portfolio = await sl<PortfolioService>().getImageUrls(
+        ownerId: user.id,
+        ownerRole: user.role.name,
       );
+      final designerProfile =
+          await sl<SpareDesignerProfileService>().getProfile(user.id);
+      final intro = designerProfile.matchingIntro.trim().isNotEmpty
+          ? designerProfile.matchingIntro.trim()
+          : '${user.name ?? user.username} ${designerProfile.roleLabel}';
+      final fromProfile = MatchProfile(
+        id: user.id,
+        role: 'spare',
+        displayName: user.name ?? user.username,
+        subtitle: designerProfile.matchSubtitle,
+        intro: intro,
+        tags: designerProfile.matchTags,
+        region: designerProfile.regionLabel,
+        treatment: designerProfile.specialties.isNotEmpty
+            ? designerProfile.specialties.first
+            : designerProfile.roleLabel,
+        portfolioImages: portfolio,
+        avatarUrl: portfolio.isNotEmpty ? portfolio.first : user.profileImage,
+      );
+
+      await sl<MatchingService>().sendLikeToModel(
+        fromProfile: fromProfile,
+        targetModel: widget.item.model,
+      );
+
       if (!mounted) return;
-      NavigationHelper.navigateToChat(context, chatId);
+      setState(() => _heartSent = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('하트를 보냈어요! 모델이 수락하면 채팅할 수 있어요')),
+      );
     } catch (e) {
       if (!mounted) return;
       final ex = ErrorHandler.handleException(e);
@@ -48,7 +80,7 @@ class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
         ),
       );
     } finally {
-      if (mounted) setState(() => _isStartingChat = false);
+      if (mounted) setState(() => _isSendingHeart = false);
     }
   }
 
@@ -147,18 +179,27 @@ class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
           width: double.infinity,
           height: 52,
           child: ElevatedButton.icon(
-            onPressed: _isStartingChat ? null : _startChat,
-            icon: _isStartingChat
+            onPressed: (_isSendingHeart || _heartSent) ? null : _sendHeart,
+            icon: _isSendingHeart
                 ? const SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : const Icon(Icons.chat_bubble_outline, color: Colors.white),
-            label: Text(_isStartingChat ? '연결 중...' : '채팅하기'),
+                : Icon(
+                    _heartSent ? Icons.favorite : Icons.favorite_border,
+                    color: Colors.white,
+                  ),
+            label: Text(
+              _isSendingHeart
+                  ? '보내는 중...'
+                  : (_heartSent ? '하트를 보냈어요' : '하트 보내기'),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.stitchPrimary,
               foregroundColor: Colors.white,
+              disabledBackgroundColor: AppTheme.stitchPrimary.withValues(alpha: 0.6),
+              disabledForegroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusLg),
               ),
