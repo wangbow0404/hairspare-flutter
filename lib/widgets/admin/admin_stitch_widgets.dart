@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/admin_stitch_theme.dart';
+import '../common/app_network_image.dart';
 
 class AdminStitchPageHeader extends StatelessWidget {
-  const AdminStitchPageHeader({
-    super.key,
-    required this.title,
-    this.subtitle,
-  });
+  const AdminStitchPageHeader({super.key, required this.title, this.subtitle});
 
   final String title;
   final String? subtitle;
@@ -217,10 +214,8 @@ class AdminStitchFilterDropdown extends StatelessWidget {
             .toList(),
         items: options.entries
             .map(
-              (e) => DropdownMenuItem<String>(
-                value: e.key,
-                child: Text(e.value),
-              ),
+              (e) =>
+                  DropdownMenuItem<String>(value: e.key, child: Text(e.value)),
             )
             .toList(),
         onChanged: (v) {
@@ -366,7 +361,9 @@ class AdminStitchMetricCard extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: iconBg,
-                  borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
+                  borderRadius: BorderRadius.circular(
+                    AdminStitchTheme.radiusLg,
+                  ),
                 ),
                 child: Icon(icon, size: 20, color: iconColor),
               ),
@@ -458,18 +455,24 @@ class AdminStitchDashboardPendingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isAlert = tone == AdminDashboardPendingTone.alert;
-    final bg = isAlert ? AdminStitchTheme.alertPeachBg : AdminStitchTheme.surfaceCard;
-    final borderColor =
-        isAlert ? AdminStitchTheme.alertPeachBorder : AdminStitchTheme.borderDefault;
-    final labelColor =
-        isAlert ? AdminStitchTheme.alertPeachLabel : AdminStitchTheme.textSecondary;
-    final subtitleColor =
-        isAlert ? AdminStitchTheme.alertPeachSubtitle : AdminStitchTheme.textSecondary;
+    final bg = isAlert
+        ? AdminStitchTheme.alertPeachBg
+        : AdminStitchTheme.surfaceCard;
+    final borderColor = isAlert
+        ? AdminStitchTheme.alertPeachBorder
+        : AdminStitchTheme.borderDefault;
+    final labelColor = isAlert
+        ? AdminStitchTheme.alertPeachLabel
+        : AdminStitchTheme.textSecondary;
+    final subtitleColor = isAlert
+        ? AdminStitchTheme.alertPeachSubtitle
+        : AdminStitchTheme.textSecondary;
     final iconBg = isAlert
         ? Colors.white.withValues(alpha: 0.65)
         : AdminStitchTheme.surfaceContainer;
-    final iconColor =
-        isAlert ? AdminStitchTheme.alertPeachSubtitle : AdminStitchTheme.primary;
+    final iconColor = isAlert
+        ? AdminStitchTheme.alertPeachSubtitle
+        : AdminStitchTheme.primary;
 
     return Material(
       color: Colors.transparent,
@@ -515,7 +518,9 @@ class AdminStitchDashboardPendingCard extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: iconBg,
-                      borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
+                      borderRadius: BorderRadius.circular(
+                        AdminStitchTheme.radiusLg,
+                      ),
                     ),
                     child: Icon(icon, size: 18, color: iconColor),
                   ),
@@ -589,7 +594,9 @@ class AdminStitchPaymentsHeroCard extends StatelessWidget {
                       style: AdminStitchTheme.labelSm.copyWith(
                         fontSize: 10,
                         letterSpacing: 0.8,
-                        color: AdminStitchTheme.onPrimary.withValues(alpha: 0.85),
+                        color: AdminStitchTheme.onPrimary.withValues(
+                          alpha: 0.85,
+                        ),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -628,7 +635,9 @@ class AdminStitchPaymentsHeroCard extends StatelessWidget {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
+                  borderRadius: BorderRadius.circular(
+                    AdminStitchTheme.radiusLg,
+                  ),
                 ),
                 child: const Icon(
                   Icons.account_balance_wallet_outlined,
@@ -687,10 +696,7 @@ class AdminStitchListRowCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: AdminStitchTheme.headlineMd,
-                ),
+                Text(value, style: AdminStitchTheme.headlineMd),
               ],
             ),
           ),
@@ -705,10 +711,7 @@ class AdminStitchListRowCard extends StatelessWidget {
 }
 
 class AdminStitchUserDistributionCard extends StatelessWidget {
-  const AdminStitchUserDistributionCard({
-    super.key,
-    required this.byRole,
-  });
+  const AdminStitchUserDistributionCard({super.key, required this.byRole});
 
   final Map<String, int> byRole;
 
@@ -938,10 +941,7 @@ class AdminStitchActivityItem extends StatelessWidget {
           width: 40,
           height: 40,
           alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: style.bg,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: style.bg, shape: BoxShape.circle),
           child: Icon(style.icon, size: 20, color: style.fg),
         ),
         const SizedBox(width: 12),
@@ -1024,7 +1024,9 @@ class AdminStitchUserCard extends StatelessWidget {
                         name,
                         style: AdminStitchTheme.sectionHeader.copyWith(
                           fontSize: 16,
-                          decoration: isActive ? null : TextDecoration.lineThrough,
+                          decoration: isActive
+                              ? null
+                              : TextDecoration.lineThrough,
                           color: isActive
                               ? AdminStitchTheme.onSurface
                               : AdminStitchTheme.textSecondary,
@@ -1070,7 +1072,10 @@ class AdminStitchUserCard extends StatelessWidget {
           IconButton(
             onPressed: onMore,
             tooltip: '더보기',
-            icon: const Icon(Icons.more_vert, color: AdminStitchTheme.textSecondary),
+            icon: const Icon(
+              Icons.more_vert,
+              color: AdminStitchTheme.textSecondary,
+            ),
           ),
         ],
       ),
@@ -1098,12 +1103,13 @@ class _Avatar extends StatelessWidget {
         children: [
           ClipOval(
             child: avatarUrl != null && avatarUrl!.isNotEmpty
-                ? Image.network(
-                    avatarUrl!,
+                ? SizedBox(
                     width: 48,
                     height: 48,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _initialsCircle(),
+                    child: AppNetworkImage(
+                      imageUrl: avatarUrl,
+                      fit: BoxFit.cover,
+                    ),
                   )
                 : _initialsCircle(),
           ),
@@ -1118,7 +1124,10 @@ class _Avatar extends StatelessWidget {
                     ? AdminStitchTheme.emerald
                     : AdminStitchTheme.statusError,
                 shape: BoxShape.circle,
-                border: Border.all(color: AdminStitchTheme.surfaceCard, width: 2),
+                border: Border.all(
+                  color: AdminStitchTheme.surfaceCard,
+                  width: 2,
+                ),
               ),
             ),
           ),
@@ -1429,10 +1438,7 @@ class AdminStitchVerificationCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      userName,
-                      style: AdminStitchTheme.sectionHeader,
-                    ),
+                    Text(userName, style: AdminStitchTheme.sectionHeader),
                     const SizedBox(height: 12),
                     _InfoRow(
                       icon: Icons.email_outlined,
@@ -1707,15 +1713,22 @@ class AdminStitchMoneyField extends StatelessWidget {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
-              borderSide: const BorderSide(color: AdminStitchTheme.borderDefault),
+              borderSide: const BorderSide(
+                color: AdminStitchTheme.borderDefault,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
-              borderSide: const BorderSide(color: AdminStitchTheme.borderDefault),
+              borderSide: const BorderSide(
+                color: AdminStitchTheme.borderDefault,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
-              borderSide: const BorderSide(color: AdminStitchTheme.primary, width: 2),
+              borderSide: const BorderSide(
+                color: AdminStitchTheme.primary,
+                width: 2,
+              ),
             ),
           ),
         ),
@@ -1760,15 +1773,22 @@ class AdminStitchNumberField extends StatelessWidget {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
-              borderSide: const BorderSide(color: AdminStitchTheme.borderDefault),
+              borderSide: const BorderSide(
+                color: AdminStitchTheme.borderDefault,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
-              borderSide: const BorderSide(color: AdminStitchTheme.borderDefault),
+              borderSide: const BorderSide(
+                color: AdminStitchTheme.borderDefault,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
-              borderSide: const BorderSide(color: AdminStitchTheme.primary, width: 2),
+              borderSide: const BorderSide(
+                color: AdminStitchTheme.primary,
+                width: 2,
+              ),
             ),
           ),
         ),
@@ -1814,7 +1834,9 @@ class AdminStitchBottomActionBar extends StatelessWidget {
                   foregroundColor: AdminStitchTheme.textSecondary,
                   side: const BorderSide(color: AdminStitchTheme.borderDefault),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AdminStitchTheme.radiusXl),
+                    borderRadius: BorderRadius.circular(
+                      AdminStitchTheme.radiusXl,
+                    ),
                   ),
                 ),
                 child: const Text('기본값 복원'),
@@ -1831,7 +1853,9 @@ class AdminStitchBottomActionBar extends StatelessWidget {
                   backgroundColor: AdminStitchTheme.primary,
                   foregroundColor: AdminStitchTheme.onPrimary,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AdminStitchTheme.radiusXl),
+                    borderRadius: BorderRadius.circular(
+                      AdminStitchTheme.radiusXl,
+                    ),
                   ),
                 ),
                 child: isSaving

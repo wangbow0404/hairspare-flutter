@@ -51,10 +51,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   };
 
   // 정렬 드롭다운 (value -> 표시명)
-  static const _sortOptions = {
-    'latest': '최신가입순',
-    'oldest': '오래된가입순',
-  };
+  static const _sortOptions = {'latest': '최신가입순', 'oldest': '오래된가입순'};
 
   @override
   void initState() {
@@ -87,8 +84,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
     try {
       final result = await _adminService.getUsers(
-        memberCategory:
-            _memberCategoryFilter.isEmpty ? null : _memberCategoryFilter,
+        memberCategory: _memberCategoryFilter.isEmpty
+            ? null
+            : _memberCategoryFilter,
         search: _search.isEmpty ? null : _search,
         accountStatus: _statusFilter.isEmpty ? null : _statusFilter,
         sort: _sort,
@@ -127,13 +125,17 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
   String _formatDate(String dateString) {
     try {
-      return DateFormat('yyyy년 M월 d일', 'ko_KR').format(DateTime.parse(dateString));
+      return DateFormat(
+        'yyyy년 M월 d일',
+        'ko_KR',
+      ).format(DateTime.parse(dateString));
     } catch (_) {
       return dateString;
     }
   }
 
-  String _selectedRoleTab() => AdminMemberRole.queryToTab(_memberCategoryFilter);
+  String _selectedRoleTab() =>
+      AdminMemberRole.queryToTab(_memberCategoryFilter);
 
   String _roleLabelForCard(Map<String, dynamic> user) =>
       AdminMemberRole.badgeLabel(user);
@@ -177,7 +179,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               leading: const Icon(Icons.person_outline, color: sheetSub),
               title: Text(
                 user['name']?.toString() ?? '회원',
-                style: const TextStyle(color: sheetTitle, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  color: sheetTitle,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               subtitle: Text(
                 user['email']?.toString() ?? '',
@@ -201,7 +206,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               )
             else
               ListTile(
-                leading: const Icon(Icons.check_circle_outline, color: sheetSub),
+                leading: const Icon(
+                  Icons.check_circle_outline,
+                  color: sheetSub,
+                ),
                 title: const Text('정지 해제', style: TextStyle(color: sheetTitle)),
                 onTap: () => Navigator.pop(context, 'unsuspend'),
               ),
@@ -238,16 +246,18 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     try {
       await _adminService.suspendUser(userId, reason: reason);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${user['name']} 회원이 정지되었습니다')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('${user['name']} 회원이 정지되었습니다')));
       _loadUsers(showLoading: false);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e)),
+            ErrorHandler.getUserFriendlyMessage(
+              ErrorHandler.handleException(e),
+            ),
           ),
           backgroundColor: AppTheme.urgentRed,
         ),
@@ -270,16 +280,18 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     try {
       await _adminService.unsuspendUser(userId, reason: reason);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${user['name']} 회원 정지가 해제되었습니다')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('${user['name']} 회원 정지가 해제되었습니다')));
       _loadUsers(showLoading: false);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e)),
+            ErrorHandler.getUserFriendlyMessage(
+              ErrorHandler.handleException(e),
+            ),
           ),
           backgroundColor: AppTheme.urgentRed,
         ),
@@ -316,13 +328,16 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                       _search = value;
                       _currentPage = 1;
                     });
-                    _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
-                      if (!mounted) return;
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _searchDebounceTimer = Timer(
+                      const Duration(milliseconds: 300),
+                      () {
                         if (!mounted) return;
-                        _loadUsers();
-                      });
-                    });
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (!mounted) return;
+                          _loadUsers();
+                        });
+                      },
+                    );
                   },
                 ),
                 const SizedBox(height: AdminStitchTheme.sectionGap),
@@ -331,7 +346,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   selectedTab: _selectedRoleTab(),
                   onTabChanged: (tab) {
                     setState(() {
-                      _memberCategoryFilter = AdminMemberRole.filterToQuery(tab);
+                      _memberCategoryFilter = AdminMemberRole.filterToQuery(
+                        tab,
+                      );
                       _currentPage = 1;
                     });
                     _loadUsers();
@@ -396,7 +413,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.cloud_off, size: 48, color: AdminStitchTheme.textSecondary),
+                  const Icon(
+                    Icons.cloud_off,
+                    size: 48,
+                    color: AdminStitchTheme.textSecondary,
+                  ),
                   const SizedBox(height: 12),
                   const Text('회원 목록을 불러오지 못했습니다'),
                   const SizedBox(height: 12),
@@ -442,7 +463,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             sliver: SliverList.separated(
               itemCount: _users.length,
               separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) => _buildUserCard(_users[index] as Map<String, dynamic>),
+              itemBuilder: (context, index) =>
+                  _buildUserCard(_users[index] as Map<String, dynamic>),
             ),
           ),
         if (_totalPages > 1)
@@ -467,7 +489,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       roleColor: _roleColorForCard(user),
       joinedLabel: '가입 ${_formatDate(user['createdAt']?.toString() ?? '')}',
       isActive: isActive,
-      avatarUrl: user['avatarUrl']?.toString(),
+      avatarUrl: user['profileImage']?.toString(),
       initials: (user['name']?.toString() ?? '?').characters.first,
       onTap: userId != null ? () => _openUserDetail(user) : null,
       onMore: userId != null ? () => _showUserActions(user) : null,
@@ -489,10 +511,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 : null,
             icon: const Icon(Icons.chevron_left),
           ),
-          Text(
-            '$_currentPage / $_totalPages',
-            style: AdminStitchTheme.bodyMd,
-          ),
+          Text('$_currentPage / $_totalPages', style: AdminStitchTheme.bodyMd),
           IconButton(
             onPressed: _currentPage < _totalPages
                 ? () {

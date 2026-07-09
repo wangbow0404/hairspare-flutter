@@ -624,41 +624,48 @@ class AdminUserProfileCard extends StatelessWidget {
             padding: const EdgeInsets.all(AdminStitchTheme.componentPadding),
             child: Column(
               children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AdminStitchTheme.secondary,
-                        AdminStitchTheme.primary,
+                GestureDetector(
+                  onTap: (profileImage != null && profileImage.isNotEmpty)
+                      ? () => showFullScreenImage(context, profileImage)
+                      : null,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AdminStitchTheme.secondary,
+                          AdminStitchTheme.primary,
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AdminStitchTheme.primary.withValues(
+                            alpha: 0.25,
+                          ),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
                       ],
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AdminStitchTheme.primary.withValues(alpha: 0.25),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  clipBehavior: Clip.antiAlias,
-                  child: (profileImage != null && profileImage.isNotEmpty)
-                      ? AppNetworkImage(
-                          imageUrl: profileImage,
-                          fit: BoxFit.cover,
-                        )
-                      : Text(
-                          initial,
-                          style: AdminStitchTheme.headlineMobile.copyWith(
-                            color: AdminStitchTheme.onPrimary,
-                            fontSize: 28,
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.antiAlias,
+                    child: (profileImage != null && profileImage.isNotEmpty)
+                        ? AppNetworkImage(
+                            imageUrl: profileImage,
+                            fit: BoxFit.cover,
+                          )
+                        : Text(
+                            initial,
+                            style: AdminStitchTheme.headlineMobile.copyWith(
+                              color: AdminStitchTheme.onPrimary,
+                              fontSize: 28,
+                            ),
                           ),
-                        ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Wrap(
@@ -1194,9 +1201,13 @@ class _AdminUserPhotosSectionState extends State<AdminUserPhotosSection> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      AppNetworkImage(
-                        imageUrl: item['url'] as String,
-                        fit: BoxFit.cover,
+                      GestureDetector(
+                        onTap: () =>
+                            showFullScreenImage(context, item['url'] as String),
+                        child: AppNetworkImage(
+                          imageUrl: item['url'] as String,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                       Positioned(
                         left: 4,

@@ -81,9 +81,11 @@ class AppNetworkImage extends StatelessWidget {
         fit: fit,
         cacheWidth: memCacheWidth,
         filterQuality: FilterQuality.medium,
-        loadingBuilder: (_, child, progress) =>
-            progress == null ? child : _Placeholder(seed: url, icon: fallbackIcon),
-        errorBuilder: (_, __, ___) => _Placeholder(seed: url, icon: fallbackIcon),
+        loadingBuilder: (_, child, progress) => progress == null
+            ? child
+            : _Placeholder(seed: url, icon: fallbackIcon),
+        errorBuilder: (_, __, ___) =>
+            _Placeholder(seed: url, icon: fallbackIcon),
       );
     }
 
@@ -96,6 +98,54 @@ class AppNetworkImage extends StatelessWidget {
       fadeOutDuration: Duration.zero,
       placeholder: (_, __) => _Placeholder(seed: url, icon: fallbackIcon),
       errorWidget: (_, __, ___) => _Placeholder(seed: url, icon: fallbackIcon),
+    );
+  }
+}
+
+/// 사진을 전체화면으로 확대해서 보여준다. 핀치/드래그로 확대·이동 가능.
+Future<void> showFullScreenImage(BuildContext context, String? imageUrl) {
+  if (imageUrl == null || imageUrl.isEmpty) return Future.value();
+  return Navigator.of(context).push(
+    PageRouteBuilder(
+      opaque: false,
+      barrierColor: Colors.black87,
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          _FullScreenImageViewer(imageUrl: imageUrl),
+    ),
+  );
+}
+
+class _FullScreenImageViewer extends StatelessWidget {
+  const _FullScreenImageViewer({required this.imageUrl});
+
+  final String imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 5,
+              child: SizedBox.expand(
+                child: AppNetworkImage(imageUrl: imageUrl, fit: BoxFit.contain),
+              ),
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            right: 8,
+            child: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white, size: 28),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
