@@ -172,6 +172,100 @@ class AdminStitchFilterChip extends StatelessWidget {
   }
 }
 
+/// 관리자 필터용 드롭다운. label(선택 안내)과 options(값→표시명)를 받아
+/// 현재 선택값을 보여주고 탭하면 메뉴가 열린다.
+class AdminStitchFilterDropdown extends StatelessWidget {
+  const AdminStitchFilterDropdown({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.options,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String value;
+  final Map<String, String> options; // value -> 표시명
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonHideUnderline(
+      child: DropdownButton<String>(
+        value: options.containsKey(value) ? value : options.keys.first,
+        isExpanded: true,
+        isDense: true,
+        borderRadius: BorderRadius.circular(AdminStitchTheme.radiusXl),
+        icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+        style: AdminStitchTheme.labelSm.copyWith(
+          color: AdminStitchTheme.onSurface,
+          fontWeight: FontWeight.w600,
+        ),
+        selectedItemBuilder: (context) => options.entries
+            .map(
+              (e) => Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '$label · ${e.value}',
+                  style: AdminStitchTheme.labelSm.copyWith(
+                    color: AdminStitchTheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            )
+            .toList(),
+        items: options.entries
+            .map(
+              (e) => DropdownMenuItem<String>(
+                value: e.key,
+                child: Text(e.value),
+              ),
+            )
+            .toList(),
+        onChanged: (v) {
+          if (v != null) onChanged(v);
+        },
+      ),
+    );
+  }
+}
+
+/// [AdminStitchFilterDropdown]을 카드 테두리로 감싼 컨테이너.
+class AdminStitchFilterDropdownBox extends StatelessWidget {
+  const AdminStitchFilterDropdownBox({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.options,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String value;
+  final Map<String, String> options;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: AdminStitchTheme.surfaceCard,
+        borderRadius: BorderRadius.circular(AdminStitchTheme.radiusXl),
+        border: Border.all(color: AdminStitchTheme.borderDefault),
+      ),
+      child: AdminStitchFilterDropdown(
+        label: label,
+        value: value,
+        options: options,
+        onChanged: onChanged,
+      ),
+    );
+  }
+}
+
 class AdminStitchCard extends StatelessWidget {
   const AdminStitchCard({
     super.key,

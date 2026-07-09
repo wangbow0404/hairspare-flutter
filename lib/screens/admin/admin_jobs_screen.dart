@@ -29,46 +29,39 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
   List<dynamic> _jobs = [];
   bool _isLoading = true;
   String _search = '';
-  String _statusFilter = '';
-  String _urgentFilter = '';
-  String _hipassFilter = ''; // '' | 'true'
-  String _sort = 'latest';
-  DateTime? _dateFrom;
-  DateTime? _dateTo;
+  String _statusFilter = ''; // 드롭다운
+  String _typeFilter = ''; // 칩: '' | urgent | hipass | normal
+  String _sort = 'latest'; // 드롭다운
   int _currentPage = 1;
   int _totalPages = 1;
   int _total = 0;
   Timer? _updateTimer;
   Timer? _searchDebounceTimer;
 
-  static const _statusTabs = ['전체', '게시중', '마감', '완료', '숨김'];
-  static const _statusMap = {
-    '전체': '',
-    '게시중': 'published',
-    '마감': 'closed',
-    '완료': 'completed',
-    '숨김': 'hidden',
+  // 상태 드롭다운 (value -> 표시명)
+  static const _statusOptions = {
+    '': '전체',
+    'published': '게시중',
+    'closed': '마감',
+    'completed': '완료',
+    'hidden': '숨김',
   };
 
-  static const _urgentTabs = ['전체', '급구', '일반'];
-  static const _urgentMap = {
+  // 유형 칩: 급구/하이패스/일반을 한 줄로 병합 (상호배타 선택)
+  static const _typeTabs = ['전체', '급구', '하이패스', '일반'];
+  static const _typeMap = {
     '전체': '',
-    '급구': 'true',
-    '일반': 'false',
+    '급구': 'urgent',
+    '하이패스': 'hipass',
+    '일반': 'normal',
   };
 
-  static const _hipassTabs = ['전체', '하이패스'];
-  static const _hipassMap = {
-    '전체': '',
-    '하이패스': 'true',
-  };
-
-  static const _sortTabs = ['최신순', '오래된순', '금액높은순', '금액낮은순'];
-  static const _sortMap = {
-    '최신순': 'latest',
-    '오래된순': 'oldest',
-    '금액높은순': 'amount_high',
-    '금액낮은순': 'amount_low',
+  // 정렬 드롭다운 (value -> 표시명)
+  static const _sortOptions = {
+    'latest': '최신순',
+    'oldest': '오래된순',
+    'amount_high': '금액높은순',
+    'amount_low': '금액낮은순',
   };
 
   @override
@@ -100,10 +93,10 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
     try {
       final result = await _adminService.getJobs(
         status: _statusFilter.isEmpty ? null : _statusFilter,
-        isUrgent: _urgentFilter.isEmpty ? null : (_urgentFilter == 'true'),
-        isOpeningSoon: _hipassFilter.isEmpty ? null : (_hipassFilter == 'true'),
-        dateFrom: _dateFrom == null ? null : _fmtDate(_dateFrom!),
-        dateTo: _dateTo == null ? null : _fmtDate(_dateTo!),
+        isUrgent: _typeFilter == 'urgent'
+            ? true
+            : (_typeFilter == 'normal' ? false : null),
+        isOpeningSoon: _typeFilter == 'hipass' ? true : null,
         sort: _sort,
         search: _search.isEmpty ? null : _search,
         page: _currentPage,
@@ -154,71 +147,11 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
     }
   }
 
-  String _selectedStatusTab() {
-    for (final entry in _statusMap.entries) {
-      if (entry.value == _statusFilter) return entry.key;
+  String _selectedTypeTab() {
+    for (final entry in _typeMap.entries) {
+      if (entry.value == _typeFilter) return entry.key;
     }
     return '전체';
-  }
-
-  String _selectedUrgentTab() {
-    for (final entry in _urgentMap.entries) {
-      if (entry.value == _urgentFilter) return entry.key;
-    }
-    return '전체';
-  }
-
-  String _selectedHipassTab() {
-    for (final entry in _hipassMap.entries) {
-      if (entry.value == _hipassFilter) return entry.key;
-    }
-    return '전체';
-  }
-
-  String _selectedSortTab() {
-    for (final entry in _sortMap.entries) {
-      if (entry.value == _sort) return entry.key;
-    }
-    return '최신순';
-  }
-
-  String _fmtDate(DateTime d) =>
-      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-
-  String get _dateRangeLabel {
-    if (_dateFrom == null && _dateTo == null) return '근무일 기간';
-    final f = _dateFrom == null ? '처음' : DateFormat('M/d').format(_dateFrom!);
-    final t = _dateTo == null ? '끝' : DateFormat('M/d').format(_dateTo!);
-    return '$f ~ $t';
-  }
-
-  Future<void> _pickDateRange() async {
-    final now = DateTime.now();
-    final picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(now.year - 1),
-      lastDate: DateTime(now.year + 2),
-      initialDateRange: (_dateFrom != null && _dateTo != null)
-          ? DateTimeRange(start: _dateFrom!, end: _dateTo!)
-          : null,
-      locale: const Locale('ko', 'KR'),
-    );
-    if (picked == null || !mounted) return;
-    setState(() {
-      _dateFrom = picked.start;
-      _dateTo = picked.end;
-      _currentPage = 1;
-    });
-    _loadJobs();
-  }
-
-  void _clearDateRange() {
-    setState(() {
-      _dateFrom = null;
-      _dateTo = null;
-      _currentPage = 1;
-    });
-    _loadJobs();
   }
 
   @override
@@ -251,66 +184,51 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
             },
           ),
           const SizedBox(height: AdminStitchTheme.sectionGap),
+          // 유형: 급구/하이패스/일반 (칩 한 줄)
           AdminStitchFilterChips(
-            tabs: _statusTabs,
-            selectedTab: _selectedStatusTab(),
+            tabs: _typeTabs,
+            selectedTab: _selectedTypeTab(),
             onTabChanged: (tab) {
               setState(() {
-                _statusFilter = _statusMap[tab] ?? '';
+                _typeFilter = _typeMap[tab] ?? '';
                 _currentPage = 1;
               });
               _loadJobs();
             },
           ),
           const SizedBox(height: AdminStitchTheme.stackTight),
-          AdminStitchFilterChips(
-            tabs: _urgentTabs,
-            selectedTab: _selectedUrgentTab(),
-            onTabChanged: (tab) {
-              setState(() {
-                _urgentFilter = _urgentMap[tab] ?? '';
-                _currentPage = 1;
-              });
-              _loadJobs();
-            },
-          ),
-          const SizedBox(height: AdminStitchTheme.stackTight),
-          AdminStitchFilterChips(
-            tabs: _hipassTabs,
-            selectedTab: _selectedHipassTab(),
-            onTabChanged: (tab) {
-              setState(() {
-                _hipassFilter = _hipassMap[tab] ?? '';
-                _currentPage = 1;
-              });
-              _loadJobs();
-            },
-          ),
-          const SizedBox(height: AdminStitchTheme.stackTight),
-          AdminStitchFilterChips(
-            tabs: _sortTabs,
-            selectedTab: _selectedSortTab(),
-            onTabChanged: (tab) {
-              setState(() {
-                _sort = _sortMap[tab] ?? 'latest';
-                _currentPage = 1;
-              });
-              _loadJobs();
-            },
-          ),
-          const SizedBox(height: AdminStitchTheme.stackTight),
+          // 상태·정렬: 드롭다운
           Row(
             children: [
-              OutlinedButton.icon(
-                onPressed: _pickDateRange,
-                icon: const Icon(Icons.calendar_today, size: 16),
-                label: Text(_dateRangeLabel),
-              ),
-              if (_dateFrom != null || _dateTo != null)
-                TextButton(
-                  onPressed: _clearDateRange,
-                  child: const Text('초기화'),
+              Expanded(
+                child: AdminStitchFilterDropdownBox(
+                  label: '상태',
+                  value: _statusFilter,
+                  options: _statusOptions,
+                  onChanged: (v) {
+                    setState(() {
+                      _statusFilter = v;
+                      _currentPage = 1;
+                    });
+                    _loadJobs();
+                  },
                 ),
+              ),
+              const SizedBox(width: AdminStitchTheme.stackTight),
+              Expanded(
+                child: AdminStitchFilterDropdownBox(
+                  label: '정렬',
+                  value: _sort,
+                  options: _sortOptions,
+                  onChanged: (v) {
+                    setState(() {
+                      _sort = v;
+                      _currentPage = 1;
+                    });
+                    _loadJobs();
+                  },
+                ),
+              ),
             ],
           ),
           if (_total > 0) ...[

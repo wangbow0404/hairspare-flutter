@@ -42,33 +42,19 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
   static const _roleTabs = AdminMemberRole.filterTabs;
 
-  static const _statusTabs = ['전체', '정상', '정지됨', '삭제됨'];
-  static const _statusMap = {
-    '전체': '',
-    '정상': 'active',
-    '정지됨': 'suspended',
-    '삭제됨': 'deleted',
+  // 상태 드롭다운 (value -> 표시명)
+  static const _statusOptions = {
+    '': '전체',
+    'active': '정상',
+    'suspended': '정지됨',
+    'deleted': '삭제됨',
   };
 
-  static const _sortTabs = ['최신가입순', '오래된가입순'];
-  static const _sortMap = {
-    '최신가입순': 'latest',
-    '오래된가입순': 'oldest',
+  // 정렬 드롭다운 (value -> 표시명)
+  static const _sortOptions = {
+    'latest': '최신가입순',
+    'oldest': '오래된가입순',
   };
-
-  String _selectedStatusTab() {
-    for (final entry in _statusMap.entries) {
-      if (entry.value == _statusFilter) return entry.key;
-    }
-    return '전체';
-  }
-
-  String _selectedSortTab() {
-    for (final entry in _sortMap.entries) {
-      if (entry.value == _sort) return entry.key;
-    }
-    return '최신가입순';
-  }
 
   @override
   void initState() {
@@ -352,28 +338,38 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   },
                 ),
                 const SizedBox(height: AdminStitchTheme.stackTight),
-                AdminStitchFilterChips(
-                  tabs: _statusTabs,
-                  selectedTab: _selectedStatusTab(),
-                  onTabChanged: (tab) {
-                    setState(() {
-                      _statusFilter = _statusMap[tab] ?? '';
-                      _currentPage = 1;
-                    });
-                    _loadUsers();
-                  },
-                ),
-                const SizedBox(height: AdminStitchTheme.stackTight),
-                AdminStitchFilterChips(
-                  tabs: _sortTabs,
-                  selectedTab: _selectedSortTab(),
-                  onTabChanged: (tab) {
-                    setState(() {
-                      _sort = _sortMap[tab] ?? 'latest';
-                      _currentPage = 1;
-                    });
-                    _loadUsers();
-                  },
+                Row(
+                  children: [
+                    Expanded(
+                      child: AdminStitchFilterDropdownBox(
+                        label: '상태',
+                        value: _statusFilter,
+                        options: _statusOptions,
+                        onChanged: (v) {
+                          setState(() {
+                            _statusFilter = v;
+                            _currentPage = 1;
+                          });
+                          _loadUsers();
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: AdminStitchTheme.stackTight),
+                    Expanded(
+                      child: AdminStitchFilterDropdownBox(
+                        label: '정렬',
+                        value: _sort,
+                        options: _sortOptions,
+                        onChanged: (v) {
+                          setState(() {
+                            _sort = v;
+                            _currentPage = 1;
+                          });
+                          _loadUsers();
+                        },
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: AdminStitchTheme.sectionGap),
                 if (!_isLoading)
