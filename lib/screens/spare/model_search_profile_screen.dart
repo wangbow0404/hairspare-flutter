@@ -81,7 +81,7 @@ class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: AppTheme.spacing8 + 110),
+        padding: const EdgeInsets.only(bottom: AppTheme.spacing3 + 90),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -171,7 +171,7 @@ class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
               ),
               child: _DetailsCard(model: model, item: widget.item),
             ),
-            const SizedBox(height: AppTheme.spacing3),
+            const SizedBox(height: AppTheme.spacing2),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
               child: _MetadataGrid(model: model),
@@ -367,7 +367,7 @@ class _NameOverlapCard extends StatelessWidget {
   }
 }
 
-/// 소개·태그·예약시간·메모 등 나머지 정보 — 사진과 안 겹치는 일반 카드.
+/// 예약 가능 시간 + 모델이 직접 적은 멘트(메모) — 사진과 안 겹치는 일반 카드.
 class _DetailsCard extends StatelessWidget {
   const _DetailsCard({required this.model, required this.item});
 
@@ -386,32 +386,6 @@ class _DetailsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (model.intro != null && model.intro!.isNotEmpty) ...[
-            Text(
-              model.intro!,
-              style: const TextStyle(
-                fontSize: 15,
-                fontStyle: FontStyle.italic,
-                color: AppTheme.textSecondary,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing3),
-          ],
-          if (model.hairLength.isNotEmpty ||
-              model.imageTags.isNotEmpty ||
-              model.preferredTreatments.isNotEmpty) ...[
-            Wrap(
-              spacing: AppTheme.spacing2,
-              runSpacing: AppTheme.spacing2,
-              children: [
-                if (model.hairLength.isNotEmpty) _ProfileTag(label: model.hairLength),
-                for (final t in model.preferredTreatments.take(2)) _ProfileTag(label: t),
-                for (final t in model.imageTags.take(2)) _ProfileTag(label: t),
-              ],
-            ),
-            const SizedBox(height: AppTheme.spacing4),
-          ],
           Container(
             padding: const EdgeInsets.all(AppTheme.spacing3),
             decoration: BoxDecoration(
@@ -461,60 +435,14 @@ class _DetailsCard extends StatelessWidget {
               ],
             ),
           ),
-          if (item.keywords.isNotEmpty) ...[
-            const SizedBox(height: AppTheme.spacing3),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: item.keywords.map<Widget>((k) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryPurpleLight,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                  ),
-                  child: Text(
-                    k,
-                    style: const TextStyle(fontSize: 12, color: AppTheme.primaryPurpleDark),
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
           if (item.memo != null && item.memo!.isNotEmpty) ...[
-            const SizedBox(height: AppTheme.spacing2),
+            const SizedBox(height: AppTheme.spacing3),
             Text(
               item.memo!,
-              style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+              style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _ProfileTag extends StatelessWidget {
-  const _ProfileTag({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppTheme.primaryPurple.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-        border: Border.all(color: AppTheme.primaryPurple.withValues(alpha: 0.15)),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: AppTheme.primaryPurple,
-        ),
       ),
     );
   }
