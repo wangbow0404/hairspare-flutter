@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../core/di/service_locator.dart';
@@ -115,7 +117,15 @@ class ModelMatchViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 백그라운드로 보낸 하트가 실패했을 때 화면에 알려주기 위한 콜백
+  /// (스와이프 자체는 이미 끝난 뒤라 되돌리지 않고 안내만 한다).
+  void Function(String message)? onBackgroundLikeFailed;
+
   /// 하트 — pending 관심 전송 (즉시 채팅 생성 없음).
+  ///
+  /// 응답을 기다리지 않고 즉시 다음 카드로 넘어가는 낙관적(optimistic)
+  /// 업데이트를 쓴다 — 실제 전송은 백그라운드에서 처리되고, 실패 시에만
+  /// [onBackgroundLikeFailed]로 알린다.
   Future<MatchAttemptResult> like() async {
     final model = currentModel;
     if (model == null) {
@@ -129,12 +139,20 @@ class ModelMatchViewModel extends ChangeNotifier {
       return MatchAttemptResult(MatchAttemptStatus.limitReached, model: model);
     }
 
+    _remainingMatches -= 1;
+    _currentIndex += 1;
+    notifyListeners();
+
+    unawaited(_sendLikeInBackground(model));
+
+    return MatchAttemptResult(MatchAttemptStatus.likeSent, model: model);
+  }
+
+  Future<void> _sendLikeInBackground(HairModel model) async {
     try {
       final user = sl<AuthProvider>().currentUser ?? MockAuthData.spareUser();
       // fromProfile은 서버가 실제로 쓰지 않고(targetModelId만 전송됨) 서버가
-      // 직접 User/SpareExtProfile을 조회해 구성한다 — 여기서 굳이 포트폴리오·
-      // 디자이너 프로필을 미리 불러올 필요가 없어 제거(불필요한 네트워크 왕복
-      // 2회 + 아래 quota 이중 차감 버그의 원인이었던 consumeMatch() 제거).
+      // 직접 User/SpareExtProfile을 조회해 구성한다.
       final fromProfile = MatchProfile(
         id: user.id,
         role: 'spare',
@@ -142,27 +160,23 @@ class ModelMatchViewModel extends ChangeNotifier {
         subtitle: '',
       );
 
-      await _matchingService.sendLikeToModel(
+      final like = await _matchingService.sendLikeToModel(
         fromProfile: fromProfile,
         targetModel: model,
       );
 
-      _remainingMatches = await _matchService.remainingMatchesToday();
-      if (_remainingMatches <= 0) {
+      // 서버가 응답에 실어준 실제 잔여 횟수로 맞춰준다(레이스 컨디션 보정).
+      if (like.remainingQuota != null && like.remainingQuota != _remainingMatches) {
+        _remainingMatches = like.remainingQuota!;
         notifyListeners();
-        return MatchAttemptResult(MatchAttemptStatus.limitReached, model: model);
       }
-      _currentIndex += 1;
-      notifyListeners();
-
-      return MatchAttemptResult(MatchAttemptStatus.likeSent, model: model);
     } catch (e) {
+      // 전송 실패 — 이미 다음 카드로 넘어간 뒤라 스와이프를 되돌리진 않고,
+      // 소모한 횟수만 복구하고 사용자에게 알린다.
+      _remainingMatches += 1;
+      notifyListeners();
       final message = ErrorHandler.handleException(e).message;
-      return MatchAttemptResult(
-        MatchAttemptStatus.error,
-        model: model,
-        message: message,
-      );
+      onBackgroundLikeFailed?.call(message);
     }
   }
 }

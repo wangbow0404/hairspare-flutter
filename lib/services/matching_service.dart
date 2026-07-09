@@ -148,6 +148,9 @@ class MatchingService {
       createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
           DateTime.now(),
       chatId: json['chatId']?.toString(),
+      remainingQuota: json['remaining'] is int
+          ? json['remaining'] as int
+          : int.tryParse(json['remaining']?.toString() ?? ''),
     );
   }
 

@@ -11,6 +11,7 @@ class MatchLike {
     required this.status,
     required this.createdAt,
     this.chatId,
+    this.remainingQuota,
   });
 
   final String id;
@@ -19,6 +20,8 @@ class MatchLike {
   final MatchLikeStatus status;
   final DateTime createdAt;
   final String? chatId;
+  /// 하트 전송 응답에만 포함되는, 전송 직후 남은 오늘의 하트 개수.
+  final int? remainingQuota;
 
   bool get isPending => status == MatchLikeStatus.pending;
   bool get isMatched => status == MatchLikeStatus.matched;

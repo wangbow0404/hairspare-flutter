@@ -168,6 +168,15 @@ class _SwipeDeckState extends State<_SwipeDeck>
           setState(() {});
         }
       });
+    widget.vm.onBackgroundLikeFailed = (message) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('하트 전송에 실패했어요: $message'),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
+    };
   }
 
   @override
@@ -180,6 +189,7 @@ class _SwipeDeckState extends State<_SwipeDeck>
 
   @override
   void dispose() {
+    widget.vm.onBackgroundLikeFailed = null;
     _controller.dispose();
     super.dispose();
   }

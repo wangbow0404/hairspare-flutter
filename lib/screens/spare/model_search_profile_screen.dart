@@ -7,8 +7,6 @@ import '../../models/match_profile.dart';
 import '../../models/model_application_search_item.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/matching_service.dart';
-import '../../services/portfolio_service.dart';
-import '../../services/spare_designer_profile_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/common/app_network_image.dart';
@@ -36,28 +34,14 @@ class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
     try {
       final user = Provider.of<AuthProvider>(context, listen: false).currentUser ??
           MockAuthData.spareUser();
-      final portfolio = await sl<PortfolioService>().getImageUrls(
-        ownerId: user.id,
-        ownerRole: user.role.name,
-      );
-      final designerProfile =
-          await sl<SpareDesignerProfileService>().getProfile(user.id);
-      final intro = designerProfile.matchingIntro.trim().isNotEmpty
-          ? designerProfile.matchingIntro.trim()
-          : '${user.name ?? user.username} ${designerProfile.roleLabel}';
+      // fromProfile은 서버가 실제로 쓰지 않고(targetModelId만 전송됨) 서버가
+      // 직접 User/SpareExtProfile을 조회해 구성하므로, 여기서 포트폴리오·
+      // 디자이너 프로필을 미리 불러올 필요가 없다(불필요한 네트워크 왕복 제거).
       final fromProfile = MatchProfile(
         id: user.id,
         role: 'spare',
         displayName: user.name ?? user.username,
-        subtitle: designerProfile.matchSubtitle,
-        intro: intro,
-        tags: designerProfile.matchTags,
-        region: designerProfile.regionLabel,
-        treatment: designerProfile.specialties.isNotEmpty
-            ? designerProfile.specialties.first
-            : designerProfile.roleLabel,
-        portfolioImages: portfolio,
-        avatarUrl: portfolio.isNotEmpty ? portfolio.first : user.profileImage,
+        subtitle: '',
       );
 
       await sl<MatchingService>().sendLikeToModel(
