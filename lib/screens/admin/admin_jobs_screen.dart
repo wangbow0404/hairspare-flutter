@@ -9,6 +9,7 @@ import '../../services/admin_service.dart';
 import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
+import '../../utils/region_helper.dart';
 import '../../widgets/admin/admin_stitch_list_cards.dart';
 import '../../widgets/admin/admin_stitch_list_screen_shell.dart';
 import '../../widgets/admin/admin_stitch_widgets.dart';
@@ -123,6 +124,8 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
         return '마감';
       case 'completed':
         return '완료';
+      case 'hidden':
+        return '숨김';
       default:
         return status;
     }
@@ -232,7 +235,10 @@ class _AdminJobsScreenState extends State<AdminJobsScreen> {
             final job = _jobs[index] as Map<String, dynamic>;
             final jobId = job['id']?.toString();
             final shopName = job['shop']?['name']?.toString() ?? '-';
-            final regionName = job['region']?['name']?.toString() ?? '-';
+            final regionId = job['region']?['id']?.toString() ??
+                job['region']?['name']?.toString() ?? '';
+            final regionName =
+                regionId.isEmpty ? '-' : RegionHelper.getRegionName(regionId);
             final amount = _formatCurrency((job['amount'] ?? 0) as int);
             final statusLabel = _getStatusLabel(job['status']?.toString() ?? '');
 

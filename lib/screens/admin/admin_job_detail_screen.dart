@@ -4,6 +4,7 @@ import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../services/admin_service.dart';
 import '../../utils/error_handler.dart';
+import '../../utils/region_helper.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/admin/admin_table_card.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
@@ -81,6 +82,12 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
     return NumberFormat.currency(locale: 'ko_KR', symbol: '₩').format(amount);
   }
 
+  String _regionName(Map<String, dynamic> job) {
+    final regionId = job['region']?['id']?.toString() ??
+        job['region']?['name']?.toString() ?? '';
+    return regionId.isEmpty ? '-' : RegionHelper.getRegionName(regionId);
+  }
+
   String _getStatusLabel(String? status) {
     switch (status) {
       case 'published':
@@ -89,6 +96,8 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
         return '마감';
       case 'completed':
         return '완료';
+      case 'hidden':
+        return '숨김';
       default:
         return status ?? '-';
     }
@@ -256,7 +265,7 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
             const SizedBox(height: AppTheme.spacing4),
             _buildInfoRow('일시', '${_formatDate(job['date'])} ${job['time'] ?? ''}'),
             _buildInfoRow('미용실', job['shop']?['name'] ?? '-'),
-            _buildInfoRow('지역', job['region']?['name'] ?? '-'),
+            _buildInfoRow('지역', _regionName(job)),
             _buildInfoRow('금액', _formatCurrency((job['amount'] ?? 0) as int)),
             _buildInfoRow('지원', '${job['_count']?['applications'] ?? 0}건'),
             _buildInfoRow('스케줄', '${job['_count']?['schedules'] ?? 0}건'),
