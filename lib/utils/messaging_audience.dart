@@ -21,12 +21,17 @@ abstract final class MessagingAudience {
     return 'spare';
   }
 
+  /// GoRouterState.of(context)는 InheritedWidget 구독을 만들어서, 라우팅
+  /// 이벤트가 있을 때마다 이 위젯(앱 전역에서 쓰이는 SpareSubpageAppBar)이
+  /// 전부 다시 빌드되는 원인이 된다. 여기선 현재 role 라벨만 필요하고 매
+  /// 리빌드마다 최신일 필요는 없으므로, 구독 없이 값만 읽는
+  /// appRouter.state를 우선 사용한다.
   static String _currentPath(BuildContext context) {
     try {
-      return GoRouterState.of(context).uri.path;
+      return appRouter.state.uri.path;
     } catch (_) {
       try {
-        return appRouter.state.uri.path;
+        return GoRouterState.of(context).uri.path;
       } catch (_) {
         return '';
       }
