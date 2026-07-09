@@ -245,7 +245,7 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _HeroSection(
-          imageUrl: imageUrls.isNotEmpty ? imageUrls.first.toString() : null,
+          imageUrls: imageUrls.map((e) => e.toString()).toList(),
           statusLabel: _getStatusLabel(job['status']),
           isUrgent: job['isUrgent'] == true,
           isOpeningSoon: job['isOpeningSoon'] == true,
@@ -455,22 +455,38 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
   }
 }
 
-/// 사진 히어로 + 상태/급구/하이패스 배지.
-class _HeroSection extends StatelessWidget {
+/// 사진 히어로(여러 장이면 좌우로 넘겨볼 수 있음) + 상태/급구/하이패스 배지.
+class _HeroSection extends StatefulWidget {
   const _HeroSection({
-    required this.imageUrl,
+    required this.imageUrls,
     required this.statusLabel,
     required this.isUrgent,
     required this.isOpeningSoon,
   });
 
-  final String? imageUrl;
+  final List<String> imageUrls;
   final String statusLabel;
   final bool isUrgent;
   final bool isOpeningSoon;
 
   @override
+  State<_HeroSection> createState() => _HeroSectionState();
+}
+
+class _HeroSectionState extends State<_HeroSection> {
+  final _pageController = PageController();
+  int _index = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final urls = widget.imageUrls;
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(AdminStitchTheme.radiusXl),
       child: SizedBox(
@@ -479,26 +495,48 @@ class _HeroSection extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            ColoredBox(
-              color: AdminStitchTheme.surfaceDim,
-              child: AppNetworkImage(
-                imageUrl: imageUrl,
-                fit: BoxFit.cover,
-                fallbackIcon: Icons.image_outlined,
+            if (urls.isEmpty)
+              const ColoredBox(
+                color: AdminStitchTheme.surfaceDim,
+                child: AppNetworkImage(
+                  imageUrl: null,
+                  fit: BoxFit.cover,
+                  fallbackIcon: Icons.image_outlined,
+                ),
+              )
+            else
+              GestureDetector(
+                onTap: () => showFullScreenImageGallery(
+                  context,
+                  imageUrls: urls,
+                  initialIndex: _index,
+                ),
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: urls.length,
+                  onPageChanged: (i) => setState(() => _index = i),
+                  itemBuilder: (context, i) => ColoredBox(
+                    color: AdminStitchTheme.surfaceDim,
+                    child: AppNetworkImage(
+                      imageUrl: urls[i],
+                      fit: BoxFit.cover,
+                      fallbackIcon: Icons.image_outlined,
+                    ),
+                  ),
+                ),
               ),
-            ),
             Positioned(
               top: AdminStitchTheme.stackTight + 8,
               left: AdminStitchTheme.stackTight + 8,
               child: Row(
                 children: [
                   _Badge(
-                    label: statusLabel,
+                    label: widget.statusLabel,
                     background: Colors.white.withValues(alpha: 0.9),
                     foreground: AdminStitchTheme.primary,
                     border: AdminStitchTheme.primaryFixed,
                   ),
-                  if (isUrgent) ...[
+                  if (widget.isUrgent) ...[
                     const SizedBox(width: AdminStitchTheme.stackTight),
                     const _Badge(
                       label: '급구',
@@ -506,7 +544,7 @@ class _HeroSection extends StatelessWidget {
                       foreground: Colors.white,
                     ),
                   ],
-                  if (isOpeningSoon) ...[
+                  if (widget.isOpeningSoon) ...[
                     const SizedBox(width: AdminStitchTheme.stackTight),
                     const _Badge(
                       label: '하이패스',
@@ -517,6 +555,30 @@ class _HeroSection extends StatelessWidget {
                 ],
               ),
             ),
+            if (urls.length > 1)
+              Positioned(
+                bottom: 10,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (var i = 0; i < urls.length; i++)
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        width: i == _index ? 16 : 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: i == _index
+                              ? Colors.white
+                              : Colors.white.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),

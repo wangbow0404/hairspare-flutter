@@ -150,6 +150,115 @@ class _FullScreenImageViewer extends StatelessWidget {
   }
 }
 
+/// 사진 여러 장을 전체화면 갤러리로 보여준다. 좌우로 넘기며 볼 수 있고
+/// 핀치로 확대/축소도 된다.
+Future<void> showFullScreenImageGallery(
+  BuildContext context, {
+  required List<String> imageUrls,
+  int initialIndex = 0,
+}) {
+  final urls = imageUrls.where((u) => u.isNotEmpty).toList();
+  if (urls.isEmpty) return Future.value();
+  return Navigator.of(context).push(
+    PageRouteBuilder(
+      opaque: false,
+      barrierColor: Colors.black87,
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          _FullScreenImageGalleryViewer(
+            imageUrls: urls,
+            initialIndex: initialIndex.clamp(0, urls.length - 1),
+          ),
+    ),
+  );
+}
+
+class _FullScreenImageGalleryViewer extends StatefulWidget {
+  const _FullScreenImageGalleryViewer({
+    required this.imageUrls,
+    required this.initialIndex,
+  });
+
+  final List<String> imageUrls;
+  final int initialIndex;
+
+  @override
+  State<_FullScreenImageGalleryViewer> createState() =>
+      _FullScreenImageGalleryViewerState();
+}
+
+class _FullScreenImageGalleryViewerState
+    extends State<_FullScreenImageGalleryViewer> {
+  late final PageController _controller = PageController(
+    initialPage: widget.initialIndex,
+  );
+  late int _currentIndex = widget.initialIndex;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          PageView.builder(
+            controller: _controller,
+            itemCount: widget.imageUrls.length,
+            onPageChanged: (i) => setState(() => _currentIndex = i),
+            itemBuilder: (context, index) => GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 5,
+                child: SizedBox.expand(
+                  child: AppNetworkImage(
+                    imageUrl: widget.imageUrls[index],
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            right: 8,
+            child: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white, size: 28),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+          if (widget.imageUrls.length > 1)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 12,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    '${_currentIndex + 1} / ${widget.imageUrls.length}',
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 /// URL 해시로 결정되는 보라 계열 그라데이션 — 항목별로 다르게 보이되 0ms 렌더.
 class _Placeholder extends StatelessWidget {
   const _Placeholder({required this.seed, this.icon});
