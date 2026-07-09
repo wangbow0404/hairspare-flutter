@@ -8,6 +8,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/admin_member_role.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
+import '../../widgets/admin/admin_stitch_widgets.dart';
 
 /// M1. 회원 상세 — Stitch User Details mockup
 class AdminUserDetailScreen extends StatefulWidget {
@@ -131,6 +132,7 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
                             onUnsuspend: _unsuspendUser,
                             onAdjustEnergy: _adjustEnergy,
                             onAdjustPoints: _adjustPoints,
+                            onDelete: _deleteUser,
                           )
                         : const SizedBox.shrink(),
           ),
@@ -236,6 +238,122 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
     }
   }
 
+  Future<void> _deleteUser() async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: const Color(0xFF1E1C30),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.visibility_off_outlined, color: Color(0xFFF5F3FF)),
+              title: const Text(
+                '비활성화 (삭제)',
+                style: TextStyle(color: Color(0xFFF5F3FF), fontWeight: FontWeight.w600),
+              ),
+              subtitle: const Text(
+                '로그인이 차단되고 개인정보 화면 노출이 줄어듭니다. 공고·채팅·스케줄 등 기록은 유지되어 복구 가능합니다.',
+                style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
+              ),
+              onTap: () => Navigator.pop(context, 'soft'),
+            ),
+            const Divider(height: 1, color: Color(0xFF3D3B56)),
+            ListTile(
+              leading: const Icon(Icons.delete_forever, color: AppTheme.urgentRed),
+              title: const Text(
+                '완전 삭제',
+                style: TextStyle(color: AppTheme.urgentRed, fontWeight: FontWeight.w600),
+              ),
+              subtitle: const Text(
+                '계정 자체를 영구히 삭제합니다. 되돌릴 수 없습니다.',
+                style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
+              ),
+              onTap: () => Navigator.pop(context, 'hard'),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (choice == null || !mounted) return;
+
+    if (choice == 'soft') {
+      final reason = await AdminActionDialog.show(
+        context,
+        title: '회원 계정 비활성화',
+        confirmLabel: '비활성화',
+        summary: _user?['name']?.toString(),
+        isDanger: true,
+      );
+      if (reason == null || !mounted) return;
+      try {
+        await _adminService.deleteUser(widget.userId);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('회원 계정이 비활성화되었습니다')),
+        );
+        _loadUser();
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e)),
+            ),
+            backgroundColor: AppTheme.urgentRed,
+          ),
+        );
+      }
+      return;
+    }
+
+    // 완전 삭제 — 복구 불가이므로 회원 이름을 정확히 입력해야 진행된다
+    final expectedName = _user?['name']?.toString() ?? '';
+    final confirmController = TextEditingController();
+    final reason = await AdminActionDialog.show(
+      context,
+      title: '회원 완전 삭제',
+      confirmLabel: '영구 삭제',
+      summary: '복구할 수 없습니다. 계속하려면 회원 이름 "$expectedName"을(를) 정확히 입력하세요.',
+      isDanger: true,
+      extraFields: [
+        AdminFieldConfig(label: '회원 이름 확인', controller: confirmController),
+      ],
+    );
+    final typedName = confirmController.text.trim();
+    confirmController.dispose();
+    if (reason == null || !mounted) return;
+    if (expectedName.isEmpty || typedName != expectedName) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('입력한 이름이 일치하지 않아 삭제가 취소되었습니다'),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
+      return;
+    }
+    try {
+      await _adminService.deleteUser(widget.userId, permanent: true);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('회원 계정이 완전히 삭제되었습니다')),
+      );
+      context.pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e)),
+          ),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
+    }
+  }
+
   Future<void> _adjustPoints() async {
     final reason = await AdminActionDialog.show(
       context,
@@ -276,6 +394,7 @@ class _AdminUserDetailBody extends StatelessWidget {
     required this.onUnsuspend,
     required this.onAdjustEnergy,
     required this.onAdjustPoints,
+    required this.onDelete,
   });
 
   final Map<String, dynamic> user;
@@ -287,6 +406,7 @@ class _AdminUserDetailBody extends StatelessWidget {
   final VoidCallback onUnsuspend;
   final VoidCallback onAdjustEnergy;
   final VoidCallback onAdjustPoints;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -306,6 +426,7 @@ class _AdminUserDetailBody extends StatelessWidget {
             onSuspend: onSuspend,
             onUnsuspend: onUnsuspend,
             onAdjustEnergy: onAdjustEnergy,
+            onDelete: onDelete,
           ),
         ),
         const SizedBox(height: AdminStitchTheme.sectionGap),
@@ -417,6 +538,7 @@ class AdminUserProfileCard extends StatelessWidget {
     required this.onSuspend,
     required this.onUnsuspend,
     required this.onAdjustEnergy,
+    required this.onDelete,
   });
 
   final Map<String, dynamic> user;
@@ -425,6 +547,7 @@ class AdminUserProfileCard extends StatelessWidget {
   final VoidCallback onSuspend;
   final VoidCallback onUnsuspend;
   final VoidCallback onAdjustEnergy;
+  final VoidCallback onDelete;
 
   static const _successBg = Color(0xFFD1FAE5);
 
@@ -548,6 +671,15 @@ class AdminUserProfileCard extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+                TextButton.icon(
+                  onPressed: onDelete,
+                  icon: const Icon(Icons.person_remove_outlined, size: 18, color: AppTheme.urgentRed),
+                  label: const Text(
+                    '회원 계정 삭제',
+                    style: TextStyle(color: AppTheme.urgentRed, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ],
             ),
@@ -858,7 +990,7 @@ class AdminUserBasicTab extends StatelessWidget {
   }
 }
 
-class AdminUserActivityTab extends StatelessWidget {
+class AdminUserActivityTab extends StatefulWidget {
   const AdminUserActivityTab({
     super.key,
     required this.user,
@@ -869,9 +1001,73 @@ class AdminUserActivityTab extends StatelessWidget {
   final String Function(String?) formatDate;
 
   @override
+  State<AdminUserActivityTab> createState() => _AdminUserActivityTabState();
+}
+
+/// 필터 칩 라벨 <-> 백엔드가 내려주는 activity "type" 매핑
+const Map<String, String?> _kActivityFilterTypes = {
+  '전체': null,
+  '공고': 'job',
+  '지원': 'application',
+  '스케줄': 'schedule',
+  '에너지': 'energy',
+  '노쇼': 'noshow',
+  '정산취소': 'settlement_cancel',
+  '신고': 'report',
+};
+
+class _AdminUserActivityTabState extends State<AdminUserActivityTab> {
+  final AdminService _adminService = AdminService();
+  List<Map<String, dynamic>> _items = [];
+  bool _isLoading = true;
+  String? _error;
+  String _selectedLabel = '전체';
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    final userId = widget.user['id']?.toString();
+    if (userId == null) {
+      setState(() {
+        _isLoading = false;
+        _error = '회원 ID를 확인할 수 없습니다';
+      });
+      return;
+    }
+    try {
+      final items = await _adminService.getUserActivities(userId);
+      if (!mounted) return;
+      setState(() {
+        _items = items;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e));
+        _isLoading = false;
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> get _filtered {
+    final type = _kActivityFilterTypes[_selectedLabel];
+    if (type == null) return _items;
+    return _items.where((item) => item['type'] == type).toList();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final count = user['_count'] as Map<String, dynamic>? ?? {};
-    final recent = user['recentActivity'] as List? ?? [];
+    final count = widget.user['_count'] as Map<String, dynamic>? ?? {};
+    final filtered = _filtered;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -889,17 +1085,39 @@ class AdminUserActivityTab extends StatelessWidget {
             ],
           ),
         ),
-        if (recent.isNotEmpty) ...[
-          const SizedBox(height: AdminStitchTheme.sectionGap),
+        const SizedBox(height: AdminStitchTheme.sectionGap),
+        AdminStitchFilterChips(
+          tabs: _kActivityFilterTypes.keys.toList(),
+          selectedTab: _selectedLabel,
+          onTabChanged: (label) => setState(() => _selectedLabel = label),
+        ),
+        const SizedBox(height: AdminStitchTheme.sectionGap),
+        if (_isLoading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 32),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (_error != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Text(_error!, style: const TextStyle(color: AppTheme.urgentRed)),
+          )
+        else if (filtered.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Text(
+              '해당 유형의 활동 내역이 없습니다',
+              style: AdminStitchTheme.bodyMd.copyWith(color: AdminStitchTheme.textSecondary),
+            ),
+          )
+        else
           Container(
             decoration: AdminStitchTheme.cardDecoration,
             padding: const EdgeInsets.all(AdminStitchTheme.componentPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('최근 활동', style: AdminStitchTheme.sectionHeader),
-                const SizedBox(height: 12),
-                for (var i = 0; i < recent.length; i++) ...[
+                for (var i = 0; i < filtered.length; i++) ...[
                   if (i > 0)
                     Divider(
                       height: 16,
@@ -907,7 +1125,7 @@ class AdminUserActivityTab extends StatelessWidget {
                     ),
                   Builder(
                     builder: (context) {
-                      final item = recent[i] as Map<String, dynamic>;
+                      final item = filtered[i];
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Row(
@@ -935,7 +1153,7 @@ class AdminUserActivityTab extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              formatDate(item['at']?.toString()),
+                              widget.formatDate(item['at']?.toString()),
                               style: AdminStitchTheme.labelSm.copyWith(
                                 color: AdminStitchTheme.textSecondary,
                                 fontWeight: FontWeight.w500,
@@ -950,7 +1168,6 @@ class AdminUserActivityTab extends StatelessWidget {
               ],
             ),
           ),
-        ],
       ],
     );
   }

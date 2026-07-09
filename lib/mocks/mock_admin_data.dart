@@ -407,6 +407,28 @@ class MockAdminData {
     };
   }
 
+  static Future<List<Map<String, dynamic>>> getUserActivities(String userId) async {
+    await Future.delayed(const Duration(milliseconds: 150));
+    return [
+      {
+        'type': 'application',
+        'label': '공고 지원',
+        'detail': '오후 스텝 급구 · 대기중',
+        'at': '2025-06-22T09:00:00Z',
+      },
+      {
+        'type': 'schedule',
+        'label': '근무 스케줄',
+        'detail': '2025-06-21 14:00 · 완료',
+        'at': '2025-06-21T14:05:00Z',
+      },
+    ];
+  }
+
+  static Future<void> deleteUser(String userId, {bool permanent = false}) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+  }
+
   static Future<Map<String, dynamic>> getJobs({int page = 1, int limit = 20}) async {
     await Future.delayed(const Duration(milliseconds: 300));
     final jobs = [

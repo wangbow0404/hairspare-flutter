@@ -176,6 +176,42 @@ class AdminService {
     }
   }
 
+  /// 회원 활동내역(공고·지원·스케줄·에너지·노쇼·정산취소·신고) 조회
+  Future<List<Map<String, dynamic>>> getUserActivities(String userId) async {
+    if (ApiConfig.useMockData) return await MockAdminData.getUserActivities(userId);
+    try {
+      final response = await _dio.get('/api/admin/users/$userId/activities');
+      if (response.statusCode == 200) {
+        final data = response.data['data'] ?? response.data;
+        final items = data is Map ? data['items'] : null;
+        if (items is! List) return [];
+        return items.whereType<Map<String, dynamic>>().toList();
+      }
+      return const [];
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 회원 계정 삭제. permanent=false(기본)면 비활성화(로그인 차단, 기록 보존),
+  /// permanent=true면 User 행 자체를 완전히 삭제(복구 불가).
+  Future<void> deleteUser(String userId, {bool permanent = false}) async {
+    if (ApiConfig.useMockData) {
+      return await MockAdminData.deleteUser(userId, permanent: permanent);
+    }
+    try {
+      await _dio.delete(
+        permanent ? '/api/admin/users/$userId/permanent' : '/api/admin/users/$userId',
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
   /// 공고 목록 조회
   Future<Map<String, dynamic>> getJobs({
     String? status,
