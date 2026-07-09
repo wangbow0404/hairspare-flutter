@@ -7,14 +7,11 @@ import '../../models/hair_model.dart';
 import '../../models/match_profile.dart';
 import '../../models/model_application_search_item.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/chat_provider.dart';
 import '../../services/matching_service.dart';
 import '../../theme/app_theme.dart';
-import '../../utils/app_bar_navigation.dart';
 import '../../utils/error_handler.dart';
-import '../../utils/messaging_audience.dart';
 import '../../widgets/common/app_network_image.dart';
-import '../../widgets/notification_bell.dart';
+import '../../widgets/common/spare_subpage_app_bar.dart';
 
 /// "날짜검색" 결과에서 모델 하나를 골랐을 때 보여주는 프로필 화면 — 하트 보내기 포함.
 /// 채팅은 모델이 하트를 수락해야 열린다("받은 관심" 화면에서 모델이 수락 → 채팅 시작).
@@ -81,124 +78,75 @@ class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
     final model = widget.item.model;
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      // 다른 프로필류 화면(spare_detail_screen.dart)과 동일하게 top SafeArea를
-      // 적용해서, 사진이 상태바(시간·배터리) 뒤까지 뻗어나가 겹치지 않게 한다.
-      body: SafeArea(
-        top: true,
-        bottom: false,
-        child: SingleChildScrollView(
-          // Scaffold가 bottomNavigationBar 높이만큼은 이미 자동으로 본문
-          // 영역을 줄여주므로, 여기서 추가로 큰 여백을 또 넣을 필요가 없다
-          // (전에 여기 넣었던 여백이 하단에 여백이 심하게 남던 원인이었음).
-          padding: const EdgeInsets.only(bottom: AppTheme.spacing3),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: _cardOverlap),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    SizedBox(
-                      height: _heroHeight,
-                      width: double.infinity,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          AppNetworkImage(
-                            imageUrl: model.primaryImage,
-                            fit: BoxFit.cover,
-                            fallbackIcon: Icons.person_outline,
-                          ),
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.black.withValues(alpha: 0.35),
-                                  Colors.transparent,
-                                  Colors.black.withValues(alpha: 0.25),
-                                ],
-                                stops: const [0.0, 0.45, 1.0],
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            top: AppTheme.spacing3,
-                            left: AppTheme.spacing4,
-                            right: AppTheme.spacing4,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                _GlassIconButton(
-                                  icon: Icons.arrow_back_ios_new,
-                                  onTap: () => Navigator.maybePop(context),
-                                ),
-                                Row(
-                                  children: [
-                                    _GlassIconButton(
-                                      icon: Icons.search,
-                                      onTap: () =>
-                                          AppBarNavigation.pushSearch(context),
-                                    ),
-                                    const SizedBox(width: AppTheme.spacing2),
-                                    _GlassIconButton(
-                                      icon: Icons.chat_bubble_outline,
-                                      onTap: () =>
-                                          AppBarNavigation.pushMessages(
-                                            context,
-                                          ),
-                                      badge:
-                                          context
-                                              .watch<ChatProvider>()
-                                              .totalUnreadCount >
-                                          0,
-                                    ),
-                                    const SizedBox(width: AppTheme.spacing2),
-                                    _GlassIconButton.custom(
-                                      child: NotificationBell(
-                                        role: MessagingAudience.resolve(
-                                          context,
-                                        ),
-                                        iconColor: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+      // 다른 화면들과 동일한 표준 상단바 — 사진 위에 떠 있는 반투명 버튼 대신
+      // 다른 페이지들과 통일된 흰색 앱바를 그대로 사용한다.
+      appBar: SpareSubpageAppBar(
+        title: model.name.isEmpty ? '모델 프로필' : model.name,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: AppTheme.spacing3),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: _cardOverlap),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  SizedBox(
+                    height: _heroHeight,
+                    width: double.infinity,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        AppNetworkImage(
+                          imageUrl: model.primaryImage,
+                          fit: BoxFit.cover,
+                          fallbackIcon: Icons.person_outline,
+                        ),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withValues(alpha: 0.0),
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.25),
                               ],
+                              stops: const [0.0, 0.45, 1.0],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    Positioned(
-                      left: AppTheme.spacing4,
-                      right: AppTheme.spacing4,
-                      bottom: -_cardOverlap,
-                      child: _NameOverlapCard(model: model),
-                    ),
-                  ],
-                ),
+                  ),
+                  Positioned(
+                    left: AppTheme.spacing4,
+                    right: AppTheme.spacing4,
+                    bottom: -_cardOverlap,
+                    child: _NameOverlapCard(model: model),
+                  ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppTheme.spacing4,
-                  AppTheme.spacing2,
-                  AppTheme.spacing4,
-                  0,
-                ),
-                child: _DetailsCard(model: model, item: widget.item),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing4,
+                AppTheme.spacing2,
+                AppTheme.spacing4,
+                0,
               ),
-              const SizedBox(height: AppTheme.spacing2),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spacing4,
-                ),
-                child: _MetadataGrid(model: model),
+              child: _DetailsCard(model: model, item: widget.item),
+            ),
+            const SizedBox(height: AppTheme.spacing2),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing4,
               ),
-            ],
-          ),
+              child: _MetadataGrid(model: model),
+            ),
+          ],
         ),
       ),
       bottomNavigationBar: Container(
@@ -260,69 +208,6 @@ class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// 히어로 이미지 위에 뜨는 반투명 원형 아이콘 버튼.
-class _GlassIconButton extends StatelessWidget {
-  const _GlassIconButton({
-    required this.icon,
-    required this.onTap,
-    this.badge = false,
-  }) : child = null;
-
-  const _GlassIconButton.custom({required this.child})
-    : icon = null,
-      onTap = null,
-      badge = false;
-
-  final IconData? icon;
-  final VoidCallback? onTap;
-  final bool badge;
-  final Widget? child;
-
-  @override
-  Widget build(BuildContext context) {
-    final content = child ?? Icon(icon, size: 20, color: Colors.white);
-
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          if (onTap != null)
-            Material(
-              color: Colors.transparent,
-              shape: const CircleBorder(),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: onTap,
-                child: Center(child: content),
-              ),
-            )
-          else
-            Center(child: content),
-          if (badge)
-            const Positioned(
-              top: 9,
-              right: 9,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: AppTheme.urgentRed,
-                  shape: BoxShape.circle,
-                ),
-                child: SizedBox(width: 8, height: 8),
-              ),
-            ),
-        ],
       ),
     );
   }
