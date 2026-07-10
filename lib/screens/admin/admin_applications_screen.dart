@@ -17,7 +17,8 @@ class AdminApplicationsScreen extends StatefulWidget {
   const AdminApplicationsScreen({super.key});
 
   @override
-  State<AdminApplicationsScreen> createState() => _AdminApplicationsScreenState();
+  State<AdminApplicationsScreen> createState() =>
+      _AdminApplicationsScreenState();
 }
 
 class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
@@ -58,7 +59,9 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
     try {
       final result = await _adminService.getApplications(
         status: _statusFilter.isEmpty ? null : _statusFilter,
-        search: _searchController.text.trim().isEmpty ? null : _searchController.text.trim(),
+        search: _searchController.text.trim().isEmpty
+            ? null
+            : _searchController.text.trim(),
         page: _currentPage,
         limit: 20,
       );
@@ -72,10 +75,14 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
     } catch (e) {
       if (mounted) {
         if (showLoading) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('지원 목록 조회 실패: ${ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))}'),
-            backgroundColor: AppTheme.urgentRed,
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '지원 목록 조회 실패: ${ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))}',
+              ),
+              backgroundColor: AppTheme.urgentRed,
+            ),
+          );
         }
         setState(() => _isLoading = false);
       }
@@ -92,7 +99,10 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
   String _formatDate(String? dateString) {
     if (dateString == null || dateString.isEmpty) return '-';
     try {
-      return DateFormat('yyyy.MM.dd HH:mm', 'ko_KR').format(DateTime.parse(dateString).toLocal());
+      return DateFormat(
+        'yyyy.MM.dd HH:mm',
+        'ko_KR',
+      ).format(DateTime.parse(dateString).toLocal());
     } catch (_) {
       return dateString;
     }
@@ -140,11 +150,27 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
     );
     if (reason == null || !mounted) return;
 
-    // API 미구현 — 추후 AdminService.cancelApplication() 연결
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('강제 취소 처리됨 (감사 로그 기록)')),
-    );
-    _loadApplications(showLoading: false);
+    try {
+      await _adminService.cancelApplication(
+        app['id'].toString(),
+        reason: reason,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('지원이 강제 취소 처리되었습니다')));
+      _loadApplications(showLoading: false);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '강제 취소 실패: ${ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))}',
+          ),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
+    }
   }
 
   @override
@@ -164,13 +190,16 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
             onChanged: (value) {
               _searchDebounceTimer?.cancel();
               setState(() => _currentPage = 1);
-              _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
-                if (!mounted) return;
-                WidgetsBinding.instance.addPostFrameCallback((_) {
+              _searchDebounceTimer = Timer(
+                const Duration(milliseconds: 300),
+                () {
                   if (!mounted) return;
-                  _loadApplications();
-                });
-              });
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    _loadApplications();
+                  });
+                },
+              );
             },
           ),
           const SizedBox(height: AdminStitchTheme.sectionGap),
@@ -206,8 +235,10 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
       padding: AdminStitchListScreenShell.listPadding(context),
       sliver: SliverList.separated(
         itemCount: _applications.length,
-        separatorBuilder: (_, __) => const SizedBox(height: AdminStitchTheme.sectionGap),
-        itemBuilder: (_, index) => _buildCard(_applications[index] as Map<String, dynamic>),
+        separatorBuilder: (_, __) =>
+            const SizedBox(height: AdminStitchTheme.sectionGap),
+        itemBuilder: (_, index) =>
+            _buildCard(_applications[index] as Map<String, dynamic>),
       ),
     );
   }
@@ -292,28 +323,67 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
                   const Expanded(
                     child: Text(
                       '지원 상세',
-                      style: TextStyle(color: titleColor, fontSize: 18, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        color: titleColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text(statusLabel, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w600)),
+                    child: Text(
+                      statusLabel,
+                      style: TextStyle(
+                        color: statusColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
               const Divider(color: dividerColor, height: 1),
               const SizedBox(height: 12),
-              _detailRow('스페어', '${app['spare']?['name'] ?? '-'}  (${app['spare']?['email'] ?? ''})', subColor, titleColor),
-              _detailRow('미용실', app['shop']?['name']?.toString() ?? '-', subColor, titleColor),
-              _detailRow('공고', app['job']?['title']?.toString() ?? '-', subColor, titleColor),
-              _detailRow('근무 일시', _formatDate(app['job']?['startTime']?.toString()), subColor, titleColor),
+              _detailRow(
+                '스페어',
+                '${app['spare']?['name'] ?? '-'}  (${app['spare']?['email'] ?? ''})',
+                subColor,
+                titleColor,
+              ),
+              _detailRow(
+                '미용실',
+                app['shop']?['name']?.toString() ?? '-',
+                subColor,
+                titleColor,
+              ),
+              _detailRow(
+                '공고',
+                app['job']?['title']?.toString() ?? '-',
+                subColor,
+                titleColor,
+              ),
+              _detailRow(
+                '근무 일시',
+                _formatDate(app['job']?['startTime']?.toString()),
+                subColor,
+                titleColor,
+              ),
               _detailRow('금액', amountStr, subColor, titleColor),
-              _detailRow('지원 일시', _formatDate(app['createdAt']?.toString()), subColor, titleColor),
+              _detailRow(
+                '지원 일시',
+                _formatDate(app['createdAt']?.toString()),
+                subColor,
+                titleColor,
+              ),
               const SizedBox(height: 16),
               Align(
                 alignment: Alignment.centerRight,
@@ -329,7 +399,12 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
     );
   }
 
-  Widget _detailRow(String label, String value, Color labelColor, Color valueColor) {
+  Widget _detailRow(
+    String label,
+    String value,
+    Color labelColor,
+    Color valueColor,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AdminStitchTheme.stackTight),
       child: Row(
@@ -337,10 +412,16 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
         children: [
           SizedBox(
             width: 72,
-            child: Text(label, style: TextStyle(fontSize: 12, color: labelColor)),
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 12, color: labelColor),
+            ),
           ),
           Expanded(
-            child: Text(value, style: TextStyle(fontSize: 13, color: valueColor)),
+            child: Text(
+              value,
+              style: TextStyle(fontSize: 13, color: valueColor),
+            ),
           ),
         ],
       ),

@@ -520,6 +520,23 @@ class AdminService {
     }
   }
 
+  /// 지원 강제 취소 (연락처 교환 등 약관 위반 시 관리자가 처리)
+  Future<void> cancelApplication(
+    String applicationId, {
+    required String reason,
+  }) async {
+    try {
+      await _dio.patch(
+        '/api/admin/applications/$applicationId/cancel',
+        data: {'reason': reason},
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
   /// 체크인/스케줄 목록 조회
   Future<Map<String, dynamic>> getSchedules({
     String? search,
