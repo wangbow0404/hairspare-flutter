@@ -8,6 +8,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/admin_member_role.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
+import '../../widgets/admin/admin_send_message_sheet.dart';
 import '../../widgets/admin/admin_stitch_widgets.dart';
 import '../../widgets/common/app_network_image.dart';
 
@@ -136,6 +137,7 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
                     onAdjustEnergy: _adjustEnergy,
                     onAdjustPoints: _adjustPoints,
                     onDelete: _deleteUser,
+                    onSendMessage: _sendMessage,
                   )
                 : const SizedBox.shrink(),
           ),
@@ -379,6 +381,30 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
     }
   }
 
+  Future<void> _sendMessage() async {
+    final user = _user;
+    if (user == null) return;
+    final name = user['name']?.toString() ?? '회원';
+    final roleLabel = AdminMemberRole.badgeLabel(user);
+
+    await AdminSendMessageSheet.show(
+      context,
+      recipientLabel: '$name ($roleLabel)',
+      onSend: ({required title, required body, required reason}) async {
+        await _adminService.sendNotificationToUser(
+          userId: widget.userId,
+          title: title,
+          body: body,
+          reason: reason,
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$name님에게 메시지를 보냈습니다')),
+        );
+      },
+    );
+  }
+
   Future<void> _adjustPoints() async {
     final reason = await AdminActionDialog.show(
       context,
@@ -422,6 +448,7 @@ class _AdminUserDetailBody extends StatelessWidget {
     required this.onAdjustEnergy,
     required this.onAdjustPoints,
     required this.onDelete,
+    required this.onSendMessage,
   });
 
   final Map<String, dynamic> user;
@@ -434,6 +461,7 @@ class _AdminUserDetailBody extends StatelessWidget {
   final VoidCallback onAdjustEnergy;
   final VoidCallback onAdjustPoints;
   final VoidCallback onDelete;
+  final VoidCallback onSendMessage;
 
   static const double _tabBarHeight = 48;
 
@@ -480,6 +508,7 @@ class _AdminUserDetailBody extends StatelessWidget {
               onUnsuspend: onUnsuspend,
               onAdjustEnergy: onAdjustEnergy,
               onDelete: onDelete,
+              onSendMessage: onSendMessage,
             ),
           ),
         ),
@@ -612,6 +641,7 @@ class AdminUserProfileCard extends StatelessWidget {
     required this.onUnsuspend,
     required this.onAdjustEnergy,
     required this.onDelete,
+    required this.onSendMessage,
   });
 
   final Map<String, dynamic> user;
@@ -621,6 +651,7 @@ class AdminUserProfileCard extends StatelessWidget {
   final VoidCallback onUnsuspend;
   final VoidCallback onAdjustEnergy;
   final VoidCallback onDelete;
+  final VoidCallback onSendMessage;
 
   static const _successBg = Color(0xFFD1FAE5);
 
@@ -758,6 +789,18 @@ class AdminUserProfileCard extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: _ProfileActionButton(
+                    label: '메시지 보내기',
+                    icon: Icons.mail_outline,
+                    backgroundColor: AdminStitchTheme.surfaceCard,
+                    foregroundColor: AdminStitchTheme.primary,
+                    borderColor: AdminStitchTheme.primary,
+                    onPressed: onSendMessage,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextButton.icon(

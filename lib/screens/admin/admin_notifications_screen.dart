@@ -6,6 +6,7 @@ import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
+import '../../widgets/admin/admin_send_message_sheet.dart';
 import '../../widgets/admin/admin_stitch_list_cards.dart';
 import '../../widgets/admin/admin_stitch_list_screen_shell.dart';
 import '../../widgets/admin/admin_stitch_widgets.dart';
@@ -113,7 +114,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
         children: [
           AdminStitchPageHeader(
             title: '알림 발송',
-            subtitle: '전체/역할별 푸시 발송 및 템플릿 관리',
+            subtitle: '스페어·디자이너·모델·샵에게 역할별 또는 개별 메시지를 보낼 수 있습니다',
           ),
           SizedBox(height: AdminStitchTheme.sectionGap),
         ],
@@ -142,12 +143,14 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
                     labelText: '대상',
                     border: OutlineInputBorder(),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'all', child: Text('전체')),
-                    DropdownMenuItem(value: 'shop', child: Text('미용실')),
-                    DropdownMenuItem(value: 'spare', child: Text('스페어')),
-                    DropdownMenuItem(value: 'model', child: Text('모델')),
-                  ],
+                  items: AdminMessageAudience.options.entries
+                      .map(
+                        (e) => DropdownMenuItem(
+                          value: e.key,
+                          child: Text(e.value),
+                        ),
+                      )
+                      .toList(),
                   onChanged: (v) => setState(() => _audience = v ?? 'all'),
                 ),
                 const SizedBox(height: AdminStitchTheme.stackTight),
@@ -176,6 +179,13 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: AdminStitchTheme.stackTight),
+          Text(
+            '개별 발송은 회원 관리 → 회원 상세에서 「메시지 보내기」를 이용하세요.',
+            style: AdminStitchTheme.labelSm.copyWith(
+              color: AdminStitchTheme.textSecondary,
             ),
           ),
           const SizedBox(height: AdminStitchTheme.sectionGap),

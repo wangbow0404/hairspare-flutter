@@ -1489,6 +1489,27 @@ class AdminService {
     );
   }
 
+  Future<void> sendNotificationToUser({
+    required String userId,
+    required String title,
+    required String body,
+    required String reason,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.post(
+      '/api/admin/notifications/send',
+      data: {
+        'userId': userId,
+        'title': title,
+        'body': body,
+        'reason': reason,
+      },
+    );
+  }
+
   // ── M17 레퍼런스 ──
   Future<Map<String, dynamic>> getReferenceData({String? tab}) async {
     if (ApiConfig.useMockData) return MockAdminData.getReferenceData(tab: tab);
