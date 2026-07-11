@@ -138,7 +138,6 @@ abstract final class AppRoutes {
   static const adminApplications = '/admin/applications';
   static const adminPayments = '/admin/payments';
   static const adminEnergy = '/admin/energy';
-  static const adminNoshow = '/admin/noshow';
   static const adminSettlementCancelRequests =
       '/admin/settlement-cancel-requests';
   static const adminNoShowReports = '/admin/no-show-reports';

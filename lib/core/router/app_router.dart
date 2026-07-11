@@ -12,7 +12,6 @@ import '../../screens/admin/admin_dashboard_screen.dart';
 import '../../screens/admin/admin_energy_screen.dart';
 import '../../screens/admin/admin_job_detail_screen.dart';
 import '../../screens/admin/admin_jobs_screen.dart';
-import '../../screens/admin/admin_noshow_screen.dart';
 import '../../screens/admin/admin_payment_detail_screen.dart';
 import '../../screens/admin/admin_payments_screen.dart';
 import '../../screens/admin/admin_no_show_reports_screen.dart';
@@ -586,11 +585,6 @@ final class AppRouter {
               path: AppRoutes.adminEnergy,
               builder: (BuildContext context, GoRouterState state) =>
                   const AdminEnergyScreen(),
-            ),
-            GoRoute(
-              path: AppRoutes.adminNoshow,
-              builder: (BuildContext context, GoRouterState state) =>
-                  const AdminNoshowScreen(),
             ),
             GoRoute(
               path: AppRoutes.adminCheckin,

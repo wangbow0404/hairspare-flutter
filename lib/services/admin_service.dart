@@ -637,37 +637,6 @@ class AdminService {
     }
   }
 
-  /// 노쇼 이력 조회
-  Future<Map<String, dynamic>> getNoShowHistory({
-    int page = 1,
-    int limit = 20,
-  }) async {
-    if (ApiConfig.useMockData)
-      return await MockAdminData.getNoShowHistory(page: page, limit: limit);
-    try {
-      final queryParams = <String, dynamic>{'page': page, 'limit': limit};
-
-      final response = await _dio.get(
-        '/api/admin/noshow',
-        queryParameters: queryParams,
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data['data'] ?? response.data;
-        return data;
-      } else {
-        throw ServerException(
-          '노쇼 이력 조회 실패: ${response.statusMessage}',
-          statusCode: response.statusCode,
-        );
-      }
-    } on DioException catch (e) {
-      throw ErrorHandler.handleDioException(e);
-    } catch (e) {
-      throw ErrorHandler.handleException(e);
-    }
-  }
-
   /// 정산취소 요청 목록 조회 (샵이 이미 정산된 근무의 취소를 요청한 건)
   Future<List<dynamic>> getSettlementCancelRequests({String? status}) async {
     try {

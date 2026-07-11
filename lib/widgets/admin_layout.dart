@@ -10,6 +10,7 @@ import '../theme/admin_stitch_theme.dart';
 import '../theme/app_theme.dart';
 import 'admin/admin_mobile_bottom_nav.dart';
 import 'common/hairspare_brand_assets.dart';
+
 /// 관리자 레이아웃 위젯 (사이드바 + 헤더)
 class AdminLayout extends StatefulWidget {
   final Widget child;
@@ -64,40 +65,115 @@ class _AdminLayoutState extends State<AdminLayout> {
     AdminNavGroup(
       title: '거래·매칭',
       items: [
-        AdminNavItem(route: AppRoutes.adminJobs, label: '공고 관리', icon: Icons.work),
-        AdminNavItem(route: AppRoutes.adminApplications, label: '지원 현황', icon: Icons.assignment_outlined),
-        AdminNavItem(route: AppRoutes.adminCheckin, label: '스케줄·체크인', icon: Icons.calendar_today),
-        AdminNavItem(route: AppRoutes.adminMatches, label: '모델 매칭', icon: Icons.favorite),
-        AdminNavItem(route: AppRoutes.adminSpaces, label: '공간 대여', icon: Icons.meeting_room, badgeKey: 'pendingBookings'),
-        AdminNavItem(route: AppRoutes.adminEducations, label: '교육 관리', icon: Icons.school, badgeKey: 'pendingEducations'),
+        AdminNavItem(
+          route: AppRoutes.adminJobs,
+          label: '공고 관리',
+          icon: Icons.work,
+        ),
+        AdminNavItem(
+          route: AppRoutes.adminApplications,
+          label: '지원 현황',
+          icon: Icons.assignment_outlined,
+        ),
+        AdminNavItem(
+          route: AppRoutes.adminCheckin,
+          label: '스케줄·체크인',
+          icon: Icons.calendar_today,
+        ),
+        AdminNavItem(
+          route: AppRoutes.adminMatches,
+          label: '모델 매칭',
+          icon: Icons.favorite,
+        ),
+        AdminNavItem(
+          route: AppRoutes.adminSpaces,
+          label: '공간 대여',
+          icon: Icons.meeting_room,
+          badgeKey: 'pendingBookings',
+        ),
+        AdminNavItem(
+          route: AppRoutes.adminEducations,
+          label: '교육 관리',
+          icon: Icons.school,
+          badgeKey: 'pendingEducations',
+        ),
       ],
     ),
     AdminNavGroup(
       title: '경제·포인트',
       items: [
-        AdminNavItem(route: AppRoutes.adminPayments, label: '결제 관리', icon: Icons.payment),
-        AdminNavItem(route: AppRoutes.adminEnergy, label: '에너지 관리', icon: Icons.bolt),
-        AdminNavItem(route: AppRoutes.adminPoints, label: '포인트·미션', icon: Icons.stars),
-        AdminNavItem(route: AppRoutes.adminSubscriptions, label: '구독 관리', icon: Icons.subscriptions),
+        AdminNavItem(
+          route: AppRoutes.adminPayments,
+          label: '결제 관리',
+          icon: Icons.payment,
+        ),
+        AdminNavItem(
+          route: AppRoutes.adminEnergy,
+          label: '에너지 관리',
+          icon: Icons.bolt,
+        ),
+        AdminNavItem(
+          route: AppRoutes.adminPoints,
+          label: '포인트·미션',
+          icon: Icons.stars,
+        ),
+        AdminNavItem(
+          route: AppRoutes.adminSubscriptions,
+          label: '구독 관리',
+          icon: Icons.subscriptions,
+        ),
       ],
     ),
     AdminNavGroup(
       title: '신뢰·안전',
       items: [
-        AdminNavItem(route: AppRoutes.adminReports, label: '신고/제재 케이스', icon: Icons.report, badgeKey: 'openReports'),
-        AdminNavItem(route: AppRoutes.adminSanctions, label: '제재 실행·이력', icon: Icons.gavel),
-        AdminNavItem(route: AppRoutes.adminContent, label: '콘텐츠 모더레이션', icon: Icons.video_library, badgeKey: 'flaggedContent'),
-        AdminNavItem(route: AppRoutes.adminNoshow, label: '노쇼 관리', icon: Icons.warning),
-        AdminNavItem(route: AppRoutes.adminSettlementCancelRequests, label: '정산취소 요청', icon: Icons.receipt_long),
-        AdminNavItem(route: AppRoutes.adminNoShowReports, label: '노쇼 신고', icon: Icons.person_off),
+        AdminNavItem(
+          route: AppRoutes.adminReports,
+          label: '신고/제재 케이스',
+          icon: Icons.report,
+          badgeKey: 'openReports',
+        ),
+        AdminNavItem(
+          route: AppRoutes.adminSanctions,
+          label: '제재 실행·이력',
+          icon: Icons.gavel,
+        ),
+        AdminNavItem(
+          route: AppRoutes.adminContent,
+          label: '콘텐츠 모더레이션',
+          icon: Icons.video_library,
+          badgeKey: 'flaggedContent',
+        ),
+        AdminNavItem(
+          route: AppRoutes.adminSettlementCancelRequests,
+          label: '정산취소 요청',
+          icon: Icons.receipt_long,
+        ),
+        AdminNavItem(
+          route: AppRoutes.adminNoShowReports,
+          label: '노쇼 신고',
+          icon: Icons.person_off,
+        ),
       ],
     ),
     AdminNavGroup(
       title: '운영설정',
       items: [
-        AdminNavItem(route: AppRoutes.adminSettings, label: '비즈니스 설정', icon: Icons.tune),
-        AdminNavItem(route: AppRoutes.adminNotifications, label: '알림 발송', icon: Icons.campaign),
-        AdminNavItem(route: AppRoutes.adminReference, label: '레퍼런스 데이터', icon: Icons.dataset),
+        AdminNavItem(
+          route: AppRoutes.adminSettings,
+          label: '비즈니스 설정',
+          icon: Icons.tune,
+        ),
+        AdminNavItem(
+          route: AppRoutes.adminNotifications,
+          label: '알림 발송',
+          icon: Icons.campaign,
+        ),
+        AdminNavItem(
+          route: AppRoutes.adminReference,
+          label: '레퍼런스 데이터',
+          icon: Icons.dataset,
+        ),
       ],
     ),
     AdminNavGroup(
@@ -204,10 +280,7 @@ class _AdminLayoutState extends State<AdminLayout> {
 
   Widget _buildMobileSyncBadge() {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 4,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: AdminStitchTheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(999),
@@ -253,10 +326,7 @@ class _AdminLayoutState extends State<AdminLayout> {
             ),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [
-                  AppTheme.adminPurple50,
-                  AppTheme.adminPink50,
-                ],
+                colors: [AppTheme.adminPurple50, AppTheme.adminPink50],
               ),
               borderRadius: BorderRadius.circular(AppTheme.radiusFull),
             ),
@@ -314,11 +384,7 @@ class _AdminLayoutState extends State<AdminLayout> {
             icon: CircleAvatar(
               radius: 16,
               backgroundColor: AppTheme.red50,
-              child: Icon(
-                Icons.logout,
-                size: 18,
-                color: AppTheme.urgentRed,
-              ),
+              child: Icon(Icons.logout, size: 18, color: AppTheme.urgentRed),
             ),
           ),
         ],
@@ -334,10 +400,7 @@ class _AdminLayoutState extends State<AdminLayout> {
               ),
               label: const Text(
                 '대시보드',
-                style: TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 13,
-                ),
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -352,10 +415,7 @@ class _AdminLayoutState extends State<AdminLayout> {
             ),
             label: const Text(
               '로그아웃',
-              style: TextStyle(
-                color: AppTheme.textSecondary,
-                fontSize: 13,
-              ),
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -364,7 +424,11 @@ class _AdminLayoutState extends State<AdminLayout> {
     );
   }
 
-  Widget _buildNavItem(AdminNavItem item, bool isMobile, bool Function(String) isActive) {
+  Widget _buildNavItem(
+    AdminNavItem item,
+    bool isMobile,
+    bool Function(String) isActive,
+  ) {
     final active = isActive(item.route);
     final badge = _badgeFor(item);
     return Padding(
@@ -384,10 +448,7 @@ class _AdminLayoutState extends State<AdminLayout> {
                   ? const LinearGradient(
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
-                      colors: [
-                        AppTheme.primaryPurple500,
-                        AppTheme.primaryPink,
-                      ],
+                      colors: [AppTheme.primaryPurple500, AppTheme.primaryPink],
                     )
                   : null,
               borderRadius: BorderRadius.circular(AppTheme.radius2xl),
@@ -502,9 +563,7 @@ class _AdminLayoutState extends State<AdminLayout> {
         color: Colors.white.withValues(alpha: isMobile ? 0.98 : 0.95),
         border: isMobile
             ? null
-            : const Border(
-                right: BorderSide(color: AppTheme.adminPurple100),
-              ),
+            : const Border(right: BorderSide(color: AppTheme.adminPurple100)),
         boxShadow: isMobile ? null : AppTheme.shadowXl,
       ),
       child: ListView(
@@ -669,8 +728,9 @@ class _AdminLayoutState extends State<AdminLayout> {
                                 color: Colors.transparent,
                                 child: InkWell(
                                   onTap: () => _navigateToRoute('/admin'),
-                                  borderRadius:
-                                      BorderRadius.circular(AppTheme.radius2xl),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius2xl,
+                                  ),
                                   splashColor: AppTheme.primaryPurple500
                                       .withValues(alpha: 0.2),
                                   highlightColor: AppTheme.primaryPurple500
@@ -741,9 +801,7 @@ class _AdminLayoutState extends State<AdminLayout> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (!isMobile) _buildSidebar(context, false),
-                    Expanded(
-                      child: widget.child,
-                    ),
+                    Expanded(child: widget.child),
                   ],
                 ),
               ),
@@ -773,8 +831,5 @@ class AdminNavGroup {
   final String title;
   final List<AdminNavItem> items;
 
-  const AdminNavGroup({
-    required this.title,
-    required this.items,
-  });
+  const AdminNavGroup({required this.title, required this.items});
 }
