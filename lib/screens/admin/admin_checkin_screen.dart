@@ -8,6 +8,7 @@ import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
+import '../../widgets/admin/admin_checkin_detail_sheet.dart';
 import '../../widgets/admin/admin_stitch_list_cards.dart';
 import '../../widgets/admin/admin_stitch_list_screen_shell.dart';
 import '../../widgets/admin/admin_stitch_widgets.dart';
@@ -304,7 +305,7 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
     _loadSchedules();
   }
 
-  Future<void> _intervene(Map<String, dynamic> schedule, String action) async {
+  Future<bool> _intervene(Map<String, dynamic> schedule, String action) async {
     final labels = {
       'complete': '강제 완료',
       'cancel': '강제 취소',
@@ -317,7 +318,7 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
       summary: schedule['job']?['title']?.toString(),
       isDanger: action != 'complete',
     );
-    if (reason == null || !mounted) return;
+    if (reason == null || !mounted) return false;
     final id = schedule['id'].toString();
     try {
       switch (action) {
@@ -332,13 +333,14 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
             party: 'spare',
           );
       }
-      if (!mounted) return;
+      if (!mounted) return false;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${labels[action]} 완료 (감사 로그 기록)')),
       );
       _loadSchedules();
+      return true;
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) return false;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -349,6 +351,7 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
           backgroundColor: AppTheme.urgentRed,
         ),
       );
+      return false;
     }
   }
 
@@ -498,6 +501,11 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
                 ? Icons.warning_amber_rounded
                 : Icons.calendar_today_outlined,
             iconColor: stateColor,
+            onTap: () => AdminCheckinDetailSheet.show(
+              context,
+              schedule: schedule,
+              onIntervene: (action) => _intervene(schedule, action),
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -519,7 +527,9 @@ class _AdminCheckinScreenState extends State<AdminCheckinScreen> {
                   ),
                 ),
                 PopupMenuButton<String>(
-                  onSelected: (action) => _intervene(schedule, action),
+                  onSelected: (action) async {
+                    await _intervene(schedule, action);
+                  },
                   itemBuilder: (_) => const [
                     PopupMenuItem(
                       value: 'complete',
