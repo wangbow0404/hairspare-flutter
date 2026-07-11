@@ -100,6 +100,41 @@ class _AdminApplicationDetailScreenState
     }
   }
 
+  String _wageTypeLabel(String? wageType) {
+    switch (wageType) {
+      case 'hourly':
+        return '시급';
+      case 'daily':
+        return '일급';
+      default:
+        return '';
+    }
+  }
+
+  String _wageUnitSuffix(String? wageType) {
+    switch (wageType) {
+      case 'hourly':
+        return '/ 시간';
+      case 'daily':
+        return '/ 일';
+      default:
+        return '';
+    }
+  }
+
+  String _scheduleStatusLabel(String? status) {
+    switch (status) {
+      case 'scheduled':
+        return '예정';
+      case 'completed':
+        return '완료';
+      case 'cancelled':
+        return '취소됨';
+      default:
+        return status ?? '-';
+    }
+  }
+
   Future<void> _cancelApplication() async {
     final app = _app;
     if (app == null) return;
@@ -204,91 +239,95 @@ class _AdminApplicationDetailScreenState
     final spareEmail = app['spare']?['email']?.toString() ?? '';
     final shopId = app['shop']?['id']?.toString();
     final shopName = app['shop']?['name']?.toString() ?? '-';
+    final shopEmail = app['shop']?['email']?.toString() ?? '';
     final jobId = app['job']?['id']?.toString();
     final jobTitle = app['job']?['title']?.toString() ?? '-';
+    final wageType = app['job']?['wageType']?.toString();
     final amount = app['job']?['amount'];
     final amountStr = amount != null
         ? '${NumberFormat('#,###', 'ko_KR').format(amount)}원'
         : '-';
     final startTime = app['job']?['startTime']?.toString();
+    final schedule = app['schedule'] as Map<String, dynamic>?;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(AdminStitchTheme.componentPadding),
-          decoration: AdminStitchTheme.cardDecoration,
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '지원 일시 ${_formatDate(app['createdAt']?.toString())}',
-                  style: AdminStitchTheme.bodyMd.copyWith(
-                    color: AdminStitchTheme.textSecondary,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(
-                    AdminStitchTheme.radius2xl,
-                  ),
-                ),
-                child: Text(
-                  statusLabel,
-                  style: AdminStitchTheme.labelSm.copyWith(
-                    color: statusColor,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
+        _StatusHero(
+          statusLabel: statusLabel,
+          statusColor: statusColor,
+          createdAtLabel: _formatDate(app['createdAt']?.toString()),
         ),
         const SizedBox(height: AdminStitchTheme.sectionGap),
-        _NavCard(
-          icon: Icons.person_outline,
-          label: '스페어',
-          title: spareName,
-          subtitle: spareEmail.isNotEmpty ? spareEmail : null,
-          onTap: spareId != null
-              ? () => context.push(AppRoutes.adminUserDetail(spareId))
-              : null,
-        ),
+        const _SectionLabel('매칭 정보'),
         const SizedBox(height: AdminStitchTheme.stackTight),
-        _NavCard(
-          icon: Icons.store_outlined,
-          label: '미용실',
-          title: shopName,
-          onTap: shopId != null
-              ? () => context.push(AppRoutes.adminUserDetail(shopId))
-              : null,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _NavCard(
+                icon: Icons.person_outline,
+                label: '스페어',
+                title: spareName,
+                subtitle: spareEmail.isNotEmpty ? spareEmail : null,
+                onTap: spareId != null
+                    ? () => context.push(AppRoutes.adminUserDetail(spareId))
+                    : null,
+              ),
+            ),
+            const SizedBox(width: AdminStitchTheme.stackTight),
+            Expanded(
+              child: _NavCard(
+                icon: Icons.store_outlined,
+                label: '미용실',
+                title: shopName,
+                subtitle: shopEmail.isNotEmpty ? shopEmail : null,
+                onTap: shopId != null
+                    ? () => context.push(AppRoutes.adminUserDetail(shopId))
+                    : null,
+              ),
+            ),
+          ],
         ),
+        const SizedBox(height: AdminStitchTheme.sectionGap),
+        const _SectionLabel('공고 정보'),
         const SizedBox(height: AdminStitchTheme.stackTight),
-        _NavCard(
-          icon: Icons.work_outline,
-          label: '공고',
+        _JobCard(
           title: jobTitle,
-          subtitle: '$amountStr · ${_formatDate(startTime)}',
+          wageTypeLabel: _wageTypeLabel(wageType),
+          amountStr: amountStr,
+          unitSuffix: _wageUnitSuffix(wageType),
+          scheduleLabel: _formatDate(startTime),
           onTap: jobId != null
               ? () => context.push(AppRoutes.adminJobDetail(jobId))
               : null,
         ),
+        if (schedule != null) ...[
+          const SizedBox(height: AdminStitchTheme.sectionGap),
+          const _SectionLabel('근무 스케줄'),
+          const SizedBox(height: AdminStitchTheme.stackTight),
+          _ScheduleCard(
+            dateTime:
+                '${schedule['date'] ?? ''} ${schedule['startTime'] ?? ''}'
+                '${schedule['endTime'] != null ? '~${schedule['endTime']}' : ''}',
+            statusLabel: _scheduleStatusLabel(schedule['status']?.toString()),
+            checkedIn: schedule['checkInTime'] != null,
+          ),
+        ],
         if (status == 'pending') ...[
           const SizedBox(height: AdminStitchTheme.sectionGap),
           SizedBox(
             width: double.infinity,
-            child: OutlinedButton(
+            child: OutlinedButton.icon(
               onPressed: _cancelApplication,
+              icon: const Icon(Icons.cancel_outlined, size: 20),
+              label: const Text('강제 취소'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AdminStitchTheme.statusError,
-                side: const BorderSide(color: AdminStitchTheme.statusError),
+                side: BorderSide(
+                  color: AdminStitchTheme.statusError.withValues(alpha: 0.4),
+                  width: 2,
+                ),
                 minimumSize: const Size.fromHeight(
                   AdminStitchTheme.buttonHeight,
                 ),
@@ -298,11 +337,309 @@ class _AdminApplicationDetailScreenState
                   ),
                 ),
               ),
-              child: const Text('강제 취소'),
             ),
           ),
         ],
       ],
+    );
+  }
+}
+
+/// 상태를 크게 강조하는 히어로 카드 — 상태색으로 옅게 틴트된 배경 +
+/// 점(dot) 배지 + 지원 일시.
+class _StatusHero extends StatelessWidget {
+  const _StatusHero({
+    required this.statusLabel,
+    required this.statusColor,
+    required this.createdAtLabel,
+  });
+
+  final String statusLabel;
+  final Color statusColor;
+  final String createdAtLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+      decoration: BoxDecoration(
+        color: statusColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AdminStitchTheme.radius2xl),
+        border: Border.all(color: statusColor.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  statusLabel,
+                  style: AdminStitchTheme.labelSm.copyWith(
+                    color: statusColor,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AdminStitchTheme.stackTight),
+          Text(
+            '지원 일시 $createdAtLabel',
+            style: AdminStitchTheme.bodyMd.copyWith(
+              color: AdminStitchTheme.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Text(text, style: AdminStitchTheme.sectionHeader),
+    );
+  }
+}
+
+/// 공고 태그 + 제목 + 금액 강조 박스. 탭하면 공고 상세로 이동.
+class _JobCard extends StatelessWidget {
+  const _JobCard({
+    required this.title,
+    required this.wageTypeLabel,
+    required this.amountStr,
+    required this.unitSuffix,
+    required this.scheduleLabel,
+    this.onTap,
+  });
+
+  final String title;
+  final String wageTypeLabel;
+  final String amountStr;
+  final String unitSuffix;
+  final String scheduleLabel;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AdminStitchTheme.surfaceCard,
+      borderRadius: BorderRadius.circular(AdminStitchTheme.radius2xl),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AdminStitchTheme.radius2xl),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AdminStitchTheme.componentPadding),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AdminStitchTheme.radius2xl),
+            border: Border.all(color: AdminStitchTheme.borderDefault),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AdminStitchTheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AdminStitchTheme.primary.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Text(
+                      '공고',
+                      style: AdminStitchTheme.labelSm.copyWith(
+                        color: AdminStitchTheme.primary,
+                      ),
+                    ),
+                  ),
+                  if (wageTypeLabel.isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AdminStitchTheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        wageTypeLabel,
+                        style: AdminStitchTheme.labelSm.copyWith(
+                          color: AdminStitchTheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const Spacer(),
+                  if (onTap != null)
+                    const Icon(
+                      Icons.chevron_right,
+                      color: AdminStitchTheme.textSecondary,
+                    ),
+                ],
+              ),
+              const SizedBox(height: AdminStitchTheme.stackTight),
+              Text(
+                title,
+                style: AdminStitchTheme.headlineMd.copyWith(fontSize: 20),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                scheduleLabel,
+                style: AdminStitchTheme.bodyMd.copyWith(
+                  color: AdminStitchTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AdminStitchTheme.stackTight),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: AdminStitchTheme.bgSubtle,
+                  borderRadius: BorderRadius.circular(
+                    AdminStitchTheme.radiusXl,
+                  ),
+                  border: Border.all(color: AdminStitchTheme.borderDefault),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      amountStr,
+                      style: AdminStitchTheme.headlineMd.copyWith(
+                        color: AdminStitchTheme.primary,
+                        fontSize: 22,
+                      ),
+                    ),
+                    if (unitSuffix.isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      Text(
+                        unitSuffix,
+                        style: AdminStitchTheme.bodyMd.copyWith(
+                          color: AdminStitchTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 확정된 근무 스케줄 요약 카드(승인된 지원일 때만 노출).
+class _ScheduleCard extends StatelessWidget {
+  const _ScheduleCard({
+    required this.dateTime,
+    required this.statusLabel,
+    required this.checkedIn,
+  });
+
+  final String dateTime;
+  final String statusLabel;
+  final bool checkedIn;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AdminStitchTheme.componentPadding),
+      decoration: AdminStitchTheme.cardDecoration,
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: checkedIn
+                  ? AdminStitchTheme.emerald.withValues(alpha: 0.12)
+                  : AdminStitchTheme.primaryFixed,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              checkedIn ? Icons.check_circle_outline : Icons.schedule,
+              size: 20,
+              color: checkedIn
+                  ? AdminStitchTheme.emerald
+                  : AdminStitchTheme.primary,
+            ),
+          ),
+          const SizedBox(width: AdminStitchTheme.stackTight),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  dateTime,
+                  style: AdminStitchTheme.bodyMd.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  checkedIn ? '체크인 완료' : '체크인 전',
+                  style: AdminStitchTheme.bodyMd.copyWith(
+                    color: AdminStitchTheme.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: AdminStitchTheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AdminStitchTheme.radius2xl),
+            ),
+            child: Text(
+              statusLabel,
+              style: AdminStitchTheme.labelSm.copyWith(
+                color: AdminStitchTheme.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
