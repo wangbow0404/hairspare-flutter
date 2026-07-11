@@ -20,6 +20,7 @@ class Chat {
   final String? jobTitle;
   final LastMessage? lastMessage;
   final int? unreadCount;
+  final bool isAdminChat;
 
   Chat({
     required this.id,
@@ -33,6 +34,7 @@ class Chat {
     this.jobTitle,
     this.lastMessage,
     this.unreadCount,
+    this.isAdminChat = false,
   });
 
   factory Chat.fromJson(Map<String, dynamic> json) {
@@ -72,6 +74,7 @@ class Chat {
       unreadCount: json['unreadCount'] is int
           ? json['unreadCount']
           : int.tryParse(json['unreadCount']?.toString() ?? '0') ?? 0,
+      isAdminChat: json['isAdminChat'] == true,
     );
   }
 }

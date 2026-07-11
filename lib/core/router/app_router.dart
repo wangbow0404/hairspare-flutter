@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../screens/admin/admin_audit_logs_screen.dart';
 import '../../screens/admin/admin_application_detail_screen.dart';
 import '../../screens/admin/admin_applications_screen.dart';
+import '../../screens/admin/admin_chat_room_screen.dart';
 import '../../screens/admin/admin_checkin_screen.dart';
 import '../../screens/admin/admin_dashboard_screen.dart';
 import '../../screens/admin/admin_energy_screen.dart';
@@ -500,6 +501,21 @@ final class AppRouter {
                 return AdminUserDetailScreen(
                   userId: userId,
                   initialData: initial,
+                );
+              },
+            ),
+            GoRoute(
+              path: '/admin/chats/:chatId',
+              builder: (BuildContext context, GoRouterState state) {
+                final chatId = state.pathParameters['chatId']!;
+                Map<String, dynamic>? member;
+                final extra = state.extra;
+                if (extra is Map<String, dynamic>) {
+                  member = extra;
+                }
+                return AdminChatRoomScreen(
+                  chatId: chatId,
+                  member: member,
                 );
               },
             ),

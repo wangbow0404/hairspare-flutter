@@ -158,6 +158,7 @@ abstract final class AppRoutes {
   static const adminReference = '/admin/reference';
 
   static String adminUserDetail(String userId) => '/admin/users/$userId';
+  static String adminChat(String chatId) => '/admin/chats/$chatId';
   static String adminJobDetail(String jobId) => '/admin/jobs/$jobId';
   static String adminApplicationDetail(String applicationId) =>
       '/admin/applications/$applicationId';

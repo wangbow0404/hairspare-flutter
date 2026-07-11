@@ -114,7 +114,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
         children: [
           AdminStitchPageHeader(
             title: '알림 발송',
-            subtitle: '스페어·디자이너·모델·샵에게 역할별 또는 개별 메시지를 보낼 수 있습니다',
+            subtitle: '스페어·디자이너·모델·샵에게 역할별 공지 또는 개별 채팅을 보낼 수 있습니다',
           ),
           SizedBox(height: AdminStitchTheme.sectionGap),
         ],
@@ -183,7 +183,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
           ),
           const SizedBox(height: AdminStitchTheme.stackTight),
           Text(
-            '개별 발송은 회원 관리 → 회원 상세에서 「메시지 보내기」를 이용하세요.',
+            '개별 연락은 회원 관리 → 회원 상세에서 「채팅하기」로 1:1 채팅방을 열 수 있습니다.',
             style: AdminStitchTheme.labelSm.copyWith(
               color: AdminStitchTheme.textSecondary,
             ),

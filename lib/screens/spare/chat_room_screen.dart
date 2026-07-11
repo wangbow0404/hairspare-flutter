@@ -266,31 +266,34 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final currentUser = authProvider.currentUser;
     final myRole = _mySenderRole(currentUser);
+    final isAdminChat = _chat?.isAdminChat == true;
 
-    try {
-      _contactViolationService.assertSenderCanChat(senderRole: myRole);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              ErrorHandler.getUserFriendlyMessage(
-                ErrorHandler.handleException(e),
+    if (!isAdminChat) {
+      try {
+        _contactViolationService.assertSenderCanChat(senderRole: myRole);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                ErrorHandler.getUserFriendlyMessage(
+                  ErrorHandler.handleException(e),
+                ),
               ),
+              backgroundColor: AppTheme.urgentRed,
             ),
-            backgroundColor: AppTheme.urgentRed,
-          ),
-        );
+          );
+        }
+        return;
       }
-      return;
-    }
 
-    if (ContactBlocker.shouldBlockSend(
-      content,
-      recentOutgoing: _recentOutgoingForContactCheck,
-    )) {
-      await _handleContactViolation();
-      return;
+      if (ContactBlocker.shouldBlockSend(
+        content,
+        recentOutgoing: _recentOutgoingForContactCheck,
+      )) {
+        await _handleContactViolation();
+        return;
+      }
     }
 
     _messageController.clear();

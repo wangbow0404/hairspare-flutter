@@ -1510,6 +1510,44 @@ class AdminService {
     );
   }
 
+  // ── 관리자 1:1 채팅 ──
+  Future<Map<String, dynamic>> ensureAdminChat(String userId) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 200));
+      return {
+        'chatId': 'mock-admin-chat-$userId',
+        'id': 'mock-admin-chat-$userId',
+        'member': {'id': userId, 'name': '회원', 'roleLabel': '회원'},
+        'messages': [],
+      };
+    }
+    final response = await _dio.post(
+      '/api/admin/chats/ensure',
+      data: {'userId': userId},
+    );
+    return (response.data['data'] ?? response.data) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> getAdminChat(String chatId) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 200));
+      return {'chatId': chatId, 'messages': []};
+    }
+    final response = await _dio.get('/api/admin/chats/$chatId');
+    return (response.data['data'] ?? response.data) as Map<String, dynamic>;
+  }
+
+  Future<void> sendAdminChatMessage(String chatId, String content) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 150));
+      return;
+    }
+    await _dio.post(
+      '/api/admin/chats/$chatId/messages',
+      data: {'content': content},
+    );
+  }
+
   // ── M17 레퍼런스 ──
   Future<Map<String, dynamic>> getReferenceData({String? tab}) async {
     if (ApiConfig.useMockData) return MockAdminData.getReferenceData(tab: tab);
