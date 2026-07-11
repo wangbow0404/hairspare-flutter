@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../../utils/transient_network_retry.dart';
+
 typedef SessionExpiredHandler = Future<void> Function();
 typedef SessionMessageHandler = void Function(String message);
 
@@ -74,7 +76,12 @@ class AuthInterceptor extends Interceptor {
 
     try {
       await _ensureRefreshedAccessToken();
-    } catch (_) {
+    } catch (e) {
+      // 배포·재시작 등 일시적 장애면 세션을 지우지 않고 원래 오류를 그대로 전달
+      if (e is DioException && TransientNetworkRetry.isTransient(e)) {
+        handler.reject(err);
+        return;
+      }
       await _handleSessionExpired();
       handler.reject(err);
       return;
@@ -112,7 +119,9 @@ class AuthInterceptor extends Interceptor {
     _refreshCompleter = Completer<void>();
 
     try {
-      final response = await _refreshDio.post(_refreshPath);
+      final response = await TransientNetworkRetry.run(
+        () => _refreshDio.post(_refreshPath),
+      );
       final data = response.data is Map<String, dynamic>
           ? response.data as Map<String, dynamic>
           : <String, dynamic>{};

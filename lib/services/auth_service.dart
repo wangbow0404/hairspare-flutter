@@ -7,6 +7,7 @@ import '../models/spare_subtype.dart';
 import '../models/user.dart';
 import '../utils/api_client.dart';
 import '../utils/api_config.dart';
+import '../utils/transient_network_retry.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
 import '../mocks/mock_auth_data.dart';
@@ -53,14 +54,16 @@ class AuthService {
       return user;
     }
     try {
-      final response = await _dio.post(
-        '/api/auth/login',
-        data: {
-          'username': username,
-          'password': password,
-          if (portal != null)
-            'login_type': portal == LoginPortal.shop ? 'shop' : 'spare',
-        },
+      final response = await TransientNetworkRetry.run(
+        () => _dio.post(
+          '/api/auth/login',
+          data: {
+            'username': username,
+            'password': password,
+            if (portal != null)
+              'login_type': portal == LoginPortal.shop ? 'shop' : 'spare',
+          },
+        ),
       );
 
       if (response.statusCode == 200) {
@@ -134,21 +137,23 @@ class AuthService {
       );
     }
     try {
-      final response = await _dio.post(
-        '/api/auth/register',
-        data: {
-          'username': username,
-          'password': password,
-          'role': role.name,
-          if (spareSubtype != null) 'spareSubtype': spareSubtype.name,
-          if (email != null && email.isNotEmpty) 'email': email,
-          if (name != null && name.isNotEmpty) 'name': name,
-          if (phone != null && phone.isNotEmpty) 'phone': phone,
-          if (referralCode != null && referralCode.isNotEmpty)
-            'referralCode': referralCode,
-          if (profilePayload != null && profilePayload.isNotEmpty)
-            'profile': profilePayload,
-        },
+      final response = await TransientNetworkRetry.run(
+        () => _dio.post(
+          '/api/auth/register',
+          data: {
+            'username': username,
+            'password': password,
+            'role': role.name,
+            if (spareSubtype != null) 'spareSubtype': spareSubtype.name,
+            if (email != null && email.isNotEmpty) 'email': email,
+            if (name != null && name.isNotEmpty) 'name': name,
+            if (phone != null && phone.isNotEmpty) 'phone': phone,
+            if (referralCode != null && referralCode.isNotEmpty)
+              'referralCode': referralCode,
+            if (profilePayload != null && profilePayload.isNotEmpty)
+              'profile': profilePayload,
+          },
+        ),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {

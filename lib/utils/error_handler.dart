@@ -11,7 +11,7 @@ class ErrorHandler {
         error.type == DioExceptionType.receiveTimeout ||
         error.type == DioExceptionType.connectionError) {
       return NetworkException(
-        '서버에 연결할 수 없습니다. 인터넷 연결을 확인해주세요.',
+        '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.',
         code: 'NETWORK_ERROR',
         originalError: error,
       );
@@ -84,6 +84,15 @@ class ErrorHandler {
         );
       }
 
+      // 게이트웨이/배포 재시작 등 일시적 서버 불가
+      if (statusCode == 502 || statusCode == 503 || statusCode == 504) {
+        return NetworkException(
+          '서버가 재시작 중입니다. 잠시 후 다시 시도해주세요.',
+          code: 'SERVER_UNAVAILABLE',
+          originalError: error,
+        );
+      }
+
       // 서버 오류 — 응답 본문을 파싱하지 않음(스택/쿼리 노출 방지, SECURITY_PATCH_GUIDE P2)
       if (statusCode != null && statusCode >= 500) {
         return ServerException(
@@ -106,7 +115,7 @@ class ErrorHandler {
 
     // 응답이 없는 경우 (네트워크 오류)
     return NetworkException(
-      '서버에 연결할 수 없습니다. Next.js 서버가 실행 중인지 확인해주세요.',
+      '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.',
       code: 'CONNECTION_ERROR',
       originalError: error,
     );
@@ -131,7 +140,7 @@ class ErrorHandler {
           message.contains('timeout') ||
           message.contains('XMLHttpRequest')) {
         return NetworkException(
-          '서버에 연결할 수 없습니다. 인터넷 연결을 확인해주세요.',
+          '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.',
           code: 'NETWORK_ERROR',
           originalError: error,
         );
@@ -262,7 +271,12 @@ class ErrorHandler {
   /// 사용자 친화적인 에러 메시지 반환
   static String getUserFriendlyMessage(AppException error) {
     if (error is NetworkException) {
-      return '인터넷 연결을 확인하고 다시 시도해주세요.';
+      if (error.message.contains('재시작')) {
+        return '서버가 재시작 중입니다. 잠시 후 다시 시도해주세요.';
+      }
+      return error.message.isNotEmpty
+          ? error.message
+          : '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.';
     }
 
     if (error is AuthenticationException) {
