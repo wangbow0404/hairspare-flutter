@@ -29,6 +29,7 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
   List<dynamic> _applications = [];
   bool _isLoading = true;
   String _statusFilter = '';
+  DateTimeRange? _dateRange;
   int _currentPage = 1;
   int _totalPages = 1;
 
@@ -62,6 +63,12 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
         search: _searchController.text.trim().isEmpty
             ? null
             : _searchController.text.trim(),
+        dateFrom: _dateRange == null
+            ? null
+            : DateFormat('yyyy-MM-dd').format(_dateRange!.start),
+        dateTo: _dateRange == null
+            ? null
+            : DateFormat('yyyy-MM-dd').format(_dateRange!.end),
         page: _currentPage,
         limit: 20,
       );
@@ -94,6 +101,37 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
       if (e.value == _statusFilter) return e.key;
     }
     return '전체';
+  }
+
+  String _dateRangeLabel() {
+    if (_dateRange == null) return '날짜 · 전체';
+    final fmt = DateFormat('M.d', 'ko_KR');
+    return '${fmt.format(_dateRange!.start)} ~ ${fmt.format(_dateRange!.end)}';
+  }
+
+  Future<void> _pickDateRange() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 1),
+      initialDateRange: _dateRange,
+      locale: const Locale('ko', 'KR'),
+    );
+    if (picked == null) return;
+    setState(() {
+      _dateRange = picked;
+      _currentPage = 1;
+    });
+    _loadApplications();
+  }
+
+  void _clearDateRange() {
+    setState(() {
+      _dateRange = null;
+      _currentPage = 1;
+    });
+    _loadApplications();
   }
 
   String _formatDate(String? dateString) {
@@ -213,6 +251,64 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
               });
               _loadApplications();
             },
+          ),
+          const SizedBox(height: AdminStitchTheme.stackTight),
+          Row(
+            children: [
+              Material(
+                color: _dateRange != null
+                    ? AdminStitchTheme.primary
+                    : AdminStitchTheme.surfaceCard,
+                borderRadius: BorderRadius.circular(999),
+                child: InkWell(
+                  onTap: _pickDateRange,
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      border: _dateRange != null
+                          ? null
+                          : Border.all(color: AdminStitchTheme.borderDefault),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 14,
+                          color: _dateRange != null
+                              ? AdminStitchTheme.onPrimary
+                              : AdminStitchTheme.textSecondary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _dateRangeLabel(),
+                          style: AdminStitchTheme.labelSm.copyWith(
+                            color: _dateRange != null
+                                ? AdminStitchTheme.onPrimary
+                                : AdminStitchTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (_dateRange != null) ...[
+                const SizedBox(width: AdminStitchTheme.stackTight),
+                IconButton(
+                  onPressed: _clearDateRange,
+                  icon: const Icon(Icons.close, size: 18),
+                  tooltip: '날짜 필터 지우기',
+                  visualDensity: VisualDensity.compact,
+                  color: AdminStitchTheme.textSecondary,
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: AdminStitchTheme.sectionGap),
         ],

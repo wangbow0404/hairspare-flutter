@@ -467,6 +467,8 @@ class AdminService {
   Future<Map<String, dynamic>> getApplications({
     String? status,
     String? search,
+    String? dateFrom,
+    String? dateTo,
     int page = 1,
     int limit = 20,
   }) async {
@@ -482,6 +484,10 @@ class AdminService {
       final queryParams = <String, dynamic>{'page': page, 'limit': limit};
       if (status != null && status.isNotEmpty) queryParams['status'] = status;
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
+      if (dateFrom != null && dateFrom.isNotEmpty) {
+        queryParams['dateFrom'] = dateFrom;
+      }
+      if (dateTo != null && dateTo.isNotEmpty) queryParams['dateTo'] = dateTo;
 
       final response = await _dio.get(
         '/api/admin/applications',
