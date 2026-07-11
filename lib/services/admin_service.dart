@@ -1533,15 +1533,14 @@ class AdminService {
     return response.data['data'] ?? response.data;
   }
 
+  /// 콘텐츠는 지금 전부 챌린지 영상이라(댓글 신고는 아직 미지원) 실제로는
+  /// 챌린지 영상 숨김/삭제 API를 그대로 호출한다.
   Future<void> hideContent(String contentId, {required String reason}) async {
     if (ApiConfig.useMockData) {
       await Future.delayed(const Duration(milliseconds: 250));
       return;
     }
-    await _dio.patch(
-      '/api/admin/content/$contentId/hide',
-      data: {'reason': reason},
-    );
+    await _dio.patch('/api/admin/challenge-videos/$contentId/hide');
   }
 
   Future<void> deleteContent(String contentId, {required String reason}) async {
@@ -1549,10 +1548,7 @@ class AdminService {
       await Future.delayed(const Duration(milliseconds: 250));
       return;
     }
-    await _dio.delete(
-      '/api/admin/content/$contentId',
-      data: {'reason': reason},
-    );
+    await _dio.delete('/api/admin/challenge-videos/$contentId');
   }
 
   // ── M16 알림 ──
