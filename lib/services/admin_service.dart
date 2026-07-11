@@ -562,6 +562,9 @@ class AdminService {
   Future<Map<String, dynamic>> getSchedules({
     String? search,
     String? dateFilter,
+    String? state,
+    String? dateFrom,
+    String? dateTo,
     int page = 1,
     int limit = 20,
   }) async {
@@ -572,6 +575,10 @@ class AdminService {
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
       if (dateFilter != null && dateFilter.isNotEmpty)
         queryParams['dateFilter'] = dateFilter;
+      if (state != null && state.isNotEmpty) queryParams['state'] = state;
+      if (dateFrom != null && dateFrom.isNotEmpty)
+        queryParams['dateFrom'] = dateFrom;
+      if (dateTo != null && dateTo.isNotEmpty) queryParams['dateTo'] = dateTo;
 
       final response = await _dio.get(
         '/api/admin/schedules',
