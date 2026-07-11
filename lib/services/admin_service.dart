@@ -1548,6 +1548,19 @@ class AdminService {
     );
   }
 
+  Future<List<dynamic>> getAdminChats() async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 200));
+      return [];
+    }
+    final response = await _dio.get('/api/admin/chats');
+    final raw = response.data['data'] ?? response.data;
+    if (raw is Map && raw['chats'] is List) {
+      return raw['chats'] as List;
+    }
+    return [];
+  }
+
   // ── M17 레퍼런스 ──
   Future<Map<String, dynamic>> getReferenceData({String? tab}) async {
     if (ApiConfig.useMockData) return MockAdminData.getReferenceData(tab: tab);

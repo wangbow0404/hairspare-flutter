@@ -155,6 +155,7 @@ abstract final class AppRoutes {
   static const adminSanctions = '/admin/sanctions';
   static const adminContent = '/admin/content';
   static const adminNotifications = '/admin/notifications';
+  static const adminChats = '/admin/chats';
   static const adminReference = '/admin/reference';
 
   static String adminUserDetail(String userId) => '/admin/users/$userId';

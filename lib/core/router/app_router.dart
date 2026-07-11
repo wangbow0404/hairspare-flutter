@@ -6,6 +6,7 @@ import '../../screens/admin/admin_audit_logs_screen.dart';
 import '../../screens/admin/admin_application_detail_screen.dart';
 import '../../screens/admin/admin_applications_screen.dart';
 import '../../screens/admin/admin_chat_room_screen.dart';
+import '../../screens/admin/admin_chats_screen.dart';
 import '../../screens/admin/admin_checkin_screen.dart';
 import '../../screens/admin/admin_dashboard_screen.dart';
 import '../../screens/admin/admin_energy_screen.dart';
@@ -503,6 +504,11 @@ final class AppRouter {
                   initialData: initial,
                 );
               },
+            ),
+            GoRoute(
+              path: AppRoutes.adminChats,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminChatsScreen(),
             ),
             GoRoute(
               path: '/admin/chats/:chatId',

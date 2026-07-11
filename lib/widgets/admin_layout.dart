@@ -285,7 +285,7 @@ class _AdminLayoutState extends State<AdminLayout> {
           ),
           const SizedBox(width: 4),
           IconButton(
-            onPressed: _handleLogout,
+            onPressed: () => appRouter.go(AppRoutes.adminChats),
             style: IconButton.styleFrom(
               minimumSize: const Size(36, 36),
               padding: EdgeInsets.zero,
@@ -294,7 +294,7 @@ class _AdminLayoutState extends State<AdminLayout> {
               radius: 16,
               backgroundColor: AdminStitchTheme.primaryFixed,
               child: Icon(
-                Icons.person,
+                Icons.chat_bubble_outline,
                 size: 18,
                 color: AdminStitchTheme.primary,
               ),
