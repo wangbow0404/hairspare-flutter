@@ -526,6 +526,21 @@ class AdminService {
     }
   }
 
+  /// 지원 상세 조회
+  Future<Map<String, dynamic>> getApplicationDetail(
+    String applicationId,
+  ) async {
+    try {
+      final response = await _dio.get('/api/admin/applications/$applicationId');
+      final data = response.data['data'] ?? response.data;
+      return data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
   /// 지원 강제 취소 (연락처 교환 등 약관 위반 시 관리자가 처리)
   Future<void> cancelApplication(
     String applicationId, {

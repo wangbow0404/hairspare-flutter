@@ -28,7 +28,8 @@ abstract final class AppRoutes {
   static const spareHomeEnergy = '/spare/home/energy';
   static String spareMessageChat(String chatId) =>
       '/spare/home/messages/chat/$chatId';
-  static String sparePaymentChat(String chatId) => '/spare/payment/chat/$chatId';
+  static String sparePaymentChat(String chatId) =>
+      '/spare/payment/chat/$chatId';
   static String shopMessageChat(String chatId) =>
       '/shop/home/messages/chat/$chatId';
   static String modelMessageChat(String chatId) =>
@@ -113,7 +114,8 @@ abstract final class AppRoutes {
   static const modelHomeProfileEdit = '/model/home/profile_edit';
   static const modelHomeEducation = '/model/home/education';
   static const modelHomeApplicationPosts = '/model/home/application_posts';
-  static const modelHomeApplicationPostsNew = '/model/home/application_posts/new';
+  static const modelHomeApplicationPostsNew =
+      '/model/home/application_posts/new';
   static String modelHomeMatchLike(String likeId) =>
       '/model/home/match_like/$likeId';
   static String modelMatchingMatchLike(String likeId) =>
@@ -137,7 +139,8 @@ abstract final class AppRoutes {
   static const adminPayments = '/admin/payments';
   static const adminEnergy = '/admin/energy';
   static const adminNoshow = '/admin/noshow';
-  static const adminSettlementCancelRequests = '/admin/settlement-cancel-requests';
+  static const adminSettlementCancelRequests =
+      '/admin/settlement-cancel-requests';
   static const adminNoShowReports = '/admin/no-show-reports';
   static const adminCheckin = '/admin/checkin';
   static const adminVerifications = '/admin/verifications';
@@ -156,6 +159,8 @@ abstract final class AppRoutes {
 
   static String adminUserDetail(String userId) => '/admin/users/$userId';
   static String adminJobDetail(String jobId) => '/admin/jobs/$jobId';
+  static String adminApplicationDetail(String applicationId) =>
+      '/admin/applications/$applicationId';
   static String adminPaymentDetail(String paymentId) =>
       '/admin/payments/$paymentId';
   static String adminVerificationDetail(String verificationId) =>

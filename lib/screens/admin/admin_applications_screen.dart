@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/router/app_routes.dart';
 import '../../services/admin_service.dart';
 import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
@@ -385,142 +387,11 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
           ],
         ],
       ),
-      onTap: () => _showDetail(app),
-    );
-  }
-
-  void _showDetail(Map<String, dynamic> app) {
-    const dialogBg = Color(0xFF1E1C30);
-    const titleColor = Color(0xFFF5F3FF);
-    const subColor = Color(0xFF9CA3AF);
-    const dividerColor = Color(0xFF3D3B56);
-
-    final status = app['status']?.toString() ?? '';
-    final statusLabel = app['statusLabel']?.toString() ?? status;
-    final statusColor = _statusColor(status);
-    final amount = app['job']?['amount'];
-    final amountStr = amount != null
-        ? NumberFormat('#,###', 'ko_KR').format(amount) + '원'
-        : '-';
-
-    showDialog<void>(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: dialogBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      '지원 상세',
-                      style: TextStyle(
-                        color: titleColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      statusLabel,
-                      style: TextStyle(
-                        color: statusColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Divider(color: dividerColor, height: 1),
-              const SizedBox(height: 12),
-              _detailRow(
-                '스페어',
-                '${app['spare']?['name'] ?? '-'}  (${app['spare']?['email'] ?? ''})',
-                subColor,
-                titleColor,
-              ),
-              _detailRow(
-                '미용실',
-                app['shop']?['name']?.toString() ?? '-',
-                subColor,
-                titleColor,
-              ),
-              _detailRow(
-                '공고',
-                app['job']?['title']?.toString() ?? '-',
-                subColor,
-                titleColor,
-              ),
-              _detailRow(
-                '근무 일시',
-                _formatDate(app['job']?['startTime']?.toString()),
-                subColor,
-                titleColor,
-              ),
-              _detailRow('금액', amountStr, subColor, titleColor),
-              _detailRow(
-                '지원 일시',
-                _formatDate(app['createdAt']?.toString()),
-                subColor,
-                titleColor,
-              ),
-              const SizedBox(height: 16),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('닫기', style: TextStyle(color: subColor)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _detailRow(
-    String label,
-    String value,
-    Color labelColor,
-    Color valueColor,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AdminStitchTheme.stackTight),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 72,
-            child: Text(
-              label,
-              style: TextStyle(fontSize: 12, color: labelColor),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(fontSize: 13, color: valueColor),
-            ),
-          ),
-        ],
-      ),
+      onTap: () {
+        final id = app['id']?.toString();
+        if (id == null) return;
+        context.push(AppRoutes.adminApplicationDetail(id), extra: app);
+      },
     );
   }
 }

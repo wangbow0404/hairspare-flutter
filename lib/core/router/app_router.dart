@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../screens/admin/admin_audit_logs_screen.dart';
+import '../../screens/admin/admin_application_detail_screen.dart';
 import '../../screens/admin/admin_applications_screen.dart';
 import '../../screens/admin/admin_checkin_screen.dart';
 import '../../screens/admin/admin_dashboard_screen.dart';
@@ -169,13 +170,14 @@ final class AppRouter {
           },
           routes: <RouteBase>[
             StatefulShellRoute.indexedStack(
-              builder: (
-                BuildContext context,
-                GoRouterState state,
-                StatefulNavigationShell navigationShell,
-              ) {
-                return MainTabShell(navigationShell: navigationShell);
-              },
+              builder:
+                  (
+                    BuildContext context,
+                    GoRouterState state,
+                    StatefulNavigationShell navigationShell,
+                  ) {
+                    return MainTabShell(navigationShell: navigationShell);
+                  },
               branches: <StatefulShellBranch>[
                 StatefulShellBranch(
                   routes: <RouteBase>[
@@ -186,35 +188,26 @@ final class AppRouter {
                       routes: <RouteBase>[
                         GoRoute(
                           path: 'messages',
-                          builder: (
-                            BuildContext context,
-                            GoRouterState state,
-                          ) =>
-                              const MessagesScreen(),
+                          builder:
+                              (BuildContext context, GoRouterState state) =>
+                                  const MessagesScreen(),
                           routes: ShellSubRoutes.chatRoomChildRoutes(),
                         ),
                         GoRoute(
                           path: 'search',
-                          builder: (
-                            BuildContext context,
-                            GoRouterState state,
-                          ) =>
-                              const SearchScreen(),
+                          builder:
+                              (BuildContext context, GoRouterState state) =>
+                                  const SearchScreen(),
                         ),
                         GoRoute(
                           path: 'notifications',
-                          builder: (
-                            BuildContext context,
-                            GoRouterState state,
-                          ) =>
-                              const NotificationsListScreen(),
+                          builder:
+                              (BuildContext context, GoRouterState state) =>
+                                  const NotificationsListScreen(),
                         ),
                         GoRoute(
                           path: 'jobs',
-                          builder: (
-                            BuildContext context,
-                            GoRouterState state,
-                          ) {
+                          builder: (BuildContext context, GoRouterState state) {
                             final query = state.uri.queryParameters;
                             return JobsListScreen(
                               filter: query['filter'],
@@ -227,23 +220,19 @@ final class AppRouter {
                         ),
                         GoRoute(
                           path: 'points',
-                          builder: (
-                            BuildContext context,
-                            GoRouterState state,
-                          ) =>
-                              const PointsScreen(),
+                          builder:
+                              (BuildContext context, GoRouterState state) =>
+                                  const PointsScreen(),
                         ),
                         GoRoute(
                           path: 'model_match',
-                          builder: (
-                            BuildContext context,
-                            GoRouterState state,
-                          ) =>
-                              const ModelMatchEntryScreen(),
+                          builder:
+                              (BuildContext context, GoRouterState state) =>
+                                  const ModelMatchEntryScreen(),
                           routes: <RouteBase>[
-                        ...ShellSubRoutes.modelMatchChildRoutes(),
-                        ...SharedLeafRoutes.all(),
-                      ],
+                            ...ShellSubRoutes.modelMatchChildRoutes(),
+                            ...SharedLeafRoutes.all(),
+                          ],
                         ),
                         ...ShellSubRoutes.spareHomeChildRoutes(),
                       ],
@@ -257,7 +246,7 @@ final class AppRouter {
                       builder: (BuildContext context, GoRouterState state) {
                         final isModel =
                             sl<AuthProvider>().currentUser?.isModelAccount ??
-                                false;
+                            false;
                         return LazyShellTab(
                           tabIndex: 1,
                           child: isModel
@@ -279,7 +268,7 @@ final class AppRouter {
                       builder: (BuildContext context, GoRouterState state) {
                         final isModel =
                             sl<AuthProvider>().currentUser?.isModelAccount ??
-                                false;
+                            false;
                         return LazyShellTab(
                           tabIndex: 2,
                           child: isModel
@@ -316,13 +305,14 @@ final class AppRouter {
           },
           routes: <RouteBase>[
             StatefulShellRoute.indexedStack(
-              builder: (
-                BuildContext context,
-                GoRouterState state,
-                StatefulNavigationShell navigationShell,
-              ) {
-                return MainTabShell(navigationShell: navigationShell);
-              },
+              builder:
+                  (
+                    BuildContext context,
+                    GoRouterState state,
+                    StatefulNavigationShell navigationShell,
+                  ) {
+                    return MainTabShell(navigationShell: navigationShell);
+                  },
               branches: <StatefulShellBranch>[
                 StatefulShellBranch(
                   routes: <RouteBase>[
@@ -333,28 +323,22 @@ final class AppRouter {
                       routes: <RouteBase>[
                         GoRoute(
                           path: 'messages',
-                          builder: (
-                            BuildContext context,
-                            GoRouterState state,
-                          ) =>
-                              const ShopMessagesScreen(),
+                          builder:
+                              (BuildContext context, GoRouterState state) =>
+                                  const ShopMessagesScreen(),
                           routes: ShellSubRoutes.chatRoomChildRoutes(),
                         ),
                         GoRoute(
                           path: 'search',
-                          builder: (
-                            BuildContext context,
-                            GoRouterState state,
-                          ) =>
-                              const ShopCommandSearchScreen(),
+                          builder:
+                              (BuildContext context, GoRouterState state) =>
+                                  const ShopCommandSearchScreen(),
                         ),
                         GoRoute(
                           path: 'notifications',
-                          builder: (
-                            BuildContext context,
-                            GoRouterState state,
-                          ) =>
-                              const NotificationsListScreen(),
+                          builder:
+                              (BuildContext context, GoRouterState state) =>
+                                  const NotificationsListScreen(),
                         ),
                         ...ShellSubRoutes.shopHomeChildRoutes(),
                       ],
@@ -412,13 +396,14 @@ final class AppRouter {
           },
           routes: <RouteBase>[
             StatefulShellRoute.indexedStack(
-              builder: (
-                BuildContext context,
-                GoRouterState state,
-                StatefulNavigationShell navigationShell,
-              ) {
-                return ModelTabShell(navigationShell: navigationShell);
-              },
+              builder:
+                  (
+                    BuildContext context,
+                    GoRouterState state,
+                    StatefulNavigationShell navigationShell,
+                  ) {
+                    return ModelTabShell(navigationShell: navigationShell);
+                  },
               branches: <StatefulShellBranch>[
                 StatefulShellBranch(
                   routes: <RouteBase>[
@@ -429,20 +414,16 @@ final class AppRouter {
                       routes: <RouteBase>[
                         GoRoute(
                           path: 'messages',
-                          builder: (
-                            BuildContext context,
-                            GoRouterState state,
-                          ) =>
-                              const MessagesScreen(),
+                          builder:
+                              (BuildContext context, GoRouterState state) =>
+                                  const MessagesScreen(),
                           routes: ShellSubRoutes.chatRoomChildRoutes(),
                         ),
                         GoRoute(
                           path: 'notifications',
-                          builder: (
-                            BuildContext context,
-                            GoRouterState state,
-                          ) =>
-                              const NotificationsListScreen(),
+                          builder:
+                              (BuildContext context, GoRouterState state) =>
+                                  const NotificationsListScreen(),
                         ),
                         ...ShellSubRoutes.modelHomeChildRoutes(),
                         ...ShellSubRoutes.matchProfileDetailChildRoutes(),
@@ -493,11 +474,7 @@ final class AppRouter {
           ],
         ),
         ShellRoute(
-          builder: (
-            BuildContext context,
-            GoRouterState state,
-            Widget child,
-          ) {
+          builder: (BuildContext context, GoRouterState state, Widget child) {
             return AdminShell(location: state.uri.path, child: child);
           },
           routes: <RouteBase>[
@@ -537,6 +514,21 @@ final class AppRouter {
                   const AdminApplicationsScreen(),
             ),
             GoRoute(
+              path: '${AppRoutes.adminApplications}/:applicationId',
+              builder: (BuildContext context, GoRouterState state) {
+                final applicationId = state.pathParameters['applicationId']!;
+                final extra = state.extra;
+                Map<String, dynamic>? initial;
+                if (extra is Map<String, dynamic>) {
+                  initial = extra;
+                }
+                return AdminApplicationDetailScreen(
+                  applicationId: applicationId,
+                  initialData: initial,
+                );
+              },
+            ),
+            GoRoute(
               path: '${AppRoutes.adminJobs}/:jobId',
               builder: (BuildContext context, GoRouterState state) {
                 final jobId = state.pathParameters['jobId']!;
@@ -545,10 +537,7 @@ final class AppRouter {
                 if (extra is Map<String, dynamic>) {
                   initial = extra;
                 }
-                return AdminJobDetailScreen(
-                  jobId: jobId,
-                  initialData: initial,
-                );
+                return AdminJobDetailScreen(jobId: jobId, initialData: initial);
               },
             ),
             GoRoute(
@@ -604,7 +593,8 @@ final class AppRouter {
                 GoRoute(
                   path: ':verificationId',
                   builder: (BuildContext context, GoRouterState state) {
-                    final verificationId = state.pathParameters['verificationId']!;
+                    final verificationId =
+                        state.pathParameters['verificationId']!;
                     Map<String, dynamic>? initial;
                     final extra = state.extra;
                     if (extra is Map<String, dynamic>) initial = extra;
