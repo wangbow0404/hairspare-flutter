@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
 import '../../services/admin_service.dart';
@@ -8,18 +8,18 @@ import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
-import '../../widgets/admin/admin_stitch_widgets.dart';
 
-/// M5. 모델 매칭 상세
+/// 관리자 모델 매칭 상세 화면 — 디자이너/모델을 각각 눌러서 회원 상세로,
+/// 매칭됐으면 연결된 채팅방으로도 이동할 수 있다.
 class AdminMatchDetailScreen extends StatefulWidget {
+  final String matchId;
+  final Map<String, dynamic>? initialData;
+
   const AdminMatchDetailScreen({
     super.key,
     required this.matchId,
     this.initialData,
   });
-
-  final String matchId;
-  final Map<String, dynamic>? initialData;
 
   @override
   State<AdminMatchDetailScreen> createState() => _AdminMatchDetailScreenState();
@@ -38,78 +38,88 @@ class _AdminMatchDetailScreenState extends State<AdminMatchDetailScreen> {
       _match = widget.initialData;
       _isLoading = false;
     }
-    _load();
+    _loadMatch();
   }
 
-  Future<void> _load() async {
+  Future<void> _loadMatch() async {
     setState(() {
       _isLoading = true;
       _error = null;
     });
     try {
       final data = await _adminService.getMatchDetail(widget.matchId);
-      if (!mounted) return;
-      setState(() {
-        _match = data;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _match = data;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e));
-        _isLoading = false;
-        if (_match == null && widget.initialData != null) {
-          _match = widget.initialData;
-        }
-      });
+      if (mounted) {
+        setState(() {
+          _error = ErrorHandler.getUserFriendlyMessage(
+            ErrorHandler.handleException(e),
+          );
+          _isLoading = false;
+          if (_match == null && widget.initialData != null) {
+            _match = widget.initialData;
+          }
+        });
+      }
     }
   }
 
-  String _formatDate(String? value) {
-    if (value == null || value.isEmpty) return '-';
+  String _formatDate(String? dateString) {
+    if (dateString == null || dateString.isEmpty) return '-';
     try {
-      return DateFormat('yyyy년 M월 d일 HH:mm', 'ko_KR')
-          .format(DateTime.parse(value).toLocal());
+      return DateFormat(
+        'yyyy년 M월 d일 HH:mm',
+        'ko_KR',
+      ).format(DateTime.parse(dateString).toLocal());
     } catch (_) {
-      return value;
+      return dateString;
     }
   }
 
-  Color _statusColor(String? status) {
+  Color _statusColor(String status) {
     switch (status) {
       case 'matched':
-        return AppTheme.green600;
+        return AdminStitchTheme.emerald;
       case 'pending':
         return AppTheme.orange600;
       case 'declined':
-        return AppTheme.urgentRed;
+        return AdminStitchTheme.textSecondary;
       default:
         return AdminStitchTheme.textSecondary;
     }
   }
 
   Future<void> _cancelMatch() async {
+    final match = _match;
+    if (match == null) return;
+    final designerName = match['designerName']?.toString() ?? '-';
+    final modelName = match['modelName']?.toString() ?? '-';
     final reason = await AdminActionDialog.show(
       context,
       title: '매칭 강제 취소',
       confirmLabel: '취소 실행',
-      summary: '${_match?['designerName']} ↔ ${_match?['modelName']}',
+      summary: '$designerName ↔ $modelName',
       isDanger: true,
     );
     if (reason == null || !mounted) return;
     try {
       await _adminService.forceCancelMatch(widget.matchId, reason: reason);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('매칭이 취소되었습니다')),
-      );
-      context.pop();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('매칭이 취소되었습니다')));
+      _loadMatch();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e)),
+            '강제 취소 실패: ${ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))}',
           ),
           backgroundColor: AppTheme.urgentRed,
         ),
@@ -119,193 +129,324 @@ class _AdminMatchDetailScreenState extends State<AdminMatchDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading && _match == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_match == null || _match!.isEmpty) {
-      return Center(
+    return ColoredBox(
+      color: AdminStitchTheme.bgSubtle,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AdminStitchTheme.pageMargin),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(_error ?? '매칭 정보를 찾을 수 없습니다'),
-            const SizedBox(height: 12),
-            FilledButton(onPressed: _load, child: const Text('다시 시도')),
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => context.pop(),
+                  color: AdminStitchTheme.onSurface,
+                ),
+                const SizedBox(width: AdminStitchTheme.stackTight),
+                const Text('매칭 상세', style: AdminStitchTheme.headlineMd),
+              ],
+            ),
+            const SizedBox(height: AdminStitchTheme.sectionGap),
+            if (_isLoading && _match == null)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(AppTheme.spacing8),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (_error != null && _match == null)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppTheme.spacing8),
+                  child: Column(
+                    children: [
+                      Text(
+                        _error!,
+                        style: const TextStyle(color: AppTheme.urgentRed),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: AppTheme.spacing4),
+                      TextButton(
+                        onPressed: _loadMatch,
+                        child: const Text('다시 시도'),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else if (_match != null)
+              _buildContent()
+            else
+              const SizedBox.shrink(),
           ],
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    final m = _match!;
-    final status = m['status']?.toString();
-    final isMatched = status == 'matched';
+  Widget _buildContent() {
+    final match = _match!;
+    final status = match['status']?.toString() ?? '';
+    final statusLabel = match['statusLabel']?.toString() ?? status;
+    final statusColor = _statusColor(status);
+    final designerId = match['designerId']?.toString();
+    final designerName = match['designerName']?.toString() ?? '-';
+    final modelId = match['modelId']?.toString();
+    final modelName = match['modelName']?.toString() ?? '-';
+    final region = match['region']?.toString() ?? '-';
+    final chatId = match['chatId']?.toString();
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AdminStitchTheme.pageMargin),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _StatusHero(
+          statusLabel: statusLabel,
+          statusColor: statusColor,
+          createdAtLabel: _formatDate(match['createdAt']?.toString()),
+        ),
+        const SizedBox(height: AdminStitchTheme.sectionGap),
+        const _SectionLabel('매칭 정보'),
+        const SizedBox(height: AdminStitchTheme.stackTight),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => context.pop(),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-              ),
-              const SizedBox(width: AppTheme.spacing1),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('매칭 상세', style: AdminStitchTheme.pageTitleMobile),
-                    Text(
-                      '${m['designerName']} ↔ ${m['modelName']}',
-                      style: AdminStitchTheme.pageSubtitle.copyWith(fontSize: 13),
-                    ),
-                  ],
+                child: _NavCard(
+                  icon: Icons.person_outline,
+                  label: '디자이너',
+                  title: designerName,
+                  onTap: designerId != null
+                      ? () =>
+                            context.push(AppRoutes.adminUserDetail(designerId))
+                      : null,
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: _statusColor(status).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  m['statusLabel']?.toString() ?? status ?? '-',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: _statusColor(status),
-                  ),
+              const SizedBox(width: AdminStitchTheme.stackTight),
+              Expanded(
+                child: _NavCard(
+                  icon: Icons.face_retouching_natural_outlined,
+                  label: '모델',
+                  title: modelName,
+                  subtitle: region,
+                  onTap: modelId != null
+                      ? () => context.push(AppRoutes.adminUserDetail(modelId))
+                      : null,
                 ),
               ),
             ],
           ),
+        ),
+        if (chatId != null && chatId.isNotEmpty) ...[
           const SizedBox(height: AdminStitchTheme.sectionGap),
-          AdminStitchCard(
-            child: Column(
+          const _SectionLabel('연결된 채팅'),
+          const SizedBox(height: AdminStitchTheme.stackTight),
+          _NavCard(
+            icon: Icons.chat_bubble_outline,
+            label: '채팅방',
+            title: '$designerName ↔ $modelName',
+            onTap: () => context.push(AppRoutes.adminChat(chatId)),
+          ),
+        ],
+        if (status == 'matched') ...[
+          const SizedBox(height: AdminStitchTheme.sectionGap),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _cancelMatch,
+              icon: const Icon(Icons.cancel_outlined, size: 20),
+              label: const Text('강제 취소'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AdminStitchTheme.statusError,
+                side: BorderSide(
+                  color: AdminStitchTheme.statusError.withValues(alpha: 0.4),
+                  width: 2,
+                ),
+                minimumSize: const Size.fromHeight(
+                  AdminStitchTheme.buttonHeight,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    AdminStitchTheme.radiusXl,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// 상태를 크게 강조하는 히어로 카드 — 상태색으로 옅게 틴트된 배경 +
+/// 점(dot) 배지 + 매칭 요청 일시.
+class _StatusHero extends StatelessWidget {
+  const _StatusHero({
+    required this.statusLabel,
+    required this.statusColor,
+    required this.createdAtLabel,
+  });
+
+  final String statusLabel;
+  final Color statusColor;
+  final String createdAtLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+      decoration: BoxDecoration(
+        color: statusColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AdminStitchTheme.radius2xl),
+        border: Border.all(color: statusColor.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                _DetailRow(label: '매칭 ID', value: m['id']?.toString() ?? '-'),
-                _DetailRow(label: '지역', value: m['region']?.toString() ?? '-'),
-                _DetailRow(label: '생성일', value: _formatDate(m['createdAt']?.toString())),
-                _DetailRow(
-                  label: '채팅방',
-                  value: m['chatId'] != null ? '연결됨' : '없음',
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  statusLabel,
+                  style: AdminStitchTheme.labelSm.copyWith(
+                    color: statusColor,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: AdminStitchTheme.sectionGap),
-          const AdminStitchSectionTitle(title: '디자이너'),
           const SizedBox(height: AdminStitchTheme.stackTight),
-          AdminStitchCard(
-            onTap: m['designerId'] != null
-                ? () => context.push(AppRoutes.adminUserDetail(m['designerId'].toString()))
-                : null,
-            child: _MemberRow(
-              name: m['designerName']?.toString() ?? '-',
-              subtitle: '스페어 · 디자이너',
+          Text(
+            '매칭 요청 일시 $createdAtLabel',
+            style: AdminStitchTheme.bodyMd.copyWith(
+              color: AdminStitchTheme.textSecondary,
             ),
           ),
-          const SizedBox(height: AdminStitchTheme.sectionGap),
-          const AdminStitchSectionTitle(title: '모델'),
-          const SizedBox(height: AdminStitchTheme.stackTight),
-          AdminStitchCard(
-            onTap: m['modelId'] != null
-                ? () => context.push(AppRoutes.adminUserDetail(m['modelId'].toString()))
-                : null,
-            child: _MemberRow(
-              name: m['modelName']?.toString() ?? '-',
-              subtitle: '스페어 · 모델',
-            ),
-          ),
-          if (isMatched) ...[
-            const SizedBox(height: AdminStitchTheme.sectionGap),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _cancelMatch,
-                icon: const Icon(Icons.cancel_outlined),
-                label: const Text('매칭 강제 취소'),
-                style: FilledButton.styleFrom(backgroundColor: AppTheme.urgentRed),
-              ),
-            ),
-          ],
         ],
       ),
     );
   }
 }
 
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+  final String text;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 88,
-            child: Text(
-              label,
-              style: AdminStitchTheme.labelSm.copyWith(
-                color: AdminStitchTheme.textSecondary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          Expanded(child: Text(value, style: AdminStitchTheme.bodyMd)),
-        ],
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Text(text, style: AdminStitchTheme.sectionHeader),
     );
   }
 }
 
-class _MemberRow extends StatelessWidget {
-  const _MemberRow({required this.name, required this.subtitle});
+/// 다른 상세 화면으로 이동하는 탭 가능한 카드. onTap이 없으면(대상 id 없음)
+/// 화살표 없이 비활성 상태로 보인다.
+class _NavCard extends StatelessWidget {
+  const _NavCard({
+    required this.icon,
+    required this.label,
+    required this.title,
+    this.subtitle,
+    this.onTap,
+  });
 
-  final String name;
-  final String subtitle;
+  final IconData icon;
+  final String label;
+  final String title;
+  final String? subtitle;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        CircleAvatar(
-          radius: 24,
-          backgroundColor: AdminStitchTheme.primaryFixed,
-          child: Text(
-            name.characters.first,
-            style: const TextStyle(color: AdminStitchTheme.primary),
+    return Material(
+      color: AdminStitchTheme.surfaceCard,
+      borderRadius: BorderRadius.circular(AdminStitchTheme.radius2xl),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AdminStitchTheme.radius2xl),
+        child: Container(
+          padding: const EdgeInsets.all(AdminStitchTheme.componentPadding),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AdminStitchTheme.radius2xl),
+            border: Border.all(color: AdminStitchTheme.borderDefault),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Text(
-                name,
-                style: AdminStitchTheme.bodyMd.copyWith(fontWeight: FontWeight.w600),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
+                  color: AdminStitchTheme.primaryFixed,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, size: 20, color: AdminStitchTheme.primary),
               ),
-              Text(
-                subtitle,
-                style: AdminStitchTheme.labelSm.copyWith(
-                  color: AdminStitchTheme.textSecondary,
+              const SizedBox(width: AdminStitchTheme.stackTight),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: AdminStitchTheme.bodyMd.copyWith(
+                        color: AdminStitchTheme.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AdminStitchTheme.bodyMd.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AdminStitchTheme.bodyMd.copyWith(
+                          color: AdminStitchTheme.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
+              if (onTap != null)
+                const Icon(
+                  Icons.chevron_right,
+                  color: AdminStitchTheme.textSecondary,
+                ),
             ],
           ),
         ),
-        const Icon(Icons.chevron_right, color: AdminStitchTheme.textSecondary),
-      ],
+      ),
     );
   }
 }

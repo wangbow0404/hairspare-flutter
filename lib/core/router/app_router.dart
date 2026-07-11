@@ -24,6 +24,7 @@ import '../../screens/admin/admin_users_screen.dart';
 import '../../screens/admin/admin_verifications_screen.dart';
 import '../../screens/admin/admin_verification_detail_screen.dart';
 import '../../screens/admin/admin_report_detail_screen.dart';
+import '../../screens/admin/admin_match_detail_screen.dart';
 import '../../screens/admin/admin_matches_screen.dart';
 import '../../screens/admin/admin_spaces_screen.dart';
 import '../../screens/admin/admin_educations_screen.dart';
@@ -521,10 +522,7 @@ final class AppRouter {
                 if (extra is Map<String, dynamic>) {
                   member = extra;
                 }
-                return AdminChatRoomScreen(
-                  chatId: chatId,
-                  member: member,
-                );
+                return AdminChatRoomScreen(chatId: chatId, member: member);
               },
             ),
             GoRoute(
@@ -666,6 +664,21 @@ final class AppRouter {
                   const AdminMatchesScreen(),
             ),
             GoRoute(
+              path: '${AppRoutes.adminMatches}/:matchId',
+              builder: (BuildContext context, GoRouterState state) {
+                final matchId = state.pathParameters['matchId']!;
+                final extra = state.extra;
+                Map<String, dynamic>? initial;
+                if (extra is Map<String, dynamic>) {
+                  initial = extra;
+                }
+                return AdminMatchDetailScreen(
+                  matchId: matchId,
+                  initialData: initial,
+                );
+              },
+            ),
+            GoRoute(
               path: AppRoutes.adminSpaces,
               builder: (BuildContext context, GoRouterState state) =>
                   const AdminSpacesScreen(),
@@ -701,7 +714,8 @@ final class AppRouter {
                 GoRoute(
                   path: 'items/:subscriptionId',
                   builder: (BuildContext context, GoRouterState state) {
-                    final subscriptionId = state.pathParameters['subscriptionId']!;
+                    final subscriptionId =
+                        state.pathParameters['subscriptionId']!;
                     Map<String, dynamic>? initial;
                     final extra = state.extra;
                     if (extra is Map<String, dynamic>) initial = extra;

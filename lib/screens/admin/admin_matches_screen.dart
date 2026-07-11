@@ -56,7 +56,9 @@ class _AdminMatchesScreenState extends State<AdminMatchesScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e)),
+              ErrorHandler.getUserFriendlyMessage(
+                ErrorHandler.handleException(e),
+              ),
             ),
             backgroundColor: AppTheme.urgentRed,
           ),
@@ -77,9 +79,9 @@ class _AdminMatchesScreenState extends State<AdminMatchesScreen> {
     if (reason == null || !mounted) return;
     await _adminService.forceCancelMatch(item['id'].toString(), reason: reason);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('매칭이 취소되었습니다')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('매칭이 취소되었습니다')));
     _load();
   }
 
@@ -127,8 +129,8 @@ class _AdminMatchesScreenState extends State<AdminMatchesScreen> {
                 _statusFilter = tab == '전체'
                     ? 'all'
                     : tab == '대기'
-                        ? 'pending'
-                        : 'matched';
+                    ? 'pending'
+                    : 'matched';
               });
               _load();
             },

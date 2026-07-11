@@ -1218,19 +1218,6 @@ class AdminService {
     return response.data['data'] ?? response.data;
   }
 
-  Future<Map<String, dynamic>> getMatchDetail(String matchId) async {
-    if (ApiConfig.useMockData) {
-      final result = await MockAdminData.getMatches();
-      final matches = (result['matches'] as List?) ?? [];
-      return matches.firstWhere(
-        (m) => m['id'].toString() == matchId,
-        orElse: () => <String, dynamic>{},
-      );
-    }
-    final response = await _dio.get('/api/admin/matches/$matchId');
-    return response.data['data'] ?? response.data;
-  }
-
   // ── M6 공간 대여 ──
   Future<Map<String, dynamic>> getSpaces({String? status}) async {
     if (ApiConfig.useMockData) return MockAdminData.getSpaces(status: status);
@@ -1403,7 +1390,9 @@ class AdminService {
     return response.data['data'] ?? response.data;
   }
 
-  Future<Map<String, dynamic>> getSubscriptionDetail(String subscriptionId) async {
+  Future<Map<String, dynamic>> getSubscriptionDetail(
+    String subscriptionId,
+  ) async {
     if (ApiConfig.useMockData) {
       final data = await MockAdminData.getSubscriptions();
       final list = data['subscriptions'] as List? ?? [];
@@ -1587,12 +1576,7 @@ class AdminService {
     }
     await _dio.post(
       '/api/admin/notifications/send',
-      data: {
-        'userId': userId,
-        'title': title,
-        'body': body,
-        'reason': reason,
-      },
+      data: {'userId': userId, 'title': title, 'body': body, 'reason': reason},
     );
   }
 

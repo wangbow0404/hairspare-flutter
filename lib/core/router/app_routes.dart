@@ -163,6 +163,7 @@ abstract final class AppRoutes {
   static String adminJobDetail(String jobId) => '/admin/jobs/$jobId';
   static String adminApplicationDetail(String applicationId) =>
       '/admin/applications/$applicationId';
+  static String adminMatchDetail(String matchId) => '/admin/matches/$matchId';
   static String adminPaymentDetail(String paymentId) =>
       '/admin/payments/$paymentId';
   static String adminVerificationDetail(String verificationId) =>
