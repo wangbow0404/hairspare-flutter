@@ -38,8 +38,8 @@ class ApiClient {
 
     final baseOptions = BaseOptions(
       baseUrl: _baseUrl,
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
+      connectTimeout: const Duration(seconds: 12),
+      receiveTimeout: const Duration(seconds: 12),
       headers: const <String, dynamic>{
         'Content-Type': 'application/json',
       },
