@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/router/app_routes.dart';
 import '../../services/admin_service.dart';
 import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
@@ -161,6 +163,10 @@ class _AdminMatchesScreenState extends State<AdminMatchesScreen> {
             subtitle:
                 '${item['region']} · ${item['statusLabel']} · ${_formatDate(item['createdAt']?.toString())}',
             icon: Icons.favorite_outline,
+            onTap: () => context.push(
+              AppRoutes.adminMatchDetail(item['id'].toString()),
+              extra: item,
+            ),
             trailing: item['status'] == 'matched'
                 ? TextButton(
                     onPressed: () => _cancelMatch(item),

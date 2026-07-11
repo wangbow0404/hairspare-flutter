@@ -1203,6 +1203,34 @@ class AdminService {
     );
   }
 
+  Future<Map<String, dynamic>> getMatchDetail(String matchId) async {
+    if (ApiConfig.useMockData) {
+      final data = await MockAdminData.getMatches();
+      final list = data['matches'] as List? ?? [];
+      for (final item in list) {
+        if (item is Map && item['id']?.toString() == matchId) {
+          return Map<String, dynamic>.from(item);
+        }
+      }
+      return {};
+    }
+    final response = await _dio.get('/api/admin/matches/$matchId');
+    return response.data['data'] ?? response.data;
+  }
+
+  Future<Map<String, dynamic>> getMatchDetail(String matchId) async {
+    if (ApiConfig.useMockData) {
+      final result = await MockAdminData.getMatches();
+      final matches = (result['matches'] as List?) ?? [];
+      return matches.firstWhere(
+        (m) => m['id'].toString() == matchId,
+        orElse: () => <String, dynamic>{},
+      );
+    }
+    final response = await _dio.get('/api/admin/matches/$matchId');
+    return response.data['data'] ?? response.data;
+  }
+
   // ── M6 공간 대여 ──
   Future<Map<String, dynamic>> getSpaces({String? status}) async {
     if (ApiConfig.useMockData) return MockAdminData.getSpaces(status: status);
