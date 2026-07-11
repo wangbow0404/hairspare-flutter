@@ -303,6 +303,25 @@ class AdminService {
     }
   }
 
+  /// 챌린지 영상 검수 — approved | limited | hidden | pending
+  Future<void> moderateChallengeVideo(
+    String videoId, {
+    required String status,
+    String? note,
+  }) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    await _dio.patch(
+      '/api/admin/challenge-videos/$videoId/moderate',
+      data: {
+        'status': status,
+        if (note != null && note.isNotEmpty) 'note': note,
+      },
+    );
+  }
+
   /// 공고 목록 조회
   Future<Map<String, dynamic>> getJobs({
     String? status,

@@ -8,6 +8,7 @@ import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
+import '../../widgets/admin/admin_challenge_video_tile.dart';
 import '../../widgets/admin/admin_stitch_widgets.dart';
 import '../../widgets/common/app_network_image.dart';
 
@@ -29,7 +30,9 @@ class AdminCreatorDetailScreen extends StatefulWidget {
 class _AdminCreatorDetailScreenState extends State<AdminCreatorDetailScreen> {
   final AdminService _adminService = AdminService();
   Map<String, dynamic>? _creator;
+  List<Map<String, dynamic>> _videos = [];
   bool _isLoading = true;
+  bool _videosLoading = false;
   String? _error;
 
   @override
@@ -54,6 +57,7 @@ class _AdminCreatorDetailScreenState extends State<AdminCreatorDetailScreen> {
         _creator = data;
         _isLoading = false;
       });
+      await _loadVideos();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -73,6 +77,85 @@ class _AdminCreatorDetailScreenState extends State<AdminCreatorDetailScreen> {
           .format(DateTime.parse(value).toLocal());
     } catch (_) {
       return value;
+    }
+  }
+
+  Future<void> _loadVideos() async {
+    final userId = _creator?['userId']?.toString();
+    if (userId == null) return;
+    setState(() => _videosLoading = true);
+    try {
+      final videos = await _adminService.getUserChallengeVideos(userId);
+      if (!mounted) return;
+      setState(() {
+        _videos = videos;
+        _videosLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _videosLoading = false);
+    }
+  }
+
+  Future<void> _moderateVideo(
+    Map<String, dynamic> video,
+    String status, {
+    required String title,
+    required String confirmLabel,
+  }) async {
+    final note = await AdminActionDialog.show(
+      context,
+      title: title,
+      confirmLabel: confirmLabel,
+      summary: video['title']?.toString(),
+    );
+    if (note == null || !mounted) return;
+    try {
+      await _adminService.moderateChallengeVideo(
+        video['id'].toString(),
+        status: status,
+        note: note,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$confirmLabel 처리되었습니다')),
+      );
+      await _loadVideos();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
+    }
+  }
+
+  Future<void> _deleteVideo(Map<String, dynamic> video) async {
+    final confirmed = await AdminActionDialog.confirm(
+      context,
+      title: '영상 삭제',
+      message: '"${video['title']}" 영상을 삭제할까요? 삭제하면 복구할 수 없습니다.',
+      confirmLabel: '삭제',
+      isDanger: true,
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await _adminService.deleteChallengeVideo(video['id'].toString());
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('영상이 삭제되었습니다')),
+      );
+      await _loadVideos();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e))),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
     }
   }
 
@@ -122,8 +205,8 @@ class _AdminCreatorDetailScreenState extends State<AdminCreatorDetailScreen> {
 
     final c = _creator!;
     final verified = c['verified'] == true;
-    final videos = (c['videos'] as List?) ?? [];
     final tags = (c['tags'] as List?)?.map((e) => e.toString()).toList() ?? [];
+    final pendingCount = ChallengeVideoModeration.pendingCount(_videos);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AdminStitchTheme.pageMargin),
@@ -255,7 +338,7 @@ class _AdminCreatorDetailScreenState extends State<AdminCreatorDetailScreen> {
               Expanded(
                 child: AdminStitchMetricCard(
                   label: '영상',
-                  value: '${c['videoCount'] ?? 0}',
+                  value: '${_videos.isNotEmpty ? _videos.length : (c['videoCount'] ?? 0)}',
                   icon: Icons.play_circle_outline,
                 ),
               ),
@@ -316,7 +399,38 @@ class _AdminCreatorDetailScreenState extends State<AdminCreatorDetailScreen> {
             ],
           ),
           const SizedBox(height: AdminStitchTheme.stackTight),
-          if (videos.isEmpty)
+          if (pendingCount > 0)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: AdminStitchTheme.stackTight),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppTheme.orange600.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
+                border: Border.all(color: AppTheme.orange600.withValues(alpha: 0.35)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.rate_review, color: AppTheme.orange600, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '검수 대기 영상 $pendingCount건 — 승인·제한·삭제 처리가 필요합니다',
+                      style: AdminStitchTheme.labelSm.copyWith(
+                        color: AppTheme.orange600,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (_videosLoading)
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_videos.isEmpty)
             AdminStitchCard(
               child: Center(
                 child: Padding(
@@ -331,59 +445,44 @@ class _AdminCreatorDetailScreenState extends State<AdminCreatorDetailScreen> {
               ),
             )
           else
-            ...videos.map((v) {
-              final video = v as Map<String, dynamic>;
+            ..._videos.map((video) {
+              final status = ChallengeVideoModeration.statusOf(video);
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: AdminStitchCard(
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: SizedBox(
-                          width: 72,
-                          height: 48,
-                          child: video['thumbnailUrl'] != null
-                              ? AppNetworkImage(
-                                  imageUrl: video['thumbnailUrl'].toString(),
-                                  fit: BoxFit.cover,
-                                )
-                              : ColoredBox(
-                                  color: AdminStitchTheme.surfaceContainer,
-                                  child: Icon(
-                                    Icons.videocam_outlined,
-                                    color: AdminStitchTheme.textSecondary,
-                                  ),
-                                ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              video['title']?.toString() ?? '제목 없음',
-                              style: AdminStitchTheme.bodyMd.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '조회 ${video['views'] ?? 0} · 좋아요 ${video['likes'] ?? 0}',
-                              style: AdminStitchTheme.labelSm.copyWith(
-                                color: AdminStitchTheme.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (video['isPublic'] == false)
-                        const Icon(Icons.visibility_off, size: 18, color: AdminStitchTheme.textSecondary),
-                    ],
-                  ),
+                child: AdminChallengeVideoTile(
+                  video: video,
+                  onApprove: status == 'pending'
+                      ? () => _moderateVideo(
+                            video,
+                            'approved',
+                            title: '영상 승인',
+                            confirmLabel: '승인',
+                          )
+                      : null,
+                  onLimit: status != 'limited'
+                      ? () => _moderateVideo(
+                            video,
+                            'limited',
+                            title: '제한 노출 (노딱)',
+                            confirmLabel: '제한',
+                          )
+                      : null,
+                  onHide: status != 'hidden'
+                      ? () => _moderateVideo(
+                            video,
+                            'hidden',
+                            title: '영상 숨김',
+                            confirmLabel: '숨김',
+                          )
+                      : status == 'hidden'
+                          ? () => _moderateVideo(
+                                video,
+                                'approved',
+                                title: '영상 복구 (공개)',
+                                confirmLabel: '복구',
+                              )
+                          : null,
+                  onDelete: () => _deleteVideo(video),
                 ),
               );
             }),

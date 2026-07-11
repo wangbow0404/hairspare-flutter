@@ -9,6 +9,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/admin_member_role.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
+import '../../widgets/admin/admin_challenge_video_tile.dart';
 import '../../widgets/admin/admin_stitch_widgets.dart';
 import '../../widgets/common/app_network_image.dart';
 
@@ -1379,21 +1380,29 @@ class _AdminUserChallengeSectionState extends State<AdminUserChallengeSection> {
     }
   }
 
-  Future<void> _hideVideo(Map<String, dynamic> video) async {
-    final confirmed = await AdminActionDialog.confirm(
+  Future<void> _moderateVideo(
+    Map<String, dynamic> video,
+    String status, {
+    required String title,
+    required String confirmLabel,
+  }) async {
+    final note = await AdminActionDialog.show(
       context,
-      title: '영상 숨김',
-      message: '"${video['title']}" 영상을 숨길까요? 피드/추천에서 보이지 않게 됩니다.',
-      confirmLabel: '숨김',
-      isDanger: true,
+      title: title,
+      confirmLabel: confirmLabel,
+      summary: video['title']?.toString(),
     );
-    if (confirmed != true || !mounted) return;
+    if (note == null || !mounted) return;
     try {
-      await _adminService.hideChallengeVideo(video['id'] as String);
+      await _adminService.moderateChallengeVideo(
+        video['id'] as String,
+        status: status,
+        note: note,
+      );
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('영상이 숨김 처리되었습니다')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$confirmLabel 처리되었습니다')),
+      );
       _load();
     } catch (e) {
       if (!mounted) return;
@@ -1492,12 +1501,57 @@ class _AdminUserChallengeSectionState extends State<AdminUserChallengeSection> {
                 ),
               )
             else ...[
+              if (ChallengeVideoModeration.pendingCount(_videos) > 0) ...[
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: AdminStitchTheme.stackTight),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.orange600.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '검수 대기 ${ChallengeVideoModeration.pendingCount(_videos)}건',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.orange600,
+                    ),
+                  ),
+                ),
+              ],
               for (final video in _videos) ...[
-                _ChallengeVideoTile(
+                AdminChallengeVideoTile(
                   video: video,
-                  onHide: video['isPublic'] == true
-                      ? () => _hideVideo(video)
+                  onApprove: ChallengeVideoModeration.statusOf(video) == 'pending'
+                      ? () => _moderateVideo(
+                            video,
+                            'approved',
+                            title: '영상 승인',
+                            confirmLabel: '승인',
+                          )
                       : null,
+                  onLimit: ChallengeVideoModeration.statusOf(video) != 'limited'
+                      ? () => _moderateVideo(
+                            video,
+                            'limited',
+                            title: '제한 노출 (노딱)',
+                            confirmLabel: '제한',
+                          )
+                      : null,
+                  onHide: ChallengeVideoModeration.statusOf(video) != 'hidden'
+                      ? () => _moderateVideo(
+                            video,
+                            'hidden',
+                            title: '영상 숨김',
+                            confirmLabel: '숨김',
+                          )
+                      : () => _moderateVideo(
+                            video,
+                            'approved',
+                            title: '영상 복구',
+                            confirmLabel: '복구',
+                          ),
                   onDelete: () => _deleteVideo(video),
                 ),
                 const SizedBox(height: AdminStitchTheme.stackTight),
@@ -1584,115 +1638,6 @@ class _ChallengeProfileSummary extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _ChallengeVideoTile extends StatelessWidget {
-  const _ChallengeVideoTile({
-    required this.video,
-    required this.onHide,
-    required this.onDelete,
-  });
-
-  final Map<String, dynamic> video;
-  final VoidCallback? onHide;
-  final VoidCallback onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    final thumbnailUrl = video['thumbnailUrl']?.toString();
-    final isPublic = video['isPublic'] == true;
-
-    return Container(
-      padding: const EdgeInsets.all(AdminStitchTheme.stackTight),
-      decoration: BoxDecoration(
-        color: AdminStitchTheme.bgSubtle,
-        borderRadius: BorderRadius.circular(AdminStitchTheme.radiusXl),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: GestureDetector(
-              onTap: (thumbnailUrl != null && thumbnailUrl.isNotEmpty)
-                  ? () => showFullScreenImage(context, thumbnailUrl)
-                  : null,
-              child: SizedBox(
-                width: 56,
-                height: 56,
-                child: AppNetworkImage(
-                  imageUrl: thumbnailUrl,
-                  fit: BoxFit.cover,
-                  fallbackIcon: Icons.play_circle_outline,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  video['title']?.toString() ?? '(제목 없음)',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AdminStitchTheme.bodyMd.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '조회 ${video['views']} · 좋아요 ${video['likes']}',
-                  style: AdminStitchTheme.bodyMd.copyWith(
-                    color: AdminStitchTheme.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isPublic
-                        ? AdminStitchTheme.emerald.withValues(alpha: 0.12)
-                        : AdminStitchTheme.statusError.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    isPublic ? '공개' : '숨김',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: isPublic
-                          ? AdminStitchTheme.emerald
-                          : AdminStitchTheme.statusError,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (onHide != null)
-            IconButton(
-              icon: const Icon(Icons.visibility_off_outlined, size: 20),
-              tooltip: '숨김',
-              onPressed: onHide,
-            ),
-          IconButton(
-            icon: Icon(
-              Icons.delete_outline,
-              size: 20,
-              color: AdminStitchTheme.statusError,
-            ),
-            tooltip: '삭제',
-            onPressed: onDelete,
-          ),
-        ],
-      ),
     );
   }
 }
