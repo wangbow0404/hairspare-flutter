@@ -64,11 +64,11 @@ class AuthService {
               'login_type': portal == LoginPortal.shop ? 'shop' : 'spare',
           },
           options: Options(
-            sendTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 10),
+            sendTimeout: const Duration(seconds: 20),
+            receiveTimeout: const Duration(seconds: 20),
           ),
         ),
-        maxAttempts: 2,
+        maxAttempts: 4,
       );
 
       if (response.statusCode == 200) {

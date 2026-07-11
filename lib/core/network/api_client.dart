@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../utils/api_config.dart';
 import 'auth_interceptor.dart';
+import 'transient_retry_interceptor.dart';
 
 /// 앱 전역 Dio 클라이언트.
 ///
@@ -38,8 +39,8 @@ class ApiClient {
 
     final baseOptions = BaseOptions(
       baseUrl: _baseUrl,
-      connectTimeout: const Duration(seconds: 12),
-      receiveTimeout: const Duration(seconds: 12),
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 25),
       headers: const <String, dynamic>{
         'Content-Type': 'application/json',
       },
@@ -69,6 +70,8 @@ class ApiClient {
         onSessionExpiredMessage: onSessionExpiredMessage,
       ),
     );
+
+    _dio.interceptors.add(TransientRetryInterceptor(dio: _dio, maxAttempts: 3));
 
     _initialized = true;
   }

@@ -7,12 +7,20 @@ class ErrorHandler {
   static AppException handleDioException(DioException error) {
     // 네트워크 연결 오류
     if (error.type == DioExceptionType.connectionTimeout ||
-        error.type == DioExceptionType.sendTimeout ||
-        error.type == DioExceptionType.receiveTimeout ||
         error.type == DioExceptionType.connectionError) {
       return NetworkException(
         '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.',
         code: 'NETWORK_ERROR',
+        originalError: error,
+      );
+    }
+
+    // 응답 지연 (서버는 살아있으나 처리가 느림)
+    if (error.type == DioExceptionType.sendTimeout ||
+        error.type == DioExceptionType.receiveTimeout) {
+      return NetworkException(
+        '서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.',
+        code: 'TIMEOUT',
         originalError: error,
       );
     }
