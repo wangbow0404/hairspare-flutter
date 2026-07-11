@@ -63,9 +63,9 @@ class AuthService {
             if (portal != null)
               'login_type': portal == LoginPortal.shop ? 'shop' : 'spare',
           },
-          options: const Options(
-            sendTimeout: Duration(seconds: 10),
-            receiveTimeout: Duration(seconds: 10),
+          options: Options(
+            sendTimeout: const Duration(seconds: 10),
+            receiveTimeout: const Duration(seconds: 10),
           ),
         ),
         maxAttempts: 2,
