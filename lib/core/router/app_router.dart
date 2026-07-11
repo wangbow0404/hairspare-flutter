@@ -29,6 +29,8 @@ import '../../screens/admin/admin_spaces_screen.dart';
 import '../../screens/admin/admin_educations_screen.dart';
 import '../../screens/admin/admin_points_screen.dart';
 import '../../screens/admin/admin_subscriptions_screen.dart';
+import '../../screens/admin/admin_creator_detail_screen.dart';
+import '../../screens/admin/admin_subscription_detail_screen.dart';
 import '../../screens/admin/admin_sanctions_screen.dart';
 import '../../screens/admin/admin_content_screen.dart';
 import '../../screens/admin/admin_notifications_screen.dart';
@@ -682,6 +684,34 @@ final class AppRouter {
               path: AppRoutes.adminSubscriptions,
               builder: (BuildContext context, GoRouterState state) =>
                   const AdminSubscriptionsScreen(),
+              routes: <RouteBase>[
+                GoRoute(
+                  path: 'creators/:creatorId',
+                  builder: (BuildContext context, GoRouterState state) {
+                    final creatorId = state.pathParameters['creatorId']!;
+                    Map<String, dynamic>? initial;
+                    final extra = state.extra;
+                    if (extra is Map<String, dynamic>) initial = extra;
+                    return AdminCreatorDetailScreen(
+                      creatorId: creatorId,
+                      initialData: initial,
+                    );
+                  },
+                ),
+                GoRoute(
+                  path: 'items/:subscriptionId',
+                  builder: (BuildContext context, GoRouterState state) {
+                    final subscriptionId = state.pathParameters['subscriptionId']!;
+                    Map<String, dynamic>? initial;
+                    final extra = state.extra;
+                    if (extra is Map<String, dynamic>) initial = extra;
+                    return AdminSubscriptionDetailScreen(
+                      subscriptionId: subscriptionId,
+                      initialData: initial,
+                    );
+                  },
+                ),
+              ],
             ),
             GoRoute(
               path: AppRoutes.adminSanctions,

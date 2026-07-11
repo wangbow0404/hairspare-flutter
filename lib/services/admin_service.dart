@@ -1356,15 +1356,73 @@ class AdminService {
   }
 
   // ── M11 구독 ──
-  Future<Map<String, dynamic>> getSubscriptions() async {
+  Future<Map<String, dynamic>> getSubscriptions({
+    String? search,
+    String? status,
+    int page = 1,
+    int limit = 20,
+  }) async {
     if (ApiConfig.useMockData) return MockAdminData.getSubscriptions();
-    final response = await _dio.get('/api/admin/subscriptions');
+    final response = await _dio.get(
+      '/api/admin/subscriptions',
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+        if (search != null && search.isNotEmpty) 'search': search,
+        if (status != null && status.isNotEmpty) 'status': status,
+      },
+    );
     return response.data['data'] ?? response.data;
   }
 
-  Future<Map<String, dynamic>> getCreators() async {
+  Future<Map<String, dynamic>> getSubscriptionDetail(String subscriptionId) async {
+    if (ApiConfig.useMockData) {
+      final data = await MockAdminData.getSubscriptions();
+      final list = data['subscriptions'] as List? ?? [];
+      for (final item in list) {
+        if (item is Map && item['id']?.toString() == subscriptionId) {
+          return Map<String, dynamic>.from(item);
+        }
+      }
+      return {};
+    }
+    final response = await _dio.get('/api/admin/subscriptions/$subscriptionId');
+    return response.data['data'] ?? response.data;
+  }
+
+  Future<Map<String, dynamic>> getCreators({
+    String? search,
+    String? verified,
+    String sort = 'latest',
+    int page = 1,
+    int limit = 20,
+  }) async {
     if (ApiConfig.useMockData) return MockAdminData.getCreators();
-    final response = await _dio.get('/api/admin/creators');
+    final response = await _dio.get(
+      '/api/admin/creators',
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+        'sort': sort,
+        if (search != null && search.isNotEmpty) 'search': search,
+        if (verified != null && verified.isNotEmpty) 'verified': verified,
+      },
+    );
+    return response.data['data'] ?? response.data;
+  }
+
+  Future<Map<String, dynamic>> getCreatorDetail(String creatorId) async {
+    if (ApiConfig.useMockData) {
+      final data = await MockAdminData.getCreators();
+      final list = data['creators'] as List? ?? [];
+      for (final item in list) {
+        if (item is Map && item['id']?.toString() == creatorId) {
+          return Map<String, dynamic>.from(item);
+        }
+      }
+      return {};
+    }
+    final response = await _dio.get('/api/admin/creators/$creatorId');
     return response.data['data'] ?? response.data;
   }
 

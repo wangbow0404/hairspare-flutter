@@ -169,4 +169,8 @@ abstract final class AppRoutes {
       '/admin/verifications/$verificationId';
   static String adminReportDetail(String reportId) =>
       '/admin/reports/$reportId';
+  static String adminCreatorDetail(String creatorId) =>
+      '/admin/subscriptions/creators/$creatorId';
+  static String adminSubscriptionDetail(String subscriptionId) =>
+      '/admin/subscriptions/items/$subscriptionId';
 }

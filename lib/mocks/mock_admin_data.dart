@@ -1265,9 +1265,28 @@ class MockAdminData {
     await Future.delayed(const Duration(milliseconds: 300));
     return {
       'subscriptions': [
-        {'id': 'sub-1', 'userName': '이미용실', 'creatorName': '정크리에이터', 'isActive': true, 'startedAt': '2025-05-01T00:00:00Z', 'amount': 99000},
-        {'id': 'sub-2', 'userName': '미용실 B', 'creatorName': '정크리에이터', 'isActive': false, 'startedAt': '2025-03-01T00:00:00Z', 'amount': 99000},
+        {
+          'id': 'sub-1',
+          'userId': 'shop-1',
+          'creatorId': 'creator-1',
+          'userName': '이미용실',
+          'creatorName': '정크리에이터',
+          'isActive': true,
+          'startedAt': '2025-05-01T00:00:00Z',
+          'amount': 99000,
+        },
+        {
+          'id': 'sub-2',
+          'userId': 'shop-2',
+          'creatorId': 'creator-1',
+          'userName': '미용실 B',
+          'creatorName': '정크리에이터',
+          'isActive': false,
+          'startedAt': '2025-03-01T00:00:00Z',
+          'amount': 99000,
+        },
       ],
+      'counts': {'all': 2, 'active': 1, 'inactive': 1},
       'pagination': {'page': 1, 'limit': 20, 'total': 2, 'totalPages': 1},
     };
   }
@@ -1276,9 +1295,31 @@ class MockAdminData {
     await Future.delayed(const Duration(milliseconds: 300));
     return {
       'creators': [
-        {'id': 'creator-1', 'name': '정크리에이터', 'subscriberCount': 128, 'videoCount': 24, 'verified': true},
-        {'id': 'creator-2', 'name': '한크리에이터', 'subscriberCount': 45, 'videoCount': 8, 'verified': false},
+        {
+          'id': 'creator-1',
+          'userId': 'user-1',
+          'name': '정크리에이터',
+          'email': 'creator1@test.com',
+          'subscriberCount': 128,
+          'videoCount': 24,
+          'likeCount': 540,
+          'verified': true,
+          'createdAt': '2025-05-01T00:00:00Z',
+        },
+        {
+          'id': 'creator-2',
+          'userId': 'user-2',
+          'name': '한크리에이터',
+          'email': 'creator2@test.com',
+          'subscriberCount': 45,
+          'videoCount': 8,
+          'likeCount': 120,
+          'verified': false,
+          'createdAt': '2025-06-01T00:00:00Z',
+        },
       ],
+      'counts': {'all': 2, 'verified': 1, 'unverified': 1},
+      'pagination': {'page': 1, 'limit': 20, 'total': 2, 'totalPages': 1},
     };
   }
 

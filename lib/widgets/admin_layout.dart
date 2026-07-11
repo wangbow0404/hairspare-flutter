@@ -202,6 +202,41 @@ class _AdminLayoutState extends State<AdminLayout> {
     );
   }
 
+  Widget _buildMobileSyncBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 4,
+      ),
+      decoration: BoxDecoration(
+        color: AdminStitchTheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: AdminStitchTheme.emerald,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '실시간 동기화',
+            style: AdminStitchTheme.labelSm.copyWith(
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              color: AdminStitchTheme.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHeaderRightActions({
     required bool isMobile,
     required bool isNarrow,
@@ -251,45 +286,13 @@ class _AdminLayoutState extends State<AdminLayout> {
             ),
           ),
         if (isMobile) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 4,
-            ),
-            decoration: BoxDecoration(
-              color: AdminStitchTheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: const BoxDecoration(
-                    color: AdminStitchTheme.emerald,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '실시간 동기화',
-                  style: AdminStitchTheme.labelSm.copyWith(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w600,
-                    color: AdminStitchTheme.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 4),
           IconButton(
             onPressed: () => appRouter.go(AppRoutes.adminChats),
             style: IconButton.styleFrom(
               minimumSize: const Size(36, 36),
               padding: EdgeInsets.zero,
             ),
+            tooltip: '고객센터 채팅',
             icon: CircleAvatar(
               radius: 16,
               backgroundColor: AdminStitchTheme.primaryFixed,
@@ -297,6 +300,24 @@ class _AdminLayoutState extends State<AdminLayout> {
                 Icons.chat_bubble_outline,
                 size: 18,
                 color: AdminStitchTheme.primary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            onPressed: _handleLogout,
+            style: IconButton.styleFrom(
+              minimumSize: const Size(36, 36),
+              padding: EdgeInsets.zero,
+            ),
+            tooltip: '로그아웃',
+            icon: CircleAvatar(
+              radius: 16,
+              backgroundColor: AppTheme.red50,
+              child: Icon(
+                Icons.logout,
+                size: 18,
+                color: AppTheme.urgentRed,
               ),
             ),
           ),
@@ -635,6 +656,8 @@ class _AdminLayoutState extends State<AdminLayout> {
                                           : null,
                                     ),
                                   ),
+                                  const SizedBox(width: 4),
+                                  _buildMobileSyncBadge(),
                                   const Spacer(),
                                   _buildHeaderRightActions(
                                     isMobile: isMobile,
