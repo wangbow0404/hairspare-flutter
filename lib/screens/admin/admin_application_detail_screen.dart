@@ -261,33 +261,35 @@ class _AdminApplicationDetailScreenState
         const SizedBox(height: AdminStitchTheme.sectionGap),
         const _SectionLabel('매칭 정보'),
         const SizedBox(height: AdminStitchTheme.stackTight),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: _NavCard(
-                icon: Icons.person_outline,
-                label: '스페어',
-                title: spareName,
-                subtitle: spareEmail.isNotEmpty ? spareEmail : null,
-                onTap: spareId != null
-                    ? () => context.push(AppRoutes.adminUserDetail(spareId))
-                    : null,
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _NavCard(
+                  icon: Icons.person_outline,
+                  label: '스페어',
+                  title: spareName,
+                  subtitle: spareEmail.isNotEmpty ? spareEmail : null,
+                  onTap: spareId != null
+                      ? () => context.push(AppRoutes.adminUserDetail(spareId))
+                      : null,
+                ),
               ),
-            ),
-            const SizedBox(width: AdminStitchTheme.stackTight),
-            Expanded(
-              child: _NavCard(
-                icon: Icons.store_outlined,
-                label: '미용실',
-                title: shopName,
-                subtitle: shopEmail.isNotEmpty ? shopEmail : null,
-                onTap: shopId != null
-                    ? () => context.push(AppRoutes.adminUserDetail(shopId))
-                    : null,
+              const SizedBox(width: AdminStitchTheme.stackTight),
+              Expanded(
+                child: _NavCard(
+                  icon: Icons.store_outlined,
+                  label: '미용실',
+                  title: shopName,
+                  subtitle: shopEmail.isNotEmpty ? shopEmail : null,
+                  onTap: shopId != null
+                      ? () => context.push(AppRoutes.adminUserDetail(shopId))
+                      : null,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: AdminStitchTheme.sectionGap),
         const _SectionLabel('공고 정보'),
@@ -582,7 +584,11 @@ class _ScheduleCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AdminStitchTheme.componentPadding),
-      decoration: AdminStitchTheme.cardDecoration,
+      decoration: BoxDecoration(
+        color: AdminStitchTheme.surfaceCard,
+        borderRadius: BorderRadius.circular(AdminStitchTheme.radius2xl),
+        border: Border.all(color: AdminStitchTheme.borderDefault),
+      ),
       child: Row(
         children: [
           Container(
@@ -629,7 +635,7 @@ class _ScheduleCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
               color: AdminStitchTheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AdminStitchTheme.radius2xl),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               statusLabel,
