@@ -182,7 +182,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   bool _isMoneyField(String key) {
     return key.contains('Fee') ||
         key.contains('Cost') ||
-        key.contains('Amount') ||
+        key.contains('Deposit') ||
         key.contains('Price');
   }
 
@@ -224,7 +224,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     children: [
                       const AdminStitchPageHeader(
                         title: '비즈니스 설정',
-                        subtitle: '가격·한도·제재 정책을 관리합니다.',
+                        subtitle: '가격·한도·하이패스·제재 정책을 관리합니다.',
                       ),
                       const SizedBox(height: AdminStitchTheme.sectionGap),
                       if (groupTabs.isNotEmpty)
