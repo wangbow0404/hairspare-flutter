@@ -115,10 +115,16 @@ class _AdminPaymentDetailScreenState extends State<AdminPaymentDetailScreen> {
     switch (type) {
       case 'energy_purchase':
         return '에너지 구매';
-      case 'subscription':
-        return '구독';
-      case 'premium_fix':
-        return '프리미엄 고정';
+      case 'hipass':
+        return '하이패스';
+      case 'urgent':
+        return '급구';
+      case 'job_post':
+        return '공고';
+      case 'energy_use':
+        return '에너지 사용';
+      case 'refund':
+        return '환불';
       default:
         return type ?? '-';
     }
@@ -230,9 +236,14 @@ class _AdminPaymentDetailScreenState extends State<AdminPaymentDetailScreen> {
               ],
             ),
             const SizedBox(height: AppTheme.spacing6),
-            _buildInfoRow('결제 방식', payment['paymentMethod'] ?? '-'),
             _buildInfoRow('유형', _getTypeLabel(payment['type'])),
             _buildInfoRow('금액', _formatCurrency((payment['amount'] ?? 0) as int)),
+            if (payment['energyAmount'] != null)
+              _buildInfoRow('에너지', '${payment['energyAmount']}'),
+            if ((payment['description']?.toString() ?? '').isNotEmpty)
+              _buildInfoRow('설명', payment['description'].toString()),
+            if (payment['job']?['title'] != null)
+              _buildInfoRow('공고', payment['job']['title'].toString()),
             _buildInfoRow('결제일', _formatDate(payment['createdAt'])),
             _buildInfoRow('사용자', payment['user']?['name'] ?? '-'),
             _buildInfoRow('이메일', payment['user']?['email'] ?? '-'),

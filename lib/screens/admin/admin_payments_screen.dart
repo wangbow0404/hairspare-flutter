@@ -29,10 +29,12 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
   bool _isLoading = true;
   String _statusFilter = '';
   String _typeFilter = '';
+  DateTimeRange? _dateRange;
   int _currentPage = 1;
   int _totalPages = 1;
   int _total = 0;
   Timer? _updateTimer;
+  Timer? _searchDebounceTimer;
 
   static const _statusTabs = ['전체', '성공', '대기', '실패', '취소'];
   static const _statusMap = {
@@ -43,12 +45,24 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
     '취소': 'cancelled',
   };
 
-  static const _typeTabs = ['전체', '에너지 구매', '구독', '프리미엄 고정'];
+  // 실 결제 원장(에너지) 기반 카테고리 — 하이패스/급구/공고는 에너지로 결제됨
+  static const _typeTabs = [
+    '전체',
+    '에너지 구매',
+    '하이패스',
+    '급구',
+    '공고',
+    '에너지 사용',
+    '환불',
+  ];
   static const _typeMap = {
     '전체': '',
     '에너지 구매': 'energy_purchase',
-    '구독': 'subscription',
-    '프리미엄 고정': 'premium_fix',
+    '하이패스': 'hipass',
+    '급구': 'urgent',
+    '공고': 'job_post',
+    '에너지 사용': 'energy_use',
+    '환불': 'refund',
   };
 
   @override
@@ -68,6 +82,7 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
   void dispose() {
     _searchController.dispose();
     _updateTimer?.cancel();
+    _searchDebounceTimer?.cancel();
     super.dispose();
   }
 
@@ -80,6 +95,15 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
       final result = await _adminService.getPayments(
         status: _statusFilter.isEmpty ? null : _statusFilter,
         type: _typeFilter.isEmpty ? null : _typeFilter,
+        search: _searchController.text.trim().isEmpty
+            ? null
+            : _searchController.text.trim(),
+        dateFrom: _dateRange == null
+            ? null
+            : DateFormat('yyyy-MM-dd').format(_dateRange!.start),
+        dateTo: _dateRange == null
+            ? null
+            : DateFormat('yyyy-MM-dd').format(_dateRange!.end),
         page: _currentPage,
         limit: 20,
       );
@@ -131,13 +155,50 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
     switch (type) {
       case 'energy_purchase':
         return '에너지 구매';
-      case 'subscription':
-        return '구독';
-      case 'premium_fix':
-        return '프리미엄 고정';
+      case 'hipass':
+        return '하이패스';
+      case 'urgent':
+        return '급구';
+      case 'job_post':
+        return '공고';
+      case 'energy_use':
+        return '에너지 사용';
+      case 'refund':
+        return '환불';
       default:
         return type;
     }
+  }
+
+  String _dateRangeLabel() {
+    if (_dateRange == null) return '날짜 · 전체';
+    final fmt = DateFormat('M.d', 'ko_KR');
+    return '${fmt.format(_dateRange!.start)} ~ ${fmt.format(_dateRange!.end)}';
+  }
+
+  Future<void> _pickDateRange() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 1),
+      initialDateRange: _dateRange,
+      locale: const Locale('ko', 'KR'),
+    );
+    if (picked == null) return;
+    setState(() {
+      _dateRange = picked;
+      _currentPage = 1;
+    });
+    _loadPayments();
+  }
+
+  void _clearDateRange() {
+    setState(() {
+      _dateRange = null;
+      _currentPage = 1;
+    });
+    _loadPayments();
   }
 
   String _selectedStatusTab() {
@@ -168,6 +229,20 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
           AdminStitchSearchField(
             controller: _searchController,
             hint: '주문번호, 사용자로 검색...',
+            onChanged: (value) {
+              _searchDebounceTimer?.cancel();
+              setState(() => _currentPage = 1);
+              _searchDebounceTimer = Timer(
+                const Duration(milliseconds: 300),
+                () {
+                  if (!mounted) return;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    _loadPayments();
+                  });
+                },
+              );
+            },
           ),
           const SizedBox(height: AdminStitchTheme.sectionGap),
           AdminStitchFilterChips(
@@ -192,6 +267,64 @@ class _AdminPaymentsScreenState extends State<AdminPaymentsScreen> {
               });
               _loadPayments();
             },
+          ),
+          const SizedBox(height: AdminStitchTheme.stackTight),
+          Row(
+            children: [
+              Material(
+                color: _dateRange != null
+                    ? AdminStitchTheme.primary
+                    : AdminStitchTheme.surfaceCard,
+                borderRadius: BorderRadius.circular(999),
+                child: InkWell(
+                  onTap: _pickDateRange,
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      border: _dateRange != null
+                          ? null
+                          : Border.all(color: AdminStitchTheme.borderDefault),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 14,
+                          color: _dateRange != null
+                              ? AdminStitchTheme.onPrimary
+                              : AdminStitchTheme.textSecondary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _dateRangeLabel(),
+                          style: AdminStitchTheme.labelSm.copyWith(
+                            color: _dateRange != null
+                                ? AdminStitchTheme.onPrimary
+                                : AdminStitchTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (_dateRange != null) ...[
+                const SizedBox(width: AdminStitchTheme.stackTight),
+                IconButton(
+                  onPressed: _clearDateRange,
+                  icon: const Icon(Icons.close, size: 18),
+                  tooltip: '날짜 필터 지우기',
+                  visualDensity: VisualDensity.compact,
+                  color: AdminStitchTheme.textSecondary,
+                ),
+              ],
+            ],
           ),
           if (_total > 0) ...[
             const SizedBox(height: AdminStitchTheme.sectionGap),
