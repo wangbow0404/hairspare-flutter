@@ -250,6 +250,168 @@ class _UnderlineTab extends StatelessWidget {
   }
 }
 
+/// Bento 스타일 세그먼트 탭 (알림 발송 등).
+class AdminStitchSegmentedTabBar extends StatelessWidget {
+  const AdminStitchSegmentedTabBar({
+    super.key,
+    required this.tabs,
+    required this.selectedIndex,
+    required this.onSelected,
+  });
+
+  final List<String> tabs;
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AdminStitchTheme.surfaceCard,
+        borderRadius: BorderRadius.circular(AdminStitchTheme.radiusXl),
+        border: Border.all(color: AdminStitchTheme.borderDefault),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < tabs.length; i++)
+            Expanded(
+              child: _SegmentedTab(
+                label: tabs[i],
+                selected: i == selectedIndex,
+                onTap: () => onSelected(i),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SegmentedTab extends StatelessWidget {
+  const _SegmentedTab({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected
+          ? AdminStitchTheme.surfaceContainerHigh
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
+        child: Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
+            boxShadow: selected
+                ? const [
+                    BoxShadow(
+                      color: Color(0x0F000000),
+                      blurRadius: 2,
+                      offset: Offset(0, 1),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            style: AdminStitchTheme.bodyMd.copyWith(
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+              color: selected
+                  ? AdminStitchTheme.onSurface
+                  : AdminStitchTheme.textSecondary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AdminStitchInfoNote extends StatelessWidget {
+  const AdminStitchInfoNote({super.key, required this.message, this.boldSpans});
+
+  final String message;
+  final List<String>? boldSpans;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AdminStitchTheme.componentPadding),
+      decoration: BoxDecoration(
+        color: AdminStitchTheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(AdminStitchTheme.radiusLg),
+        border: Border.all(color: AdminStitchTheme.borderDefault),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.info_outline,
+            size: 20,
+            color: AdminStitchTheme.textSecondary,
+          ),
+          const SizedBox(width: AdminStitchTheme.stackTight),
+          Expanded(child: _buildMessageText()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessageText() {
+    if (boldSpans == null || boldSpans!.isEmpty) {
+      return Text(
+        message,
+        style: AdminStitchTheme.bodyMd.copyWith(
+          color: AdminStitchTheme.textSecondary,
+          height: 1.6,
+        ),
+      );
+    }
+
+    final spans = <InlineSpan>[];
+    var remaining = message;
+    for (final bold in boldSpans!) {
+      final index = remaining.indexOf(bold);
+      if (index == -1) continue;
+      if (index > 0) {
+        spans.add(TextSpan(text: remaining.substring(0, index)));
+      }
+      spans.add(
+        TextSpan(
+          text: bold,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+      );
+      remaining = remaining.substring(index + bold.length);
+    }
+    if (remaining.isNotEmpty) {
+      spans.add(TextSpan(text: remaining));
+    }
+
+    return Text.rich(
+      TextSpan(
+        style: AdminStitchTheme.bodyMd.copyWith(
+          color: AdminStitchTheme.textSecondary,
+          height: 1.6,
+        ),
+        children: spans,
+      ),
+    );
+  }
+}
+
 /// 관리자 필터용 드롭다운. label(선택 안내)과 options(값→표시명)를 받아
 /// 현재 선택값을 보여주고 탭하면 메뉴가 열린다.
 class AdminStitchFilterDropdown extends StatelessWidget {

@@ -12,11 +12,19 @@ abstract final class AdminMessageAudience {
 
   static const Map<String, String> options = {
     'all': '전체',
-    'shop': '샵',
     'spare': '스페어',
     'designer': '디자이너',
     'model': '모델',
+    'shop': '샵 사장님',
   };
+
+  static const List<String> orderedKeys = [
+    'all',
+    'spare',
+    'designer',
+    'model',
+    'shop',
+  ];
 
   static String labelFor(String key) => options[key] ?? key;
 }
