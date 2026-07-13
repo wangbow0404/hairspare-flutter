@@ -142,8 +142,29 @@ class _WorkCheckScaffoldState extends State<_WorkCheckScaffold> {
   bool _openedProposalDetail = false;
   bool _scrolledToScheduleCard = false;
 
+  /// 선택된 근무 카드 섹션 위치 추적용 key.
+  final GlobalKey _selectedCardKey = GlobalKey();
+  int _lastScrollRequest = 0;
+
   void _handleModelBack(BuildContext context) {
     AppNavigation.backFromModelTab(context);
+  }
+
+  /// 달력 날짜·미체크 배너 탭으로 스크롤이 요청되면 해당 근무 카드로 스크롤한다.
+  void _scrollToSelectedCardIfRequested(WorkCheckViewModel vm) {
+    if (vm.isLoading) return;
+    if (vm.scrollToCardRequest == _lastScrollRequest) return;
+    _lastScrollRequest = vm.scrollToCardRequest;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _selectedCardKey.currentContext;
+      if (ctx == null) return;
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOut,
+        alignment: 0.1,
+      );
+    });
   }
 
   void _scrollToScheduleCardIfNeeded(WorkCheckViewModel vm) {
@@ -194,6 +215,7 @@ class _WorkCheckScaffoldState extends State<_WorkCheckScaffold> {
       } else {
         _scrollToScheduleCardIfNeeded(vm);
       }
+      _scrollToSelectedCardIfRequested(vm);
     }
 
     if (vm.isLoading) {
@@ -232,6 +254,7 @@ class _WorkCheckScaffoldState extends State<_WorkCheckScaffold> {
                     SliverToBoxAdapter(
                       child: WorkCheckScrollContent(
                         isModelMode: true,
+                        selectedDateSectionKey: _selectedCardKey,
                       ),
                     ),
                   ],
@@ -274,6 +297,7 @@ class _WorkCheckScaffoldState extends State<_WorkCheckScaffold> {
                   SliverToBoxAdapter(
                     child: WorkCheckScrollContent(
                       isModelMode: widget.isModelMode,
+                      selectedDateSectionKey: _selectedCardKey,
                     ),
                   ),
                 ],

@@ -52,6 +52,11 @@ class WorkCheckViewModel extends ChangeNotifier {
   Set<String> viewedDates = {};
   Map<String, String> pendingApprovals = {};
 
+  /// 달력에서 일정 있는 날짜를 누르거나 미체크 배너를 누를 때마다 증가한다.
+  /// 스크롤 컨트롤러를 가진 화면이 이 값의 변화를 감지해 선택된 근무 카드로
+  /// 스크롤한다.
+  int scrollToCardRequest = 0;
+
   bool showRatingModal = false;
   String? ratedShopName;
   String? ratedJobId;
@@ -377,6 +382,10 @@ class WorkCheckViewModel extends ChangeNotifier {
         selectedScheduleId = firstScheduled.first.id;
       }
     }
+    // 일정(근무·교육)이 있는 날짜를 누르면 해당 카드로 스크롤을 요청한다.
+    if (hasWork) {
+      scrollToCardRequest++;
+    }
     notifyListeners();
   }
 
@@ -395,6 +404,7 @@ class WorkCheckViewModel extends ChangeNotifier {
     }
     selectedScheduleId = schedule.id;
     viewedDates = {...viewedDates, schedule.date};
+    scrollToCardRequest++;
     notifyListeners();
   }
 
