@@ -11,13 +11,14 @@ class SpaceSlotBuilder {
   static List<TimeSlot> build({
     required SpaceOperatingSchedule schedule,
     DateTime? fromDate,
-    int horizonDays = defaultHorizonDays,
+    int? horizonDays,
   }) {
+    final resolvedHorizonDays = horizonDays ?? defaultHorizonDays;
     final base = fromDate ?? DateTime.now();
     final startDay = DateTime(base.year, base.month, base.day);
     final slots = <TimeSlot>[];
 
-    for (var day = 0; day < horizonDays; day++) {
+    for (var day = 0; day < resolvedHorizonDays; day++) {
       final date = startDay.add(Duration(days: day));
       if (schedule.isClosedDate(date)) continue;
 

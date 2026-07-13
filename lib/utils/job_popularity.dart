@@ -60,9 +60,10 @@ abstract final class JobPopularity {
 
   static List<Job> topPopular(
     List<Job> jobs, {
-    int limit = defaultTopLimit,
+    int? limit,
     Map<String, JobPopularityMetrics>? metricsByJobId,
   }) {
+    final resolvedLimit = limit ?? defaultTopLimit;
     final metrics = metricsByJobId ?? resolveMetrics(jobs);
     final published = jobs.where((j) => j.status == 'published' && !j.isHidden);
     final ranked = published.toList()
@@ -84,14 +85,14 @@ abstract final class JobPopularity {
     for (final job in ranked) {
       if (!seenShops.add(job.shopName)) continue;
       deduped.add(job);
-      if (deduped.length >= limit) break;
+      if (deduped.length >= resolvedLimit) break;
     }
     return deduped;
   }
 
   static Set<String> popularJobIds(
     List<Job> jobs, {
-    int limit = defaultTopLimit,
+    int? limit,
     Map<String, JobPopularityMetrics>? metricsByJobId,
   }) {
     return topPopular(

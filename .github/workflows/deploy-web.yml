@@ -26,6 +26,9 @@ jobs:
       - name: Flutter 웹 빌드
         run: flutter build web --release
 
+      - name: SPA 라우팅 설정 복사
+        run: cp web/vercel.json build/web/vercel.json
+
       - name: Vercel CLI 설치
         run: npm install -g vercel@latest
 

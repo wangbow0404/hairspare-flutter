@@ -93,8 +93,8 @@ abstract final class ShopSchedulePenaltyWarningModal {
     required ShopCancellationWarningLevel warningLevel,
     DateTime? suspendedUntil,
   }) {
-    const limit = ScheduleCancellationPolicy.shopUnilateralCancelLimit30d;
-    const days = ScheduleCancellationPolicy.shopJobPostingSuspensionDays;
+    final limit = ScheduleCancellationPolicy.shopUnilateralCancelLimit30d;
+    final days = ScheduleCancellationPolicy.shopJobPostingSuspensionDays;
 
     if (warningLevel == ShopCancellationWarningLevel.suspended &&
         suspendedUntil != null) {

@@ -838,7 +838,7 @@ class MockShopData {
     contactViolationRoomCount++;
     final now = DateTime.now();
     final penaltyEnd = now.add(
-      const Duration(days: ContactViolationPolicy.shopPenaltyDays),
+      Duration(days: ContactViolationPolicy.shopPenaltyDays),
     );
     chatBlockedUntil = _later(chatBlockedUntil, penaltyEnd);
     jobPostingSuspendedUntil = _later(jobPostingSuspendedUntil, penaltyEnd);
@@ -846,7 +846,7 @@ class MockShopData {
     if (contactViolationRoomCount >=
         ContactViolationPolicy.maxShopRoomPenaltiesBeforeBan) {
       MockAuthData.terminateShopAccount(shopId);
-      return const ContactViolationResult(
+      return ContactViolationResult(
         attemptCount: ContactViolationPolicy.maxAttemptsPerChat,
         maxAttempts: ContactViolationPolicy.maxAttemptsPerChat,
         outcome: ContactViolationOutcome.shopAccountTerminated,
@@ -881,7 +881,7 @@ class MockShopData {
     if (unilateralCancelCount30d >=
         ScheduleCancellationPolicy.shopUnilateralCancelLimit30d) {
       jobPostingSuspendedUntil = DateTime.now().add(
-        const Duration(
+        Duration(
           days: ScheduleCancellationPolicy.shopJobPostingSuspensionDays,
         ),
       );
