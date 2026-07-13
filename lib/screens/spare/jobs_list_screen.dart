@@ -495,6 +495,16 @@ class _JobsListScreenState extends State<JobsListScreen> {
                           ),
                           const SizedBox(width: AppTheme.spacing2),
                           StitchFilterChip(
+                            label: '프리미엄',
+                            isSelected: _isPremium,
+                            onTap: () {
+                              setState(() {
+                                _isPremium = !_isPremium;
+                              });
+                            },
+                          ),
+                          const SizedBox(width: AppTheme.spacing2),
+                          StitchFilterChip(
                             label: '최신순',
                             isSelected:
                                 _sortMode == JobsListSortMode.latest &&
@@ -503,36 +513,6 @@ class _JobsListScreenState extends State<JobsListScreen> {
                               setState(() {
                                 _sortMode = JobsListSortMode.latest;
                                 _activeFilter = null;
-                              });
-                            },
-                          ),
-                          const SizedBox(width: AppTheme.spacing2),
-                          StitchFilterChip(
-                            label: '마감임박',
-                            isSelected: _activeFilter == 'deadline',
-                            onTap: () {
-                              setState(() {
-                                _activeFilter = _activeFilter == 'deadline' ? null : 'deadline';
-                              });
-                            },
-                          ),
-                          const SizedBox(width: AppTheme.spacing2),
-                          StitchFilterChip(
-                            label: '시급',
-                            isSelected: _activeFilter == 'hourly',
-                            onTap: () {
-                              setState(() {
-                                _activeFilter = _activeFilter == 'hourly' ? null : 'hourly';
-                              });
-                            },
-                          ),
-                          const SizedBox(width: AppTheme.spacing2),
-                          StitchFilterChip(
-                            label: '일급',
-                            isSelected: _activeFilter == 'daily',
-                            onTap: () {
-                              setState(() {
-                                _activeFilter = _activeFilter == 'daily' ? null : 'daily';
                               });
                             },
                           ),
@@ -548,11 +528,11 @@ class _JobsListScreenState extends State<JobsListScreen> {
                           ),
                           const SizedBox(width: AppTheme.spacing2),
                           StitchFilterChip(
-                            label: '프리미엄',
-                            isSelected: _isPremium,
+                            label: '마감임박',
+                            isSelected: _activeFilter == 'deadline',
                             onTap: () {
                               setState(() {
-                                _isPremium = !_isPremium;
+                                _activeFilter = _activeFilter == 'deadline' ? null : 'deadline';
                               });
                             },
                           ),
