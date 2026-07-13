@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/admin_stitch_theme.dart';
+import '../../utils/admin_signup_provider.dart';
 import '../common/app_network_image.dart';
 
 class AdminStitchPageHeader extends StatelessWidget {
@@ -1229,6 +1230,7 @@ class AdminStitchUserCard extends StatelessWidget {
     required this.isActive,
     this.avatarUrl,
     this.initials,
+    this.signupUser,
     this.onTap,
     this.onMore,
   });
@@ -1241,6 +1243,7 @@ class AdminStitchUserCard extends StatelessWidget {
   final bool isActive;
   final String? avatarUrl;
   final String? initials;
+  final Map<String, dynamic>? signupUser;
   final VoidCallback? onTap;
   final VoidCallback? onMore;
 
@@ -1292,21 +1295,31 @@ class AdminStitchUserCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    const Icon(
-                      Icons.calendar_today,
-                      size: 14,
-                      color: AdminStitchTheme.textSecondary,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.calendar_today,
+                          size: 14,
+                          color: AdminStitchTheme.textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          joinedLabel,
+                          style: AdminStitchTheme.labelSm.copyWith(
+                            fontWeight: FontWeight.w400,
+                            color: AdminStitchTheme.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      joinedLabel,
-                      style: AdminStitchTheme.labelSm.copyWith(
-                        fontWeight: FontWeight.w400,
-                        color: AdminStitchTheme.textSecondary,
-                      ),
-                    ),
+                    if (signupUser != null)
+                      AdminSignupProviderBadge(user: signupUser!, compact: true),
                   ],
                 ),
               ],

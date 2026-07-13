@@ -10,6 +10,7 @@ import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/admin_member_role.dart';
 import '../../utils/admin_member_role_style.dart';
+import '../../utils/admin_signup_provider.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
 import '../../widgets/admin/admin_stitch_list_screen_shell.dart';
@@ -33,6 +34,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   String _search = '';
   String _memberCategoryFilter = '';
   String _statusFilter = ''; // '' | active | suspended | deleted
+  String _signupMethodFilter = '';
   String _sort = 'latest';
   int _currentPage = 1;
   int _totalPages = 1;
@@ -89,6 +91,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             : _memberCategoryFilter,
         search: _search.isEmpty ? null : _search,
         accountStatus: _statusFilter.isEmpty ? null : _statusFilter,
+        signupMethod: _signupMethodFilter.isEmpty ? null : _signupMethodFilter,
         sort: _sort,
         page: _currentPage,
         limit: 20,
@@ -388,6 +391,19 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: AdminStitchTheme.stackTight),
+                AdminStitchFilterDropdownBox(
+                  label: '가입 방식',
+                  value: _signupMethodFilter,
+                  options: AdminSignupProviderUtil.signupFilterOptions,
+                  onChanged: (v) {
+                    setState(() {
+                      _signupMethodFilter = v;
+                      _currentPage = 1;
+                    });
+                    _loadUsers();
+                  },
+                ),
                 const SizedBox(height: AdminStitchTheme.sectionGap),
                 if (!_isLoading)
                   Text(
@@ -491,6 +507,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       isActive: isActive,
       avatarUrl: user['profileImage']?.toString(),
       initials: (user['name']?.toString() ?? '?').characters.first,
+      signupUser: user,
       onTap: userId != null ? () => _openUserDetail(user) : null,
       onMore: userId != null ? () => _showUserActions(user) : null,
     );

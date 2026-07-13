@@ -7,6 +7,7 @@ import '../../services/admin_service.dart';
 import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/admin_member_role.dart';
+import '../../utils/admin_signup_provider.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
 import '../../widgets/admin/admin_challenge_video_tile.dart';
@@ -93,21 +94,6 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
     }
   }
 
-  String _getSignupLabel(dynamic accounts) {
-    if (accounts == null || (accounts as List).isEmpty) return '일반 가입';
-    final provider = (accounts).first['provider'] ?? '';
-    switch (provider) {
-      case 'kakao':
-        return '카카오';
-      case 'naver':
-        return '네이버';
-      case 'google':
-        return '구글';
-      default:
-        return '일반 가입';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
@@ -131,7 +117,6 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen>
                     user: _user!,
                     tabController: _tabController,
                     formatDate: _formatDate,
-                    signupLabel: _getSignupLabel(_user!['accounts']),
                     bottomInset: MediaQuery.paddingOf(context).bottom,
                     onSuspend: _suspendUser,
                     onUnsuspend: _unsuspendUser,
@@ -443,7 +428,6 @@ class _AdminUserDetailBody extends StatelessWidget {
     required this.user,
     required this.tabController,
     required this.formatDate,
-    required this.signupLabel,
     required this.bottomInset,
     required this.onSuspend,
     required this.onUnsuspend,
@@ -456,7 +440,6 @@ class _AdminUserDetailBody extends StatelessWidget {
   final Map<String, dynamic> user;
   final TabController tabController;
   final String Function(String?) formatDate;
-  final String signupLabel;
   final double bottomInset;
   final VoidCallback onSuspend;
   final VoidCallback onUnsuspend;
@@ -502,9 +485,8 @@ class _AdminUserDetailBody extends StatelessWidget {
             padding: const EdgeInsets.symmetric(
               horizontal: AdminStitchTheme.pageMargin,
             ),
-            child: AdminUserProfileCard(
+            child:             AdminUserProfileCard(
               user: user,
-              signupLabel: signupLabel,
               isSuspended: isSuspended,
               onSuspend: onSuspend,
               onUnsuspend: onUnsuspend,
@@ -637,7 +619,6 @@ class AdminUserProfileCard extends StatelessWidget {
   const AdminUserProfileCard({
     super.key,
     required this.user,
-    required this.signupLabel,
     required this.isSuspended,
     required this.onSuspend,
     required this.onUnsuspend,
@@ -647,7 +628,6 @@ class AdminUserProfileCard extends StatelessWidget {
   });
 
   final Map<String, dynamic> user;
-  final String signupLabel;
   final bool isSuspended;
   final VoidCallback onSuspend;
   final VoidCallback onUnsuspend;
@@ -741,7 +721,7 @@ class AdminUserProfileCard extends StatelessWidget {
                   children: [
                     Text(name, style: AdminStitchTheme.sectionHeader),
                     AdminUserRoleBadge(label: roleLabel),
-                    AdminUserSignupBadge(label: signupLabel),
+                    AdminSignupProviderBadge(user: user),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -846,29 +826,6 @@ class AdminUserRoleBadge extends StatelessWidget {
         label,
         style: AdminStitchTheme.labelSm.copyWith(
           color: AdminStitchTheme.primary,
-        ),
-      ),
-    );
-  }
-}
-
-class AdminUserSignupBadge extends StatelessWidget {
-  const AdminUserSignupBadge({super.key, required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: AdminStitchTheme.primaryFixed,
-        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-      ),
-      child: Text(
-        label,
-        style: AdminStitchTheme.labelSm.copyWith(
-          color: AdminStitchTheme.onPrimaryFixed,
         ),
       ),
     );
@@ -1116,6 +1073,10 @@ class AdminUserBasicTab extends StatelessWidget {
         ),
         AdminUserBentoRowData(label: '회원 유형', value: categoryLabel),
         AdminUserBentoRowData(label: '역할', value: roleLabel),
+        AdminUserBentoRowData(
+          label: '가입 방식',
+          value: AdminSignupProviderUtil.labelFor(user),
+        ),
         AdminUserBentoRowData(
           label: '가입일',
           value: formatDate(user['createdAt']?.toString()),
