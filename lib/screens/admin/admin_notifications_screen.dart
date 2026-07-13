@@ -6,6 +6,7 @@ import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
+import '../../widgets/admin/admin_notification_template_editor.dart';
 import '../../widgets/admin/admin_send_message_sheet.dart';
 import '../../widgets/admin/admin_stitch_list_cards.dart';
 import '../../widgets/admin/admin_stitch_list_screen_shell.dart';
@@ -202,6 +203,42 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
     );
   }
 
+  Future<void> _openTemplateEditor({Map<String, dynamic>? template}) async {
+    final saved = await AdminNotificationTemplateEditor.show(
+      context,
+      template: template,
+      onSave: ({required name, required title, required body}) async {
+        if (template == null) {
+          await _adminService.createNotificationTemplate(
+            name: name,
+            title: title,
+            body: body,
+          );
+        } else {
+          await _adminService.updateNotificationTemplate(
+            templateId: template['id']?.toString() ?? '',
+            name: name,
+            title: title,
+            body: body,
+          );
+        }
+      },
+      onDelete: template == null
+          ? null
+          : () => _adminService.deleteNotificationTemplate(
+                template['id']?.toString() ?? '',
+              ),
+    );
+    if (saved == true && mounted) {
+      await _load();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(template == null ? '템플릿이 추가되었습니다' : '템플릿이 저장되었습니다'),
+        ),
+      );
+    }
+  }
+
   String _formatDate(String? v) {
     if (v == null) return '-';
     try {
@@ -219,8 +256,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
         children: [
           const AdminStitchPageHeader(
             title: '알림 발송',
-            subtitle:
-                '스페어·디자이너·모델·샵에게 역할별 공지 또는 개별 알림을 보낼 수 있습니다.',
+            subtitle: '역할별 전체 공지를 보냅니다. 개별 연락은 회원 상세의 채팅을 이용하세요.',
           ),
           const SizedBox(height: AdminStitchTheme.sectionGap),
           AdminStitchSegmentedTabBar(
@@ -379,31 +415,174 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
   }
 
   Widget _buildTemplatesTab() {
-    if (_templates.isEmpty) {
-      return const AdminStitchInfoNote(
-        message: '등록된 템플릿이 없습니다. 발송 탭에서 메시지를 작성한 뒤 템플릿으로 저장할 수 있습니다.',
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final t in _templates) ...[
-          Builder(
-            builder: (context) {
-              final map = Map<String, dynamic>.from(t as Map);
-              return AdminStitchSimpleListCard(
-                title: map['name']?.toString() ?? '',
-                subtitle: '${map['title']} — ${map['body']}',
-                icon: Icons.description_outlined,
-                onTap: () => _applyTemplate(map),
-              );
-            },
-          ),
-          const SizedBox(height: AdminStitchTheme.sectionGap),
-        ],
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '전체 공지 템플릿',
+                style: AdminStitchTheme.sectionHeader,
+              ),
+            ),
+            FilledButton.icon(
+              onPressed: () => _openTemplateEditor(),
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('추가'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AdminStitchTheme.primary,
+                foregroundColor: AdminStitchTheme.onPrimary,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AdminStitchTheme.stackTight),
+        const AdminStitchInfoNote(
+          message:
+              '템플릿은 역할별 전체 공지 발송용입니다. 회원 1명에게 보낼 메시지는 회원 관리 → 회원 상세의 「채팅하기」를 사용하세요.',
+          boldSpans: ['회원 관리 → 회원 상세'],
+        ),
+        const SizedBox(height: AdminStitchTheme.sectionGap),
+        if (_templates.isEmpty)
+          const AdminStitchInfoNote(
+            message: '등록된 템플릿이 없습니다. 「추가」로 전체 공지용 메시지를 만들어 보세요.',
+          )
+        else
+          for (final t in _templates) ...[
+            Builder(
+              builder: (context) {
+                final map = Map<String, dynamic>.from(t as Map);
+                return AdminStitchCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: AdminStitchTheme.primary.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.description_outlined,
+                              size: 20,
+                              color: AdminStitchTheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  map['name']?.toString() ?? '',
+                                  style: AdminStitchTheme.bodyMd.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  map['title']?.toString() ?? '',
+                                  style: AdminStitchTheme.bodyMd.copyWith(
+                                    color: AdminStitchTheme.textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  map['body']?.toString() ?? '',
+                                  style: AdminStitchTheme.bodyMd.copyWith(
+                                    color: AdminStitchTheme.textSecondary,
+                                    fontSize: 13,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AdminStitchTheme.sectionGap),
+                      Row(
+                        children: [
+                          TextButton.icon(
+                            onPressed: () => _applyTemplate(map),
+                            icon: const Icon(Icons.send_outlined, size: 18),
+                            label: const Text('발송 탭에 불러오기'),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            tooltip: '수정',
+                            onPressed: () => _openTemplateEditor(template: map),
+                            icon: const Icon(Icons.edit_outlined),
+                            color: AdminStitchTheme.textSecondary,
+                          ),
+                          IconButton(
+                            tooltip: '삭제',
+                            onPressed: () => _confirmDeleteTemplate(map),
+                            icon: const Icon(Icons.delete_outline),
+                            color: AppTheme.urgentRed,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: AdminStitchTheme.sectionGap),
+          ],
       ],
     );
+  }
+
+  Future<void> _confirmDeleteTemplate(Map<String, dynamic> template) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('템플릿 삭제'),
+        content: Text('「${template['name']}」 템플릿을 삭제할까요?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.urgentRed),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await _adminService.deleteNotificationTemplate(
+        template['id']?.toString() ?? '',
+      );
+      if (!mounted) return;
+      await _load();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('템플릿이 삭제되었습니다')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ErrorHandler.getUserFriendlyMessage(ErrorHandler.handleException(e)),
+          ),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
+    }
   }
 
   Widget _buildHistoryTab() {

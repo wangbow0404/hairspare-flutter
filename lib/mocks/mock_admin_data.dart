@@ -1298,17 +1298,62 @@ class MockAdminData {
     return {'items': filtered, 'pagination': {'page': 1, 'limit': 20, 'total': filtered.length, 'totalPages': 1}, 'flaggedContent': 2};
   }
 
+  static final List<Map<String, dynamic>> _notificationTemplates = [
+    {'id': 'tpl-1', 'name': '인증 승인', 'title': '인증이 승인되었습니다', 'body': 'HairSpare 인증 심사가 완료되었습니다.'},
+    {'id': 'tpl-2', 'name': '제재 안내', 'title': '계정 제재 안내', 'body': '커뮤니티 가이드 위반으로 제재가 적용되었습니다.'},
+    {'id': 'tpl-3', 'name': '점검 안내', 'title': '서비스 점검 안내', 'body': '더 나은 서비스를 위해 점검이 진행됩니다. 이용에 참고해 주세요.'},
+  ];
+  static int _templateIdSeq = 10;
+
   static Future<Map<String, dynamic>> getNotificationData() async {
     await Future.delayed(const Duration(milliseconds: 300));
     return {
-      'templates': [
-        {'id': 'tpl-1', 'name': '인증 승인', 'title': '인증이 승인되었습니다', 'body': 'HairSpare 인증 심사가 완료되었습니다.'},
-        {'id': 'tpl-2', 'name': '제재 안내', 'title': '계정 제재 안내', 'body': '커뮤니티 가이드 위반으로 제재가 적용되었습니다.'},
-      ],
+      'templates': _notificationTemplates
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList(),
       'history': [
         {'id': 'send-1', 'audience': '전체', 'title': '서비스 점검 안내', 'sentAt': '2025-06-20T09:00:00Z', 'recipientCount': 1247},
       ],
     };
+  }
+
+  static Future<Map<String, dynamic>> createNotificationTemplate({
+    required String name,
+    required String title,
+    required String body,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    final row = {
+      'id': 'tpl-${_templateIdSeq++}',
+      'name': name,
+      'title': title,
+      'body': body,
+    };
+    _notificationTemplates.add(row);
+    return Map<String, dynamic>.from(row);
+  }
+
+  static Future<Map<String, dynamic>> updateNotificationTemplate({
+    required String templateId,
+    required String name,
+    required String title,
+    required String body,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    final index = _notificationTemplates.indexWhere((e) => e['id'] == templateId);
+    if (index < 0) throw Exception('템플릿을 찾을 수 없습니다');
+    _notificationTemplates[index] = {
+      'id': templateId,
+      'name': name,
+      'title': title,
+      'body': body,
+    };
+    return Map<String, dynamic>.from(_notificationTemplates[index]);
+  }
+
+  static Future<void> deleteNotificationTemplate(String templateId) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    _notificationTemplates.removeWhere((e) => e['id'] == templateId);
   }
 
   static Future<Map<String, dynamic>> getReferenceData({String? tab}) async {

@@ -1564,6 +1564,54 @@ class AdminService {
     );
   }
 
+  Future<Map<String, dynamic>> createNotificationTemplate({
+    required String name,
+    required String title,
+    required String body,
+  }) async {
+    if (ApiConfig.useMockData) {
+      return MockAdminData.createNotificationTemplate(
+        name: name,
+        title: title,
+        body: body,
+      );
+    }
+    final response = await _dio.post(
+      '/api/admin/notifications/templates',
+      data: {'name': name, 'title': title, 'body': body},
+    );
+    return Map<String, dynamic>.from(response.data['data'] ?? response.data);
+  }
+
+  Future<Map<String, dynamic>> updateNotificationTemplate({
+    required String templateId,
+    required String name,
+    required String title,
+    required String body,
+  }) async {
+    if (ApiConfig.useMockData) {
+      return MockAdminData.updateNotificationTemplate(
+        templateId: templateId,
+        name: name,
+        title: title,
+        body: body,
+      );
+    }
+    final response = await _dio.patch(
+      '/api/admin/notifications/templates/$templateId',
+      data: {'name': name, 'title': title, 'body': body},
+    );
+    return Map<String, dynamic>.from(response.data['data'] ?? response.data);
+  }
+
+  Future<void> deleteNotificationTemplate(String templateId) async {
+    if (ApiConfig.useMockData) {
+      await MockAdminData.deleteNotificationTemplate(templateId);
+      return;
+    }
+    await _dio.delete('/api/admin/notifications/templates/$templateId');
+  }
+
   // ── 관리자 1:1 채팅 ──
   Future<Map<String, dynamic>> ensureAdminChat(String userId) async {
     if (ApiConfig.useMockData) {
