@@ -54,21 +54,19 @@ class AuthService {
       return user;
     }
     try {
-      final response = await TransientNetworkRetry.run(
-        () => _dio.post(
-          '/api/auth/login',
-          data: {
-            'username': username,
-            'password': password,
-            if (portal != null)
-              'login_type': portal == LoginPortal.shop ? 'shop' : 'spare',
-          },
-          options: Options(
-            sendTimeout: const Duration(seconds: 20),
-            receiveTimeout: const Duration(seconds: 20),
-          ),
+      final response = await _dio.post(
+        '/api/auth/login',
+        data: {
+          'username': username,
+          'password': password,
+          if (portal != null)
+            'login_type': portal == LoginPortal.shop ? 'shop' : 'spare',
+        },
+        options: Options(
+          sendTimeout: const Duration(seconds: 12),
+          receiveTimeout: const Duration(seconds: 12),
+          extra: const {'skip_transient_retry': true},
         ),
-        maxAttempts: 4,
       );
 
       if (response.statusCode == 200) {

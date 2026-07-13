@@ -14,6 +14,9 @@ class TransientRetryInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
+    if (err.requestOptions.extra['skip_transient_retry'] == true) {
+      return handler.next(err);
+    }
     final attempt = (err.requestOptions.extra['transient_retry'] as int?) ?? 0;
     if (!TransientNetworkRetry.isTransient(err) || attempt >= maxAttempts - 1) {
       return handler.next(err);
