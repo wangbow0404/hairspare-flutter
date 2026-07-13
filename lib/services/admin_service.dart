@@ -1672,4 +1672,79 @@ class AdminService {
     );
     return response.data['data'] ?? response.data;
   }
+
+  Future<Map<String, dynamic>> _createReferenceItem(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return {'id': 'mock-${DateTime.now().millisecondsSinceEpoch}', ...body};
+    }
+    try {
+      final response = await _dio.post('/api/admin/$path', data: body);
+      return response.data['data'] ?? response.data;
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> _updateReferenceItem(
+    String path,
+    String id,
+    Map<String, dynamic> body,
+  ) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return {'id': id, ...body};
+    }
+    try {
+      final response = await _dio.patch('/api/admin/$path/$id', data: body);
+      return response.data['data'] ?? response.data;
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  Future<void> _deleteReferenceItem(String path, String id) async {
+    if (ApiConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      return;
+    }
+    try {
+      await _dio.delete('/api/admin/$path/$id');
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> createRegion(Map<String, dynamic> body) =>
+      _createReferenceItem('regions', body);
+  Future<Map<String, dynamic>> updateRegion(String id, Map<String, dynamic> body) =>
+      _updateReferenceItem('regions', id, body);
+  Future<void> deleteRegion(String id) => _deleteReferenceItem('regions', id);
+
+  Future<Map<String, dynamic>> createTier(Map<String, dynamic> body) =>
+      _createReferenceItem('tiers', body);
+  Future<Map<String, dynamic>> updateTier(String id, Map<String, dynamic> body) =>
+      _updateReferenceItem('tiers', id, body);
+  Future<void> deleteTier(String id) => _deleteReferenceItem('tiers', id);
+
+  Future<Map<String, dynamic>> createMatchTag(Map<String, dynamic> body) =>
+      _createReferenceItem('match-tags', body);
+  Future<Map<String, dynamic>> updateMatchTag(String id, Map<String, dynamic> body) =>
+      _updateReferenceItem('match-tags', id, body);
+  Future<void> deleteMatchTag(String id) => _deleteReferenceItem('match-tags', id);
+
+  Future<Map<String, dynamic>> createCategory(Map<String, dynamic> body) =>
+      _createReferenceItem('categories', body);
+  Future<Map<String, dynamic>> updateCategory(String id, Map<String, dynamic> body) =>
+      _updateReferenceItem('categories', id, body);
+  Future<void> deleteCategory(String id) => _deleteReferenceItem('categories', id);
 }
