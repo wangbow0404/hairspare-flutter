@@ -388,6 +388,18 @@ class MockShopData {
         'createdAt': now.subtract(const Duration(hours: 1)).toIso8601String(),
         'relatedJobId': 'job-mock-1',
       }),
+      AppNotification.fromJson({
+        'id': 'notif-shop-4',
+        'type': 'schedule_reminder',
+        'title': '스페어 출근 알림',
+        'message': '「오후 스텝 급구」에 김디자이너 스페어가 2026-07-14 14:00 출근 예정입니다',
+        'isRead': false,
+        'createdAt': now.subtract(const Duration(minutes: 30)).toIso8601String(),
+        'relatedJobId': 'job-mock-1',
+        'relatedScheduleId': 'sched-mock-shop-1',
+        'scheduleDate': '2026-07-14',
+        'scheduleTime': '14:00',
+      }),
     ];
     return all
         .where((n) => !_dismissedNotificationIds.contains(n.id))

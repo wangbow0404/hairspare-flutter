@@ -79,7 +79,11 @@ class _ShopHomeLoadedBodyState extends State<_ShopHomeLoadedBody> {
       if (!mounted) return;
       unawaited(context.read<FavoriteProvider>().loadFavorites());
       unawaited(context.read<ChatProvider>().loadChats(viewerRole: 'shop'));
-      context.read<ShopHomeViewModel>().loadInitial();
+      final vm = context.read<ShopHomeViewModel>();
+      vm.loadInitial();
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) vm.startPolling();
+      });
     });
   }
 

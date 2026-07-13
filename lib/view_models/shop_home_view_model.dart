@@ -52,6 +52,8 @@ class ShopHomeViewModel extends ChangeNotifier {
   /// 오늘 모델 매칭 건수.
   int todayModelMatchingCount = 0;
 
+  Timer? _pollTimer;
+
   /// 알림·내 공고·지원자·스페어 목록을 병렬 로드합니다.
   Future<void> loadInitial() async {
     isLoading = true;
@@ -103,5 +105,23 @@ class ShopHomeViewModel extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  void startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      notificationProvider.refreshNotifications();
+    });
+  }
+
+  void stopPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
   }
 }
