@@ -82,14 +82,14 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
     }
 
     final audienceLabel = AdminMessageAudience.labelFor(_audience);
-    final reason = await AdminActionDialog.show(
+    final confirmed = await AdminActionDialog.confirm(
       context,
       title: '알림 발송 확인',
+      message:
+          '대상: $audienceLabel\n${_titleController.text.trim()}\n\n${_bodyController.text.trim()}',
       confirmLabel: '발송하기',
-      summary:
-          '대상: $audienceLabel\n${_titleController.text.trim()}',
     );
-    if (reason == null || !mounted) return;
+    if (confirmed != true || !mounted) return;
 
     setState(() => _isSending = true);
     try {
@@ -97,7 +97,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
         audience: _audience,
         title: _titleController.text.trim(),
         body: _bodyController.text.trim(),
-        reason: reason,
+        reason: '관리자 공지 발송',
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
