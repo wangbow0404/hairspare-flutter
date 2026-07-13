@@ -40,6 +40,7 @@ abstract final class ShopNotificationNavigation {
         return;
       case 'settlement_reminder':
       case 'schedule_reminder':
+      case 'check_in_reminder':
         ShellNavigation.pushShopSchedule(
           context,
           focusJobId: notification.relatedJobId,

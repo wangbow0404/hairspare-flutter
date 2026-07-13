@@ -14,6 +14,7 @@ abstract final class ModelNotificationNavigation {
         appRouter.push(AppRoutes.modelMatching);
         return;
       case 'schedule_reminder':
+      case 'check_in_reminder':
         appRouter.go(AppRoutes.modelSchedule);
         return;
       case 'deposit_payment':

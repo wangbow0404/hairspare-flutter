@@ -79,6 +79,14 @@ enum ScheduleSessionAudience {
       ? '시술 일정을 미리 확인하고 디자이너와 메시지로 조율해 보세요.'
       : '매일 출석하면 최대 에너지 3개를 받을 수 있어요!';
 
+  String uncheckedBannerTitle(int count) => isModel
+      ? '완료하지 않은 시술이 $count건 있어요'
+      : '아직 근무체크를 하지 않은 근무가 $count건 있어요';
+
+  String get uncheckedBannerSubtitle => isModel
+      ? '탭해서 시술 완료하기를 눌러주세요.'
+      : '탭해서 근무체크하기를 눌러 근무를 완료해주세요.';
+
   /// 취소 정책·차단 메시지 — 모델 화면에서 근무 용어 치환.
   String? localizePolicyText(String? text) {
     if (!isModel || text == null || text.isEmpty) return text;

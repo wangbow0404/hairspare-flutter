@@ -58,6 +58,17 @@ class WorkCheckScrollContent extends StatelessWidget {
     final daysInMonth = vm.getDaysInMonth(vm.currentMonth);
     final upcomingCount = vm.upcomingScheduleCount;
 
+    final now = DateTime.now();
+    final uncheckedSchedules = vm.schedules
+        .where(
+          (s) =>
+              s.status == 'scheduled' &&
+              s.checkInTime == null &&
+              ScheduleWorkSession.phase(s, now) == ScheduleWorkPhase.afterEnd,
+        )
+        .toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+
     return Column(
       children: [
         // Hero Banner
@@ -186,6 +197,13 @@ class WorkCheckScrollContent extends StatelessWidget {
             ],
           ),
         ),
+
+        if (uncheckedSchedules.isNotEmpty)
+          _UncheckedCheckInBanner(
+            audience: audience,
+            count: uncheckedSchedules.length,
+            onTap: () => vm.focusSchedule(uncheckedSchedules.first),
+          ),
 
         if (isModelMode)
           _ModelScheduleSummarySection(upcomingCount: upcomingCount)
@@ -1104,6 +1122,91 @@ class WorkCheckScrollContent extends StatelessWidget {
         // 하단 여백 (하단 네비게이션 바)
         SizedBox(height: MediaQuery.of(context).padding.bottom + 70),
       ],
+    );
+  }
+}
+
+class _UncheckedCheckInBanner extends StatelessWidget {
+  const _UncheckedCheckInBanner({
+    required this.audience,
+    required this.count,
+    required this.onTap,
+  });
+
+  final ScheduleSessionAudience audience;
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: AppTheme.backgroundWhite,
+      padding: AppTheme.spacingSymmetric(
+        horizontal: AppTheme.spacing4,
+        vertical: AppTheme.spacing4,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+          child: Container(
+            padding: AppTheme.spacing(AppTheme.spacing4),
+            decoration: BoxDecoration(
+              color: AppTheme.orange500.withValues(alpha: 0.08),
+              border: Border.all(color: AppTheme.orange500, width: 1),
+              borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppTheme.orange500.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.how_to_reg_outlined,
+                    size: 22,
+                    color: AppTheme.orange500,
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacing3),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        audience.uncheckedBannerTitle(count),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spacing1),
+                      Text(
+                        audience.uncheckedBannerSubtitle,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: 13,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: AppTheme.orange500,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

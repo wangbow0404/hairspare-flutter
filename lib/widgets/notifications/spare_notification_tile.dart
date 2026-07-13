@@ -163,6 +163,10 @@ class _NotificationTypeIcon extends StatelessWidget {
           Icons.payments_outlined,
           AppTheme.orange500,
         ),
+      'check_in_reminder' => (
+          Icons.how_to_reg_outlined,
+          AppTheme.orange500,
+        ),
       'message_received' => (Icons.chat_bubble_outline, AppTheme.textSecondary),
       'admin_message' => (Icons.campaign_outlined, AppTheme.stitchPrimaryContainer),
       _ => (Icons.notifications_outlined, AppTheme.textSecondary),

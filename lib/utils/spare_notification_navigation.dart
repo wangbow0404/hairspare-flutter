@@ -22,6 +22,7 @@ abstract final class SpareNotificationNavigation {
         return;
       case 'application_accepted':
       case 'schedule_reminder':
+      case 'check_in_reminder':
       case 'schedule_confirmed':
       case 'schedule_cancelled':
       case 'job_cancelled':

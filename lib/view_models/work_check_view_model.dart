@@ -386,6 +386,18 @@ class WorkCheckViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 미체크 배너 탭 시 해당 스케줄 날짜·월로 이동하고 카드를 선택한다.
+  void focusSchedule(Schedule schedule) {
+    final date = DateTime.tryParse(schedule.date);
+    if (date != null) {
+      currentMonth = DateTime(date.year, date.month);
+      selectedDate = date;
+    }
+    selectedScheduleId = schedule.id;
+    viewedDates = {...viewedDates, schedule.date};
+    notifyListeners();
+  }
+
   Future<void> handleCheckIn() async {
     if (selectedScheduleId == null) return;
 
