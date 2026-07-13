@@ -4,6 +4,7 @@ import '../models/notification.dart';
 import '../utils/shell_navigation.dart';
 import 'message_notification_navigation.dart';
 import 'navigation_helper.dart';
+import 'notification_detail_navigation.dart';
 
 /// 샵 알림 탭 시 목적 화면 라우팅.
 abstract final class ShopNotificationNavigation {
@@ -51,6 +52,9 @@ abstract final class ShopNotificationNavigation {
           notification,
           audience: 'shop',
         );
+        return;
+      case 'admin_message':
+        NotificationDetailNavigation.open(context, notification);
         return;
       default:
         NavigationHelper.navigateToNotificationsList(context);

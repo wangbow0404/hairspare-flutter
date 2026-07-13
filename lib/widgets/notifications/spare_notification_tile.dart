@@ -106,6 +106,16 @@ class SpareNotificationTile extends StatelessWidget {
                       maxLines: compact ? 2 : 4,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (notification.type == 'admin_message') ...[
+                      const SizedBox(height: AppTheme.spacing2),
+                      Text(
+                        '자세히 보기',
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                              color: AppTheme.stitchPrimaryContainer,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ],
                     const SizedBox(height: AppTheme.spacing2),
                     Text(
                       DateFormat('yyyy.M.d HH:mm', 'ko_KR')
@@ -150,6 +160,7 @@ class _NotificationTypeIcon extends StatelessWidget {
           AppTheme.stitchPrimaryContainer,
         ),
       'message_received' => (Icons.chat_bubble_outline, AppTheme.textSecondary),
+      'admin_message' => (Icons.campaign_outlined, AppTheme.stitchPrimaryContainer),
       _ => (Icons.notifications_outlined, AppTheme.textSecondary),
     };
 
