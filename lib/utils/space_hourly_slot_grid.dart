@@ -1,3 +1,4 @@
+import '../config/business_config.dart';
 import '../models/space_rental.dart';
 
 /// 1시간 칸 UI 상태.
@@ -34,21 +35,23 @@ class HourlySlotCell {
       );
 }
 
-/// 공간 예약 — 날짜별 1시간(09~21) 그리드 생성·범위 검증.
+/// 공간 예약 — 날짜별 1시간 그리드 생성·범위 검증.
 abstract final class SpaceHourlySlotGrid {
   SpaceHourlySlotGrid._();
 
-  static const int defaultOpenHour = 9;
-  static const int defaultCloseHour = 21;
+  static int get defaultOpenHour => BusinessConfig.spaceDefaultOpenHour;
+  static int get defaultCloseHour => BusinessConfig.spaceDefaultCloseHour;
 
-  /// [date] 하루의 09:00~21:00(마지막 칸 20:00–21:00) 1시간 칸 목록.
+  /// [date] 하루의 운영시간(기본 09:00~21:00) 1시간 칸 목록.
   static List<HourlySlotCell> buildCells({
     required SpaceRental space,
     required DateTime date,
     DateTime? now,
-    int openHour = defaultOpenHour,
-    int closeHour = defaultCloseHour,
+    int? openHour,
+    int? closeHour,
   }) {
+    final resolvedOpenHour = openHour ?? defaultOpenHour;
+    final resolvedCloseHour = closeHour ?? defaultCloseHour;
     final clock = now ?? DateTime.now();
     final day = DateTime(date.year, date.month, date.day);
     final slotsByStart = <DateTime, TimeSlot>{};
@@ -64,7 +67,7 @@ abstract final class SpaceHourlySlotGrid {
     }
 
     final cells = <HourlySlotCell>[];
-    for (var hour = openHour; hour < closeHour; hour++) {
+    for (var hour = resolvedOpenHour; hour < resolvedCloseHour; hour++) {
       final start = DateTime(day.year, day.month, day.day, hour);
       final end = start.add(const Duration(hours: 1));
       final matched = slotsByStart[_slotKey(start)];

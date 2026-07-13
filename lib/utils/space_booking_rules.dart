@@ -1,10 +1,15 @@
+import '../config/business_config.dart';
+
 /// 공간 예약 — 샵별 최소 이용 시간(minHours) 검증.
 abstract final class SpaceBookingRules {
   SpaceBookingRules._();
 
-  /// API·모델 기본값 보정 (0 이하 → 1시간).
-  static int normalizeMinHours(int minHours) =>
-      minHours < 1 ? 1 : minHours;
+  /// API·모델 기본값 보정 (0 이하 → 플랫폼 최소 시간).
+  static int normalizeMinHours(int minHours) {
+    final floor = BusinessConfig.spaceMinBookingHours;
+    final normalized = minHours < 1 ? floor : minHours;
+    return normalized < floor ? floor : normalized;
+  }
 
   static bool meetsMinHours({
     required int selectedHours,

@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 
+import '../config/business_config.dart';
 import '../utils/json_parse_utils.dart';
 
 part 'shop_tier.g.dart';
@@ -246,14 +247,14 @@ class ShopTierInfo {
   static int calculateMaxJobPosts(ShopTier tier) {
     switch (tier) {
       case ShopTier.bronze:
-        return 5;
+        return BusinessConfig.shopTierBronzeMaxJobs;
       case ShopTier.silver:
-        return 10;
+        return BusinessConfig.shopTierSilverMaxJobs;
       case ShopTier.gold:
-        return 20;
+        return BusinessConfig.shopTierGoldMaxJobs;
       case ShopTier.platinum:
       case ShopTier.vip:
-        return 999; // 무제한
+        return BusinessConfig.shopTierPlatinumMaxJobs;
     }
   }
 

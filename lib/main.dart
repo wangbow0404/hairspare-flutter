@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -13,6 +14,7 @@ import 'providers/chat_provider.dart';
 import 'providers/point_provider.dart';
 import 'package:go_router/go_router.dart';
 
+import 'config/business_config.dart';
 import 'core/di/service_locator.dart'
     show configureDependencies, registerGoRouter, sl;
 import 'core/router/app_routes.dart';
@@ -53,6 +55,7 @@ void main() async {
     },
   );
   configureDependencies();
+  await BusinessConfig.load(sl<Dio>());
   final router = AppRouter.createRouter(sl<AuthProvider>());
   registerGoRouter(router);
   await sl<AuthProvider>().checkAuth();

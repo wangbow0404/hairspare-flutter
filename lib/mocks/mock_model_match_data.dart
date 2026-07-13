@@ -1,12 +1,13 @@
+import '../config/business_config.dart';
 import '../models/hair_model.dart';
 import '../models/model_discovery_item.dart';
 import '../models/model_match_preference.dart';
 
-/// 모델 매칭 mock — 후보 목록·조건 필터링·하루 3회 매칭 카운트.
+/// 모델 매칭 mock — 후보 목록·조건 필터링·일일 매칭 한도.
 abstract final class MockModelMatchData {
   static String _mockImage(String key) => 'mock://model/$key';
 
-  static const int dailyMatchLimit = 3;
+  static int get dailyMatchLimit => BusinessConfig.modelDailyMatchLimit;
 
   static String _ymd(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';

@@ -1,4 +1,5 @@
 import '../models/schedule.dart';
+import '../config/business_config.dart';
 import 'schedule_session_audience.dart';
 import 'schedule_work_session.dart';
 
@@ -111,10 +112,12 @@ abstract final class ScheduleCancellationPolicy {
   /// v2 — 매칭 확정된(scheduled) 근무를 스페어가 이 시간 이내에 일방적으로
   /// 취소하면 노쇼와 동일하게 취급(관리자 검토 큐 등록). 상호 합의된 취소는
   /// 관리자가 반려 처리해 페널티를 취소할 수 있다.
-  static const int lateCancelCutoffHours = 48;
+  static int get lateCancelCutoffHours => BusinessConfig.lateCancelCutoffHours;
 
-  static const int shopUnilateralCancelLimit30d = 3;
-  static const int shopJobPostingSuspensionDays = 7;
+  static int get shopUnilateralCancelLimit30d =>
+      BusinessConfig.shopUnilateralCancelLimit30d;
+  static int get shopJobPostingSuspensionDays =>
+      BusinessConfig.shopJobPostingSuspensionDays;
 
   static const String cancelBlockedCode = 'CANCEL_BLOCKED_WITHIN_CUTOFF';
   static const String cancelBlockedAfterStartCode = 'CANCEL_BLOCKED_AFTER_START';

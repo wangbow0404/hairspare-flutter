@@ -169,6 +169,87 @@ class AdminStitchFilterChip extends StatelessWidget {
   }
 }
 
+/// Stitch 스타일 밑줄 탭 (비즈니스 설정 등).
+class AdminStitchUnderlineTabBar extends StatelessWidget {
+  const AdminStitchUnderlineTabBar({
+    super.key,
+    required this.tabs,
+    required this.selectedIndex,
+    required this.onSelected,
+  });
+
+  final List<String> tabs;
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AdminStitchTheme.surfaceCard,
+        border: Border(bottom: BorderSide(color: AdminStitchTheme.borderDefault)),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AdminStitchTheme.pageMargin),
+        child: Row(
+          children: [
+            for (var i = 0; i < tabs.length; i++) ...[
+              _UnderlineTab(
+                label: tabs[i],
+                selected: i == selectedIndex,
+                onTap: () => onSelected(i),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _UnderlineTab extends StatelessWidget {
+  const _UnderlineTab({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: selected
+                  ? AdminStitchTheme.primaryContainer
+                  : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
+        child: Text(
+          label,
+          style: selected
+              ? AdminStitchTheme.sectionHeader.copyWith(
+                  color: AdminStitchTheme.primaryContainer,
+                )
+              : AdminStitchTheme.bodyMd.copyWith(
+                  color: AdminStitchTheme.textSecondary,
+                ),
+        ),
+      ),
+    );
+  }
+}
+
 /// 관리자 필터용 드롭다운. label(선택 안내)과 options(값→표시명)를 받아
 /// 현재 선택값을 보여주고 탭하면 메뉴가 열린다.
 class AdminStitchFilterDropdown extends StatelessWidget {
@@ -1803,11 +1884,19 @@ class AdminStitchBottomActionBar extends StatelessWidget {
     required this.onReset,
     required this.onSave,
     this.isSaving = false,
+    this.infoMessage,
+    this.resetLabel = '기본값 복원',
+    this.saveLabel = '변경 저장',
+    this.saveButtonColor,
   });
 
   final VoidCallback onReset;
   final VoidCallback onSave;
   final bool isSaving;
+  final String? infoMessage;
+  final String resetLabel;
+  final String saveLabel;
+  final Color? saveButtonColor;
 
   @override
   Widget build(BuildContext context) {
@@ -1819,54 +1908,91 @@ class AdminStitchBottomActionBar extends StatelessWidget {
         AdminStitchTheme.pageMargin,
         16 + bottom,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AdminStitchTheme.surfaceCard,
-        border: Border(top: BorderSide(color: AdminStitchTheme.borderDefault)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: SizedBox(
-              height: AdminStitchTheme.buttonHeight,
-              child: OutlinedButton(
-                onPressed: isSaving ? null : onReset,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AdminStitchTheme.textSecondary,
-                  side: const BorderSide(color: AdminStitchTheme.borderDefault),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      AdminStitchTheme.radiusXl,
-                    ),
-                  ),
-                ),
-                child: const Text('기본값 복원'),
-              ),
-            ),
+        border: const Border(top: BorderSide(color: AdminStitchTheme.borderDefault)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 6,
+            offset: const Offset(0, -4),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: SizedBox(
-              height: AdminStitchTheme.buttonHeight,
-              child: FilledButton(
-                onPressed: isSaving ? null : onSave,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AdminStitchTheme.primary,
-                  foregroundColor: AdminStitchTheme.onPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      AdminStitchTheme.radiusXl,
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (infoMessage != null) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 14,
+                  color: AdminStitchTheme.textSecondary,
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    infoMessage!,
+                    textAlign: TextAlign.center,
+                    style: AdminStitchTheme.labelSm.copyWith(
+                      color: AdminStitchTheme.textSecondary,
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
                 ),
-                child: isSaving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('변경 저장'),
-              ),
+              ],
             ),
+            const SizedBox(height: 12),
+          ],
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: AdminStitchTheme.buttonHeight,
+                  child: OutlinedButton(
+                    onPressed: isSaving ? null : onReset,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AdminStitchTheme.textSecondary,
+                      side: const BorderSide(color: AdminStitchTheme.borderDefault),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AdminStitchTheme.radiusXl,
+                        ),
+                      ),
+                    ),
+                    child: Text(resetLabel),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: SizedBox(
+                  height: AdminStitchTheme.buttonHeight,
+                  child: FilledButton(
+                    onPressed: isSaving ? null : onSave,
+                    style: FilledButton.styleFrom(
+                      backgroundColor:
+                          saveButtonColor ?? AdminStitchTheme.primary,
+                      foregroundColor: AdminStitchTheme.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AdminStitchTheme.radiusXl,
+                        ),
+                      ),
+                    ),
+                    child: isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(saveLabel),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

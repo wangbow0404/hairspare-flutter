@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../core/di/service_locator.dart';
+import '../config/business_config.dart';
 import '../mocks/mock_model_match_data.dart';
 import '../models/hair_model.dart';
 import '../models/model_application_search_item.dart';
@@ -13,7 +14,7 @@ import '../utils/error_handler.dart';
 class ModelMatchService {
   final Dio _dio = sl<Dio>();
 
-  int get dailyMatchLimit => MockModelMatchData.dailyMatchLimit;
+  int get dailyMatchLimit => BusinessConfig.modelDailyMatchLimit;
 
   /// 조건에 맞는 모델 후보 목록.
   Future<List<HairModel>> getCandidates(ModelMatchPreference pref) async {

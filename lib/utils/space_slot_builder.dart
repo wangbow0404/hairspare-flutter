@@ -1,11 +1,12 @@
 import '../models/space_operating_schedule.dart';
 import '../models/space_rental.dart';
+import '../config/business_config.dart';
 
 /// [SpaceOperatingSchedule]로 예약 가능 [TimeSlot] 목록 생성.
 class SpaceSlotBuilder {
   SpaceSlotBuilder._();
 
-  static const int defaultHorizonDays = 30;
+  static int get defaultHorizonDays => BusinessConfig.spaceBookingWindowDays;
 
   static List<TimeSlot> build({
     required SpaceOperatingSchedule schedule,

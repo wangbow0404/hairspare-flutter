@@ -1,4 +1,5 @@
 import '../models/job.dart';
+import '../config/business_config.dart';
 import '../mocks/mock_shop_data.dart';
 import 'api_config.dart';
 
@@ -29,7 +30,7 @@ class JobPopularityMetrics {
 abstract final class JobPopularity {
   JobPopularity._();
 
-  static const int defaultTopLimit = 10;
+  static int get defaultTopLimit => BusinessConfig.jobPopularityTopN;
 
   static Map<String, JobPopularityMetrics> resolveMetrics(Iterable<Job> jobs) {
     if (ApiConfig.useMockData) {
@@ -42,15 +43,17 @@ abstract final class JobPopularity {
     Job job, {
     JobPopularityMetrics metrics = const JobPopularityMetrics(),
   }) {
-    var total = metrics.applicationCount * 10 + metrics.viewCount;
+    var total = metrics.applicationCount * BusinessConfig.jobPopularityAppWeight +
+        metrics.viewCount * BusinessConfig.jobPopularityViewWeight;
     total += (job.amount / 10000).round();
-    if (job.isPremium) total += 5;
+    if (job.isPremium) total += BusinessConfig.jobPopularityPremiumBonus;
 
+    final bonusHours = BusinessConfig.newJobBonusWindowHours;
     final ageHours = DateTime.now().difference(job.createdAt).inHours;
-    if (ageHours <= 72) {
-      total += (72 - ageHours) ~/ 12;
+    if (ageHours <= bonusHours) {
+      total += (bonusHours - ageHours) ~/ 12;
     }
-    if (job.energy <= 3) total += 2;
+    if (job.energy <= 3) total += BusinessConfig.jobPopularityLowEnergyBonus;
 
     return total;
   }

@@ -2,6 +2,7 @@
 /// 서버 최종 집행 원칙 — mock·클라이언트는 동일 규칙을 미리 적용.
 library;
 
+import '../config/business_config.dart';
 import 'contact_blocker.dart';
 
 enum ContactViolationOutcome {
@@ -53,9 +54,10 @@ class ContactViolationResult {
 abstract final class ContactViolationPolicy {
   ContactViolationPolicy._();
 
-  static const int maxAttemptsPerChat = 3;
-  static const int shopPenaltyDays = 1;
-  static const int maxShopRoomPenaltiesBeforeBan = 3;
+  static int get maxAttemptsPerChat => BusinessConfig.contactMaxAttemptsPerChat;
+  static int get shopPenaltyDays => BusinessConfig.shopContactPenaltyDays;
+  static int get maxShopRoomPenaltiesBeforeBan =>
+      BusinessConfig.maxShopRoomPenaltiesBeforeBan;
 
   static const String chatDeletionNotice =
       '연락처 전송시도 3회 적발시 해당 대화방은 자동으로 삭제됩니다.';

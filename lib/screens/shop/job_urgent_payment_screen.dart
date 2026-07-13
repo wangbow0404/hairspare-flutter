@@ -12,7 +12,10 @@ import 'package:hairspare/view_models/shop_job_new_view_model.dart';
 import 'package:hairspare/widgets/shop_job_new/shop_job_new_ui_kit.dart';
 
 /// 급구 공고 노출 수수료 (원). MVP mock 기준.
-const int kShopUrgentJobListingFee = 5000;
+import '../../config/business_config.dart';
+
+/// 급구 공고 등록 수수료 — [BusinessConfig.urgentJobListingFee] 사용.
+int get kShopUrgentJobListingFee => BusinessConfig.urgentJobListingFee;
 
 /// 급구 공고 등록 전 결제 확인.
 class ShopJobUrgentPaymentScreen extends StatefulWidget {

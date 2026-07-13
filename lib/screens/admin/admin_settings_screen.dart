@@ -1,10 +1,15 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../config/business_config.dart';
+import '../../core/di/service_locator.dart';
 import '../../services/admin_service.dart';
 import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/business_setting_help.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
+import '../../widgets/admin/admin_business_setting_field.dart';
 import '../../widgets/admin/admin_stitch_list_screen_shell.dart';
 import '../../widgets/admin/admin_stitch_widgets.dart';
 
@@ -162,6 +167,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         await _adminService.updateBusinessSetting(key, value);
         _originalValues[key] = value;
       }
+      await BusinessConfig.reload(sl<Dio>());
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${changed.length}개 설정이 저장되었습니다')),
@@ -205,72 +211,97 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     final groupTabs = _groups.map((g) => g['title']?.toString() ?? '').toList();
     final selectedGroup = _groups.isNotEmpty ? _groups[_selectedGroupIndex] : null;
     final settings = (selectedGroup?['settings'] as List?) ?? [];
+    final groupId = selectedGroup?['id']?.toString() ?? '';
 
     return Column(
       children: [
         Expanded(
           child: CustomScrollView(
             slivers: [
+              SliverToBoxAdapter(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(
+                    AdminStitchTheme.pageMargin,
+                    AdminStitchTheme.sectionGap,
+                    AdminStitchTheme.pageMargin,
+                    AdminStitchTheme.sectionGap,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: AdminStitchTheme.surfaceCard,
+                    border: Border(
+                      bottom: BorderSide(color: AdminStitchTheme.borderDefault),
+                    ),
+                  ),
+                  child: const AdminStitchPageHeader(
+                    title: '비즈니스 설정',
+                    subtitle: '가격·한도·하이패스·제재 정책을 관리합니다.',
+                  ),
+                ),
+              ),
+              if (groupTabs.isNotEmpty)
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _UnderlineTabHeader(
+                    child: AdminStitchUnderlineTabBar(
+                      tabs: groupTabs,
+                      selectedIndex: _selectedGroupIndex,
+                      onSelected: (index) =>
+                          setState(() => _selectedGroupIndex = index),
+                    ),
+                  ),
+                ),
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(
                   AdminStitchTheme.pageMargin,
+                  AdminStitchTheme.sectionGap,
                   AdminStitchTheme.pageMargin,
-                  AdminStitchTheme.pageMargin,
-                  0,
+                  AdminStitchTheme.sectionGap,
                 ),
                 sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const AdminStitchPageHeader(
-                        title: '비즈니스 설정',
-                        subtitle: '가격·한도·하이패스·제재 정책을 관리합니다.',
-                      ),
-                      const SizedBox(height: AdminStitchTheme.sectionGap),
-                      if (groupTabs.isNotEmpty)
-                        AdminStitchFilterChips(
-                          tabs: groupTabs,
-                          selectedTab: groupTabs[_selectedGroupIndex],
-                          onTabChanged: (tab) {
-                            final index = groupTabs.indexOf(tab);
-                            if (index >= 0) setState(() => _selectedGroupIndex = index);
-                          },
-                        ),
-                      const SizedBox(height: AdminStitchTheme.sectionGap),
-                      if (selectedGroup != null) ...[
-                        if (selectedGroup['description'] != null)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: AdminStitchTheme.sectionGap),
-                            child: Text(
-                              selectedGroup['description'].toString(),
-                              style: AdminStitchTheme.bodyMd.copyWith(
-                                color: AdminStitchTheme.textSecondary,
-                              ),
-                            ),
+                  child: selectedGroup == null
+                      ? const SizedBox.shrink()
+                      : Container(
+                          padding: const EdgeInsets.all(
+                            AdminStitchTheme.componentPadding,
                           ),
-                        AdminStitchCard(
+                          decoration: AdminStitchTheme.cardDecoration.copyWith(
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              Text(
+                                BusinessSettingHelp.sectionTitleFor(
+                                  groupId,
+                                  selectedGroup['title']?.toString() ?? '',
+                                ),
+                                style: AdminStitchTheme.sectionHeader,
+                              ),
+                              if (selectedGroup['description'] != null) ...[
+                                const SizedBox(height: AdminStitchTheme.stackTight),
+                                Text(
+                                  selectedGroup['description'].toString(),
+                                  style: AdminStitchTheme.bodyMd.copyWith(
+                                    color: AdminStitchTheme.textSecondary,
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(height: 24),
                               for (var i = 0; i < settings.length; i++) ...[
-                                if (i > 0) const SizedBox(height: AdminStitchTheme.sectionGap),
+                                if (i > 0)
+                                  const SizedBox(height: AdminStitchTheme.sectionGap),
                                 _buildSettingField(settings[i] as Map),
                               ],
                             ],
                           ),
                         ),
-                      ],
-                      const SizedBox(height: AdminStitchTheme.sectionGap),
-                      Center(
-                        child: Text(
-                          '저장 시 서버에 즉시 반영됩니다.',
-                          style: AdminStitchTheme.bodyMd.copyWith(
-                            color: AdminStitchTheme.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
               SliverPadding(
@@ -284,6 +315,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           isSaving: _isSaving,
           onReset: _resetToDefaults,
           onSave: _saveAllChanges,
+          resetLabel: '초기화',
+          saveLabel: '저장하기',
+          saveButtonColor: AdminStitchTheme.primaryContainer,
+          infoMessage: '저장 시 감사 로그에 기록되며 서버에 즉시 반영됩니다.',
         ),
       ],
     );
@@ -295,9 +330,36 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     final controller = _controllers[key];
     if (controller == null) return const SizedBox.shrink();
 
-    if (_isMoneyField(key)) {
-      return AdminStitchMoneyField(label: label, controller: controller);
-    }
-    return AdminStitchNumberField(label: label, controller: controller);
+    return AdminBusinessSettingField(
+      settingKey: key,
+      label: label,
+      controller: controller,
+      isMoney: _isMoneyField(key),
+    );
   }
+}
+
+class _UnderlineTabHeader extends SliverPersistentHeaderDelegate {
+  _UnderlineTabHeader({required this.child});
+
+  final Widget child;
+
+  @override
+  double get minExtent => 52;
+
+  @override
+  double get maxExtent => 52;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return child;
+  }
+
+  @override
+  bool shouldRebuild(covariant _UnderlineTabHeader oldDelegate) =>
+      oldDelegate.child != child;
 }

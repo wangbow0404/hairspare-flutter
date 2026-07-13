@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../config/business_config.dart';
 import '../models/job.dart';
 import '../models/create_job_request.dart';
 import '../utils/api_config.dart';
@@ -27,7 +28,7 @@ class JobService {
         time: request.startTime,
         endTime: request.endTime,
         amount: request.amount,
-        energy: request.amount ~/ 1000,
+        energy: BusinessConfig.jobEnergyFromAmount(request.amount),
         requiredCount: request.requiredCount,
         regionId: request.districtId,
         description: request.description,

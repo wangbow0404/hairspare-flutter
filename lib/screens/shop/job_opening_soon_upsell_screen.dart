@@ -10,8 +10,10 @@ import 'package:hairspare/utils/api_config.dart';
 import 'package:hairspare/utils/error_handler.dart';
 import 'package:hairspare/widgets/shop_job_new/shop_job_new_ui_kit.dart';
 
-/// 하이패스 노출 수수료 (원).
-const int kShopOpeningSoonFee = 5000;
+import '../../config/business_config.dart';
+
+/// 하이패스 노출 수수료 — [BusinessConfig.hipassListingFee] 사용.
+int get kShopOpeningSoonFee => BusinessConfig.hipassListingFee;
 
 const Color _kHiPassGold = Color(0xFFD4AF37);
 const Color _kHiPassGoldLight = Color(0xFFFDF8E7);

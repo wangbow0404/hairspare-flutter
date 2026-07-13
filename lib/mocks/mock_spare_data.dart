@@ -1561,7 +1561,7 @@ class MockSpareData {
     required String shopId,
   }) async {
     await Future.delayed(const Duration(milliseconds: 80));
-    const max = ContactViolationPolicy.maxAttemptsPerChat;
+    final max = ContactViolationPolicy.maxAttemptsPerChat;
     final jobId = _jobIdFromChat(chatId);
     final countKey = jobId != null && jobId.isNotEmpty
         ? 'job:$jobId:$senderId'

@@ -1,9 +1,11 @@
-/// 에너지 구매 가격 정책 (MVP mock — **운영 확정 전 예시**).
+import '../config/business_config.dart';
+
+/// 에너지 구매 가격 정책 — 값은 서버 [BusinessConfig]에서 로드.
 ///
 /// 상세: docs/yoram/ENERGY_PURCHASE_PRICING.md
 
 /// 1회 구매·패키지당 에너지 상한 (개).
-const int kMaxEnergyPurchaseAmount = 5;
+int get kMaxEnergyPurchaseAmount => BusinessConfig.maxEnergyPurchaseAmount;
 
 /// 판매 패키지 구성 (개). 1·3·5만 제공, 그 외 수량 없음.
 const List<int> kEnergyPurchasePackageAmounts = [1, 3, 5];
@@ -16,17 +18,18 @@ const bool kEnergyPurchasePricingIsProvisional = true;
 const String kEnergyPurchaseProvisionalNotice =
     '표시된 카드·포인트 금액은 예시이며, 정식 서비스 전에 확정·변경될 수 있습니다.';
 
-/// 포인트 환율 (TBD) — 1에너지당 차감 포인트. **예시값.**
-const int kEnergyPointCostPerUnit = 1000;
+/// 포인트 환율 — 1에너지당 차감 포인트 (서버 설정).
+int get kEnergyPointCostPerUnit => BusinessConfig.energyPointCostPerUnit;
 
 int energyPointCostForPackage(int energyAmount) =>
     energyAmount * kEnergyPointCostPerUnit;
 
-/// 구매 수량이 허용 패키지(1·3·5, 최대 5)인지 검증. 위반 시 [ArgumentError].
+/// 구매 수량이 허용 패키지(1·3·5, 최대 N)인지 검증. 위반 시 [ArgumentError].
 void assertValidEnergyPurchaseAmount(int energyAmount) {
-  if (energyAmount < 1 || energyAmount > kMaxEnergyPurchaseAmount) {
+  final max = kMaxEnergyPurchaseAmount;
+  if (energyAmount < 1 || energyAmount > max) {
     throw ArgumentError(
-      '에너지는 1~$kMaxEnergyPurchaseAmount개까지만 구매할 수 있습니다. (요청: $energyAmount개)',
+      '에너지는 1~$max개까지만 구매할 수 있습니다. (요청: $energyAmount개)',
     );
   }
   if (!kEnergyPurchasePackageAmounts.contains(energyAmount)) {
