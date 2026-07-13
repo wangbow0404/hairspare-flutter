@@ -6,6 +6,7 @@ import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/admin/admin_action_dialog.dart';
+import '../../widgets/admin/admin_notification_history_detail_sheet.dart';
 import '../../widgets/admin/admin_notification_template_editor.dart';
 import '../../widgets/admin/admin_send_message_sheet.dart';
 import '../../widgets/admin/admin_stitch_list_cards.dart';
@@ -607,6 +608,10 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
                 subtitle:
                     '$audience · ${map['recipientCount']}명 · ${_formatDate(map['sentAt']?.toString())}',
                 icon: Icons.history,
+                onTap: () => AdminNotificationHistoryDetailSheet.show(
+                  context,
+                  item: map,
+                ),
               );
             },
           ),

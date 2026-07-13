@@ -1312,7 +1312,7 @@ class MockAdminData {
           .map((e) => Map<String, dynamic>.from(e))
           .toList(),
       'history': [
-        {'id': 'send-1', 'audience': '전체', 'title': '서비스 점검 안내', 'sentAt': '2025-06-20T09:00:00Z', 'recipientCount': 1247},
+        {'id': 'send-1', 'audience': '전체', 'title': '서비스 점검 안내', 'body': '더 나은 서비스를 위해 점검이 진행됩니다. 이용에 참고해 주세요.', 'sentAt': '2025-06-20T09:00:00Z', 'recipientCount': 1247},
       ],
     };
   }
