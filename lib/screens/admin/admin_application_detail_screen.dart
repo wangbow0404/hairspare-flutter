@@ -93,6 +93,8 @@ class _AdminApplicationDetailScreenState
         return AppTheme.orange600;
       case 'rejected':
         return AdminStitchTheme.statusError;
+      case 'expired':
+        return AdminStitchTheme.textSecondary;
       case 'cancelled_contact_violation':
         return AdminStitchTheme.textSecondary;
       default:

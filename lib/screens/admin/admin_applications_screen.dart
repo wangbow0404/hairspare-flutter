@@ -35,12 +35,13 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
   int _currentPage = 1;
   int _totalPages = 1;
 
-  static const _statusTabs = ['전체', '대기중', '승인됨', '거절됨', '취소됨'];
+  static const _statusTabs = ['전체', '대기중', '승인됨', '거절됨', '만료', '취소됨'];
   static const _statusMap = {
     '전체': '',
     '대기중': 'pending',
     '승인됨': 'approved',
     '거절됨': 'rejected',
+    '만료': 'expired',
     '취소됨': 'cancelled_contact_violation',
   };
 
@@ -156,6 +157,8 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
         return AppTheme.orange600;
       case 'rejected':
         return AdminStitchTheme.statusError;
+      case 'expired':
+        return AdminStitchTheme.textSecondary;
       case 'cancelled_contact_violation':
         return AdminStitchTheme.textSecondary;
       default:
@@ -171,6 +174,8 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
         return Icons.hourglass_empty;
       case 'rejected':
         return Icons.cancel_outlined;
+      case 'expired':
+        return Icons.schedule_outlined;
       case 'cancelled_contact_violation':
         return Icons.warning_amber_outlined;
       default:

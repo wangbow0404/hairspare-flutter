@@ -136,6 +136,10 @@ class _AdminJobDetailScreenState extends State<AdminJobDetailScreen> {
         return '승인됨';
       case 'rejected':
         return '거절됨';
+      case 'expired':
+        return '만료';
+      case 'cancelled_contact_violation':
+        return '취소됨';
       default:
         return status ?? '-';
     }
