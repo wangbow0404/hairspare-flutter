@@ -56,10 +56,13 @@ class AdminService {
   }
 
   /// 최근 활동 목록 조회
-  Future<Map<String, dynamic>> getRecentActivities() async {
+  Future<Map<String, dynamic>> getRecentActivities({int limit = 10}) async {
     if (ApiConfig.useMockData) return await MockAdminData.getRecentActivities();
     try {
-      final response = await _dio.get('/api/admin/activities');
+      final response = await _dio.get(
+        '/api/admin/activities',
+        queryParameters: {'limit': limit},
+      );
       if (response.statusCode == 200) {
         final data = response.data['data'] ?? response.data;
         return data;

@@ -146,6 +146,7 @@ abstract final class AppRoutes {
   static const adminReports = '/admin/reports';
   static const adminSettings = '/admin/settings';
   static const adminAuditLogs = '/admin/audit-logs';
+  static const adminRecentActivities = '/admin/activities';
   static const adminMatches = '/admin/matches';
   static const adminSpaces = '/admin/spaces';
   static const adminEducations = '/admin/educations';

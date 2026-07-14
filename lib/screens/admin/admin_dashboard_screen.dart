@@ -308,7 +308,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             const SizedBox(height: AdminStitchTheme.sectionGap),
             AdminStitchActivityList(
               activities: activityMaps,
-              onViewAll: () => context.go(AppRoutes.adminAuditLogs),
+              onViewAll: () => context.go(AppRoutes.adminRecentActivities),
             ),
           ],
         ],

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../screens/admin/admin_audit_logs_screen.dart';
+import '../../screens/admin/admin_recent_activities_screen.dart';
 import '../../screens/admin/admin_application_detail_screen.dart';
 import '../../screens/admin/admin_applications_screen.dart';
 import '../../screens/admin/admin_chat_room_screen.dart';
@@ -646,6 +647,11 @@ final class AppRouter {
               path: AppRoutes.adminSettings,
               builder: (BuildContext context, GoRouterState state) =>
                   const AdminSettingsScreen(),
+            ),
+            GoRoute(
+              path: AppRoutes.adminRecentActivities,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminRecentActivitiesScreen(),
             ),
             GoRoute(
               path: AppRoutes.adminAuditLogs,
