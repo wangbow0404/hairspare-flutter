@@ -1153,6 +1153,13 @@ class AdminStitchActivityItem extends StatelessWidget {
         fg: AdminStitchTheme.secondary,
       );
     }
+    if (type.contains('withdrawal')) {
+      return (
+        icon: Icons.person_remove_outlined,
+        bg: AdminStitchTheme.surfaceContainerHigh,
+        fg: AdminStitchTheme.textSecondary,
+      );
+    }
     if (colorKey == 'green') {
       return (
         icon: Icons.payments_outlined,
@@ -1295,33 +1302,28 @@ class AdminStitchUserCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  crossAxisAlignment: WrapCrossAlignment.center,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.calendar_today,
-                          size: 14,
-                          color: AdminStitchTheme.textSecondary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          joinedLabel,
-                          style: AdminStitchTheme.labelSm.copyWith(
-                            fontWeight: FontWeight.w400,
-                            color: AdminStitchTheme.textSecondary,
-                          ),
-                        ),
-                      ],
+                    const Icon(
+                      Icons.calendar_today,
+                      size: 14,
+                      color: AdminStitchTheme.textSecondary,
                     ),
-                    if (signupUser != null)
-                      AdminSignupProviderBadge(user: signupUser!, compact: true),
+                    const SizedBox(width: 4),
+                    Text(
+                      joinedLabel,
+                      style: AdminStitchTheme.labelSm.copyWith(
+                        fontWeight: FontWeight.w400,
+                        color: AdminStitchTheme.textSecondary,
+                      ),
+                    ),
                   ],
                 ),
+                if (signupUser != null) ...[
+                  const SizedBox(height: 4),
+                  AdminSignupProviderBadge(user: signupUser!, compact: true),
+                ],
               ],
             ),
           ),

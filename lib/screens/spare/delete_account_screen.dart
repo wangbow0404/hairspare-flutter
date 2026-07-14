@@ -189,7 +189,6 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                         ...[
                           '진행 중인 스케줄이 있는 경우, 스케줄 완료 후 삭제를 진행해주세요.',
                           '미정산된 에너지가 있는 경우, 정산 완료 후 삭제를 진행해주세요.',
-                          '계정 삭제 후 30일 이내에 재가입할 수 없습니다.',
                         ].map((item) {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: AppTheme.spacing2),
