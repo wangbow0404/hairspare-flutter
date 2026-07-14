@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,6 +20,7 @@ import 'package:flutter_naver_login/flutter_naver_login.dart';
 import 'package:flutter_naver_login/interface/types/naver_login_result.dart';
 import 'package:flutter_naver_login/interface/types/naver_login_status.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class SpareLoginScreen extends StatefulWidget {
   const SpareLoginScreen({super.key});
@@ -43,6 +45,9 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
   static const _keySaveId = 'spare_save_id';
   static const _keySavedUsername = 'spare_saved_username';
   static const _keyAutoLogin = 'auto_login_enabled';
+
+  bool get _showAppleLogin =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   @override
   void initState() {
@@ -278,6 +283,60 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
           _isSocialLoggingIn = false;
         });
       }
+    }
+  }
+
+  Future<void> _handleAppleLogin() async {
+    setState(() => _isSocialLoggingIn = true);
+
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      final identityToken = credential.identityToken;
+      if (identityToken == null || identityToken.isEmpty) {
+        throw Exception('Apple 로그인 토큰을 받을 수 없습니다');
+      }
+
+      final user = await _socialAuthService.loginWithApple(
+        identityToken: identityToken,
+        authorizationCode: credential.authorizationCode,
+        email: credential.email,
+        givenName: credential.givenName,
+        familyName: credential.familyName,
+      );
+
+      await authProvider.setUser(user);
+
+      if (!mounted) return;
+      AppNavigation.goSpareHome(context);
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) return;
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Apple 로그인 실패: ${e.message}'),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
+    } catch (e) {
+      final appException = ErrorHandler.handleException(e);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Apple 로그인 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}',
+          ),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isSocialLoggingIn = false);
     }
   }
 
@@ -600,6 +659,15 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
                                       isLoading: _isSocialLoggingIn,
                                       onPressed: _isSocialLoggingIn ? null : _handleGoogleLogin,
                                     ),
+                                    if (_showAppleLogin) ...[
+                                      const SizedBox(width: AppTheme.spacing4),
+                                      SocialLoginButton(
+                                        provider: SocialProvider.apple,
+                                        isLoading: _isSocialLoggingIn,
+                                        onPressed:
+                                            _isSocialLoggingIn ? null : _handleAppleLogin,
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ],

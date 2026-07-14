@@ -51,6 +51,7 @@ dependencies:
   kakao_flutter_sdk_user: ^1.7.0
   flutter_naver_login: ^2.1.1
   google_sign_in: ^6.2.1
+  sign_in_with_apple: ^6.1.4
   
   # 로컬라이제이션
   flutter_localizations:

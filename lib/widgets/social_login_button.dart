@@ -6,6 +6,7 @@ enum SocialProvider {
   kakao,
   naver,
   google,
+  apple,
 }
 
 class SocialLoginButton extends StatelessWidget {
@@ -28,7 +29,7 @@ class SocialLoginButton extends StatelessWidget {
 
     switch (provider) {
       case SocialProvider.kakao:
-        backgroundColor = const Color(0xFFFEE500); // yellow-400
+        backgroundColor = const Color(0xFFFEE500);
         icon = isLoading
             ? const SizedBox(
                 width: 16,
@@ -46,7 +47,7 @@ class SocialLoginButton extends StatelessWidget {
         break;
 
       case SocialProvider.naver:
-        backgroundColor = const Color(0xFF03C75A); // green-500
+        backgroundColor = const Color(0xFF03C75A);
         icon = isLoading
             ? const SizedBox(
                 width: 16,
@@ -69,7 +70,7 @@ class SocialLoginButton extends StatelessWidget {
 
       case SocialProvider.google:
         backgroundColor = AppTheme.backgroundWhite;
-        borderColor = AppTheme.borderGray300; // border-gray-300
+        borderColor = AppTheme.borderGray300;
         icon = isLoading
             ? const SizedBox(
                 width: 16,
@@ -85,6 +86,24 @@ class SocialLoginButton extends StatelessWidget {
                 height: 24,
               );
         break;
+
+      case SocialProvider.apple:
+        backgroundColor = const Color(0xFF111827);
+        icon = isLoading
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : const Icon(
+                Icons.apple,
+                color: Colors.white,
+                size: 26,
+              );
+        break;
     }
 
     return MouseRegion(
@@ -93,7 +112,7 @@ class SocialLoginButton extends StatelessWidget {
         onTap: isLoading || onPressed == null ? null : onPressed,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          width: 48, // w-12 h-12
+          width: 48,
           height: 48,
           decoration: BoxDecoration(
             color: backgroundColor,
@@ -101,7 +120,7 @@ class SocialLoginButton extends StatelessWidget {
                 ? Border.all(color: borderColor, width: 2)
                 : null,
             shape: BoxShape.circle,
-            boxShadow: AppTheme.shadowSm, // shadow-sm
+            boxShadow: AppTheme.shadowSm,
           ),
           child: Center(child: icon),
         ),
