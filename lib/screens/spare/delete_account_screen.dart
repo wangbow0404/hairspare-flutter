@@ -1,11 +1,16 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
+import 'package:flutter_naver_login/flutter_naver_login.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/auth_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/error_handler.dart';
+import '../../utils/env_config.dart';
 import '../../core/router/app_navigation.dart';
 
 /// Next.js와 동일한 계정 삭제 화면
@@ -36,6 +41,35 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
     super.dispose();
   }
 
+  /// 소셜 로그인 SDK는 우리 앱과 별개로 기기에 로그인 세션을 캐싱해둔다.
+  /// 계정을 삭제해도 이 세션을 지우지 않으면, 다음에 소셜 로그인 버튼을
+  /// 눌렀을 때 로그인 창도 없이 방금 삭제한 계정(혹은 엉뚱한 캐시된 계정)으로
+  /// 바로 다시 들어가버린다. 어떤 provider로 가입했는지 모르니 셋 다 시도한다.
+  Future<void> _clearSocialSessions() async {
+    try {
+      await FlutterNaverLogin.logOutAndDeleteToken();
+    } catch (e) {
+      if (kDebugMode) debugPrint('[DeleteAccount] 네이버 세션 정리 실패(무시): $e');
+    }
+    try {
+      await kakao.UserApi.instance.unlink();
+    } catch (e) {
+      if (kDebugMode) debugPrint('[DeleteAccount] 카카오 세션 정리 실패(무시): $e');
+    }
+    try {
+      final webClientId = EnvConfig.googleWebClientId;
+      final iosClientId = EnvConfig.googleIosClientId;
+      final googleSignIn = GoogleSignIn(
+        scopes: const ['email', 'profile'],
+        serverClientId: webClientId.isNotEmpty ? webClientId : null,
+        clientId: iosClientId.isNotEmpty ? iosClientId : null,
+      );
+      await googleSignIn.disconnect();
+    } catch (e) {
+      if (kDebugMode) debugPrint('[DeleteAccount] 구글 세션 정리 실패(무시): $e');
+    }
+  }
+
   Future<void> _handleDelete() async {
     setState(() {
       _isDeleting = true;
@@ -47,6 +81,9 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       await _authService.deleteAccount(
         password: _passwordController.text.isNotEmpty ? _passwordController.text : null,
       );
+
+      // 삭제 성공 후 소셜 로그인 캐시도 정리 — 실패해도 탈퇴 자체는 이미 끝났으니 무시.
+      await _clearSocialSessions();
 
       if (!mounted) return;
 
