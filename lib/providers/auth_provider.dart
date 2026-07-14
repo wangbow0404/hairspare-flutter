@@ -3,6 +3,7 @@ import '../models/login_portal.dart';
 import '../models/spare_subtype.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
+import '../services/admin_realtime_service.dart';
 import '../utils/error_handler.dart';
 class AuthProvider with ChangeNotifier {
   AuthProvider(this._authService);
@@ -33,6 +34,9 @@ class AuthProvider with ChangeNotifier {
         portal: portal,
       );
       _error = null;
+      if (_currentUser?.role == UserRole.admin) {
+        AdminRealtimeService.instance.reconnect();
+      }
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
       _error = ErrorHandler.getUserFriendlyMessage(appException);
