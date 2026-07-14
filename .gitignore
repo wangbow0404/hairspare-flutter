@@ -5,6 +5,10 @@
 *.pem
 secrets.json
 **/defines.local.json
+**/naver_strings.xml
+!**/naver_strings.xml.example
+**/google_strings.xml
+!**/google_strings.xml.example
 
 # Miscellaneous
 *.class

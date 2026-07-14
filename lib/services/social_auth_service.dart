@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../models/user.dart';
 import '../utils/api_client.dart';
 import '../utils/error_handler.dart';
@@ -41,6 +42,12 @@ class SocialAuthService {
       );
       return _parseSocialResponse(response, '카카오');
     } on DioException catch (e) {
+      if (kDebugMode) {
+        debugPrint(
+          '[KakaoLogin] DioException status=${e.response?.statusCode} '
+          'type=${e.type} data=${e.response?.data}',
+        );
+      }
       throw ErrorHandler.handleDioException(e);
     } catch (e) {
       throw ErrorHandler.handleException(e);
@@ -56,6 +63,12 @@ class SocialAuthService {
       );
       return _parseSocialResponse(response, '네이버');
     } on DioException catch (e) {
+      if (kDebugMode) {
+        debugPrint(
+          '[NaverLogin] DioException status=${e.response?.statusCode} '
+          'type=${e.type} data=${e.response?.data}',
+        );
+      }
       throw ErrorHandler.handleDioException(e);
     } catch (e) {
       throw ErrorHandler.handleException(e);
@@ -71,6 +84,12 @@ class SocialAuthService {
       );
       return _parseSocialResponse(response, '구글');
     } on DioException catch (e) {
+      if (kDebugMode) {
+        debugPrint(
+          '[GoogleLogin] DioException status=${e.response?.statusCode} '
+          'type=${e.type} data=${e.response?.data}',
+        );
+      }
       throw ErrorHandler.handleDioException(e);
     } catch (e) {
       throw ErrorHandler.handleException(e);

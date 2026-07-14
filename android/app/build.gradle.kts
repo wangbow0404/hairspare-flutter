@@ -28,6 +28,19 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // google_sign_in Android fallback (Dart serverClientId 가 우선).
+        val googleStrings = file("src/main/res/values/google_strings.xml")
+        if (googleStrings.exists()) {
+            val content = googleStrings.readText()
+            val match = Regex(
+                "<string name=\"google_web_client_id\">([^<]+)</string>"
+            ).find(content)
+            val webClientId = match?.groupValues?.getOrNull(1)?.trim().orEmpty()
+            if (webClientId.isNotEmpty() && !webClientId.startsWith("YOUR_")) {
+                resValue("string", "default_web_client_id", webClientId)
+            }
+        }
     }
 
     buildTypes {

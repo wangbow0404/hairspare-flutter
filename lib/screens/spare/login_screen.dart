@@ -13,7 +13,9 @@ import '../../widgets/common/hairspare_brand_assets.dart';
 import '../../utils/icon_mapper.dart'; // IconMapper import
 import '../../services/social_auth_service.dart';
 import '../../utils/api_config.dart';
+import '../../utils/env_config.dart';
 import '../../utils/error_handler.dart';
+import '../../utils/app_exception.dart';
 import '../../mocks/mock_auth_data.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 import 'package:flutter_naver_login/flutter_naver_login.dart';
@@ -34,9 +36,15 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final SocialAuthService _socialAuthService = SocialAuthService();
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email', 'profile'],
-  );
+  GoogleSignIn get _googleSignIn {
+    final webClientId = EnvConfig.googleWebClientId;
+    final iosClientId = EnvConfig.googleIosClientId;
+    return GoogleSignIn(
+      scopes: ['email', 'profile'],
+      serverClientId: webClientId.isNotEmpty ? webClientId : null,
+      clientId: iosClientId.isNotEmpty ? iosClientId : null,
+    );
+  }
   bool _obscurePassword = true;
   bool _isSocialLoggingIn = false;
   bool _saveId = false;
@@ -179,9 +187,19 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
       if (!mounted) return;
+      final friendly = ErrorHandler.getUserFriendlyMessage(appException);
+      final debugHint = () {
+        if (appException is ServerException && appException.statusCode != null) {
+          return ' (HTTP ${appException.statusCode})';
+        }
+        if (appException is NetworkException && appException.code == 'SERVER_UNAVAILABLE') {
+          return ' (서버 재시작 중)';
+        }
+        return '';
+      }();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('카카오 로그인 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}'),
+          content: Text('카카오 로그인 실패: $friendly$debugHint'),
           backgroundColor: AppTheme.urgentRed,
         ),
       );
@@ -205,9 +223,19 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
       final NaverLoginResult result = await FlutterNaverLogin.logIn();
 
       if (result.status == NaverLoginStatus.loggedIn) {
-        final accessToken = result.accessToken?.accessToken;
+        var accessToken = result.accessToken?.accessToken;
+        if (accessToken == null || accessToken.isEmpty) {
+          final token = await FlutterNaverLogin.getCurrentAccessToken();
+          if (token.isValid() && token.accessToken.isNotEmpty) {
+            accessToken = token.accessToken;
+          }
+        }
         if (accessToken == null || accessToken.isEmpty) {
           throw Exception('네이버 로그인 토큰을 받을 수 없습니다');
+        }
+
+        if (kDebugMode) {
+          debugPrint('[NaverLogin] accessToken length=${accessToken.length}');
         }
 
         final user = await _socialAuthService.loginWithNaver(accessToken);
@@ -222,9 +250,19 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
       if (!mounted) return;
+      final friendly = ErrorHandler.getUserFriendlyMessage(appException);
+      final debugHint = () {
+        if (appException is ServerException && appException.statusCode != null) {
+          return ' (HTTP ${appException.statusCode})';
+        }
+        if (appException is AuthenticationException) {
+          return ' (인증 실패)';
+        }
+        return '';
+      }();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('네이버 로그인 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}'),
+          content: Text('네이버 로그인 실패: $friendly$debugHint'),
           backgroundColor: AppTheme.urgentRed,
         ),
       );
@@ -238,30 +276,46 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
   }
 
   Future<void> _handleGoogleLogin() async {
+    if (!EnvConfig.isGoogleSignInConfigured) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '구글 로그인 설정이 필요합니다. GOOGLE_WEB_CLIENT_ID / GOOGLE_IOS_CLIENT_ID 를 설정하세요.',
+          ),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isSocialLoggingIn = true;
     });
 
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      // 구글 SDK를 사용하여 로그인
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
+
       if (googleUser == null) {
-        // 사용자가 로그인 취소
         setState(() {
           _isSocialLoggingIn = false;
         });
         return;
       }
-      
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final idToken = googleAuth.idToken;
-      
-      if (idToken == null) {
+
+      if (idToken == null || idToken.isEmpty) {
         throw Exception('구글 로그인 토큰을 받을 수 없습니다');
       }
-      
+
+      if (kDebugMode) {
+        debugPrint('[GoogleLogin] idToken length=${idToken.length}');
+      }
+
       final user = await _socialAuthService.loginWithGoogle(idToken);
 
       await authProvider.setUser(user);
@@ -271,9 +325,19 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
       if (!mounted) return;
+      final friendly = ErrorHandler.getUserFriendlyMessage(appException);
+      final debugHint = () {
+        if (appException is ServerException && appException.statusCode != null) {
+          return ' (HTTP ${appException.statusCode})';
+        }
+        if (appException is AuthenticationException) {
+          return ' (인증 실패)';
+        }
+        return '';
+      }();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('구글 로그인 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}'),
+          content: Text('구글 로그인 실패: $friendly$debugHint'),
           backgroundColor: AppTheme.urgentRed,
         ),
       );

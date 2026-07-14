@@ -43,6 +43,17 @@ void main() async {
   } else {
     kakao.KakaoSdk.init(nativeAppKey: kakaoKey);
   }
+
+  if (!EnvConfig.isGoogleSignInConfigured) {
+    assert(() {
+      debugPrint(
+        '[HairSpare] GOOGLE_WEB_CLIENT_ID / GOOGLE_IOS_CLIENT_ID 가 비어 있어 '
+        '구글 로그인을 쓰려면 --dart-define=GOOGLE_WEB_CLIENT_ID=... '
+        '--dart-define=GOOGLE_IOS_CLIENT_ID=... 를 설정하세요.',
+      );
+      return true;
+    }());
+  }
   
   // API 클라이언트 초기화를 가장 먼저 (Dio _dio 초기화 필요)
   ApiClient().init(
