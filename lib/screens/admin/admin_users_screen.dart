@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/router/app_routes.dart';
 import '../../services/admin_service.dart';
+import '../../services/admin_realtime_service.dart';
 import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/admin_member_role.dart';
@@ -39,7 +40,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   int _currentPage = 1;
   int _totalPages = 1;
   int _total = 0;
-  Timer? _updateTimer;
+  StreamSubscription<String>? _realtimeSub;
   Timer? _searchDebounceTimer;
 
   static const _roleTabs = AdminMemberRole.filterTabs;
@@ -59,19 +60,16 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   void initState() {
     super.initState();
     _loadUsers();
-    _updateTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (!mounted) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _loadUsers(showLoading: false);
-      });
+    _realtimeSub = AdminRealtimeService.instance.events.listen((event) {
+      if (event != 'users_changed' || !mounted) return;
+      _loadUsers(showLoading: false);
     });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _updateTimer?.cancel();
+    _realtimeSub?.cancel();
     _searchDebounceTimer?.cancel();
     super.dispose();
   }

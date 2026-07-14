@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/router/app_routes.dart';
 import '../../services/admin_service.dart';
+import '../../services/admin_realtime_service.dart';
 import '../../theme/admin_stitch_theme.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
@@ -26,26 +27,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Map<String, dynamic>? _stats;
   List<dynamic> _activities = [];
   bool _isLoading = true;
-  Timer? _updateTimer;
+  StreamSubscription<String>? _realtimeSub;
 
   @override
   void initState() {
     super.initState();
     _loadStats();
     _loadActivities();
-    _updateTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (!mounted) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _loadStats(showLoading: false);
-        _loadActivities();
-      });
+    _realtimeSub = AdminRealtimeService.instance.events.listen((event) {
+      if (event != 'users_changed' || !mounted) return;
+      _loadStats(showLoading: false);
+      _loadActivities();
     });
   }
 
   @override
   void dispose() {
-    _updateTimer?.cancel();
+    _realtimeSub?.cancel();
     super.dispose();
   }
 

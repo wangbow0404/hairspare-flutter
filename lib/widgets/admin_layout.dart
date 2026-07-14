@@ -6,6 +6,7 @@ import '../core/router/app_router.dart';
 import '../providers/auth_provider.dart';
 import '../core/router/app_routes.dart';
 import '../services/admin_service.dart';
+import '../services/admin_realtime_service.dart';
 import '../theme/admin_stitch_theme.dart';
 import '../theme/app_theme.dart';
 import 'admin/admin_mobile_bottom_nav.dart';
@@ -191,7 +192,14 @@ class _AdminLayoutState extends State<AdminLayout> {
   @override
   void initState() {
     super.initState();
+    AdminRealtimeService.instance.addListener();
     _loadBadgeCounts();
+  }
+
+  @override
+  void dispose() {
+    AdminRealtimeService.instance.removeListener();
+    super.dispose();
   }
 
   Future<void> _loadBadgeCounts() async {
@@ -278,35 +286,46 @@ class _AdminLayoutState extends State<AdminLayout> {
     );
   }
 
-  Widget _buildMobileSyncBadge() {
+  Widget _buildSyncStatusDot({required bool connected, Color? connectedColor}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      width: 6,
+      height: 6,
       decoration: BoxDecoration(
-        color: AdminStitchTheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(999),
+        color: connected
+            ? (connectedColor ?? AdminStitchTheme.emerald)
+            : AdminStitchTheme.textSecondary.withValues(alpha: 0.45),
+        shape: BoxShape.circle,
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: const BoxDecoration(
-              color: AdminStitchTheme.emerald,
-              shape: BoxShape.circle,
-            ),
+    );
+  }
+
+  Widget _buildMobileSyncBadge() {
+    return ValueListenableBuilder<bool>(
+      valueListenable: AdminRealtimeService.instance.isConnected,
+      builder: (context, connected, _) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: AdminStitchTheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(999),
           ),
-          const SizedBox(width: 4),
-          Text(
-            '실시간 동기화',
-            style: AdminStitchTheme.labelSm.copyWith(
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-              color: AdminStitchTheme.textSecondary,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildSyncStatusDot(connected: connected),
+              const SizedBox(width: 4),
+              Text(
+                connected ? '실시간 동기화' : '동기화 대기',
+                style: AdminStitchTheme.labelSm.copyWith(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                  color: AdminStitchTheme.textSecondary,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -318,42 +337,43 @@ class _AdminLayoutState extends State<AdminLayout> {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (!isMobile && !isNarrow)
-          Container(
-            constraints: const BoxConstraints(maxWidth: 180),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppTheme.spacing2,
-              vertical: AppTheme.spacing1,
-            ),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppTheme.adminPurple50, AppTheme.adminPink50],
-              ),
-              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.primaryGreen,
-                    shape: BoxShape.circle,
-                  ),
+          ValueListenableBuilder<bool>(
+            valueListenable: AdminRealtimeService.instance.isConnected,
+            builder: (context, connected, _) {
+              return Container(
+                constraints: const BoxConstraints(maxWidth: 180),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing2,
+                  vertical: AppTheme.spacing1,
                 ),
-                const SizedBox(width: AppTheme.spacing1),
-                const Text(
-                  '실시간 업데이트 중',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textGray700,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppTheme.adminPurple50, AppTheme.adminPink50],
                   ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                 ),
-              ],
-            ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildSyncStatusDot(
+                      connected: connected,
+                      connectedColor: AppTheme.primaryGreen,
+                    ),
+                    const SizedBox(width: AppTheme.spacing1),
+                    Text(
+                      connected ? '실시간 업데이트 중' : '동기화 대기',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textGray700,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         if (isMobile) ...[
           IconButton(
