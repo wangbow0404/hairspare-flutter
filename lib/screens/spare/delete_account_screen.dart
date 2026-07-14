@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/auth_service.dart';
+import '../../providers/auth_provider.dart';
 import '../../utils/error_handler.dart';
 import '../../core/router/app_navigation.dart';
 
@@ -45,11 +47,18 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
       await _authService.deleteAccount(
         password: _passwordController.text.isNotEmpty ? _passwordController.text : null,
       );
-      
+
+      if (!mounted) return;
+
+      // 토큰만 지우면 라우터가 "로그인 유지"로 보고 홈으로 되돌림
+      await context.read<AuthProvider>().logout();
+
+      if (!mounted) return;
+
+      setState(() => _isDeleting = false);
+
       // 로그아웃 후 로그인 화면으로 이동
-      if (mounted) {
-        AppNavigation.goSpareLogin(context);
-      }
+      AppNavigation.goSpareLogin(context);
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
       setState(() {
