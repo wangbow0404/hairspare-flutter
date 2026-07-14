@@ -371,6 +371,11 @@ class AuthService {
         data: {
           if (password != null && password.isNotEmpty) 'password': password,
         },
+        options: Options(
+          // 탈퇴는 재시도하면 로딩이 수십 초까지 늘어날 수 있음
+          extra: const {'skip_transient_retry': true},
+          receiveTimeout: const Duration(seconds: 30),
+        ),
       );
 
       if (response.statusCode != 200 && response.statusCode != 204) {
