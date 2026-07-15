@@ -8,6 +8,7 @@ import '../models/model_application_search_item.dart';
 import '../models/model_discovery_item.dart';
 import '../models/model_match_preference.dart';
 import '../utils/api_config.dart';
+import '../utils/app_exception.dart';
 import '../utils/error_handler.dart';
 
 /// 모델 매칭 후보 조회·하루 매칭 한도 관리.
@@ -150,6 +151,29 @@ class ModelMatchService {
     try {
       final response = await _dio.post('/api/model-match/like');
       return response.statusCode == 200 || response.statusCode == 201;
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 모델의 특정 신청 날짜를 매칭 확정 — 같은 모델의 같은 날짜 다른 신청은
+  /// 서버에서 자동 취소된다(하루 1건 제한).
+  Future<void> confirmApplicationDate({
+    required String postId,
+    required String dateId,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/api/models/application-posts/$postId/dates/$dateId/confirm',
+      );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw ServerException(
+          '매칭 확정 실패: ${response.statusMessage}',
+          statusCode: response.statusCode,
+        );
+      }
     } on DioException catch (e) {
       throw ErrorHandler.handleDioException(e);
     } catch (e) {

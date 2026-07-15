@@ -8,6 +8,7 @@ import '../../models/match_profile.dart';
 import '../../models/model_application_search_item.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/matching_service.dart';
+import '../../services/model_match_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/common/app_network_image.dart';
@@ -31,6 +32,58 @@ class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
 
   bool _isSendingHeart = false;
   bool _heartSent = false;
+  bool _isConfirming = false;
+  bool _dateConfirmed = false;
+
+  Future<void> _confirmDate() async {
+    if (_isConfirming || _dateConfirmed) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('매칭 확정'),
+        content: Text(
+          '${widget.item.date} · ${widget.item.startTime}~${widget.item.endTime}'
+          '\n이 날짜로 매칭을 확정하시겠습니까? 확정하면 이 모델의 같은 날짜 '
+          '다른 신청은 자동으로 취소돼요.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('확정'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isConfirming = true);
+    try {
+      await sl<ModelMatchService>().confirmApplicationDate(
+        postId: widget.item.postId,
+        dateId: widget.item.dateId,
+      );
+      if (!mounted) return;
+      setState(() => _dateConfirmed = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('매칭이 확정되었어요')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      final ex = ErrorHandler.handleException(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ErrorHandler.getUserFriendlyMessage(ex)),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isConfirming = false);
+    }
+  }
 
   Future<void> _sendHeart() async {
     if (_isSendingHeart || _heartSent) return;
@@ -160,53 +213,98 @@ class _ModelSearchProfileScreenState extends State<ModelSearchProfileScreen> {
           color: AppTheme.backgroundWhite,
           border: Border(top: BorderSide(color: AppTheme.borderGray)),
         ),
-        child: SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: (_isSendingHeart || _heartSent)
-                  ? null
-                  : AppTheme.stitchHeroGradient,
-              color: (_isSendingHeart || _heartSent)
-                  ? AppTheme.stitchPrimary.withValues(alpha: 0.6)
-                  : null,
-              borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-            ),
-            child: ElevatedButton.icon(
-              onPressed: (_isSendingHeart || _heartSent) ? null : _sendHeart,
-              icon: _isSendingHeart
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Icon(
-                      _heartSent ? Icons.favorite : Icons.favorite_border,
-                      color: Colors.white,
+        child: Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: 52,
+                child: OutlinedButton.icon(
+                  onPressed:
+                      (_isSendingHeart || _heartSent) ? null : _sendHeart,
+                  icon: _isSendingHeart
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppTheme.stitchPrimary,
+                          ),
+                        )
+                      : Icon(
+                          _heartSent
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                        ),
+                  label: Text(
+                    _isSendingHeart
+                        ? '보내는 중...'
+                        : (_heartSent ? '하트를 보냈어요' : '하트 보내기'),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.stitchPrimary,
+                    side: const BorderSide(color: AppTheme.stitchPrimary),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXl),
                     ),
-              label: Text(
-                _isSendingHeart
-                    ? '보내는 중...'
-                    : (_heartSent ? '하트를 보냈어요' : '하트 보내기'),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-                foregroundColor: Colors.white,
-                textStyle: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                  ),
                 ),
               ),
             ),
-          ),
+            const SizedBox(width: AppTheme.spacing3),
+            Expanded(
+              child: SizedBox(
+                height: 52,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: (_isConfirming || _dateConfirmed)
+                        ? null
+                        : AppTheme.stitchHeroGradient,
+                    color: (_isConfirming || _dateConfirmed)
+                        ? AppTheme.stitchPrimary.withValues(alpha: 0.6)
+                        : null,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                  ),
+                  child: ElevatedButton.icon(
+                    onPressed: (_isConfirming || _dateConfirmed)
+                        ? null
+                        : _confirmDate,
+                    icon: _isConfirming
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Icon(
+                            _dateConfirmed
+                                ? Icons.check_circle
+                                : Icons.check_circle_outline,
+                            color: Colors.white,
+                          ),
+                    label: Text(
+                      _isConfirming
+                          ? '확정 중...'
+                          : (_dateConfirmed ? '확정됨' : '이 날짜로 확정'),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
