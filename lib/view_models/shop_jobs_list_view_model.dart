@@ -147,6 +147,8 @@ class ShopJobsListViewModel extends ChangeNotifier {
     }
   }
 
+  Map<String, int> _approvedCounts = {};
+
   Future<void> _loadApplicantCounts() async {
     try {
       final apps = await _applicationService.getShopApplications();
@@ -154,13 +156,21 @@ class ShopJobsListViewModel extends ChangeNotifier {
         jobIds: _allJobs.map((j) => j.id),
         applications: apps,
       );
+      _approvedCounts = {
+        for (final job in _allJobs)
+          job.id: ShopApplicantCounts.approvedForJob(job.id, apps),
+      };
       notifyListeners();
     } catch (_) {
       applicantCounts = {};
+      _approvedCounts = {};
     }
   }
 
   int applicantCountFor(String jobId) => applicantCounts[jobId] ?? 0;
+
+  /// 확정(승인)된 지원자 수 — 마감 전 확인 문구에 사용.
+  int approvedCountFor(String jobId) => _approvedCounts[jobId] ?? 0;
 
   Future<void> hideJob(String jobId) async {
     try {

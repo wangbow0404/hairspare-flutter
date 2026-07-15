@@ -187,11 +187,18 @@ class ShopJobsListScrollView extends StatelessWidget {
     ShopJobsListViewModel vm,
     Job job,
   ) async {
+    final hasApprovedApplicant = vm.approvedCountFor(job.id) > 0;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('공고 마감'),
-        content: const Text('이 공고를 마감하시겠습니까?'),
+        title: Text(hasApprovedApplicant ? '공고 마감' : '확정된 지원자가 없어요'),
+        content: Text(
+          hasApprovedApplicant
+              ? '이 공고를 마감하시겠습니까?'
+              : '아직 확정(승인)된 지원자가 없는 상태예요.\n'
+                  '이대로 마감하면 이 공고로는 더 이상 지원을 받을 수 없어요.\n'
+                  '정말 마감하시겠어요?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -199,7 +206,10 @@ class ShopJobsListScrollView extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('마감'),
+            style: hasApprovedApplicant
+                ? null
+                : TextButton.styleFrom(foregroundColor: AppTheme.urgentRed),
+            child: Text(hasApprovedApplicant ? '마감' : '그래도 마감'),
           ),
         ],
       ),
