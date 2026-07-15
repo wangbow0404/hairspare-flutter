@@ -173,6 +173,22 @@ class ShopScheduleViewModel extends ChangeNotifier {
 
   void setSelectedDate(DateTime date) {
     selectedDate = date;
+    final dateStr = DateFormat('yyyy-MM-dd').format(date);
+    final daySchedules = schedules
+        .where(
+          (s) =>
+              s.date == dateStr &&
+              (s.status == 'scheduled' || s.status == 'completed'),
+        )
+        .toList();
+    if (daySchedules.isEmpty) {
+      selectedSchedule = null;
+    } else {
+      selectedSchedule = daySchedules.firstWhere(
+        (s) => s.status == 'scheduled',
+        orElse: () => daySchedules.first,
+      );
+    }
     notifyListeners();
   }
 
