@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../utils/api_config.dart';
 import 'auth_interceptor.dart';
@@ -21,7 +22,7 @@ class ApiClient {
   static const _accessTokenKey = 'auth_token';
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
-  final CookieJar _cookieJar = CookieJar();
+  late final CookieJar _cookieJar;
 
   late final Dio _dio;
   late final Dio _refreshDio;
@@ -31,11 +32,24 @@ class ApiClient {
   Dio get dio => _dio;
   CookieJar get cookieJar => _cookieJar;
 
-  void init({
+  Future<void> init({
     required SessionExpiredHandler onSessionExpired,
     required SessionMessageHandler onSessionExpiredMessage,
-  }) {
+  }) async {
     if (_initialized) return;
+
+    if (!kIsWeb) {
+      try {
+        final dir = await getApplicationDocumentsDirectory();
+        _cookieJar = PersistCookieJar(
+          storage: FileStorage('${dir.path}/.cookies/'),
+        );
+      } catch (_) {
+        _cookieJar = CookieJar();
+      }
+    } else {
+      _cookieJar = CookieJar();
+    }
 
     final baseOptions = BaseOptions(
       baseUrl: _baseUrl,

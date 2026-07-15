@@ -48,6 +48,19 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
+    if (_isSocialLoginRequest(options)) {
+      options.headers.remove(_authorizationHeader);
+      handler.next(options);
+      return;
+    }
+
+    if (_isRefreshRequest(options)) {
+      // 만료된 access token을 붙이면 게이트웨이가 refresh 자체를 401로 막을 수 있음
+      options.headers.remove(_authorizationHeader);
+      handler.next(options);
+      return;
+    }
+
     final token = await _storage.read(key: _accessTokenKey);
     if (token != null && token.isNotEmpty) {
       options.headers[_authorizationHeader] = '$_bearerPrefix$token';
@@ -104,7 +117,11 @@ class AuthInterceptor extends Interceptor {
       options.path.endsWith(_refreshPath) || options.path == _refreshPath;
 
   bool _isLoginRequest(RequestOptions options) =>
-      options.path.contains('/api/auth/login');
+      options.path.contains('/api/auth/login') ||
+      options.path.contains('/api/auth/social/');
+
+  bool _isSocialLoginRequest(RequestOptions options) =>
+      options.path.contains('/api/auth/social/');
 
   Future<void> _ensureRefreshedAccessToken() async {
     if (_isRefreshing) {

@@ -56,7 +56,7 @@ void main() async {
   }
   
   // API 클라이언트 초기화를 가장 먼저 (Dio _dio 초기화 필요)
-  ApiClient().init(
+  await ApiClient().init(
     onSessionExpiredMessage: (message) {
       sl<GlobalMessengerService>().showError(message);
     },
