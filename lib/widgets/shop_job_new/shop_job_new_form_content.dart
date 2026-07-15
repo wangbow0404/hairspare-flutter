@@ -51,7 +51,7 @@ Future<void> shopJobNewPickDate(
       context,
       initialDate: vm.selectedDate ?? DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 5)),
     ),
   );
   if (picked == null) return;
