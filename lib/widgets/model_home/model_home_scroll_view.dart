@@ -34,7 +34,7 @@ class ModelHomeScrollView extends StatelessWidget {
         ),
         SliverToBoxAdapter(
           child: Selector<MatchingViewModel, int>(
-            selector: (_, vm) => vm.pendingCount,
+            selector: (_, vm) => vm.todayPendingCount,
             builder: (context, pendingCount, _) {
               final profile = ModelHomeProfileSummary(
                 name: user?.name ?? user?.username ?? '모델',

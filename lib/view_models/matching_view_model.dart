@@ -23,6 +23,17 @@ class MatchingViewModel extends ChangeNotifier {
   String? get error => _error;
   int get pendingCount => _receivedLikes.length;
 
+  /// 오늘(기기 로컬 날짜 기준) 받은 관심 수 — 홈 화면 "오늘 받은 관심" 카드용.
+  int get todayPendingCount {
+    final now = DateTime.now();
+    return _receivedLikes.where((like) {
+      final local = like.createdAt.toLocal();
+      return local.year == now.year &&
+          local.month == now.month &&
+          local.day == now.day;
+    }).length;
+  }
+
   /// 홈 받은 관심 카드용 — VM 단일 소스.
   List<ModelHomeInterest> get pendingHomeInterests => _receivedLikes
       .map(
