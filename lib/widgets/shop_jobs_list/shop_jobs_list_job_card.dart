@@ -142,7 +142,9 @@ class ShopJobsListJobCard extends StatelessWidget {
 
   bool get _isExpired {
     if (job.status == 'expired') return true;
-    if (job.status != 'published') return false;
+    // 임시저장은 아직 등록 전이라 날짜 경과 판단 대상이 아님.
+    // 마감(closed)도 날짜가 지났으면 지난공고로 넘어가야 하므로 published로 제한하지 않는다.
+    if (job.status == 'draft') return false;
     try {
       final parts = job.time.split(':');
       if (parts.length < 2) return false;
@@ -159,7 +161,7 @@ class ShopJobsListJobCard extends StatelessWidget {
     }
   }
 
-  String get _effectiveStatus => _isExpired && job.status == 'published' ? 'expired' : job.status;
+  String get _effectiveStatus => _isExpired ? 'expired' : job.status;
 
   @override
   Widget build(BuildContext context) {

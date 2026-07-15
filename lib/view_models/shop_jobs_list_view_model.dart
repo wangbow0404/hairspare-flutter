@@ -38,9 +38,11 @@ class ShopJobsListViewModel extends ChangeNotifier {
   bool isLoadingMore = false;
   bool hasMore = false;
 
-  /// job.status가 published여도 시작 시간이 지났으면 expired 반환.
+  /// 시작 시간이 지났으면 published든 closed든 expired로 취급한다.
+  /// (마감은 지원자 확정 등으로 마감된 상태를 뜻하지만, 날짜가 지난 공고는
+  /// 마감 여부와 무관하게 지난공고 탭으로 가야 재등록 폼을 쓸 수 있다)
   static String effectiveStatus(Job job) {
-    if (job.status != 'published') return job.status;
+    if (job.status == 'draft') return job.status;
     try {
       final parts = job.time.split(':');
       if (parts.length < 2) return job.status;
@@ -51,7 +53,7 @@ class ShopJobsListViewModel extends ChangeNotifier {
         int.parse(parts[0]),
         int.parse(parts[1]),
       );
-      return jobStart.isBefore(DateTime.now()) ? 'expired' : 'published';
+      return jobStart.isBefore(DateTime.now()) ? 'expired' : job.status;
     } catch (_) {
       return job.status;
     }
