@@ -545,9 +545,15 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final currentUser = authProvider.currentUser;
     final chat = _chat!;
+    // 상대방 정보(이름·id·사진)는 "내 역할이 shop이냐"가 아니라 "이 채팅방의
+    // shopId 슬롯에 내가 들어있냐"로 판단해야 한다. 모델↔디자이너 채팅은
+    // 양쪽 다 실제 역할이 'spare'라서(모델도 디자이너도 spare, subtype만
+    // 다름) role 기반 판단은 항상 false로 나와 디자이너가 자기 자신을
+    // "상대방"으로 보게 되는 버그가 있었다.
+    final amInShopSlot = currentUser != null && currentUser.id == chat.shopId;
+    final otherUserName = amInShopSlot ? chat.spareName : chat.shopName;
+    final otherUserId = amInShopSlot ? chat.spareId : chat.shopId;
     final isShop = currentUser?.role == UserRole.shop;
-    final otherUserName = isShop ? chat.spareName : chat.shopName;
-    final otherUserId = isShop ? chat.spareId : chat.shopId;
     final shopChatBlockedUntil = isShop
         ? _contactViolationService.shopChatBlockedUntil()
         : null;
@@ -557,7 +563,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     final jobSubtitle = chat.jobTitle?.trim().isNotEmpty == true
         ? chat.jobTitle!
         : null;
-    final otherUserAvatarUrl = isShop ? chat.spareProfileImage : chat.shopProfileImage;
+    final otherUserAvatarUrl =
+        amInShopSlot ? chat.spareProfileImage : chat.shopProfileImage;
     final isModelDesignerChat = _isModelDesignerChat(currentUser);
 
     return Scaffold(

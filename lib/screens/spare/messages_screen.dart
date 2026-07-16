@@ -4,6 +4,7 @@ import 'package:hairspare/core/di/service_locator.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../providers/auth_provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../services/chat_service.dart';
 import '../../services/model_designer_match_service.dart';
@@ -268,6 +269,15 @@ class _ChatListItemState extends State<_ChatListItem> {
   @override
   Widget build(BuildContext context) {
     final preview = _chatPreviewLine(widget.chat);
+    // 상대방 이름은 "내 역할이 shop이냐"가 아니라 "이 채팅방의 shopId 슬롯에
+    // 내가 들어있냐"로 판단한다 — 모델↔디자이너 채팅은 양쪽 다 실제 역할이
+    // 'spare'라 role 기반 판단이 불가능하다(chat_room_screen.dart와 동일 이유).
+    final currentUserId =
+        Provider.of<AuthProvider>(context, listen: false).currentUser?.id;
+    final amInShopSlot =
+        currentUserId != null && currentUserId == widget.chat.shopId;
+    final otherName =
+        amInShopSlot ? widget.chat.spareName : widget.chat.shopName;
 
     return GestureDetector(
       onHorizontalDragStart: (_) => _dragDistance = 0.0,
@@ -349,9 +359,7 @@ class _ChatListItemState extends State<_ChatListItem> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           _ChatAvatarLetter(
-                            letter: widget.chat.shopName.isNotEmpty
-                                ? widget.chat.shopName[0]
-                                : '?',
+                            letter: otherName.isNotEmpty ? otherName[0] : '?',
                           ),
                           const SizedBox(width: AppTheme.spacing3),
                           Expanded(
@@ -363,7 +371,7 @@ class _ChatListItemState extends State<_ChatListItem> {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        widget.chat.shopName,
+                                        otherName,
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
