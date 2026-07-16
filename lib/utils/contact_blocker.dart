@@ -36,6 +36,15 @@ class ContactBlocker {
     '[$_hangulDigitChars]{3,}',
   );
 
+  /// "150,000원", "20만원" 등 원화 금액 표현 — 채팅 내 가격 협상(결제 요청 등)과
+  /// 정면 충돌하는 오탐을 막기 위해 번호 후보 추출 전에 미리 제거한다.
+  /// 한 번 협상 메시지에 금액이 섞이면 이후 무관한 메시지(예: "감사합니다")까지
+  /// "최근 메시지 합산" 검사에 걸려 대화방이 삭제되는 문제가 있었다.
+  static final RegExp _wonAmountPattern = RegExp(r'\d[\d,]*\s*만?\s*원');
+
+  static String _stripWonAmounts(String text) =>
+      text.replaceAll(_wonAmountPattern, '');
+
   /// 단일 메시지 검사
   static bool containsBlockedPattern(String text) {
     if (text.trim().isEmpty) return false;
@@ -60,15 +69,16 @@ class ContactBlocker {
     return _analyzeDigitStream(combinedRuns);
   }
 
-  /// 메시지에서 번호 후보 숫자열 목록 추출.
+  /// 메시지에서 번호 후보 숫자열 목록 추출 (금액 표현은 미리 제외).
   static List<String> _digitRunsFromText(String text) {
+    final cleaned = _stripWonAmounts(text);
     final runs = <String>[];
 
-    for (final match in RegExp(r'\d{3,}').allMatches(text)) {
+    for (final match in RegExp(r'\d{3,}').allMatches(cleaned)) {
       runs.add(match.group(0)!);
     }
 
-    for (final match in _hangulDigitRunPattern.allMatches(text)) {
+    for (final match in _hangulDigitRunPattern.allMatches(cleaned)) {
       runs.add(_hangulRunToDigits(match.group(0)!));
     }
 
@@ -99,20 +109,21 @@ class ContactBlocker {
     return false;
   }
 
-  /// 레거시 호출부 호환 — 한글·기호 포함 원문도 함께 검사
+  /// 레거시 호출부 호환 — 한글·기호 포함 원문도 함께 검사 (금액 표현은 미리 제외)
   static bool containsBlockedPatternLegacy(String text) {
     if (text.isEmpty) return false;
+    final cleaned = _stripWonAmounts(text);
 
-    if (RegExp(r'010[\s\-]?\d{4}[\s\-]?\d{4}').hasMatch(text)) return true;
-    if (RegExp(r'01[0-9][\s\-]?\d{3,4}[\s\-]?\d{4}').hasMatch(text)) {
+    if (RegExp(r'010[\s\-]?\d{4}[\s\-]?\d{4}').hasMatch(cleaned)) return true;
+    if (RegExp(r'01[0-9][\s\-]?\d{3,4}[\s\-]?\d{4}').hasMatch(cleaned)) {
       return true;
     }
 
-    final digitsOnly = text.replaceAll(RegExp(r'[\s\-\.]'), '');
+    final digitsOnly = cleaned.replaceAll(RegExp(r'[\s\-\.]'), '');
     if (RegExp(r'\d{8,}').hasMatch(digitsOnly)) return true;
-    if (RegExp(r'\d{3}[\s\-]\d{3,4}[\s\-]\d{4}').hasMatch(text)) return true;
+    if (RegExp(r'\d{3}[\s\-]\d{3,4}[\s\-]\d{4}').hasMatch(cleaned)) return true;
 
-    for (final match in _hangulDigitRunPattern.allMatches(text)) {
+    for (final match in _hangulDigitRunPattern.allMatches(cleaned)) {
       if (match.group(0)!.length >= 5) return true;
     }
 
