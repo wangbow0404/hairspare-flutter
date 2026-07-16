@@ -418,14 +418,37 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     }
 
     _messageController.clear();
+
+    // 낙관적 전송(optimistic UI) — 서버 응답을 기다리지 않고 내 화면엔 바로
+    // 표시한다. 왕복 시간만큼 "눌러도 안 보내지는 것 같은" 지연을 없앤다.
+    final tempId = 'temp-${DateTime.now().microsecondsSinceEpoch}';
+    final optimisticMessage = Message(
+      id: tempId,
+      chatId: widget.chatId,
+      senderId: currentUser?.id ?? '',
+      senderName: currentUser?.name ?? '',
+      senderRole: myRole,
+      content: content,
+      createdAt: DateTime.now(),
+      isRead: false,
+    );
+
     setState(() {
+      _messages = [..._messages, optimisticMessage];
       _isSending = true;
     });
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+
     try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final currentUser = authProvider.currentUser;
-      final myRole = _mySenderRole(currentUser);
       final newMessage = await _chatService.sendMessage(
         widget.chatId,
         content,
@@ -433,39 +456,34 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         senderName: currentUser?.name,
         senderRole: myRole,
       );
-      
+
+      if (!mounted) return;
       setState(() {
-        _messages.add(newMessage);
+        final idx = _messages.indexWhere((m) => m.id == tempId);
+        if (idx != -1) {
+          _messages[idx] = newMessage;
+        } else {
+          _messages.add(newMessage);
+        }
         _isSending = false;
         _recentOutgoingForContactCheck.add(content);
         if (_recentOutgoingForContactCheck.length > _recentOutgoingWindow) {
           _recentOutgoingForContactCheck.removeAt(0);
         }
       });
-
-      // 스크롤을 맨 아래로
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
-      });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
+        _messages.removeWhere((m) => m.id == tempId);
         _isSending = false;
       });
       final appException = ErrorHandler.handleException(e);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorHandler.getUserFriendlyMessage(appException)),
-            backgroundColor: AppTheme.urgentRed,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ErrorHandler.getUserFriendlyMessage(appException)),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
     }
   }
 
