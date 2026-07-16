@@ -51,10 +51,12 @@ class _PaymentRequestCardState extends State<PaymentRequestCard> {
     final payload = widget.message.payload ?? const {};
     final amount = payload['amount'];
     final purpose = payload['purpose']?.toString();
-    final payeeId = payload['payeeId']?.toString();
-    final isPayee = widget.currentUserId.isNotEmpty &&
-        widget.currentUserId == payeeId;
-    final canRespond = !widget.isSuperseded && isPayee;
+    final payerId = payload['payerId']?.toString();
+    // 결제 요청을 수락/거절하는 건 돈을 내야 하는 사람(payer)이다 —
+    // 요청을 보낸 사람(payee)이 자기 요청을 스스로 수락할 수는 없다.
+    final isPayer = widget.currentUserId.isNotEmpty &&
+        widget.currentUserId == payerId;
+    final canRespond = !widget.isSuperseded && isPayer;
 
     return Container(
       width: 240,

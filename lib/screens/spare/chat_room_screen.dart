@@ -114,13 +114,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   }
 
   Future<void> _openPaymentRequestSheet(Chat chat, String otherUserName, String otherUserId) async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final myUserId = authProvider.currentUser?.id;
-    if (myUserId == null) return;
     final created = await showPaymentRequestComposeSheet(
       context,
       chatId: chat.id,
-      myUserId: myUserId,
       otherUserName: otherUserName,
       otherUserId: otherUserId,
     );
