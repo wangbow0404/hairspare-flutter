@@ -59,8 +59,12 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   bool _isMyMessage(Message message, User? currentUser, Chat chat) {
     if (currentUser == null) return false;
 
-    if (message.senderId.isNotEmpty && message.senderId == currentUser.id) {
-      return true;
+    // senderId(보낸 사람 id)가 있으면 그게 정답 — 내 id와 같을 때만 내 메시지다.
+    // 예전엔 다를 때 아래 역할·슬롯 추측(fallback)으로 넘어가서, 모델↔디자이너
+    // 채팅처럼 모델이 spareId 칸에 들어간 경우 상대(모델) 메시지를 내 것으로
+    // 오인해 오른쪽에 표시하는 버그가 있었다. fallback은 senderId가 없을 때만 쓴다.
+    if (message.senderId.isNotEmpty) {
+      return message.senderId == currentUser.id;
     }
 
     if (currentUser.role == UserRole.shop) {
