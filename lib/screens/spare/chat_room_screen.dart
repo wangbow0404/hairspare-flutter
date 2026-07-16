@@ -908,11 +908,11 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.stitchPrimaryContainer),
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
-                      : IconMapper.icon('send', size: 24, color: AppTheme.stitchPrimaryContainer) ??
-                          const Icon(Icons.send, size: 24, color: AppTheme.stitchPrimaryContainer),
+                      : IconMapper.icon('send', size: 24, color: Colors.white) ??
+                          const Icon(Icons.send, size: 24, color: Colors.white),
                   style: IconButton.styleFrom(
                     backgroundColor: AppTheme.stitchPrimaryContainer,
                     foregroundColor: Colors.white,
