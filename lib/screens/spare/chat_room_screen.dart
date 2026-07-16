@@ -11,6 +11,7 @@ import '../../core/router/app_routes.dart';
 import '../../core/router/route_extras.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/chat_provider.dart';
+import '../../services/chat_realtime_service.dart';
 import '../../services/chat_service.dart';
 import '../../services/contact_violation_service.dart';
 import '../../services/model_designer_match_service.dart';
@@ -46,6 +47,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       sl<ModelDesignerMatchService>();
   final PaymentRequestService _paymentRequestService =
       sl<PaymentRequestService>();
+  final ChatRealtimeService _realtimeService = ChatRealtimeService();
+  StreamSubscription<Message>? _realtimeSub;
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   List<Message> _messages = [];
@@ -173,6 +176,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _realtimeSub?.cancel();
+    _realtimeService.dispose();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -184,6 +189,48 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       const Duration(seconds: 3),
       (_) => _pollNewMessages(),
     );
+  }
+
+  /// 웹소켓으로 새 메시지가 바로 오면 폴링(최대 3초 지연)을 기다리지 않고
+  /// 즉시 반영한다. 웹소켓이 끊기거나 실패해도 위 폴링이 안전망으로 남는다.
+  void _startRealtime() {
+    _realtimeSub?.cancel();
+    _realtimeSub = _realtimeService.messages.listen(_onRealtimeMessage);
+    _realtimeService.connect();
+  }
+
+  void _onRealtimeMessage(Message message) {
+    if (!mounted) return;
+    if (message.chatId != widget.chatId) return;
+    if (_messages.any((m) => m.id == message.id)) return;
+
+    final chat = _chat;
+    if (chat == null) return;
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final currentUser = authProvider.currentUser;
+    final isFromOther = !_isMyMessage(message, currentUser, chat);
+
+    setState(() {
+      _messages = [..._messages, message];
+    });
+
+    if (isFromOther) {
+      context.read<ChatProvider>().markChatAsRead(
+            widget.chatId,
+            viewerRole: _mySenderRole(currentUser),
+          );
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   Future<void> _pollNewMessages() async {
@@ -274,6 +321,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       });
 
       _startPolling();
+      _startRealtime();
     } catch (e) {
       if (mounted) {
         setState(() {
