@@ -8,18 +8,23 @@ import 'package:provider/provider.dart';
 import '../../models/user.dart';
 import '../../core/router/app_router.dart';
 import '../../core/router/app_routes.dart';
+import '../../core/router/route_extras.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../services/chat_service.dart';
 import '../../services/contact_violation_service.dart';
 import '../../services/model_designer_match_service.dart';
+import '../../services/payment_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/contact_blocker.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/icon_mapper.dart';
+import '../../utils/shell_navigation.dart';
 import '../../services/block_service.dart';
 import '../../widgets/chat/chat_contact_warning_banner.dart';
 import '../../widgets/chat/contact_violation_blocked_modal.dart';
+import '../../widgets/chat/payment_request_card.dart';
+import '../../widgets/chat/payment_request_compose_sheet.dart';
 import '../../widgets/common/report_sheet.dart';
 import '../../widgets/spare_app_bar.dart';
 
@@ -39,6 +44,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       sl<ContactViolationService>();
   final ModelDesignerMatchService _modelDesignerMatchService =
       sl<ModelDesignerMatchService>();
+  final PaymentRequestService _paymentRequestService =
+      sl<PaymentRequestService>();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   List<Message> _messages = [];
@@ -94,6 +101,72 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   bool _isModelDesignerChat(User? user) =>
       user?.isModelAccount == true &&
       _modelDesignerMatchService.isModelDesignerChat(widget.chatId);
+
+  /// 결제요청/상태 메시지 중 같은 paymentId를 가진 더 최신 메시지가 뒤에
+  /// 있으면 이미 처리된 것 — 버튼 없이 결과만 보여준다.
+  bool _isPaymentActionSuperseded(int index) {
+    final paymentId = _messages[index].payload?['paymentId'];
+    if (paymentId == null) return false;
+    for (var j = index + 1; j < _messages.length; j++) {
+      if (_messages[j].payload?['paymentId'] == paymentId) return true;
+    }
+    return false;
+  }
+
+  Future<void> _openPaymentRequestSheet(Chat chat, String otherUserName, String otherUserId) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final myUserId = authProvider.currentUser?.id;
+    if (myUserId == null) return;
+    final created = await showPaymentRequestComposeSheet(
+      context,
+      chatId: chat.id,
+      myUserId: myUserId,
+      otherUserName: otherUserName,
+      otherUserId: otherUserId,
+    );
+    if (created == true) await _pollNewMessages();
+  }
+
+  Future<void> _runPaymentAction(Future<void> Function() action) async {
+    try {
+      await action();
+      await _pollNewMessages();
+    } catch (e) {
+      if (!mounted) return;
+      final ex = ErrorHandler.handleException(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ErrorHandler.getUserFriendlyMessage(ex)),
+          backgroundColor: AppTheme.urgentRed,
+        ),
+      );
+    }
+  }
+
+  Future<void> _acceptPayment(String paymentId) =>
+      _runPaymentAction(() => _paymentRequestService.acceptPayment(paymentId));
+
+  Future<void> _declinePayment(String paymentId) => _runPaymentAction(
+      () => _paymentRequestService.declinePayment(paymentId));
+
+  /// "결제하기" — 채팅에서 바로 결제하지 않고 전용 결제 화면으로 이동한다.
+  Future<void> _openPaymentScreen({
+    required String paymentId,
+    required int amount,
+    String? purpose,
+    required String counterpartyName,
+  }) async {
+    final paid = await ShellNavigation.pushPaymentRequestPay(
+      context,
+      PaymentRequestPayExtra(
+        paymentId: paymentId,
+        amount: amount,
+        purpose: purpose,
+        counterpartyName: counterpartyName,
+      ),
+    );
+    if (paid == true) await _pollNewMessages();
+  }
 
   @override
   void initState() {
@@ -501,6 +574,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         subtitle: jobSubtitle,
         avatarUrl: otherUserAvatarUrl ?? '',
         actions: [
+          if (chat.isModelChat)
+            IconButton(
+              icon: const Icon(Icons.request_quote_outlined),
+              tooltip: '결제 요청',
+              onPressed: () =>
+                  _openPaymentRequestSheet(chat, otherUserName, otherUserId),
+            ),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: '나가기',
@@ -587,6 +667,38 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                       final showProfile = prevMessage == null ||
                           !_isSameSender(prevMessage, message);
 
+                      if (message.type == 'payment_status') {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
+                          child: Center(
+                            child: PaymentStatusBubble(
+                              message: message,
+                              currentUserId: currentUser?.id ?? '',
+                              isSuperseded: _isPaymentActionSuperseded(index),
+                              onPay: () {
+                                final payload = message.payload ?? const {};
+                                final paymentId =
+                                    payload['paymentId']?.toString();
+                                if (paymentId == null) return Future.value();
+                                final amount = payload['amount'];
+                                return _openPaymentScreen(
+                                  paymentId: paymentId,
+                                  amount: amount is int
+                                      ? amount
+                                      : int.tryParse(
+                                              amount?.toString() ?? '') ??
+                                          0,
+                                  purpose: payload['purpose']?.toString(),
+                                  counterpartyName: otherUserName,
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      }
+
+                      final isPaymentRequest = message.type == 'payment_request';
+
                       return Padding(
                         padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
                         child: Row(
@@ -609,43 +721,64 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                               const SizedBox(width: 32),
                             const SizedBox(width: AppTheme.spacing2),
                             Flexible(
-                              child: Container(
-                                constraints: BoxConstraints(
-                                  maxWidth: MediaQuery.of(context).size.width * 0.7,
-                                ),
-                                padding: AppTheme.spacing(AppTheme.spacing3),
-                                decoration: BoxDecoration(
-                                  color: isMyMessage
-                                      ? AppTheme.stitchPrimaryContainer
-                                      : AppTheme.backgroundWhite,
-                                  borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                                  border: isMyMessage
-                                      ? null
-                                      : Border.all(color: AppTheme.borderGray),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      message.content,
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        fontSize: 14,
-                                        color: isMyMessage ? Colors.white : AppTheme.textPrimary,
+                              child: isPaymentRequest
+                                  ? PaymentRequestCard(
+                                      message: message,
+                                      currentUserId: currentUser?.id ?? '',
+                                      isSuperseded:
+                                          _isPaymentActionSuperseded(index),
+                                      onAccept: () {
+                                        final paymentId = message
+                                            .payload?['paymentId']
+                                            ?.toString();
+                                        if (paymentId == null) return Future.value();
+                                        return _acceptPayment(paymentId);
+                                      },
+                                      onDecline: () {
+                                        final paymentId = message
+                                            .payload?['paymentId']
+                                            ?.toString();
+                                        if (paymentId == null) return Future.value();
+                                        return _declinePayment(paymentId);
+                                      },
+                                    )
+                                  : Container(
+                                      constraints: BoxConstraints(
+                                        maxWidth: MediaQuery.of(context).size.width * 0.7,
                                       ),
-                                    ),
-                                    const SizedBox(height: AppTheme.spacing1 / 2),
-                                    Text(
-                                      _formatTime(message.createdAt),
-                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                        fontSize: 12,
+                                      padding: AppTheme.spacing(AppTheme.spacing3),
+                                      decoration: BoxDecoration(
                                         color: isMyMessage
-                                            ? Colors.white.withValues(alpha: 0.7)
-                                            : AppTheme.textSecondary,
+                                            ? AppTheme.stitchPrimaryContainer
+                                            : AppTheme.backgroundWhite,
+                                        borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+                                        border: isMyMessage
+                                            ? null
+                                            : Border.all(color: AppTheme.borderGray),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            message.content,
+                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                              fontSize: 14,
+                                              color: isMyMessage ? Colors.white : AppTheme.textPrimary,
+                                            ),
+                                          ),
+                                          const SizedBox(height: AppTheme.spacing1 / 2),
+                                          Text(
+                                            _formatTime(message.createdAt),
+                                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                              fontSize: 12,
+                                              color: isMyMessage
+                                                  ? Colors.white.withValues(alpha: 0.7)
+                                                  : AppTheme.textSecondary,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
                             ),
                             const SizedBox(width: AppTheme.spacing2),
                             if (isMyMessage && showProfile)

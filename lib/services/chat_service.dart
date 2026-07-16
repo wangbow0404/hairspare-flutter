@@ -21,6 +21,7 @@ class Chat {
   final LastMessage? lastMessage;
   final int? unreadCount;
   final bool isAdminChat;
+  final bool isModelChat;
 
   Chat({
     required this.id,
@@ -35,6 +36,7 @@ class Chat {
     this.lastMessage,
     this.unreadCount,
     this.isAdminChat = false,
+    this.isModelChat = false,
   });
 
   factory Chat.fromJson(Map<String, dynamic> json) {
@@ -75,6 +77,7 @@ class Chat {
           ? json['unreadCount']
           : int.tryParse(json['unreadCount']?.toString() ?? '0') ?? 0,
       isAdminChat: json['isAdminChat'] == true,
+      isModelChat: json['isModelChat'] == true,
     );
   }
 }
@@ -404,6 +407,8 @@ class Message {
   final String content;
   final DateTime createdAt;
   final bool isRead;
+  final String? type; // null | 'payment_request' | 'payment_status'
+  final Map<String, dynamic>? payload;
 
   Message({
     required this.id,
@@ -414,6 +419,8 @@ class Message {
     required this.content,
     required this.createdAt,
     this.isRead = false,
+    this.type,
+    this.payload,
   });
 
   factory Message.fromJson(Map<String, dynamic>? json) {
@@ -448,6 +455,10 @@ class Message {
           ? DateTime.parse(json['createdAt'].toString())
           : DateTime.now(),
       isRead: json['isRead'] as bool? ?? false,
+      type: json['type']?.toString(),
+      payload: json['payload'] is Map
+          ? Map<String, dynamic>.from(json['payload'] as Map)
+          : null,
     );
   }
 }

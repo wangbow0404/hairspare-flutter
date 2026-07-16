@@ -13,6 +13,21 @@ final class ShopJobNewRouteArgs {
   final Job? jobToCopy;
 }
 
+/// 채팅 결제요청 전용 결제 화면 — 결제 요청 상세 전달.
+final class PaymentRequestPayExtra {
+  const PaymentRequestPayExtra({
+    required this.paymentId,
+    required this.amount,
+    this.purpose,
+    required this.counterpartyName,
+  });
+
+  final String paymentId;
+  final int amount;
+  final String? purpose;
+  final String counterpartyName;
+}
+
 /// 긴급 공고 결제 화면 — ViewModel·formKey 전달.
 final class ShopJobUrgentPaymentExtra {
   const ShopJobUrgentPaymentExtra({

@@ -77,6 +77,7 @@ void configureDependencies() {
   sl.registerLazySingleton<ApplicationService>(() => ApplicationService());
   sl.registerLazySingleton<ChallengeService>(() => ChallengeService());
   sl.registerLazySingleton<PaymentService>(() => PaymentService());
+  sl.registerLazySingleton<PaymentRequestService>(() => PaymentRequestService());
   sl.registerLazySingleton<ModelSelfProfileService>(() => ModelSelfProfileService());
   sl.registerLazySingleton<ModelApplicationService>(() => ModelApplicationService());
   sl.registerLazySingleton<PortfolioService>(() => PortfolioService());

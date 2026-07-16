@@ -27,6 +27,7 @@ import '../../screens/spare/energy_purchase_checkout_screen.dart';
 import '../../screens/spare/energy_purchase_screen.dart';
 import '../../screens/spare/job_detail_screen.dart';
 import '../../screens/spare/notifications_settings_screen.dart';
+import '../../screens/spare/payment_request_screen.dart';
 import '../../screens/spare/point_history_screen.dart';
 import '../../screens/spare/profile_edit_screen.dart';
 import '../../screens/spare/reviews_list_screen.dart';
@@ -243,6 +244,16 @@ abstract final class SharedLeafRoutes {
               value: extra.viewModel,
               child: ShopJobUrgentPaymentScreen(formKey: extra.formKey),
             );
+          },
+        ),
+        GoRoute(
+          path: 'payment_request_pay',
+          builder: (BuildContext context, GoRouterState state) {
+            final extra = state.extra;
+            if (extra is! PaymentRequestPayExtra) {
+              return const SizedBox.shrink();
+            }
+            return PaymentRequestScreen(extra: extra);
           },
         ),
         GoRoute(
