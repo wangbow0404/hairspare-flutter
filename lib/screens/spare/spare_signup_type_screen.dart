@@ -26,7 +26,7 @@ class _SpareSignupTypeScreenState extends State<SpareSignupTypeScreen> {
           backgroundColor: AppTheme.backgroundGray,
           appBar: const SharedAppBar(title: '회원가입'),
           body: SafeArea(
-            child: Padding(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(AppTheme.spacing6),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -53,52 +53,46 @@ class _SpareSignupTypeScreenState extends State<SpareSignupTypeScreen> {
                     ),
                   ),
                   const SizedBox(height: AppTheme.spacing8),
-                  SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        _TypeCard(
-                          title: SpareSubtype.professional.label,
-                          subtitle: '미용 일자리를 찾고 있어요',
-                          description: '공고 지원 · 스케줄 · 에너지 결제',
-                          icon: Icons.content_cut_outlined,
-                          onTap: () {
-                            context.push(AppRoutes.spareSignupProfessional);
-                          },
-                        ),
-                        const SizedBox(height: AppTheme.spacing4),
-                        _TypeCard(
-                          title: SpareSubtype.model.label,
-                          subtitle: '헤어 시술 모델로 활동해요',
-                          description: '디자이너 매칭에 노출 · 채팅으로 일정 조율',
-                          icon: Icons.face_retouching_natural_outlined,
-                          onTap: () {
-                            context.push(AppRoutes.spareSignupModel);
-                          },
-                        ),
-                        const SizedBox(height: AppTheme.spacing4),
-                        _TypeCard(
-                          title: '샵(미용실)',
-                          subtitle: '미용실을 운영하고 있어요',
-                          description: '스페어 채용 · 공고 등록 · 정산 관리',
-                          icon: Icons.storefront_outlined,
-                          onTap: () {
-                            context.push(AppRoutes.shopSignup);
-                          },
-                        ),
-                        const SizedBox(height: AppTheme.spacing4),
-                        _TypeCard(
-                          title: '스토어',
-                          subtitle: '미용 제품을 판매해요',
-                          description: '상품 등록 · 주문 관리 (준비중)',
-                          icon: Icons.shopping_bag_outlined,
-                          onTap: () {
-                            setState(() => _showStoreModal = true);
-                          },
-                        ),
-                      ],
-                    ),
+                  _TypeCard(
+                    title: SpareSubtype.professional.label,
+                    subtitle: '미용 일자리를 찾고 있어요',
+                    description: '공고 지원 · 스케줄 · 에너지 결제',
+                    icon: Icons.content_cut_outlined,
+                    onTap: () {
+                      context.push(AppRoutes.spareSignupProfessional);
+                    },
                   ),
-                  const Spacer(),
+                  const SizedBox(height: AppTheme.spacing4),
+                  _TypeCard(
+                    title: SpareSubtype.model.label,
+                    subtitle: '헤어 시술 모델로 활동해요',
+                    description: '디자이너 매칭에 노출 · 채팅으로 일정 조율',
+                    icon: Icons.face_retouching_natural_outlined,
+                    onTap: () {
+                      context.push(AppRoutes.spareSignupModel);
+                    },
+                  ),
+                  const SizedBox(height: AppTheme.spacing4),
+                  _TypeCard(
+                    title: '샵(미용실)',
+                    subtitle: '미용실을 운영하고 있어요',
+                    description: '스페어 채용 · 공고 등록 · 정산 관리',
+                    icon: Icons.storefront_outlined,
+                    onTap: () {
+                      context.push(AppRoutes.shopSignup);
+                    },
+                  ),
+                  const SizedBox(height: AppTheme.spacing4),
+                  _TypeCard(
+                    title: '스토어',
+                    subtitle: '미용 제품을 판매해요',
+                    description: '상품 등록 · 주문 관리 (준비중)',
+                    icon: Icons.shopping_bag_outlined,
+                    onTap: () {
+                      setState(() => _showStoreModal = true);
+                    },
+                  ),
+                  const SizedBox(height: AppTheme.spacing8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
