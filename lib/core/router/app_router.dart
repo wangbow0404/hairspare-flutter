@@ -37,11 +37,9 @@ import '../../screens/admin/admin_content_screen.dart';
 import '../../screens/admin/admin_notifications_screen.dart';
 import '../../screens/admin/admin_reference_screen.dart';
 import '../../screens/common/privacy_policy_screen.dart';
-import '../../screens/common/role_select_screen.dart';
 import '../../screens/shop/favorites_screen.dart';
 import '../../screens/shop/home_screen.dart';
 import '../../screens/shop/shop_command_search_screen.dart';
-import '../../screens/shop/login_screen.dart';
 import '../../screens/shop/messages_screen.dart';
 import '../../screens/shop/payment_screen.dart';
 import '../../screens/shop/profile_screen.dart';
@@ -95,7 +93,7 @@ final class AppRouter {
         GoRoute(
           path: AppRoutes.roleSelect,
           builder: (BuildContext context, GoRouterState state) =>
-              const RoleSelectScreen(),
+              const SpareLoginScreen(),
         ),
         GoRoute(
           path: AppRoutes.privacyPolicy,
@@ -148,7 +146,7 @@ final class AppRouter {
         GoRoute(
           path: AppRoutes.shopLogin,
           builder: (BuildContext context, GoRouterState state) =>
-              const ShopLoginScreen(),
+              const SpareLoginScreen(),
         ),
         GoRoute(
           path: AppRoutes.shopSignup,

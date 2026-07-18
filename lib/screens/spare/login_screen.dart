@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../models/login_portal.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../core/router/app_navigation.dart';
@@ -121,10 +120,11 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
+    // 로그인 화면을 역할별로 나누지 않으므로 portal 제한 없이 로그인한다 —
+    // 실제 role은 서버 응답으로 오고, 성공 후 goHomeForRole이 알맞은 홈으로 보낸다.
     await authProvider.login(
       username: username,
       password: password,
-      portal: LoginPortal.spare,
     );
 
     if (authProvider.error != null) {
@@ -183,7 +183,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
       await authProvider.setUser(user);
 
       if (!mounted) return;
-      AppNavigation.goSpareHome(context);
+      AppNavigation.goHomeForRole(user.role);
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
       if (!mounted) return;
@@ -243,7 +243,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
         await authProvider.setUser(user);
 
         if (!mounted) return;
-        AppNavigation.goSpareHome(context);
+        AppNavigation.goHomeForRole(user.role);
       } else {
         throw Exception('네이버 로그인이 취소되었습니다');
       }
@@ -321,7 +321,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
       await authProvider.setUser(user);
 
       if (!mounted) return;
-      AppNavigation.goSpareHome(context);
+      AppNavigation.goHomeForRole(user.role);
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
       if (!mounted) return;
@@ -378,7 +378,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
       await authProvider.setUser(user);
 
       if (!mounted) return;
-      AppNavigation.goSpareHome(context);
+      AppNavigation.goHomeForRole(user.role);
     } on SignInWithAppleAuthorizationException catch (e) {
       if (e.code == AuthorizationErrorCode.canceled) return;
       if (!mounted) return;
