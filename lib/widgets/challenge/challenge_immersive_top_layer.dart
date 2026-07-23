@@ -4,15 +4,39 @@ import 'package:provider/provider.dart';
 import '../../view_models/challenge_view_model.dart';
 import 'challenge_feed_tab_button.dart';
 
-/// 상단 중앙 탭만 남긴 초미니멀 오버레이.
+/// 상단 중앙 탭만 남긴 초미니멀 오버레이 — 뒤로가기 + 전체/구독 탭.
+/// 로딩·빈 화면([ChallengeLoadingScaffold]/[ChallengeEmptyScaffold])도
+/// 전환 시 깜빡임 없도록 동일한 레이아웃([ChallengeImmersiveTabHeader])을 씀.
 class ChallengeImmersiveTopLayer extends StatelessWidget {
   const ChallengeImmersiveTopLayer({super.key});
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ChallengeViewModel>();
-    final topPad = MediaQuery.paddingOf(context).top;
+    return ChallengeImmersiveTabHeader(
+      allSelected: vm.feedTabIndex == 0,
+      onTapAll: () => context.read<ChallengeViewModel>().switchFeedTab(0),
+      onTapSubscribed: () => context.read<ChallengeViewModel>().switchFeedTab(1),
+    );
+  }
+}
 
+/// [ChallengeImmersiveTopLayer]의 순수 레이아웃 — ViewModel 없이도(로딩 중) 쓸 수 있게 분리.
+class ChallengeImmersiveTabHeader extends StatelessWidget {
+  const ChallengeImmersiveTabHeader({
+    super.key,
+    required this.allSelected,
+    required this.onTapAll,
+    required this.onTapSubscribed,
+  });
+
+  final bool allSelected;
+  final VoidCallback onTapAll;
+  final VoidCallback onTapSubscribed;
+
+  @override
+  Widget build(BuildContext context) {
+    final topPad = MediaQuery.paddingOf(context).top;
     const double sideSlot = 48;
 
     return Padding(
@@ -41,20 +65,16 @@ class ChallengeImmersiveTopLayer extends StatelessWidget {
                 children: [
                   ChallengeFeedTabButton(
                     label: '전체',
-                    isSelected: vm.feedTabIndex == 0,
+                    isSelected: allSelected,
                     variant: ChallengeFeedTabVariant.immersive,
-                    onTap: () async {
-                      await context.read<ChallengeViewModel>().switchFeedTab(0);
-                    },
+                    onTap: onTapAll,
                   ),
                   const SizedBox(width: 28),
                   ChallengeFeedTabButton(
                     label: '구독',
-                    isSelected: vm.feedTabIndex == 1,
+                    isSelected: !allSelected,
                     variant: ChallengeFeedTabVariant.immersive,
-                    onTap: () async {
-                      await context.read<ChallengeViewModel>().switchFeedTab(1);
-                    },
+                    onTap: onTapSubscribed,
                   ),
                 ],
               ),
