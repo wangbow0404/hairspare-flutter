@@ -52,14 +52,16 @@ String? authRedirect(AuthProvider auth, GoRouterState state) {
   };
 
   if (loggedIn) {
+    // 로그인 화면(수동 로그인 성공)·역할선택에서 로그인된 걸 감지하면
+    // 바로 홈으로 보내지 않고 브랜드 스플래시를 한 번 거치게 한다.
     if (path == AppRoutes.roleSelect) {
-      return homeRouteFor(user);
+      return AppRoutes.autoLoginSplash;
     }
     if (_isSparePublicPath(path) && path != AppRoutes.spareSignupSuccess) {
-      return homeRouteFor(user);
+      return AppRoutes.autoLoginSplash;
     }
     if (shopAuthPaths.contains(path)) {
-      return homeRouteFor(user);
+      return AppRoutes.autoLoginSplash;
     }
   }
 
