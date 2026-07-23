@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
-/// HairSpare 브랜드 이미지 (로고 500×132, 심볼 240×240).
+/// HairSpare 브랜드 이미지 — 2026-07 Stitch 신규 로고(H 심볼 + HairSpare 워드마크
+/// 세로 조합, 512×457). 로고·심볼 둘 다 동일 이미지를 씀.
 abstract final class HairSpareBrandAssets {
   static const String logo = 'assets/images/brand/hairspare_logo.png';
   static const String symbol = 'assets/images/brand/hairspare_symbol.png';
 
-  /// Export 기준 500×132.
-  static const double logoAspectRatio = 500 / 132;
+  /// Export 기준 512×457 (구버전 500×132 와이드 로고에서 정사각형에 가까운
+  /// 세로 조합형으로 교체됨).
+  static const double logoAspectRatio = 512 / 457;
 }
 
 /// 가로형 풀 로고 (앱바·역할 선택 등).
