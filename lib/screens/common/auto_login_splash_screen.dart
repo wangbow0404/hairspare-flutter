@@ -13,10 +13,6 @@ import '../../widgets/common/hairspare_brand_assets.dart';
 
 /// 자동로그인 성공 직후 홈 진입 전에 잠깐 보여주는 브랜드 스플래시.
 /// 참고: docs/STITCH_BRIEF_AUTO_LOGIN_SPLASH.md
-///
-/// ⚠️ TODO: 스페어용 배경 사진은 아직 전달받은 파일이 깨져있어 임시로 샵
-/// 사진을 재사용 중 — 스페어 전용 사진 확보되면 [_SplashCopy.spare]의
-/// backgroundAsset만 교체하면 됨.
 class AutoLoginSplashScreen extends StatefulWidget {
   const AutoLoginSplashScreen({super.key});
 
@@ -61,18 +57,18 @@ class _AutoLoginSplashScreenState extends State<AutoLoginSplashScreen> {
           fit: StackFit.expand,
           children: [
             Image.asset(copy.backgroundAsset, fit: BoxFit.cover),
-            // 사진 위 텍스트 가독성 확보 + Stitch 목업에 있던 기존 카피 픽셀 가림.
+            // 사진 위 텍스트 가독성 확보용 암전 그라데이션.
             Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black87,
-                    Colors.black45,
+                    Colors.black54,
+                    Colors.black26,
                     Colors.transparent,
                   ],
-                  stops: [0.0, 0.32, 0.55],
+                  stops: [0.0, 0.28, 0.48],
                 ),
               ),
             ),
@@ -168,8 +164,7 @@ class _SplashCopy {
   final String backgroundAsset;
 
   static const _bgShop = 'assets/images/brand/auto_login_splash_shop_bg.jpg';
-  // TODO: 스페어 전용 사진으로 교체 필요 (섹션 상단 TODO 참고).
-  static const _bgSpare = _bgShop;
+  static const _bgSpare = 'assets/images/brand/auto_login_splash_spare_bg.jpg';
 
   static const shop = _SplashCopy(
     headline: '이런 스페어,\n우리 매장에도 올까?',
