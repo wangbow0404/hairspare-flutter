@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../providers/chat_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/common/hairspare_brand_assets.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../utils/app_bar_navigation.dart';
-import '../../utils/icon_mapper.dart';
+import '../../widgets/design_system/hs_search_bar.dart';
 import '../../widgets/notification_bell.dart';
 
-/// 샵 홈 상단 로고·검색·메시지·알림.
+/// a안 샵 홈 헤더 — 지점명 + SHOP pill + 검색바.
 class ShopHomeAppBarRow extends StatelessWidget {
   const ShopHomeAppBarRow({super.key, required this.scrollController});
 
@@ -16,91 +16,61 @@ class ShopHomeAppBarRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+    final shopName = context.select<AuthProvider, String>(
+      (p) => p.currentUser?.name?.trim().isNotEmpty == true
+          ? p.currentUser!.name!.trim()
+          : '내 샵',
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        GestureDetector(
-          onTap: () {
-            if (scrollController.hasClients) {
-              scrollController.animateTo(
-                0,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-              );
-            }
-          },
-          child: const HairSpareBrandLogo(height: 36),
-        ),
-        const Spacer(),
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => AppBarNavigation.pushSearch(context),
-            borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-            child: Container(
-              padding: const EdgeInsets.all(AppTheme.spacing2),
-              child: IconMapper.icon('search', size: 24, color: AppTheme.textSecondary) ??
-                  const Icon(Icons.search, size: 24, color: AppTheme.textSecondary),
+        Row(
+          children: [
+            Text(
+              shopName,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: HairSpareColors.textPrimary,
+              ),
             ),
-          ),
-        ),
-        const SizedBox(width: AppTheme.spacing3),
-        Consumer<ChatProvider>(
-          builder: (context, chatProvider, _) {
-            final unreadCount = chatProvider.totalUnreadCount;
-            return Stack(
-              children: [
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => AppBarNavigation.pushMessages(context),
-                    borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-                    child: Container(
-                      padding: const EdgeInsets.all(AppTheme.spacing2),
-                      child: IconMapper.icon(
-                            'messagecircle',
-                            size: 24,
-                            color: AppTheme.textSecondary,
-                          ) ??
-                          const Icon(Icons.message_outlined, size: 24, color: AppTheme.textSecondary),
-                    ),
-                  ),
+            const SizedBox(width: AppTheme.spacing2),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing2,
+                vertical: 2,
+              ),
+              decoration: BoxDecoration(
+                color: HairSpareColors.brandPrimarySoft,
+                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                border: Border.all(
+                  color: HairSpareColors.brandPrimary.withValues(alpha: 0.25),
                 ),
-                if (unreadCount > 0)
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: IgnorePointer(
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: AppTheme.urgentRed,
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                        child: Text(
-                          unreadCount > 99 ? '99+' : '$unreadCount',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          },
+              ),
+              child: const Text(
+                'SHOP',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: HairSpareColors.brandPrimary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+            const Spacer(),
+            IconButton(
+              icon: const Icon(Icons.chat_bubble_outline),
+              color: HairSpareColors.textStrong,
+              onPressed: () => AppBarNavigation.pushMessages(context),
+            ),
+            const NotificationBell(role: 'shop'),
+          ],
         ),
-        const SizedBox(width: AppTheme.spacing3),
-        const SizedBox(
-          width: 40,
-          height: 40,
-          child: Center(
-            child: NotificationBell(role: 'shop'),
-          ),
+        const SizedBox(height: AppTheme.spacing2),
+        HsSearchBar(
+          hintText: '스페어·모델 이름 검색',
+          onTap: () => AppBarNavigation.pushSearch(context),
         ),
       ],
     );

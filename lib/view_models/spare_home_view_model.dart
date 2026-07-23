@@ -8,6 +8,7 @@ import '../providers/chat_provider.dart';
 import '../providers/favorite_provider.dart';
 import '../providers/job_provider.dart';
 import '../providers/notification_provider.dart';
+import '../services/location_region_service.dart';
 
 /// 스페어 홈: 초기 데이터 병렬 로드 + 10초 주기 알림·채팅 목록 갱신.
 class SpareHomeViewModel extends ChangeNotifier {
@@ -25,15 +26,26 @@ class SpareHomeViewModel extends ChangeNotifier {
   final FavoriteProvider _favoriteProvider;
   final NotificationProvider _notificationProvider;
   final ChatProvider _chatProvider;
+  final LocationRegionService _locationService = LocationRegionService();
 
   GlobalMessengerService get _m => sl<GlobalMessengerService>();
 
   Timer? _pollTimer;
 
-  /// 공고·찜·알림·채팅을 불러옵니다. 공고를 먼저 로드해 홈 UI를 빠르게 표시합니다.
+  /// 공고·찜·알림·채팅을 불러옵니다. 저장된 지역·LBS 설정을 먼저 복원합니다.
   Future<void> loadInitial() async {
     try {
-      await _jobProvider.loadJobs();
+      final saved = await _locationService.loadSavedRegion();
+      if (saved != null) {
+        _jobProvider.restoreSavedRegion(
+          districtId: saved.districtId,
+          displayLabel: saved.displayLabel,
+          locationBased: saved.isLocationBased,
+        );
+        await _jobProvider.refreshJobs();
+      } else {
+        await _jobProvider.loadJobs();
+      }
       await Future.wait<void>([
         _favoriteProvider.loadFavorites(),
         _notificationProvider.loadNotifications(audience: 'spare'),

@@ -6,6 +6,7 @@ import '../core/services/global_messenger_service.dart';
 import '../models/education_enrollment.dart';
 import '../models/schedule.dart';
 import '../services/education_service.dart';
+import '../services/payment_service.dart';
 import '../services/review_service.dart';
 import '../services/schedule_service.dart';
 import '../utils/error_handler.dart';
@@ -18,6 +19,7 @@ class WorkCheckViewModel extends ChangeNotifier {
     ScheduleService? scheduleService,
     ReviewService? reviewService,
     EducationService? educationService,
+    PaymentRequestService? paymentService,
     DateTime? initialDay,
     String? focusJobId,
     String? focusScheduleId,
@@ -25,6 +27,7 @@ class WorkCheckViewModel extends ChangeNotifier {
   }) : _scheduleService = scheduleService ?? sl<ScheduleService>(),
        _reviewService = reviewService ?? sl<ReviewService>(),
        _educationService = educationService ?? sl<EducationService>(),
+       _paymentService = paymentService ?? sl<PaymentRequestService>(),
        _initialDay = initialDay,
        _focusJobId = focusJobId,
        _focusScheduleId = focusScheduleId;
@@ -39,9 +42,11 @@ class WorkCheckViewModel extends ChangeNotifier {
   final ScheduleService _scheduleService;
   final ReviewService _reviewService;
   final EducationService _educationService;
+  final PaymentRequestService _paymentService;
 
   List<Schedule> schedules = [];
   List<EducationEnrollment> educationEnrollments = [];
+  Set<String> modelMatchDates = {};
   int consecutiveDays = 0;
   int energyFromWork = 0;
   bool isLoading = true;
@@ -74,6 +79,7 @@ class WorkCheckViewModel extends ChangeNotifier {
       await _loadSchedules();
       await _loadEducationEnrollments();
       await _loadWorkCheckStats();
+      await _loadModelMatchDates();
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
       _m.showError(ErrorHandler.getUserFriendlyMessage(appException));
@@ -169,6 +175,20 @@ class WorkCheckViewModel extends ChangeNotifier {
 
   bool hasAnyCalendarEvent(DateTime date) =>
       hasScheduledWork(date) || hasEducationOnDate(date);
+
+  Future<void> _loadModelMatchDates() async {
+    try {
+      modelMatchDates = await _paymentService.getConfirmedDates();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('모델매칭 확정 날짜 로드 오류: $e');
+    }
+  }
+
+  bool hasModelMatchOnDate(DateTime date) {
+    final dateStr = DateFormat('yyyy-MM-dd').format(date);
+    return modelMatchDates.contains(dateStr);
+  }
 
   List<EducationEnrollment> getEnrollmentsForDate(DateTime date) {
     final dateStr = DateFormat('yyyy-MM-dd').format(date);

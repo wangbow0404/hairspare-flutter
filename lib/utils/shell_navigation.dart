@@ -17,6 +17,7 @@ abstract final class ShellNavigation {
     '/spare/home',
     '/spare/profile',
     '/spare/favorites',
+    '/spare/work',
     '/spare/payment',
     '/shop/home',
     '/shop/profile',

@@ -7,6 +7,7 @@ import '../../models/schedule.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/chat_service.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/icon_mapper.dart';
 import '../../utils/navigation_helper.dart';
@@ -161,13 +162,13 @@ class _SelectedScheduleCard extends StatelessWidget {
               color: isScheduleChecked
                   ? AppTheme.primaryBlue.withValues(alpha: 0.08)
                   : isSelected && !isScheduleChecked
-                  ? AppTheme.stitchPrimaryContainer.withValues(alpha: 0.1)
+                  ? HairSpareColors.brandPrimary.withValues(alpha: 0.1)
                   : AppTheme.backgroundWhite,
               border: Border.all(
                 color: isScheduleChecked
                     ? AppTheme.primaryBlue
                     : isSelected && !isScheduleChecked
-                    ? AppTheme.stitchPrimaryContainer
+                    ? HairSpareColors.brandPrimary
                     : AppTheme.borderGray,
                 width: isScheduleChecked ||
                         (isSelected && !isScheduleChecked)
@@ -449,7 +450,7 @@ class _SelectedScheduleCard extends StatelessWidget {
                           vertical: AppTheme.spacing1,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.purple100,
+                          color: HairSpareColors.brandPrimarySoft,
                           borderRadius: AppTheme.borderRadius(
                             AppTheme.radiusFull,
                           ),
@@ -465,8 +466,8 @@ class _SelectedScheduleCard extends StatelessWidget {
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                                 color: !isModelMode && isProposed
-                                    ? AppTheme.stitchPrimaryContainer
-                                    : AppTheme.purple700,
+                                    ? HairSpareColors.brandPrimary
+                                    : HairSpareColors.brandPrimary,
                               ),
                         ),
                       ),

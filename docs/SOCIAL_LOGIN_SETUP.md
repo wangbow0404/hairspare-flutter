@@ -65,9 +65,10 @@ kakao.KakaoSdk.init(
 5. 제공 정보: **이름, 이메일** (필수 권장)
 
 ### 2.2 Android 설정
+> `.example` 템플릿은 `android/app/`에 둔다 — `res/values/` 안에 두면 Android 리소스 병합기가 `.xml`로 안 끝나는 파일을 거부해서 빌드가 깨진다.
 1. 예시 파일을 복사한 뒤 키를 입력합니다:
    ```bash
-   cp android/app/src/main/res/values/naver_strings.xml.example \
+   cp android/app/naver_strings.xml.example \
       android/app/src/main/res/values/naver_strings.xml
    ```
 2. `naver_strings.xml`에 Client ID / Secret 입력 (`naver_strings.xml`은 Git 커밋 금지)
@@ -133,7 +134,7 @@ flutter run \
 1. 예시 파일 복사 후 Web Client ID 입력:
 
 ```bash
-cp android/app/src/main/res/values/google_strings.xml.example \
+cp android/app/google_strings.xml.example \
    android/app/src/main/res/values/google_strings.xml
 ```
 

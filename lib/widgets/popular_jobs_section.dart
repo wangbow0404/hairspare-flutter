@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/job.dart';
 import '../theme/app_theme.dart';
 import '../theme/home_layout_metrics.dart';
-import 'stitch/stitch_compact_job_card.dart';
+import '../theme/hairspare_colors.dart';
+import 'design_system/hs_job_card_horizontal.dart';
 import 'stitch/stitch_section_header.dart';
 
 /// 인기 공고 섹션 (가로 스크롤, 무한 스크롤).
@@ -80,7 +81,7 @@ class _PopularJobsSectionState extends State<PopularJobsSection> {
                 final isFavorite = widget.favoriteMap[job.id] ?? false;
                 return Padding(
                   padding: const EdgeInsets.only(right: AppTheme.spacing4),
-                  child: StitchCompactJobCard(
+                  child: HsJobCardHorizontal(
                     job: job,
                     isFavorite: isFavorite,
                     width: _cardWidth,
@@ -88,8 +89,8 @@ class _PopularJobsSectionState extends State<PopularJobsSection> {
                     showThumbnail: true,
                     badgeLabel: job.isUrgent ? '급구' : '인기',
                     badgeColor: job.isUrgent
-                        ? AppTheme.urgentRed
-                        : AppTheme.stitchPrimary,
+                        ? HairSpareColors.statusUrgent
+                        : HairSpareColors.brandPrimary,
                     onTap: () => widget.onJobTap?.call(job),
                     onFavoriteToggle: () =>
                         widget.onFavoriteToggle?.call(job.id, isFavorite),

@@ -1,42 +1,51 @@
 import 'package:flutter/material.dart';
 
+import 'hairspare_colors.dart';
+
 /// Next.js 웹 앱의 디자인 시스템을 Flutter에 적용한 테마
 class AppTheme {
-  // 색상 팔레트 (Next.js Tailwind CSS 기반)
+  // a안 브랜드 (2026-07-22) — [HairSpareColors] 참조
+  static const Color brandPrimary = HairSpareColors.brandPrimary;
+  static const Color brandPrimarySoft = HairSpareColors.brandPrimarySoft;
+  static const Color activeStructural = HairSpareColors.activeStructural;
+
+  // 색상 팔레트 — legacy alias → a안 (점진 마이그레이션)
   static const Color primaryBlue = Color(0xFF3B82F6); // blue-500
   static const Color primaryBlueDark = Color(0xFF2563EB); // blue-600
   static const Color primaryPurple500 = Color(0xFFA855F7); // purple-500
-  /// Stitch design system — primary brand purple
-  static const Color stitchPrimary = Color(0xFF7800CE);
-  static const Color stitchPrimaryContainer = Color(0xFF9333EA);
-  static const Color stitchTextPrimary = Color(0xFF191F28);
-  static const Color stitchTextSecondary = Color(0xFF4E5968);
-  static const Color surfaceContainerLow = Color(0xFFF3F4F5);
+  /// @deprecated Use [brandPrimary]
+  static const Color stitchPrimary = HairSpareColors.brandPrimary;
+  /// @deprecated Use [brandPrimary]
+  static const Color stitchPrimaryContainer = HairSpareColors.brandPrimary;
+  static const Color stitchTextPrimary = HairSpareColors.textPrimary;
+  static const Color stitchTextSecondary = HairSpareColors.textSecondary;
+  static const Color surfaceContainerLow = HairSpareColors.surfaceMutedAlt;
 
-  static const Color primaryPurple = Color(0xFF9333EA); // purple-600
+  /// @deprecated Use [brandPrimary]
+  static const Color primaryPurple = HairSpareColors.brandPrimary;
   static const Color primaryPurpleDark = Color(0xFF7E22CE); // purple-700
   static const Color primaryPurpleDarker = Color(0xFF6B21A8); // purple-800
-  static const Color primaryGreen = Color(0xFF10B981); // green-500
+  static const Color primaryGreen = HairSpareColors.statusSuccess;
   static const Color primaryPink = Color(0xFFEC4899); // pink-500
   static const Color primaryPinkLight = Color(0xFFFDF2F8); // pink-50
   static const Color primaryPinkDarker = Color(0xFF9F1239); // pink-900
   static const Color primaryPurpleLight = Color(0xFFF3E8FF); // purple-50
   
   // 배경색
-  static const Color backgroundGray = Color(0xFFF9FAFB); // gray-50
-  static const Color backgroundWhite = Color(0xFFFFFFFF);
+  static const Color backgroundGray = HairSpareColors.surfaceMuted;
+  static const Color backgroundWhite = HairSpareColors.surface;
   static const Color backgroundGradientStart = Color(0xFFEFF6FF); // blue-50
   static const Color backgroundGradientMiddle = Color(0xFFF3E8FF); // purple-50
   static const Color backgroundGradientEnd = Color(0xFFFDF2F8); // pink-50
   
   // 텍스트 색상
-  static const Color textPrimary = Color(0xFF111827); // gray-900
-  static const Color textSecondary = Color(0xFF6B7280); // gray-600
-  static const Color textTertiary = Color(0xFF9CA3AF); // gray-400
+  static const Color textPrimary = HairSpareColors.textPrimary;
+  static const Color textSecondary = HairSpareColors.textSecondary;
+  static const Color textTertiary = HairSpareColors.textSecondaryAlt;
   static const Color textGray700 = Color(0xFF374151); // gray-700
   
   // 급구 관련 색상
-  static const Color urgentRed = Color(0xFFEF4444); // red-500
+  static const Color urgentRed = HairSpareColors.statusUrgent;
   static const Color urgentRedLight = Color(0xFFFEE2E2); // red-100
   static const Color red50 = Color(0xFFFEF2F2); // red-50
   static const Color red200 = Color(0xFFFECACA); // red-200
@@ -74,7 +83,7 @@ class AppTheme {
   static const Color yellow900 = Color(0xFF713F12); // yellow-900
   
   // 테두리 색상
-  static const Color borderGray = Color(0xFFE5E7EB); // gray-200
+  static const Color borderGray = HairSpareColors.border;
   static const Color borderGray300 = Color(0xFFD1D5DB); // gray-300
   static const Color outline = Color(0xFF7E7386); // Stitch outline icons
   
@@ -193,9 +202,9 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: stitchPrimary,
-        primary: stitchPrimary,
-        secondary: primaryPurple,
+        seedColor: brandPrimary,
+        primary: brandPrimary,
+        secondary: brandPrimary,
         surface: backgroundWhite,
         error: urgentRed,
       ),
@@ -213,7 +222,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: stitchPrimaryContainer,
+          backgroundColor: brandPrimary,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
@@ -306,7 +315,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: stitchPrimaryContainer, width: 2),
+          borderSide: const BorderSide(color: brandPrimary, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
@@ -394,7 +403,7 @@ class AppTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusLg),
-        borderSide: const BorderSide(color: stitchPrimaryContainer, width: 2),
+        borderSide: const BorderSide(color: brandPrimary, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusLg),

@@ -14,8 +14,8 @@ abstract final class MessagingNavigation {
     if (path.startsWith('/shop/')) {
       return AppRoutes.shopMessageChat(chatId);
     }
-    if (path.startsWith('/spare/payment')) {
-      return AppRoutes.sparePaymentChat(chatId);
+    if (path.startsWith('/spare/work') || path.startsWith('/spare/payment')) {
+      return AppRoutes.spareWorkChat(chatId);
     }
     return AppRoutes.spareMessageChat(chatId);
   }

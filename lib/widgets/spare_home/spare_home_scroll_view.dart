@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/router/app_routes.dart';
 import '../../providers/favorite_provider.dart';
 import '../../providers/job_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/category_grid.dart';
-import '../../widgets/stitch/stitch_hero_banner.dart';
-import 'spare_home_quick_menu.dart';
 import '../../utils/app_screen_insets.dart';
 import 'spare_home_app_bar.dart';
 import 'spare_home_job_sections.dart';
+import 'spare_home_promo_banner.dart';
+import 'spare_home_quick_menu.dart';
 
-/// 스페어·디자이너 홈 본문(헤더·배너·공고 섹션).
-class SpareHomeScrollView extends StatelessWidget {
+/// 스페어·디자이너 홈 본문 (a안).
+class SpareHomeScrollView extends StatefulWidget {
   const SpareHomeScrollView({super.key, required this.scrollController});
 
   final ScrollController scrollController;
 
+  @override
+  State<SpareHomeScrollView> createState() => _SpareHomeScrollViewState();
+}
+
+class _SpareHomeScrollViewState extends State<SpareHomeScrollView> {
   static Future<void> _toggleFavorite(
     BuildContext context,
     String jobId,
@@ -39,42 +42,34 @@ class SpareHomeScrollView extends StatelessWidget {
     }
   }
 
-  static void _onBannerTap(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        context.push(AppRoutes.spareHomeJobsPath(filter: 'urgent'));
-        break;
-      default:
-        break;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
-      controller: scrollController,
+      controller: widget.scrollController,
       slivers: [
         AppScreenInsets.pinnedTopBarSliver(
           context: context,
-          child: SpareHomeAppBarRow(scrollController: scrollController),
+          child: SpareHomeAppBarRow(scrollController: widget.scrollController),
         ),
         SliverToBoxAdapter(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              StitchHeroBanner(
-                height: 240,
-                onCtaTap: (index) => _onBannerTap(context, index),
-              ),
-              const SizedBox(height: AppTheme.spacing4),
+              const SizedBox(height: AppTheme.spacing3),
+              const SpareHomePromoBanner(),
+              const SizedBox(height: AppTheme.spacing3),
               CategoryGrid(
                 padding: const EdgeInsets.only(
-                  top: 0,
+                  left: AppTheme.spacing4,
+                  right: AppTheme.spacing4,
                   bottom: AppTheme.spacing2,
                 ),
+                crossAxisCount: 6,
+                wrapInCard: false,
                 categories: SpareHomeQuickMenu.buildCategories(context),
               ),
+              const SizedBox(height: AppTheme.spacing3),
               Consumer<JobProvider>(
                 builder: (context, jobProvider, _) {
                   if (jobProvider.isLoading) {

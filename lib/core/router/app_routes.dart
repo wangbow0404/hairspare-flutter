@@ -28,8 +28,10 @@ abstract final class AppRoutes {
   static const spareHomeEnergy = '/spare/home/energy';
   static String spareMessageChat(String chatId) =>
       '/spare/home/messages/chat/$chatId';
-  static String sparePaymentChat(String chatId) =>
-      '/spare/payment/chat/$chatId';
+  static const spareWork = '/spare/work';
+  static String spareWorkChat(String chatId) => '/spare/work/chat/$chatId';
+  /// @deprecated Use [spareWork]
+  static const sparePayment = '/spare/work';
   static String shopMessageChat(String chatId) =>
       '/shop/home/messages/chat/$chatId';
   static String modelMessageChat(String chatId) =>
@@ -43,11 +45,13 @@ abstract final class AppRoutes {
   static String spareHomeSpaceDetail(String spaceId) =>
       '/spare/home/space/$spaceId';
 
-  /// 공고별 목록 — [filter], [sort](JobsListSortMode.name), [searchQuery](q).
+  /// 공고별 목록 — [filter], [sort](JobsListSortMode.name), [searchQuery](q),
+  /// [premium](하이패스 프리셋).
   static String spareHomeJobsPath({
     String? filter,
     String? sort,
     String? searchQuery,
+    bool premium = false,
   }) {
     final query = <String, String>{};
     if (filter != null && filter.isNotEmpty) {
@@ -59,11 +63,14 @@ abstract final class AppRoutes {
     if (searchQuery != null && searchQuery.isNotEmpty) {
       query['q'] = searchQuery;
     }
+    if (premium) {
+      query['premium'] = '1';
+    }
     if (query.isEmpty) return spareHomeJobs;
     return Uri(path: spareHomeJobs, queryParameters: query).toString();
   }
 
-  static const sparePayment = '/spare/payment';
+  static String sparePaymentChat(String chatId) => spareWorkChat(chatId);
   static const spareFavorites = '/spare/favorites';
   static String spareFavoritesJobDetail(String jobId) =>
       '/spare/favorites/job/$jobId';

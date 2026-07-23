@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/app_routes.dart';
 import '../category_grid.dart';
 
-/// 스페어 홈 8칸 퀵 메뉴 — CategoryGrid 항목 정의.
+/// a안 스페어 홈 6칸 퀵 메뉴.
 abstract final class SpareHomeQuickMenu {
   static List<CategoryItem> buildCategories(BuildContext context) {
     return [
@@ -18,21 +18,32 @@ abstract final class SpareHomeQuickMenu {
         emoji: '',
         icon: Icons.calendar_month_outlined,
         label: '내 스케줄',
-        onTap: () => context.push(AppRoutes.spareHomeWorkCheck),
+        onTap: () => context.go(AppRoutes.spareWork),
       ),
       CategoryItem(
         emoji: '',
-        icon: Icons.star_outline_rounded,
-        label: '챌린지참여',
+        icon: Icons.emoji_events_outlined,
+        label: '챌린지',
         onTap: () => context.push(AppRoutes.spareHomeChallenge),
       ),
       CategoryItem(
         emoji: '',
         icon: Icons.favorite_outline_rounded,
-        label: '모델검색',
+        label: '모델매칭',
         onTap: () => context.push(AppRoutes.spareHomeModelMatch),
+      ),
+      CategoryItem(
+        emoji: '',
+        icon: Icons.school_outlined,
+        label: '교육',
+        onTap: () => context.push(AppRoutes.spareHomeEducation),
+      ),
+      CategoryItem(
+        emoji: '',
+        icon: Icons.storefront_outlined,
+        label: '공간대여',
+        onTap: () => context.push(AppRoutes.spareHomeRegionSelect),
       ),
     ];
   }
-
 }

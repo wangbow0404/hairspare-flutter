@@ -122,6 +122,7 @@ class PaymentRequest {
   final int amount;
   final String? purpose;
   final String status; // requested | accepted | declined | paid | cancelled
+  final String? scheduledDate; // YYYY-MM-DD, 모델 촬영/시술 확정 날짜
   final DateTime createdAt;
 
   PaymentRequest({
@@ -132,6 +133,7 @@ class PaymentRequest {
     required this.amount,
     this.purpose,
     required this.status,
+    this.scheduledDate,
     required this.createdAt,
   });
 
@@ -146,6 +148,7 @@ class PaymentRequest {
           : int.tryParse(json['amount']?.toString() ?? '0') ?? 0,
       purpose: json['purpose']?.toString(),
       status: json['status']?.toString() ?? 'requested',
+      scheduledDate: json['scheduledDate']?.toString(),
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
           : DateTime.now(),
@@ -161,6 +164,7 @@ class PaymentRequestService {
     required int amount,
     required String payerId,
     String? purpose,
+    String? date,
   }) async {
     try {
       final response = await _dio.post(
@@ -169,6 +173,7 @@ class PaymentRequestService {
           'amount': amount,
           'payerId': payerId,
           if (purpose != null) 'purpose': purpose,
+          if (date != null) 'date': date,
         },
       );
       final data = response.data['data'] ?? response.data;
@@ -212,6 +217,21 @@ class PaymentRequestService {
       final response = await _dio.get('/api/payments/$paymentId');
       final data = response.data['data'] ?? response.data;
       return PaymentRequest.fromJson(Map<String, dynamic>.from(data as Map));
+    } on DioException catch (e) {
+      throw ErrorHandler.handleDioException(e);
+    } catch (e) {
+      throw ErrorHandler.handleException(e);
+    }
+  }
+
+  /// 결제 완료(paid)되고 날짜가 지정된 내 결제 요청의 확정 날짜 목록 (YYYY-MM-DD).
+  /// 스페어 근무 캘린더의 「모델매칭」 표시에 사용.
+  Future<Set<String>> getConfirmedDates() async {
+    try {
+      final response = await _dio.get('/api/payments/confirmed-dates');
+      final data = response.data['data'] ?? response.data;
+      final dates = (data['dates'] as List?) ?? const [];
+      return dates.map((d) => d.toString()).toSet();
     } on DioException catch (e) {
       throw ErrorHandler.handleDioException(e);
     } catch (e) {

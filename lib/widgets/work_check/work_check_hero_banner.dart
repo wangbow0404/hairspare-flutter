@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../utils/schedule_session_audience.dart';
 
-/// 근무체크 / 모델 일정 화면 상단 히어로 배너 (그라데이션 + 이모지 + 스트릭 pill).
+/// 연속 근무 이벤트 배너 (a안 — berry soft surface).
 class WorkCheckHeroBanner extends StatelessWidget {
   const WorkCheckHeroBanner({
     super.key,
@@ -20,127 +21,157 @@ class WorkCheckHeroBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!isModelMode) {
+      return _buildStreakBanner(context);
+    }
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
-        vertical: AppTheme.spacing8,
+        vertical: AppTheme.spacing6,
         horizontal: AppTheme.spacing4,
       ),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF7800CE),
-            Color(0xFF9333EA),
-            Color(0xFFEC4899),
-          ],
+      decoration: const BoxDecoration(
+        color: HairSpareColors.brandPrimarySoft,
+        border: Border(
+          bottom: BorderSide(color: HairSpareColors.border),
         ),
       ),
       child: Column(
         children: [
-          // 배경 장식
-          Stack(
+          Text(
+            titleInfo['emoji'] as String,
+            style: const TextStyle(fontSize: 48),
+          ),
+          const SizedBox(height: AppTheme.spacing2),
+          Text(
+            titleInfo['title'] as String,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: HairSpareColors.textPrimary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppTheme.spacing1),
+          Text(
+            titleInfo['subtitle'] as String,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontSize: 14,
+              color: HairSpareColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppTheme.spacing3),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacing4,
+              vertical: AppTheme.spacing2,
+            ),
+            decoration: BoxDecoration(
+              color: HairSpareColors.surface,
+              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+              border: Border.all(color: HairSpareColors.border),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  titleInfo['pillLabel'] as String,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: HairSpareColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacing2),
+                Text(
+                  titleInfo['pillValue'] as String,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: HairSpareColors.brandPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// PDF 03 — 「연속 근무 이벤트 X/10」 도트 진행바 한 장으로 정리 (근무체크 시작 타이틀 +
+  /// 근무 보상 카드는 여기 흡수됨, 중복 섹션 제거).
+  Widget _buildStreakBanner(BuildContext context) {
+    final remaining = 10 - displayDays;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        vertical: AppTheme.spacing4,
+        horizontal: AppTheme.spacing4,
+      ),
+      decoration: const BoxDecoration(
+        color: HairSpareColors.brandPrimarySoft,
+        border: Border(
+          bottom: BorderSide(color: HairSpareColors.border),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Positioned(
-                top: AppTheme.spacing4,
-                left: AppTheme.spacing4,
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: AppTheme.stitchPrimaryContainer.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
+              const Text(
+                '연속 근무 이벤트',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: HairSpareColors.textPrimary,
                 ),
               ),
-              Positioned(
-                top: AppTheme.spacing8,
-                right: AppTheme.spacing8,
-                child: Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    color: AppTheme.stitchPrimaryContainer.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
+              Text(
+                '$displayDays/10',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: HairSpareColors.brandPrimary,
                 ),
-              ),
-              Column(
-                children: [
-                  Text(
-                    titleInfo['emoji'] as String,
-                    style: const TextStyle(fontSize: 60),
-                  ),
-                  const SizedBox(height: AppTheme.spacing3),
-                  Text(
-                    titleInfo['title'] as String,
-                    style: Theme.of(context).textTheme.headlineMedium
-                        ?.copyWith(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppTheme.spacing2),
-                  Text(
-                    titleInfo['subtitle'] as String,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: 16,
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontWeight: FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppTheme.spacing4),
-                  Container(
-                    padding: AppTheme.spacingSymmetric(
-                      horizontal: AppTheme.spacing5,
-                      vertical: AppTheme.spacing2 + AppTheme.spacing1,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: AppTheme.borderRadius(
-                        AppTheme.radiusFull,
-                      ),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          isModelMode
-                              ? titleInfo['pillLabel'] as String
-                              : audience.streakPillLabel,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                fontSize: 14,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                        ),
-                        const SizedBox(width: AppTheme.spacing2),
-                        Text(
-                          isModelMode
-                              ? titleInfo['pillValue'] as String
-                              : '$displayDays일',
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
               ),
             ],
+          ),
+          const SizedBox(height: AppTheme.spacing3),
+          Row(
+            children: List.generate(10, (index) {
+              final filled = index < displayDays;
+              return Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(
+                    right: index == 9 ? 0 : AppTheme.spacing1,
+                  ),
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: filled
+                        ? HairSpareColors.brandPrimary
+                        : HairSpareColors.surface,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: AppTheme.spacing2),
+          Text(
+            remaining > 0
+                ? '$remaining번만 더 근무하면 포인트가 지급돼요'
+                : '포인트가 지급됐어요!',
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: HairSpareColors.brandPrimary,
+            ),
           ),
         ],
       ),

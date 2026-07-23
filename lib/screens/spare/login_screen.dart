@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../core/router/app_navigation.dart';
 import '../../core/router/app_routes.dart';
 import '../../widgets/social_login_button.dart'; // SocialLoginButton import
@@ -791,16 +792,10 @@ class _LoginButtonState extends State<_LoginButton> {
               1.0,
             ), // active:scale-[0.98]
           decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: _isPressed
-                ? [AppTheme.primaryPurpleDark, AppTheme.primaryPurpleDarker] // hover:from-purple-700 hover:to-purple-800
-                : [AppTheme.primaryPurple, AppTheme.primaryPurpleDark], // from-purple-600 to-purple-700
+            color: HairSpareColors.brandPrimary,
+            borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+            boxShadow: AppTheme.shadowMd,
           ),
-          borderRadius: AppTheme.borderRadius(AppTheme.radiusLg), // rounded-lg
-          boxShadow: AppTheme.shadowMd, // shadow-md
-        ),
         child: widget.isLoading
             ? const SizedBox(
                 height: 20,

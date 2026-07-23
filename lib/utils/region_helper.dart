@@ -351,4 +351,63 @@ class RegionHelper {
     if (matches.isEmpty) return regionId;
     return matches.first.name;
   }
+
+  /// 역지오코딩 결과 → 구/군 region ID (없으면 null).
+  static String? resolveDistrictIdFromPlacemark({
+    String? administrativeArea,
+    String? locality,
+    String? subAdministrativeArea,
+    String? subLocality,
+  }) {
+    final haystack = [
+      locality,
+      subAdministrativeArea,
+      subLocality,
+      administrativeArea,
+    ].whereType<String>().where((s) => s.trim().isNotEmpty);
+
+    final districts =
+        _regions.where((r) => r.type == RegionType.district).toList();
+
+    for (final raw in haystack) {
+      final normalized = _normalizeRegionToken(raw);
+      for (final district in districts) {
+        final districtNorm = _normalizeRegionToken(district.name);
+        if (normalized.contains(districtNorm) ||
+            districtNorm.contains(normalized)) {
+          return district.id;
+        }
+      }
+    }
+    return null;
+  }
+
+  /// 동·읍·면 라벨 (없으면 구/군명).
+  static String locationDisplayLabel({
+    required String? districtId,
+    String? subLocality,
+    String? locality,
+  }) {
+    final dong = subLocality?.trim();
+    if (dong != null && dong.isNotEmpty && dong.endsWith('동')) {
+      return dong;
+    }
+    if (districtId != null && districtId.isNotEmpty) {
+      return districtShortName(districtId);
+    }
+    final city = locality?.trim();
+    if (city != null && city.isNotEmpty) return city;
+    return '지역 선택';
+  }
+
+  static String _normalizeRegionToken(String value) {
+    return value
+        .replaceAll(' ', '')
+        .replaceAll('특별시', '')
+        .replaceAll('광역시', '')
+        .replaceAll('특별자치시', '')
+        .replaceAll('특별자치도', '')
+        .replaceAll('도', '')
+        .toLowerCase();
+  }
 }

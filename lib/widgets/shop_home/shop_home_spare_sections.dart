@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/spare_profile.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../theme/home_text_styles.dart';
 import 'shop_home_spare_card.dart';
 import 'shop_home_spare_portrait_card.dart';
@@ -59,7 +60,7 @@ class _ShopHomeSectionHeader extends StatelessWidget {
             TextButton(
               onPressed: onSeeMore,
               style: TextButton.styleFrom(
-                foregroundColor: AppTheme.primaryBlue,
+                foregroundColor: HairSpareColors.brandPrimary,
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppTheme.spacing2,
                 ),
@@ -238,7 +239,7 @@ class ShopHomeNearbySparesSection extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppTheme.primaryPurpleLight,
                   borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                  border: Border.all(color: AppTheme.stitchPrimaryContainer),
+                  border: Border.all(color: HairSpareColors.brandPrimary),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
@@ -246,7 +247,7 @@ class ShopHomeNearbySparesSection extends StatelessWidget {
                     Icon(
                       Icons.location_on_outlined,
                       size: 12,
-                      color: AppTheme.stitchPrimaryContainer,
+                      color: HairSpareColors.brandPrimary,
                     ),
                     SizedBox(width: 2),
                     Text(
@@ -254,7 +255,7 @@ class ShopHomeNearbySparesSection extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.stitchPrimaryContainer,
+                        color: HairSpareColors.brandPrimary,
                       ),
                     ),
                   ],

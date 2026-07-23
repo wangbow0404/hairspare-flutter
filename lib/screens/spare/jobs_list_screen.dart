@@ -23,15 +23,17 @@ import '../spare/education_screen.dart';
 
 /// Next.js와 동일한 공고 목록 화면
 class JobsListScreen extends StatefulWidget {
-  final String? filter; // 'urgent', 'latest', 'deadline', 'hourly', 'daily', 'recommended'
+  final String? filter; // 'urgent', 'opening_soon', 'latest', 'deadline', 'hourly', 'daily', 'recommended'
   final String? searchQuery; // 홈 검색에서 전달된 검색어
   final JobsListSortMode? initialSortMode;
+  final bool initialPremium; // 검색화면 "하이패스" 바로가기에서 전달
 
   const JobsListScreen({
     super.key,
     this.filter,
     this.searchQuery,
     this.initialSortMode,
+    this.initialPremium = false,
   });
 
   @override
@@ -80,6 +82,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
     _activeFilter = widget.filter;
     _sortMode = widget.initialSortMode ?? JobsListSortMode.all;
     _searchQuery = widget.searchQuery;
+    _isPremium = widget.initialPremium;
     _scheduleDataLoad();
     _scheduleBodyReveal();
   }
@@ -306,6 +309,9 @@ class _JobsListScreenState extends State<JobsListScreen> {
     switch (_activeFilter) {
       case 'urgent':
         filtered = filtered.where((j) => j.isUrgent).toList();
+        break;
+      case 'opening_soon':
+        filtered = filtered.where((j) => j.isOpeningSoon).toList();
         break;
       case 'deadline':
         filtered = filtered.where(_isDeadlineImminent).toList();

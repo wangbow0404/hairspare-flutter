@@ -63,6 +63,8 @@ import '../../screens/spare/model_schedule_screen.dart';
 import '../../screens/spare/profile_screen.dart';
 import '../../screens/spare/search_screen.dart';
 import '../../screens/spare/verification_screen.dart';
+import '../../screens/spare/work_check_screen.dart';
+import '../../widgets/bottom_nav_bar.dart';
 import '../../screens/spare/spare_signup_professional_screen.dart';
 import '../../screens/spare/spare_signup_model_screen.dart';
 import '../../screens/spare/spare_signup_type_screen.dart';
@@ -179,7 +181,7 @@ final class AppRouter {
                     GoRouterState state,
                     StatefulNavigationShell navigationShell,
                   ) {
-                    return MainTabShell(navigationShell: navigationShell);
+                    return SpareTabShell(navigationShell: navigationShell);
                   },
               branches: <StatefulShellBranch>[
                 StatefulShellBranch(
@@ -218,6 +220,7 @@ final class AppRouter {
                               initialSortMode: jobsListSortModeFromRouteQuery(
                                 query['sort'],
                               ),
+                              initialPremium: query['premium'] == '1',
                             );
                           },
                         ),
@@ -245,7 +248,7 @@ final class AppRouter {
                 StatefulShellBranch(
                   routes: <RouteBase>[
                     GoRoute(
-                      path: 'payment',
+                      path: 'work',
                       builder: (BuildContext context, GoRouterState state) {
                         final isModel =
                             sl<AuthProvider>().currentUser?.isModelAccount ??
@@ -254,13 +257,25 @@ final class AppRouter {
                           tabIndex: 1,
                           child: isModel
                               ? const MessagesScreen()
-                              : const PaymentScreen(),
+                              : const WorkCheckScreen(),
                         );
                       },
                       routes: <RouteBase>[
                         ...ShellSubRoutes.chatRoomChildRoutes(),
                         ...SharedLeafRoutes.all(),
                       ],
+                    ),
+                    GoRoute(
+                      path: 'payment',
+                      redirect: (_, state) {
+                        final path = state.uri.path;
+                        if (path == '/spare/payment') {
+                          return AppRoutes.spareWork;
+                        }
+                        return state.uri
+                            .toString()
+                            .replaceFirst('/spare/payment', '/spare/work');
+                      },
                     ),
                   ],
                 ),
@@ -314,7 +329,10 @@ final class AppRouter {
                     GoRouterState state,
                     StatefulNavigationShell navigationShell,
                   ) {
-                    return MainTabShell(navigationShell: navigationShell);
+                    return MainTabShell(
+                      navigationShell: navigationShell,
+                      persona: BottomNavPersona.shop,
+                    );
                   },
               branches: <StatefulShellBranch>[
                 StatefulShellBranch(

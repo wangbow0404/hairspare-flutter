@@ -63,9 +63,7 @@ class WorkCheckScrollContent extends StatelessWidget {
           ),
 
         if (isModelMode)
-          WorkCheckModelScheduleSummary(upcomingCount: upcomingCount)
-        else
-          WorkCheckRewardSection(displayDays: displayDays),
+          WorkCheckModelScheduleSummary(upcomingCount: upcomingCount),
 
         // 근무/시술 현황 - 달력
         WorkCheckCalendarSection(
@@ -85,8 +83,6 @@ class WorkCheckScrollContent extends StatelessWidget {
           ),
 
         WorkCheckActionBar(isModelMode: isModelMode),
-
-        if (!isModelMode) WorkCheckBonusTipSection(vm: vm),
 
         if (isModelMode) WorkCheckModelTipSection(audience: audience),
 

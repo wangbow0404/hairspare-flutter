@@ -4,25 +4,35 @@ import 'package:provider/provider.dart';
 
 import '../../core/router/app_routes.dart';
 import '../../theme/app_theme.dart';
-import '../../theme/home_text_styles.dart';
-import '../../widgets/stitch/stitch_hero_banner.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../widgets/category_grid.dart';
 import '../../widgets/customer_service_section.dart';
+import '../../widgets/design_system/hs_filter_chip.dart';
 import '../../view_models/shop_home_view_model.dart';
 import 'shop_home_app_bar.dart';
 import 'shop_home_quick_menu.dart';
 import 'shop_home_spare_sections.dart';
 import 'shop_home_tips_banner.dart';
 
-/// 샵 홈 본문 스크롤(배너·카테고리·대시보드·리스트). 데이터는 [ShopHomeViewModel].
-class ShopHomeScrollView extends StatelessWidget {
+/// a안 샵 홈 본문 — pending 배너, KPI 단색, 필터칩, 스페어 그리드.
+class ShopHomeScrollView extends StatefulWidget {
   const ShopHomeScrollView({super.key, required this.scrollController});
 
   final ScrollController scrollController;
 
-  void _openSparesList(BuildContext context) {
-    context.push(AppRoutes.shopHomeSpares);
-  }
+  @override
+  State<ShopHomeScrollView> createState() => _ShopHomeScrollViewState();
+}
+
+class _ShopHomeScrollViewState extends State<ShopHomeScrollView> {
+  String _filter = 'all';
+
+  static const _filters = <String, String>{
+    'all': '전체',
+    'rating': '평점순',
+    'experience': '경력순',
+    'nearby': '근처',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -51,10 +61,13 @@ class ShopHomeScrollView extends StatelessWidget {
       context.push(AppRoutes.shopHomeSchedule);
     }
 
-    Widget dashboardCard({
+    void openSparesList() {
+      context.push(AppRoutes.shopHomeSpares);
+    }
+
+    Widget kpiCard({
       required String value,
       required String label,
-      required Gradient gradient,
       required VoidCallback onTap,
     }) {
       return GestureDetector(
@@ -62,16 +75,29 @@ class ShopHomeScrollView extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(AppTheme.spacing3),
           decoration: BoxDecoration(
-            gradient: gradient,
+            color: HairSpareColors.surfaceMuted,
             borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-            boxShadow: AppTheme.shadowSm,
+            border: Border.all(color: HairSpareColors.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(value, style: HomeTextStyles.dashboardValueOnGradient),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: HairSpareColors.textPrimary,
+                ),
+              ),
               const SizedBox(height: AppTheme.spacing1),
-              Text(label, style: HomeTextStyles.dashboardLabelOnGradient),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: HairSpareColors.textSecondary,
+                ),
+              ),
             ],
           ),
         ),
@@ -79,108 +105,90 @@ class ShopHomeScrollView extends StatelessWidget {
     }
 
     return CustomScrollView(
-      controller: scrollController,
+      controller: widget.scrollController,
       slivers: [
         SliverToBoxAdapter(
           child: Container(
-            height: 44 + MediaQuery.paddingOf(context).top,
             decoration: const BoxDecoration(
-              color: AppTheme.backgroundWhite,
+              color: HairSpareColors.surface,
               border: Border(
-                bottom: BorderSide(color: AppTheme.borderGray, width: 1),
+                bottom: BorderSide(color: HairSpareColors.border),
               ),
             ),
-            padding: EdgeInsets.only(
-              top: MediaQuery.paddingOf(context).top,
-              left: AppTheme.spacing4,
-              right: AppTheme.spacing4,
+            padding: EdgeInsets.fromLTRB(
+              AppTheme.spacing4,
+              MediaQuery.paddingOf(context).top + AppTheme.spacing2,
+              AppTheme.spacing4,
+              AppTheme.spacing3,
             ),
-            child: SizedBox(
-              height: 44,
-              child: ShopHomeAppBarRow(scrollController: scrollController),
-            ),
+            child: ShopHomeAppBarRow(scrollController: widget.scrollController),
           ),
         ),
-        SliverToBoxAdapter(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              StitchHeroBanner(
-                height: 240,
-                variant: StitchHeroVariant.shop,
-                onCtaTap: (index) {
-                  switch (index) {
-                    case 0:
-                      openJobsList();
-                      break;
-                    case 1:
-                      _openSparesList(context);
-                      break;
-                    case 2:
-                      openSchedule();
-                      break;
-                  }
-                },
-              ),
-              const SizedBox(height: AppTheme.spacing4),
-              CategoryGrid(
-                padding: const EdgeInsets.fromLTRB(
-                  AppTheme.spacing4,
-                  0,
-                  AppTheme.spacing4,
-                  AppTheme.spacing6,
+        if (vm.pendingApplicantsCount > 0)
+          SliverToBoxAdapter(
+            child: Material(
+              color: HairSpareColors.brandPrimarySoft,
+              child: InkWell(
+                onTap: openApplicants,
+                child: Padding(
+                  padding: const EdgeInsets.all(AppTheme.spacing4),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.person_add_alt_1_outlined,
+                        color: HairSpareColors.brandPrimary,
+                      ),
+                      const SizedBox(width: AppTheme.spacing3),
+                      Expanded(
+                        child: Text(
+                          '대기 중인 지원자 ${vm.pendingApplicantsCount}명',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: HairSpareColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right,
+                        color: HairSpareColors.textSecondary,
+                      ),
+                    ],
+                  ),
                 ),
-                categories: ShopHomeQuickMenu.buildCategories(context),
-              ),
-            ],
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: Container(
-            decoration: const BoxDecoration(
-              color: AppTheme.backgroundWhite,
-              border: Border(
-                bottom: BorderSide(color: AppTheme.borderGray, width: 1),
               ),
             ),
+          ),
+        SliverToBoxAdapter(
+          child: Padding(
             padding: const EdgeInsets.fromLTRB(
               AppTheme.spacing4,
+              AppTheme.spacing4,
+              AppTheme.spacing4,
               AppTheme.spacing2,
-              AppTheme.spacing4,
-              AppTheme.spacing4,
             ),
             child: Row(
               children: [
                 Expanded(
-                  child: dashboardCard(
+                  child: kpiCard(
                     value: '${vm.activeJobCount}',
                     label: '내 공고',
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF9333EA), Color(0xFFEC4899)],
-                    ),
                     onTap: openJobsList,
                   ),
                 ),
                 const SizedBox(width: AppTheme.spacing3),
                 Expanded(
-                  child: dashboardCard(
+                  child: kpiCard(
                     value: '${vm.pendingApplicantsCount}',
                     label: '대기 지원자',
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF3B82F6), Color(0xFF06B6D4)],
-                    ),
                     onTap: openApplicants,
                   ),
                 ),
                 const SizedBox(width: AppTheme.spacing3),
                 Expanded(
-                  child: dashboardCard(
+                  child: kpiCard(
                     value: '${vm.todayModelMatchingCount}',
                     label: '오늘 모델매칭',
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF10B981), Color(0xFF059669)],
-                    ),
                     onTap: openSchedule,
                   ),
                 ),
@@ -189,11 +197,44 @@ class ShopHomeScrollView extends StatelessWidget {
           ),
         ),
         SliverToBoxAdapter(
+          child: CategoryGrid(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing4,
+              0,
+              AppTheme.spacing4,
+              AppTheme.spacing4,
+            ),
+            wrapInCard: false,
+            crossAxisCount: 4,
+            categories: ShopHomeQuickMenu.buildCategories(context),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: SizedBox(
+            height: 40,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
+              itemCount: _filters.length,
+              separatorBuilder: (_, __) =>
+                  const SizedBox(width: AppTheme.spacing2),
+              itemBuilder: (context, index) {
+                final key = _filters.keys.elementAt(index);
+                return HsFilterChip(
+                  label: _filters[key]!,
+                  isSelected: _filter == key,
+                  onTap: () => setState(() => _filter = key),
+                );
+              },
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
           child: ColoredBox(
             color: AppTheme.backgroundGray,
             child: ShopHomePopularSparesSection(
               spares: vm.popularSpares,
-              onSeeMore: () => _openSparesList(context),
+              onSeeMore: openSparesList,
               onSpareTap: (spare) => context.push(
                 AppRoutes.shopHomeSpareDetail(spare.id),
               ),
@@ -211,7 +252,7 @@ class ShopHomeScrollView extends StatelessWidget {
         SliverToBoxAdapter(
           child: ShopHomeNewSparesSection(
             spares: vm.newSpares,
-            onSeeMore: () => _openSparesList(context),
+            onSeeMore: openSparesList,
             onSpareTap: (spare) => context.push(
               AppRoutes.shopHomeSpareDetail(spare.id),
             ),
@@ -221,7 +262,7 @@ class ShopHomeScrollView extends StatelessWidget {
           child: ShopHomeNearbySparesSection(
             spares: vm.nearbySpares,
             regionLabel: vm.shopRegionLabel,
-            onSeeMore: () => _openSparesList(context),
+            onSeeMore: openSparesList,
             onSpareTap: (spare) => context.push(
               AppRoutes.shopHomeSpareDetail(spare.id),
             ),
@@ -230,7 +271,7 @@ class ShopHomeScrollView extends StatelessWidget {
         SliverToBoxAdapter(
           child: ShopHomeRegularSparesSection(
             spares: vm.regularSpares,
-            onSeeMore: () => _openSparesList(context),
+            onSeeMore: openSparesList,
             onSpareTap: (spare) => context.push(
               AppRoutes.shopHomeSpareDetail(spare.id),
             ),

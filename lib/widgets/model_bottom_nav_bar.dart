@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../theme/hairspare_colors.dart';
 
 /// 모델 계정 하단 탭 — 홈 · 매칭 · 스케줄 · 마이.
 class ModelBottomNavBar extends StatelessWidget {
@@ -88,8 +89,9 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        isActive ? AppTheme.stitchPrimaryContainer : AppTheme.stitchTextSecondary;
+    final color = isActive
+        ? HairSpareColors.activeStructural
+        : HairSpareColors.textSecondary;
 
     return Expanded(
       child: InkWell(

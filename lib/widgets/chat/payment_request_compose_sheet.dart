@@ -52,6 +52,7 @@ class _PaymentRequestComposeSheetState
   final _amountController = TextEditingController();
   final _customPurposeController = TextEditingController();
   String _purpose = _purposeOptions.first;
+  DateTime? _scheduledDate;
   bool _submitting = false;
 
   @override
@@ -59,6 +60,18 @@ class _PaymentRequestComposeSheetState
     _amountController.dispose();
     _customPurposeController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _scheduledDate ?? DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 1)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) {
+      setState(() => _scheduledDate = picked);
+    }
   }
 
   Future<void> _submit() async {
@@ -71,6 +84,9 @@ class _PaymentRequestComposeSheetState
     }
     final purpose =
         _purpose == '기타' ? _customPurposeController.text.trim() : _purpose;
+    final date = _scheduledDate == null
+        ? null
+        : '${_scheduledDate!.year}-${_scheduledDate!.month.toString().padLeft(2, '0')}-${_scheduledDate!.day.toString().padLeft(2, '0')}';
 
     setState(() => _submitting = true);
     try {
@@ -79,6 +95,7 @@ class _PaymentRequestComposeSheetState
         amount: amount,
         purpose: purpose.isEmpty ? null : purpose,
         payerId: widget.otherUserId,
+        date: date,
       );
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
@@ -195,6 +212,53 @@ class _PaymentRequestComposeSheetState
               ),
             ),
           ],
+          const SizedBox(height: 16),
+          const Text(
+            '촬영·시술 날짜 (선택)',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          InkWell(
+            onTap: _pickDate,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              width: double.infinity,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.backgroundGray,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_month_outlined,
+                    size: 18,
+                    color: AppTheme.textSecondary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _scheduledDate == null
+                        ? '날짜를 선택해주세요 (근무 캘린더에 표시돼요)'
+                        : '${_scheduledDate!.year}.${_scheduledDate!.month}.${_scheduledDate!.day}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: _scheduledDate == null
+                          ? AppTheme.textSecondary
+                          : AppTheme.textPrimary,
+                      fontWeight: _scheduledDate == null
+                          ? FontWeight.w400
+                          : FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,

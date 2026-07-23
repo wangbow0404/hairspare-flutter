@@ -1,35 +1,46 @@
 import 'package:flutter/material.dart';
 
-/// 스케줄 상태 태그용 저채도 파스텔 팔레트.
+import '../../theme/hairspare_colors.dart';
+
+/// 스케줄·일정 태그 — a안 기능색.
 abstract final class ScheduleStatusChipTheme {
   ScheduleStatusChipTheme._();
 
   static (Color bg, Color fg, Color? border) forLabel(String label) {
     switch (label) {
       case '완료':
+      case '정산 완료':
+      case '정산완료':
         return (
-          const Color(0xFFF1F5F9),
-          const Color(0xFF64748B),
-          const Color(0xFFE2E8F0),
+          HairSpareColors.statusSuccessBg,
+          HairSpareColors.statusSuccess,
+          HairSpareColors.statusSuccess.withValues(alpha: 0.25),
+        );
+      case '교육':
+        return (
+          HairSpareColors.statusEducationBg,
+          HairSpareColors.statusEducation,
+          HairSpareColors.statusEducation.withValues(alpha: 0.25),
+        );
+      case '모델매칭':
+        return (
+          HairSpareColors.statusMatchingBg,
+          HairSpareColors.statusMatching,
+          HairSpareColors.statusMatching.withValues(alpha: 0.25),
         );
       case '근무 중':
         return (
-          const Color(0xFFFEF9C3),
-          const Color(0xFFA16207),
-          const Color(0xFFFDE68A).withValues(alpha: 0.6),
-        );
-      case '체크 가능':
-        return (
-          const Color(0xFFEDE9FE),
-          const Color(0xFF7C3AED),
-          const Color(0xFFDDD6FE).withValues(alpha: 0.7),
+          HairSpareColors.brandPrimarySoft,
+          HairSpareColors.brandPrimary,
+          HairSpareColors.brandPrimary.withValues(alpha: 0.2),
         );
       case '근무 예정':
+      case '근무예정':
       default:
         return (
-          const Color(0xFFEEF2FF),
-          const Color(0xFF4F46E5),
-          const Color(0xFFE0E7FF).withValues(alpha: 0.8),
+          HairSpareColors.surfaceMuted,
+          HairSpareColors.textStrongAlt,
+          HairSpareColors.border,
         );
     }
   }

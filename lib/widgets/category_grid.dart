@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../theme/hairspare_colors.dart';
 
 class CategoryItem {
   final String emoji;
@@ -16,22 +17,24 @@ class CategoryItem {
     required this.label,
     this.onTap,
     this.has3DEffect = false,
-    this.color = AppTheme.stitchPrimary,
+    this.color = HairSpareColors.brandPrimary,
   });
 }
 
-/// Stitch 스타일 4×2 카테고리 그리드 — 회색 원 + outline 아이콘.
+/// a안 카테고리 그리드 — 회색 원 + outline 아이콘.
 class CategoryGrid extends StatelessWidget {
   const CategoryGrid({
     super.key,
     required this.categories,
     this.padding,
     this.wrapInCard = true,
+    this.crossAxisCount = 4,
   });
 
   final List<CategoryItem> categories;
   final EdgeInsetsGeometry? padding;
   final bool wrapInCard;
+  final int crossAxisCount;
 
   @override
   Widget build(BuildContext context) {
@@ -39,15 +42,16 @@ class CategoryGrid extends StatelessWidget {
       padding: EdgeInsets.zero,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
         crossAxisSpacing: 8,
-        mainAxisSpacing: 24,
+        mainAxisSpacing: 12,
+        mainAxisExtent: 70,
       ),
       itemCount: categories.length,
       itemBuilder: (context, index) {
         final category = categories[index];
-        return _StitchCategoryItem(
+        return _CategoryItemTile(
           icon: category.icon,
           emoji: category.emoji,
           label: category.label,
@@ -72,9 +76,9 @@ class CategoryGrid extends StatelessWidget {
           const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppTheme.backgroundWhite,
+          color: HairSpareColors.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-          boxShadow: AppTheme.stitchSoftShadow,
+          border: Border.all(color: HairSpareColors.border),
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppTheme.spacing4),
@@ -85,8 +89,8 @@ class CategoryGrid extends StatelessWidget {
   }
 }
 
-class _StitchCategoryItem extends StatefulWidget {
-  const _StitchCategoryItem({
+class _CategoryItemTile extends StatefulWidget {
+  const _CategoryItemTile({
     required this.icon,
     required this.emoji,
     required this.label,
@@ -99,10 +103,10 @@ class _StitchCategoryItem extends StatefulWidget {
   final VoidCallback? onTap;
 
   @override
-  State<_StitchCategoryItem> createState() => _StitchCategoryItemState();
+  State<_CategoryItemTile> createState() => _CategoryItemTileState();
 }
 
-class _StitchCategoryItemState extends State<_StitchCategoryItem> {
+class _CategoryItemTileState extends State<_CategoryItemTile> {
   bool _hovered = false;
   bool _pressed = false;
 
@@ -122,8 +126,8 @@ class _StitchCategoryItemState extends State<_StitchCategoryItem> {
           onHover: (hovered) => setState(() => _hovered = hovered),
           onHighlightChanged: (pressed) => setState(() => _pressed = pressed),
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          splashColor: AppTheme.stitchPrimary.withValues(alpha: 0.12),
-          highlightColor: AppTheme.stitchPrimary.withValues(alpha: 0.08),
+          splashColor: HairSpareColors.brandPrimary.withValues(alpha: 0.12),
+          highlightColor: HairSpareColors.brandPrimary.withValues(alpha: 0.08),
           child: SizedBox.expand(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -131,45 +135,35 @@ class _StitchCategoryItemState extends State<_StitchCategoryItem> {
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   curve: Curves.easeOut,
-                  width: 48,
-                  height: 48,
+                  width: 44,
+                  height: 44,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: _active
-                        ? AppTheme.primaryPurpleLight
-                        : AppTheme.surfaceContainerLow,
+                        ? HairSpareColors.brandPrimarySoft
+                        : HairSpareColors.surfaceMuted,
                     shape: BoxShape.circle,
-                    boxShadow: _active
-                        ? [
-                            BoxShadow(
-                              color: AppTheme.stitchPrimary
-                                  .withValues(alpha: 0.18),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ]
-                        : null,
                   ),
                   child: widget.icon != null
                       ? Icon(
                           widget.icon,
-                          size: 24,
+                          size: 20,
                           color: _active
-                              ? AppTheme.stitchPrimary
-                              : AppTheme.stitchTextSecondary,
+                              ? HairSpareColors.brandPrimary
+                              : HairSpareColors.textSecondary,
                         )
                       : Text(
                           widget.emoji,
-                          style: const TextStyle(fontSize: 22),
+                          style: const TextStyle(fontSize: 18),
                         ),
                 ),
-                const SizedBox(height: AppTheme.spacing2),
+                const SizedBox(height: AppTheme.spacing1),
                 Text(
                   widget.label,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: AppTheme.stitchTextPrimary,
+                    color: HairSpareColors.textPrimary,
                     height: 1.2,
                   ),
                   textAlign: TextAlign.center,

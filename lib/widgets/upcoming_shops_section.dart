@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/job.dart';
 import '../theme/app_theme.dart';
+import '../theme/hairspare_colors.dart';
 import '../utils/icon_mapper.dart';
 import '../utils/region_helper.dart';
 import 'common/job_thumbnail.dart';
@@ -21,7 +22,7 @@ class UpcomingShopsSection extends StatelessWidget {
     required this.favoriteMap,
   });
 
-  static const Color _textMuted = Color(0xFFD1D5DB); // gray-300
+  static const Color _textMuted = HairSpareColors.textSecondary;
 
   String _formatAmount(int amount) => NumberFormat('#,###').format(amount);
 
@@ -85,11 +86,12 @@ class UpcomingShopsSection extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1F2937), Color(0xFF111827)],
+      margin: const EdgeInsets.only(top: AppTheme.spacing2),
+      decoration: BoxDecoration(
+        color: HairSpareColors.brandPrimarySoft,
+        border: Border(
+          top: BorderSide(color: HairSpareColors.border),
+          bottom: BorderSide(color: HairSpareColors.border),
         ),
       ),
       padding: const EdgeInsets.all(AppTheme.spacing4),
@@ -109,7 +111,7 @@ class UpcomingShopsSection extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  color: HairSpareColors.textPrimary,
                 ),
               ),
             ],
@@ -187,15 +189,8 @@ class _UpcomingCard extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
               border: Border.all(
-                color: AppTheme.stitchPrimaryContainer.withValues(alpha: 0.6),
+                color: HairSpareColors.brandPrimary.withValues(alpha: 0.25),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.stitchPrimaryContainer.withValues(alpha: 0.35),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,7 +231,7 @@ class _UpcomingCard extends StatelessWidget {
                             const Icon(
                               Icons.bolt,
                               size: 12,
-                              color: AppTheme.stitchPrimary,
+                              color: HairSpareColors.brandPrimary,
                             ),
                             const SizedBox(width: 3),
                             Text(
@@ -244,7 +239,7 @@ class _UpcomingCard extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.stitchPrimary,
+                                color: HairSpareColors.brandPrimary,
                                 letterSpacing: 0.3,
                               ),
                             ),
@@ -267,7 +262,7 @@ class _UpcomingCard extends StatelessWidget {
                                   'heart',
                                   size: 16,
                                   color: isFavorite
-                                      ? AppTheme.urgentRed
+                                      ? HairSpareColors.statusUrgent
                                       : Colors.white,
                                 ) ??
                                 Icon(
@@ -276,7 +271,7 @@ class _UpcomingCard extends StatelessWidget {
                                       : Icons.favorite_border,
                                   size: 16,
                                   color: isFavorite
-                                      ? AppTheme.urgentRed
+                                      ? HairSpareColors.statusUrgent
                                       : Colors.white,
                                 ),
                           ),
@@ -365,7 +360,7 @@ class _UpcomingCard extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
-                              color: AppTheme.stitchPrimary,
+                              color: HairSpareColors.brandPrimary,
                             ),
                           ),
                         ],

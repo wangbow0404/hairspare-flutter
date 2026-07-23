@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../models/job.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../theme/home_layout_metrics.dart';
-import 'stitch/stitch_compact_job_card.dart';
+import 'design_system/hs_job_card_horizontal.dart';
 import 'stitch/stitch_section_header.dart';
 
-/// Stitch 스타일 급구 공고 섹션 — 가로 스크롤 카드.
+/// a안 급구 공고 섹션 — 가로 스크롤 카드.
 class UrgentJobSection extends StatelessWidget {
   const UrgentJobSection({
     super.key,
@@ -62,16 +63,15 @@ class UrgentJobSection extends StatelessWidget {
               itemBuilder: (context, index) {
                 final job = urgentJobs[index];
                 final isFavorite = favoriteMap[job.id] ?? false;
-                return StitchCompactJobCard(
+                return HsJobCardHorizontal(
                   job: job,
                   isFavorite: isFavorite,
                   height: HomeLayoutMetrics.compactCarouselHeight,
+                  badgeLabel: '급구',
+                  badgeColor: HairSpareColors.statusUrgent,
                   onTap: () => onJobTap?.call(job),
                   onFavoriteToggle: onFavoriteToggle != null
-                      ? () => onFavoriteToggle!(
-                            job.id,
-                            !isFavorite,
-                          )
+                      ? () => onFavoriteToggle!(job.id, !isFavorite)
                       : null,
                 );
               },

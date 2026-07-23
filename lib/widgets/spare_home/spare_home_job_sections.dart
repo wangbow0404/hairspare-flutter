@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -9,18 +7,22 @@ import '../../models/job.dart';
 import '../../providers/favorite_provider.dart';
 import '../../providers/job_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/job_filter_utils.dart';
 import '../../utils/job_popularity.dart';
 import '../../utils/jobs_list_sort.dart';
 import '../category_jobs_section.dart';
 import '../customer_service_section.dart';
-import '../new_jobs_section.dart';
 import '../normal_jobs_section.dart';
 import '../popular_jobs_section.dart';
 import '../upcoming_shops_section.dart';
 import '../urgent_job_section.dart';
+import 'spare_home_filter_chips.dart';
 
 /// 스페어 홈 공고 섹션 묶음 — favoriteMap·sort 1회 계산.
-class SpareHomeJobSections extends StatelessWidget {
+///
+/// 급구·하이패스·카테고리 BEST·인기 공고는 결제/노출 우선순위가 있는 영역이라
+/// 필터칩과 무관하게 항상 전체 노출. 필터칩은 그 아래 일반 공고 목록에만 적용됨.
+class SpareHomeJobSections extends StatefulWidget {
   const SpareHomeJobSections({
     super.key,
     required this.onToggleFavorite,
@@ -28,6 +30,13 @@ class SpareHomeJobSections extends StatelessWidget {
 
   final Future<void> Function(BuildContext context, String jobId, bool isFavorite)
       onToggleFavorite;
+
+  @override
+  State<SpareHomeJobSections> createState() => _SpareHomeJobSectionsState();
+}
+
+class _SpareHomeJobSectionsState extends State<SpareHomeJobSections> {
+  String _filter = 'all';
 
   static Map<String, bool> _favoriteMap(Set<String> ids) {
     return {for (final id in ids) id: true};
@@ -43,51 +52,47 @@ class SpareHomeJobSections extends StatelessWidget {
     return Consumer2<JobProvider, FavoriteProvider>(
       builder: (context, jobProvider, favoriteProvider, _) {
         final favoriteMap = _favoriteMap(favoriteProvider.favoriteJobIds);
-        final allJobs = [...jobProvider.urgentJobs, ...jobProvider.normalJobs];
+        final allJobsRaw = [...jobProvider.urgentJobs, ...jobProvider.normalJobs];
 
-        // 섹션 간 중복 제거: 위 섹션에서 사용된 ID는 아래 섹션에서 제외
-        final shownIds = <String>{};
-
-        // 긴급 공고 ID를 먼저 예약
-        shownIds.addAll(jobProvider.urgentJobs.map((j) => j.id));
-
-        // 인기 공고: 긴급 공고 제외 후 선택
-        final topPopularJobs = JobPopularity.topPopular(
-          allJobs.where((j) => !shownIds.contains(j.id)).toList(),
-        );
-        shownIds.addAll(topPopularJobs.map((j) => j.id));
-
-        // 신규 공고: 앞 섹션에서 사용된 것 제외
-        final newJobs = List<Job>.from(allJobs.where((j) => !shownIds.contains(j.id)))
-          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        final topNewJobs = newJobs.take(10).toList();
-        shownIds.addAll(topNewJobs.map((j) => j.id));
-
-        // 다가오는 샵: 오픈예정 결제 공고만 노출
-        final allJobsForUpcoming = jobProvider.normalJobs.isNotEmpty
-            ? jobProvider.normalJobs
-            : jobProvider.urgentJobs;
-        final upcomingJobs = List<Job>.from(
-          allJobsForUpcoming.where(
-            (j) => !shownIds.contains(j.id) && j.isOpeningSoon,
-          ),
+        // 결제·노출 우선순위 섹션 — 필터칩과 무관하게 항상 전체 표시.
+        final urgentJobs = jobProvider.urgentJobs;
+        final hipassJobs = List<Job>.from(
+          jobProvider.jobs.where((j) => j.isPremium),
         )..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        final topUpcomingJobs = upcomingJobs.take(3).toList();
 
-        final popularJobIds = JobPopularity.popularJobIds(allJobs);
+        final shownIds = <String>{};
+        shownIds.addAll(urgentJobs.map((j) => j.id));
+        shownIds.addAll(hipassJobs.map((j) => j.id));
+
+        final topPopularJobs = JobPopularity.topPopular(
+          allJobsRaw.where((j) => !shownIds.contains(j.id)).toList(),
+        );
+
+        final popularJobIds = JobPopularity.popularJobIds(allJobsRaw);
+
+        // 필터칩 아래 일반 공고 목록 — 선택된 칩에 따라 필터링(신규 공고도 여기 포함).
+        final filteredNormalJobs =
+            JobFilterUtils.apply(_filter, jobProvider.normalJobs);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             UrgentJobSection(
-              urgentJobs: jobProvider.urgentJobs,
+              urgentJobs: urgentJobs,
               favoriteMap: favoriteMap,
               onJobTap: (job) => _openJobDetail(context, job),
               onFavoriteToggle: (jobId, isFav) =>
-                  onToggleFavorite(context, jobId, isFav),
+                  widget.onToggleFavorite(context, jobId, isFav),
               onViewAll: () => context.push(
                 AppRoutes.spareHomeJobsPath(filter: 'urgent'),
               ),
+            ),
+            UpcomingShopsSection(
+              jobs: hipassJobs,
+              favoriteMap: favoriteMap,
+              onJobTap: (job) => _openJobDetail(context, job),
+              onFavoriteToggle: (jobId, isFav) =>
+                  widget.onToggleFavorite(context, jobId, isFav),
             ),
             CategoryJobsSection(
               allJobs: jobProvider.jobs,
@@ -95,7 +100,7 @@ class SpareHomeJobSections extends StatelessWidget {
               favoriteMap: favoriteMap,
               onJobTap: (job) => _openJobDetail(context, job),
               onFavoriteToggle: (jobId, isFav) =>
-                  onToggleFavorite(context, jobId, isFav),
+                  widget.onToggleFavorite(context, jobId, isFav),
               sectionPadding: const EdgeInsets.fromLTRB(
                 AppTheme.spacing4,
                 AppTheme.spacing1,
@@ -108,39 +113,26 @@ class SpareHomeJobSections extends StatelessWidget {
               favoriteMap: favoriteMap,
               onJobTap: (job) => _openJobDetail(context, job),
               onFavoriteToggle: (jobId, isFav) =>
-                  onToggleFavorite(context, jobId, isFav),
+                  widget.onToggleFavorite(context, jobId, isFav),
               onViewAll: () => context.push(
                 AppRoutes.spareHomeJobsPath(
                   sort: JobsListSortMode.popular.name,
                 ),
               ),
             ),
-            UpcomingShopsSection(
-              jobs: topUpcomingJobs,
-              favoriteMap: favoriteMap,
-              onJobTap: (job) => _openJobDetail(context, job),
-              onFavoriteToggle: (jobId, isFav) =>
-                  onToggleFavorite(context, jobId, isFav),
+            const SizedBox(height: AppTheme.spacing2),
+            SpareHomeFilterChips(
+              selected: _filter,
+              onSelected: (v) => setState(() => _filter = v),
             ),
-            NewJobsSection(
-              jobs: topNewJobs,
-              favoriteMap: favoriteMap,
-              onJobTap: (job) => _openJobDetail(context, job),
-              onFavoriteToggle: (jobId, isFav) =>
-                  onToggleFavorite(context, jobId, isFav),
-              onViewAll: () => context.push(
-                AppRoutes.spareHomeJobsPath(
-                  sort: JobsListSortMode.latest.name,
-                ),
-              ),
-            ),
+            const SizedBox(height: AppTheme.spacing3),
             NormalJobsSection(
-              jobs: jobProvider.normalJobs,
+              jobs: filteredNormalJobs,
               favoriteMap: favoriteMap,
               popularJobIds: popularJobIds,
               onJobTap: (job) => _openJobDetail(context, job),
               onFavoriteToggle: (jobId, isFav) =>
-                  onToggleFavorite(context, jobId, isFav),
+                  widget.onToggleFavorite(context, jobId, isFav),
               onViewAll: () => context.push(AppRoutes.spareHomeJobs),
             ),
             const CustomerServiceSection(),

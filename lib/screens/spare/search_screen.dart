@@ -13,6 +13,7 @@ import '../../providers/favorite_provider.dart';
 import '../../screens/spare/education_screen.dart';
 import '../../services/search_service.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../utils/icon_mapper.dart';
 import '../../utils/job_popularity.dart';
 import '../../utils/spare_search_hints.dart';
@@ -477,6 +478,37 @@ class _SearchInputFieldState extends State<SearchInputField> {
   }
 }
 
+class _QuickCategory {
+  const _QuickCategory({
+    required this.label,
+    required this.icon,
+    this.filter,
+    this.sort,
+    this.premium = false,
+  });
+
+  final String label;
+  final IconData icon;
+  final String? filter;
+  final String? sort;
+  final bool premium;
+}
+
+const _quickCategories = [
+  _QuickCategory(label: '급구', icon: Icons.bolt, filter: 'urgent'),
+  _QuickCategory(
+    label: '하이패스',
+    icon: Icons.workspace_premium,
+    premium: true,
+  ),
+  _QuickCategory(
+    label: '오픈예정',
+    icon: Icons.upcoming_outlined,
+    filter: 'opening_soon',
+  ),
+  _QuickCategory(label: '신규공고', icon: Icons.fiber_new_outlined, sort: 'latest'),
+];
+
 class SearchEmptySuggestionsBody extends StatelessWidget {
   const SearchEmptySuggestionsBody({
     super.key,
@@ -489,79 +521,138 @@ class SearchEmptySuggestionsBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: AppTheme.spacingSymmetric(
-        horizontal: AppTheme.spacing6,
-        vertical: AppTheme.spacing6,
+        horizontal: AppTheme.spacing4,
+        vertical: AppTheme.spacing5,
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: AppTheme.spacing8),
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: AppTheme.primaryPurpleLight,
-              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-            ),
-            child: Center(
-              child: IconMapper.icon(
-                    'search',
-                    size: 32,
-                    color: AppTheme.stitchPrimary,
-                  ) ??
-                  const Icon(
-                    Icons.search,
-                    size: 32,
-                    color: AppTheme.stitchPrimary,
-                  ),
-            ),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: AppTheme.spacing3,
+            crossAxisSpacing: AppTheme.spacing3,
+            childAspectRatio: 2.6,
+            children: [
+              for (final category in _quickCategories)
+                _QuickCategoryButton(category: category),
+            ],
           ),
-          const SizedBox(height: AppTheme.spacing4),
+          const SizedBox(height: AppTheme.spacing6),
           const Text(
-            '검색어를 입력해주세요',
-            textAlign: TextAlign.center,
+            '인기 검색어',
             style: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.stitchTextPrimary,
+              fontWeight: FontWeight.w700,
+              color: HairSpareColors.textPrimary,
             ),
           ),
           const SizedBox(height: AppTheme.spacing2),
-          const Text(
-            '공고, 교육, 공간, 챌린지를 찾아볼 수 있어요',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.stitchTextSecondary,
-              height: 1.4,
+          for (var i = 0; i < SpareSearchHints.quickPickKeywords.length; i++)
+            _PopularSearchRow(
+              rank: i + 1,
+              keyword: SpareSearchHints.quickPickKeywords[i],
+              onTap: () => onSuggestionTap(SpareSearchHints.quickPickKeywords[i]),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickCategoryButton extends StatelessWidget {
+  const _QuickCategoryButton({required this.category});
+
+  final _QuickCategory category;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+        onTap: () => context.push(
+          AppRoutes.spareHomeJobsPath(
+            filter: category.filter,
+            sort: category.sort,
+            premium: category.premium,
           ),
-          const SizedBox(height: AppTheme.spacing8),
-          const Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              '추천 검색어',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.stitchTextPrimary,
-              ),
-            ),
+        ),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: HairSpareColors.brandPrimarySoft,
+            borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
           ),
-          const SizedBox(height: AppTheme.spacing3),
-          Wrap(
-            spacing: AppTheme.spacing2,
-            runSpacing: AppTheme.spacing2,
+          padding: AppTheme.spacingSymmetric(
+            horizontal: AppTheme.spacing4,
+            vertical: AppTheme.spacing3,
+          ),
+          child: Row(
             children: [
-              for (final keyword in SpareSearchHints.quickPickKeywords)
-                StitchFilterChip(
-                  label: keyword,
-                  isSelected: false,
-                  onTap: () => onSuggestionTap(keyword),
+              Icon(category.icon, size: 20, color: HairSpareColors.brandPrimary),
+              const SizedBox(width: AppTheme.spacing2),
+              Text(
+                category.label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: HairSpareColors.textPrimary,
                 ),
+              ),
             ],
           ),
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PopularSearchRow extends StatelessWidget {
+  const _PopularSearchRow({
+    required this.rank,
+    required this.keyword,
+    required this.onTap,
+  });
+
+  final int rank;
+  final String keyword;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing2),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 24,
+              child: Text(
+                '$rank',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: rank <= 3
+                      ? HairSpareColors.brandPrimary
+                      : HairSpareColors.textSecondary,
+                ),
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacing2),
+            Expanded(
+              child: Text(
+                keyword,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: HairSpareColors.textPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

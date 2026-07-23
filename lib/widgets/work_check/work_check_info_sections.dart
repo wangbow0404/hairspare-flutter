@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../utils/schedule_session_audience.dart';
 import '../../view_models/work_check_view_model.dart';
 
-/// 미체크 근무가 있을 때 상단에 노출되는 안내 배너.
+/// 미체크 근무가 있을 때만(있을 때만!) 상단에 노출되는 안내 배너.
 class WorkCheckUncheckedBanner extends StatelessWidget {
   const WorkCheckUncheckedBanner({
     super.key,
@@ -21,10 +22,10 @@ class WorkCheckUncheckedBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: AppTheme.backgroundWhite,
+      color: HairSpareColors.surface,
       padding: AppTheme.spacingSymmetric(
         horizontal: AppTheme.spacing4,
-        vertical: AppTheme.spacing4,
+        vertical: AppTheme.spacing2,
       ),
       child: Material(
         color: Colors.transparent,
@@ -32,7 +33,7 @@ class WorkCheckUncheckedBanner extends StatelessWidget {
           onTap: onTap,
           borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
           child: Container(
-            padding: AppTheme.spacing(AppTheme.spacing4),
+            padding: AppTheme.spacing(AppTheme.spacing3),
             decoration: BoxDecoration(
               color: AppTheme.orange500.withValues(alpha: 0.08),
               border: Border.all(color: AppTheme.orange500, width: 1),
@@ -41,37 +42,37 @@ class WorkCheckUncheckedBanner extends StatelessWidget {
             child: Row(
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     color: AppTheme.orange500.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.how_to_reg_outlined,
-                    size: 22,
+                    size: 18,
                     color: AppTheme.orange500,
                   ),
                 ),
-                const SizedBox(width: AppTheme.spacing3),
+                const SizedBox(width: AppTheme.spacing2),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         audience.uncheckedBannerTitle(count),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 15,
+                        style: const TextStyle(
+                          fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
+                          color: HairSpareColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: AppTheme.spacing1),
+                      const SizedBox(height: 2),
                       Text(
                         audience.uncheckedBannerSubtitle,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontSize: 13,
-                          color: AppTheme.textSecondary,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: HairSpareColors.textSecondary,
                         ),
                       ),
                     ],
@@ -79,7 +80,7 @@ class WorkCheckUncheckedBanner extends StatelessWidget {
                 ),
                 const Icon(
                   Icons.chevron_right,
-                  size: 20,
+                  size: 18,
                   color: AppTheme.orange500,
                 ),
               ],

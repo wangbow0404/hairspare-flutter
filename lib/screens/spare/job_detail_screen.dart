@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/di/service_locator.dart';
 import '../../core/services/global_messenger_service.dart';
+import '../../models/job.dart';
 import '../../theme/app_theme.dart';
 import '../../view_models/job_detail_view_model.dart';
 import '../../mocks/mock_spare_data.dart';
@@ -42,8 +43,33 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   }
 }
 
-class _JobDetailScaffold extends StatelessWidget {
+class _JobDetailScaffold extends StatefulWidget {
   const _JobDetailScaffold();
+
+  @override
+  State<_JobDetailScaffold> createState() => _JobDetailScaffoldState();
+}
+
+class _JobDetailScaffoldState extends State<_JobDetailScaffold> {
+  bool _confirmSheetOpen = false;
+
+  void _maybeShowConfirmSheet(JobDetailViewModel vm, Job job) {
+    if (!vm.showConfirmModal || _confirmSheetOpen) return;
+    _confirmSheetOpen = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await JobDetailConfirmApplyModal.show(
+        context,
+        job: job,
+        onConfirm: () => _confirmApplyWithConflictCheck(context, vm),
+        onCancel: vm.dismissConfirmModal,
+      );
+      if (mounted) {
+        _confirmSheetOpen = false;
+        vm.dismissConfirmModal();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +106,7 @@ class _JobDetailScaffold extends StatelessWidget {
     }
 
     final job = vm.job!;
+    _maybeShowConfirmSheet(vm, job);
 
     return PopScope(
       canPop: true,
@@ -129,12 +156,6 @@ class _JobDetailScaffold extends StatelessWidget {
                     vm.dismissVerificationModal();
                     deferAfterTap(() => ShellNavigation.pushVerification(context));
                   },
-                ),
-              if (vm.showConfirmModal)
-                JobDetailConfirmApplyModal(
-                  job: job,
-                  onConfirm: () => _confirmApplyWithConflictCheck(context, vm),
-                  onCancel: vm.dismissConfirmModal,
                 ),
             ],
           ),

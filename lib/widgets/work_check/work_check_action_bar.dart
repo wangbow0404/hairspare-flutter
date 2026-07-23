@@ -3,7 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../theme/app_theme.dart';
-import '../../utils/icon_mapper.dart';
+import '../../theme/hairspare_colors.dart';
+import '../design_system/hs_primary_button.dart';
 import '../../utils/schedule_cancel_flow.dart';
 import '../../utils/schedule_cancellation_policy.dart';
 import '../../utils/schedule_session_audience.dart';
@@ -63,48 +64,9 @@ class WorkCheckActionBar extends StatelessWidget {
                         ),
                   ),
                 ),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: canCheckIn ? vm.handleCheckIn : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.stitchPrimaryContainer,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: AppTheme.borderGray300,
-                    disabledForegroundColor: AppTheme.textSecondary,
-                    padding: AppTheme.spacingSymmetric(
-                      horizontal: AppTheme.spacing4,
-                      vertical: AppTheme.spacing4,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        audience.completeButtonLabel,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                      ),
-                      const SizedBox(width: AppTheme.spacing2),
-                      IconMapper.icon(
-                            'chevronright',
-                            size: 20,
-                            color: Colors.white,
-                          ) ??
-                          const Icon(
-                            Icons.chevron_right,
-                            size: 20,
-                            color: Colors.white,
-                          ),
-                    ],
-                  ),
-                ),
+              HsPrimaryButton(
+                label: audience.completeButtonLabel,
+                onPressed: canCheckIn ? vm.handleCheckIn : null,
               ),
               if (vm.selectedScheduleId != null &&
                   !vm.isChecked(vm.selectedDate))

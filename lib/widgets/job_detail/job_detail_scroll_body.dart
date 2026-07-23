@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/job.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../utils/icon_mapper.dart';
 import '../../utils/navigation_helper.dart';
 import '../../utils/schedule_work_session.dart';
@@ -58,7 +59,7 @@ class JobDetailScrollBody extends StatelessWidget {
                         icon: const Icon(
                           Icons.delete_outline,
                           size: 22,
-                          color: AppTheme.urgentRed,
+                          color: HairSpareColors.statusUrgent,
                         ),
                         onPressed: onDelete,
                         padding: EdgeInsets.zero,
@@ -152,9 +153,9 @@ class JobDetailScrollBody extends StatelessWidget {
             _shopOwnerPill(
               context,
               label: '급구',
-              fg: AppTheme.urgentRed,
-              bg: AppTheme.urgentRed.withValues(alpha: 0.08),
-              border: AppTheme.urgentRed.withValues(alpha: 0.35),
+              fg: HairSpareColors.statusUrgent,
+              bg: HairSpareColors.statusUrgent.withValues(alpha: 0.08),
+              border: HairSpareColors.statusUrgent.withValues(alpha: 0.35),
             ),
         ],
       ),
@@ -218,7 +219,7 @@ class JobDetailScrollBody extends StatelessWidget {
               padding: AppTheme.spacing(AppTheme.spacing5),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [AppTheme.urgentRed, Color(0xFFDC2626)],
+                  colors: [HairSpareColors.statusUrgent, Color(0xFFDC2626)],
                 ),
                 borderRadius: AppTheme.borderRadius(AppTheme.radius2xl),
               ),
@@ -370,12 +371,12 @@ class JobDetailScrollBody extends StatelessWidget {
                 IconMapper.icon(
                   'mappin',
                   size: 16,
-                  color: AppTheme.stitchPrimaryContainer,
+                  color: HairSpareColors.brandPrimary,
                 ) ??
                 const Icon(
                   Icons.location_on,
                   size: 16,
-                  color: AppTheme.stitchPrimaryContainer,
+                  color: HairSpareColors.brandPrimary,
                 ),
             label: '근무 지역',
             value: jobDetailRegionName(job.regionId),
@@ -386,12 +387,12 @@ class JobDetailScrollBody extends StatelessWidget {
                 IconMapper.icon(
                   'clock',
                   size: 16,
-                  color: AppTheme.stitchPrimaryContainer,
+                  color: HairSpareColors.brandPrimary,
                 ) ??
                 const Icon(
                   Icons.access_time,
                   size: 16,
-                  color: AppTheme.stitchPrimaryContainer,
+                  color: HairSpareColors.brandPrimary,
                 ),
             label: '근무 시간',
             value:
@@ -551,7 +552,7 @@ class JobDetailScrollBody extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppTheme.stitchPrimaryContainer,
+              color: HairSpareColors.brandPrimary,
               borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
             ),
             child: Center(
@@ -747,7 +748,7 @@ class JobDetailScrollBody extends StatelessWidget {
                       context,
                       '최신 시설',
                       AppTheme.blue200.withValues(alpha: 0.3),
-                      AppTheme.stitchPrimaryContainer,
+                      HairSpareColors.brandPrimary,
                     ),
                     _buildTag(
                       context,
@@ -772,12 +773,12 @@ class JobDetailScrollBody extends StatelessWidget {
         IconMapper.icon(
               'checkcircle2',
               size: 18,
-              color: AppTheme.stitchPrimaryContainer,
+              color: HairSpareColors.brandPrimary,
             ) ??
             const Icon(
               Icons.check_circle,
               size: 18,
-              color: AppTheme.stitchPrimaryContainer,
+              color: HairSpareColors.brandPrimary,
             ),
         const SizedBox(width: AppTheme.spacing2),
         Expanded(
@@ -815,19 +816,19 @@ class JobDetailScrollBody extends StatelessWidget {
         icon: Icon(
           Icons.chat_bubble_outline,
           size: 18,
-          color: canContact ? AppTheme.stitchPrimaryContainer : AppTheme.textTertiary,
+          color: canContact ? HairSpareColors.brandPrimary : AppTheme.textTertiary,
         ),
         label: Text(
           label,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: canContact ? AppTheme.stitchPrimaryContainer : AppTheme.textTertiary,
+            color: canContact ? HairSpareColors.brandPrimary : AppTheme.textTertiary,
           ),
         ),
         style: OutlinedButton.styleFrom(
           side: BorderSide(
-            color: canContact ? AppTheme.stitchPrimaryContainer : AppTheme.borderGray,
+            color: canContact ? HairSpareColors.brandPrimary : AppTheme.borderGray,
           ),
           padding: AppTheme.spacingSymmetric(
             horizontal: AppTheme.spacing4,
@@ -999,7 +1000,7 @@ class _JobDetailHeroCarouselState extends State<_JobDetailHeroCarousel> {
                       vertical: AppTheme.spacing2 - 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.urgentRed,
+                      color: HairSpareColors.statusUrgent,
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                     ),
                     child: Text(
@@ -1020,7 +1021,7 @@ class _JobDetailHeroCarouselState extends State<_JobDetailHeroCarousel> {
                       vertical: AppTheme.spacing2 - 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.stitchPrimaryContainer,
+                      color: HairSpareColors.brandPrimary,
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                     ),
                     child: Text(

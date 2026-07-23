@@ -41,6 +41,11 @@ public final class GeneratedPluginRegistrant {
       Log.e(TAG, "Error registering plugin geocoding_android, com.baseflow.geocoding.GeocodingPlugin", e);
     }
     try {
+      flutterEngine.getPlugins().add(new com.baseflow.geolocator.GeolocatorPlugin());
+    } catch (Exception e) {
+      Log.e(TAG, "Error registering plugin geolocator_android, com.baseflow.geolocator.GeolocatorPlugin", e);
+    }
+    try {
       flutterEngine.getPlugins().add(new io.flutter.plugins.googlesignin.GoogleSignInPlugin());
     } catch (Exception e) {
       Log.e(TAG, "Error registering plugin google_sign_in_android, io.flutter.plugins.googlesignin.GoogleSignInPlugin", e);
@@ -69,6 +74,11 @@ public final class GeneratedPluginRegistrant {
       flutterEngine.getPlugins().add(new io.flutter.plugins.sharedpreferences.SharedPreferencesPlugin());
     } catch (Exception e) {
       Log.e(TAG, "Error registering plugin shared_preferences_android, io.flutter.plugins.sharedpreferences.SharedPreferencesPlugin", e);
+    }
+    try {
+      flutterEngine.getPlugins().add(new com.aboutyou.dart_packages.sign_in_with_apple.SignInWithApplePlugin());
+    } catch (Exception e) {
+      Log.e(TAG, "Error registering plugin sign_in_with_apple, com.aboutyou.dart_packages.sign_in_with_apple.SignInWithApplePlugin", e);
     }
     try {
       flutterEngine.getPlugins().add(new com.tekartik.sqflite.SqflitePlugin());
