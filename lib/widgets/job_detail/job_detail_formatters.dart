@@ -36,3 +36,19 @@ String jobDetailFormatJobDate(String date) {
 }
 
 String jobDetailFormatJobTime(Job job) => WorkScheduleUtils.formatJobTimeRange(job);
+
+/// 오늘/내일/M월 d일 — 근무 일정 표시용 상대 날짜 라벨.
+String jobDetailRelativeDayLabel(String date) {
+  try {
+    final target = DateTime.parse(date);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final targetDay = DateTime(target.year, target.month, target.day);
+    final diff = targetDay.difference(today).inDays;
+    if (diff == 0) return '오늘';
+    if (diff == 1) return '내일';
+    return DateFormat('M월 d일', 'ko_KR').format(target);
+  } catch (_) {
+    return date;
+  }
+}

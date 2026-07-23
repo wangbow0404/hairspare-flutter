@@ -4,7 +4,7 @@ import '../../models/job.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/hairspare_colors.dart';
 import '../../utils/icon_mapper.dart';
-import '../design_system/hs_primary_button.dart';
+import 'job_detail_formatters.dart';
 
 /// 본인인증 유도 모달.
 class JobDetailVerificationModal extends StatelessWidget {
@@ -187,6 +187,8 @@ class _ConfirmApplySheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final summary =
+        '${job.shopName} · ${jobDetailRelativeDayLabel(job.date)} ${jobDetailFormatJobTime(job)} · ${job.title}';
 
     return Container(
       decoration: const BoxDecoration(
@@ -196,70 +198,98 @@ class _ConfirmApplySheet extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(24, 12, 24, bottomInset + 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: HairSpareColors.border,
-              borderRadius: BorderRadius.circular(2),
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: HairSpareColors.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
           ),
           const SizedBox(height: 20),
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: HairSpareColors.brandPrimarySoft,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.account_balance_wallet_outlined,
-              size: 28,
-              color: HairSpareColors.brandPrimary,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '지원하기',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontSize: 22,
+          const Text(
+            '지원을 확정할까요?',
+            style: TextStyle(
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: HairSpareColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
-            '지원 시 예약금 5,000원이 잠금됩니다.\n근무 완료 후 자동 환급됩니다.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontSize: 14,
-              color: HairSpareColors.textSecondary,
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            job.shopName,
+            summary,
             style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: HairSpareColors.textStrong,
+              fontSize: 13,
+              color: HairSpareColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 24),
-          HsPrimaryButton(label: '지원하기', onPressed: onConfirm),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: onCancel,
-            child: const Text(
-              '취소',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: HairSpareColors.textSecondary,
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: HairSpareColors.surfaceMuted,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: RichText(
+              text: const TextSpan(
+                style: TextStyle(
+                  fontSize: 14,
+                  color: HairSpareColors.textStrong,
+                  height: 1.5,
+                ),
+                children: [
+                  TextSpan(text: '노쇼 방지를 위해 예약금 '),
+                  TextSpan(
+                    text: '5,000원',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  TextSpan(text: '이 결제돼요. 근무를 완료하면\n전액 환급됩니다.'),
+                ],
               ),
             ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onCancel,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: HairSpareColors.textSecondary,
+                    side: const BorderSide(color: HairSpareColors.border),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('취소'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: ElevatedButton(
+                  onPressed: onConfirm,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: HairSpareColors.brandPrimary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    '지원 확정하기',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/job.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/hairspare_colors.dart';
-import '../../utils/icon_mapper.dart';
+import '../../utils/job_filter_utils.dart';
 import '../../utils/navigation_helper.dart';
 import '../../utils/schedule_work_session.dart';
 import '../../view_models/job_detail_view_model.dart';
@@ -15,7 +16,7 @@ import 'job_detail_formatters.dart';
 import 'job_detail_header.dart';
 import 'job_detail_hero_favorite_button.dart';
 
-/// 구인 상세 스크롤 본문 (히어로 ~ 상세 정보).
+/// 구인 상세 스크롤 본문 (히어로 ~ 상세 정보). PDF a안 02 화면 기준.
 class JobDetailScrollBody extends StatelessWidget {
   const JobDetailScrollBody({
     super.key,
@@ -75,13 +76,25 @@ class JobDetailScrollBody extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildHeroSection(context, vm),
+                if (forShopOwner) _buildShopOwnerStatusBanner(context),
                 _buildTitleSection(context),
+                if (job.isUrgent && job.countdown != null)
+                  _buildUrgentCountdown(context),
                 if (!forShopOwner && vm.isProposalMode)
                   _buildProposalNotice(context, vm),
-                if (forShopOwner) _buildShopOwnerStatusBanner(context),
-                _buildQuickInfoGrid(context),
-                if (!forShopOwner) _buildHowToApplySection(context),
-                _buildDetailSection(context),
+                _buildInfoTable(context),
+                if (job.description != null && job.description!.trim().isNotEmpty)
+                  _buildDescriptionSection(context),
+                _buildLocationSection(context),
+                if (!forShopOwner) ...[
+                  const SizedBox(height: AppTheme.spacing2),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing4,
+                    ),
+                    child: _buildContactButton(context),
+                  ),
+                ],
                 SizedBox(height: _scrollBottomPadding(context, vm)),
               ],
             ),
@@ -111,8 +124,8 @@ class JobDetailScrollBody extends StatelessWidget {
   Widget _buildShopOwnerStatusBanner(BuildContext context) {
     return Padding(
       padding: AppTheme.spacingSymmetric(
-        horizontal: AppTheme.spacing6,
-        vertical: AppTheme.spacing2,
+        horizontal: AppTheme.spacing4,
+        vertical: AppTheme.spacing3,
       ),
       child: Wrap(
         spacing: AppTheme.spacing2,
@@ -149,14 +162,6 @@ class JobDetailScrollBody extends StatelessWidget {
               bg: AppTheme.backgroundGray,
               border: AppTheme.borderGray,
             ),
-          if (job.isUrgent)
-            _shopOwnerPill(
-              context,
-              label: '급구',
-              fg: HairSpareColors.statusUrgent,
-              bg: HairSpareColors.statusUrgent.withValues(alpha: 0.08),
-              border: HairSpareColors.statusUrgent.withValues(alpha: 0.35),
-            ),
         ],
       ),
     );
@@ -190,91 +195,126 @@ class JobDetailScrollBody extends StatelessWidget {
     );
   }
 
+  /// 제목(샵명·지역) + 지역 + 초보가능/당일정산 태그.
   Widget _buildTitleSection(BuildContext context) {
+    final regionName = jobDetailRegionName(job.regionId);
+    final tags = <String>[
+      if (JobFilterUtils.matches('beginner', job)) '초보가능',
+      if (JobFilterUtils.matches('same_day', job)) '당일정산',
+    ];
+
     return Padding(
-      padding: AppTheme.spacing(AppTheme.spacing6),
+      padding: AppTheme.spacingSymmetric(
+        horizontal: AppTheme.spacing4,
+        vertical: AppTheme.spacing4,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            job.title,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontSize: 30,
+            regionName.isNotEmpty ? '${job.shopName} · $regionName' : job.shopName,
+            style: const TextStyle(
+              fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
+              color: HairSpareColors.textPrimary,
             ),
           ),
-          const SizedBox(height: AppTheme.spacing2),
-          Text(
-            job.shopName,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontSize: 18,
-              color: AppTheme.textSecondary,
-            ),
-          ),
-          // 급구 카운트다운 배너
-          if (job.isUrgent && job.countdown != null) ...[
-            const SizedBox(height: AppTheme.spacing6),
-            Container(
-              padding: AppTheme.spacing(AppTheme.spacing5),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [HairSpareColors.statusUrgent, Color(0xFFDC2626)],
+          if (regionName.isNotEmpty) ...[
+            const SizedBox(height: AppTheme.spacing1),
+            Row(
+              children: [
+                const Icon(
+                  Icons.location_on_outlined,
+                  size: 15,
+                  color: HairSpareColors.textSecondary,
                 ),
-                borderRadius: AppTheme.borderRadius(AppTheme.radius2xl),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '⏰ 남은 시간',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontSize: 14,
-                          color: Colors.white.withValues(alpha: 0.9),
+                const SizedBox(width: 4),
+                Text(
+                  regionName,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: HairSpareColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+          if (tags.isNotEmpty) ...[
+            const SizedBox(height: AppTheme.spacing3),
+            Wrap(
+              spacing: AppTheme.spacing2,
+              runSpacing: AppTheme.spacing2,
+              children: tags
+                  .map(
+                    (tag) => Container(
+                      padding: AppTheme.spacingSymmetric(
+                        horizontal: AppTheme.spacing3,
+                        vertical: AppTheme.spacing1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: HairSpareColors.surfaceMuted,
+                        borderRadius:
+                            AppTheme.borderRadius(AppTheme.radiusFull),
+                      ),
+                      child: Text(
+                        tag,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: HairSpareColors.textStrong,
                         ),
                       ),
-                      const SizedBox(height: AppTheme.spacing1),
-                      Text(
-                        jobDetailCountdownText(job.countdown),
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '마감 시간',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontSize: 14,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spacing1),
-                      Text(
-                        jobDetailDeadlineTime(job.countdown),
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  )
+                  .toList(),
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildUrgentCountdown(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing4,
+        0,
+        AppTheme.spacing4,
+        AppTheme.spacing4,
+      ),
+      child: Container(
+        padding: AppTheme.spacingSymmetric(
+          horizontal: AppTheme.spacing4,
+          vertical: AppTheme.spacing3,
+        ),
+        decoration: BoxDecoration(
+          color: HairSpareColors.statusUrgent.withValues(alpha: 0.08),
+          borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+          border: Border.all(
+            color: HairSpareColors.statusUrgent.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '마감까지 ${jobDetailCountdownText(job.countdown)}',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: HairSpareColors.statusUrgent,
+              ),
+            ),
+            Text(
+              jobDetailDeadlineTime(job.countdown),
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: HairSpareColors.statusUrgent,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -290,18 +330,18 @@ class JobDetailScrollBody extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppTheme.spacing6,
+        AppTheme.spacing4,
         0,
-        AppTheme.spacing6,
+        AppTheme.spacing4,
         AppTheme.spacing4,
       ),
       child: Container(
         width: double.infinity,
         padding: AppTheme.spacing(AppTheme.spacing4),
         decoration: BoxDecoration(
-          color: AppTheme.backgroundWhite,
+          color: HairSpareColors.surfaceMuted,
           borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
-          border: Border.all(color: AppTheme.borderGray),
+          border: Border.all(color: HairSpareColors.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -312,37 +352,41 @@ class JobDetailScrollBody extends StatelessWidget {
                 vertical: AppTheme.spacing1,
               ),
               decoration: BoxDecoration(
-                color: AppTheme.purple100,
+                color: HairSpareColors.brandPrimarySoft,
                 borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
               ),
-              child: Text(
+              child: const Text(
                 '제안 대기',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.purple700,
+                  fontSize: 12,
+                  color: HairSpareColors.brandPrimary,
                 ),
               ),
             ),
             const SizedBox(height: AppTheme.spacing3),
             Text(
               '$shop에서 보낸 근무 제안입니다. 내용을 확인한 뒤 하단에서 수락 또는 거절해 주세요.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondary,
+              style: const TextStyle(
+                fontSize: 14,
+                color: HairSpareColors.textSecondary,
                 height: 1.45,
               ),
             ),
             const SizedBox(height: AppTheme.spacing3),
             Text(
               '일정: ${schedule.date} · $timeLine',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              style: const TextStyle(
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
+                color: HairSpareColors.textPrimary,
               ),
             ),
             Text(
               '금액: ${NumberFormat('#,###').format(job.amount)}원',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondary,
+              style: const TextStyle(
+                fontSize: 13,
+                color: HairSpareColors.textSecondary,
               ),
             ),
           ],
@@ -351,443 +395,59 @@ class JobDetailScrollBody extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickInfoGrid(BuildContext context) {
+  /// 일정 / 역할 / 급여 정보 테이블 (PDF a안 02).
+  Widget _buildInfoTable(BuildContext context) {
     return Padding(
       padding: AppTheme.spacingSymmetric(
         horizontal: AppTheme.spacing4,
-        vertical: AppTheme.spacing4,
+        vertical: AppTheme.spacing2,
       ),
-      child: GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisSpacing: AppTheme.spacing3,
-        mainAxisSpacing: AppTheme.spacing3,
-        childAspectRatio: 1.6,
+      child: Column(
         children: [
-          _buildQuickInfoItem(
+          _infoRow(
             context,
-            icon:
-                IconMapper.icon(
-                  'mappin',
-                  size: 16,
-                  color: HairSpareColors.brandPrimary,
-                ) ??
-                const Icon(
-                  Icons.location_on,
-                  size: 16,
-                  color: HairSpareColors.brandPrimary,
-                ),
-            label: '근무 지역',
-            value: jobDetailRegionName(job.regionId),
-          ),
-          _buildQuickInfoItem(
-            context,
-            icon:
-                IconMapper.icon(
-                  'clock',
-                  size: 16,
-                  color: HairSpareColors.brandPrimary,
-                ) ??
-                const Icon(
-                  Icons.access_time,
-                  size: 16,
-                  color: HairSpareColors.brandPrimary,
-                ),
-            label: '근무 시간',
+            label: '일정',
             value:
-                '${jobDetailFormatJobDate(job.date)}\n${jobDetailFormatJobTime(job)}',
+                '${jobDetailRelativeDayLabel(job.date)} ${jobDetailFormatJobTime(job)}',
           ),
-          _buildQuickInfoItem(
+          const Divider(height: AppTheme.spacing6, color: HairSpareColors.border),
+          _infoRow(context, label: '역할', value: job.title),
+          const Divider(height: AppTheme.spacing6, color: HairSpareColors.border),
+          _infoRow(
             context,
-            icon:
-                IconMapper.icon(
-                  'users',
-                  size: 16,
-                  color: AppTheme.primaryGreen,
-                ) ??
-                const Icon(
-                  Icons.people,
-                  size: 16,
-                  color: AppTheme.primaryGreen,
-                ),
-            label: '모집 인원',
-            value: '${job.requiredCount}명',
+            label: '급여',
+            value: '${NumberFormat('#,###').format(job.amount)}원',
+            valueColor: HairSpareColors.brandPrimary,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildQuickInfoItem(
+  Widget _infoRow(
     BuildContext context, {
-    required Widget icon,
     required String label,
     required String value,
+    Color? valueColor,
   }) {
-    return Container(
-      padding: AppTheme.spacing(AppTheme.spacing3),
-      decoration: BoxDecoration(
-        color: AppTheme.backgroundGray,
-        borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            children: [
-              icon,
-              const SizedBox(width: AppTheme.spacing2),
-              Expanded(
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textSecondary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spacing2),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
-              height: 1.3,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHowToApplySection(BuildContext context) {
-    return Container(
-      padding: AppTheme.spacingSymmetric(
-        horizontal: AppTheme.spacing4,
-        vertical: AppTheme.spacing6,
-      ),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFF3E8FF), Colors.white],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            '지원 방법',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppTheme.spacing2),
-          Text(
-            '간단한 3단계로 지원이 완료됩니다',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontSize: 14,
-              color: AppTheme.textSecondary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppTheme.spacing6),
-          _buildStepItem(
-            context,
-            step: 1,
-            title: '공고 확인하기',
-            description: '근무 지역, 시간, 급여 등 상세 정보를 꼼꼼히 확인하세요.',
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          _buildStepItem(
-            context,
-            step: 2,
-            title: '지원하기 버튼 클릭',
-            description: '지원하기 버튼을 눌러 지원을 완료하세요.',
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          _buildStepItem(
-            context,
-            step: 3,
-            title: '매장 확인 및 출근',
-            description: '매장에서 지원을 확인하면 출근 시간에 맞춰 근무하시면 됩니다.',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStepItem(
-    BuildContext context, {
-    required int step,
-    required String title,
-    required String description,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: AppTheme.spacing(AppTheme.spacing4),
-      decoration: BoxDecoration(
-        color: AppTheme.backgroundWhite,
-        borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
-        border: Border.all(color: AppTheme.borderGray.withValues(alpha: 0.5)),
-        boxShadow: AppTheme.shadowSm,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: HairSpareColors.brandPrimary,
-              borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-            ),
-            child: Center(
-              child: Text(
-                '$step',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: AppTheme.spacing4),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing1),
-                Text(
-                  description,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontSize: 13,
-                    color: AppTheme.textSecondary,
-                    height: 1.45,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailSection(BuildContext context) {
-    return Padding(
-      padding: AppTheme.spacingSymmetric(
-        horizontal: AppTheme.spacing4,
-        vertical: AppTheme.spacing4,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            '상세 정보',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          // 급여 정보
-          Container(
-            width: double.infinity,
-            padding: AppTheme.spacing(AppTheme.spacing4),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFFF0FDF4), Color(0xFFD1FAE5)],
-              ),
-              borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
-              border: Border.all(color: AppTheme.green100),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '급여',
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.green700,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing2),
-                Text(
-                  '${NumberFormat('#,###').format(job.amount)}원',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.green700,
-                    height: 1.2,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing1),
-                Text(
-                  '당일 지급',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontSize: 13,
-                    color: AppTheme.green700.withValues(alpha: 0.85),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          // 근무 조건
-          Container(
-            width: double.infinity,
-            padding: AppTheme.spacing(AppTheme.spacing4),
-            decoration: BoxDecoration(
-              color: AppTheme.backgroundGray,
-              borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '근무 조건',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing3),
-                _buildConditionItem(
-                  context,
-                  '근무 날짜: ${jobDetailFormatJobDate(job.date)}',
-                ),
-                const SizedBox(height: AppTheme.spacing2),
-                _buildConditionItem(
-                  context,
-                  '근무 시간: ${jobDetailFormatJobTime(job)}',
-                ),
-                const SizedBox(height: AppTheme.spacing2),
-                _buildConditionItem(
-                  context,
-                  '위치: ${jobDetailRegionName(job.regionId)}',
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          // 매장 정보
-          Container(
-            width: double.infinity,
-            padding: AppTheme.spacing(AppTheme.spacing4),
-            decoration: BoxDecoration(
-              color: AppTheme.backgroundWhite,
-              borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
-              border: Border.all(color: AppTheme.borderGray),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '매장 정보',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing3),
-                _buildShopInfoItem(
-                  context,
-                  '매장명',
-                  job.isPremium ? '${job.shopName} (프리미엄)' : job.shopName,
-                ),
-                const SizedBox(height: AppTheme.spacing3),
-                _buildShopInfoItem(
-                  context,
-                  '위치',
-                  '${jobDetailRegionName(job.regionId)} 인근',
-                ),
-                const SizedBox(height: AppTheme.spacing4),
-                _buildContactButton(context),
-                const SizedBox(height: AppTheme.spacing4),
-                Wrap(
-                  spacing: AppTheme.spacing2,
-                  runSpacing: AppTheme.spacing2,
-                  children: [
-                    if (job.isPremium)
-                      _buildTag(
-                        context,
-                        '프리미엄 매장',
-                        AppTheme.purple100,
-                        AppTheme.purple700,
-                      ),
-                    _buildTag(
-                      context,
-                      '최신 시설',
-                      AppTheme.blue200.withValues(alpha: 0.3),
-                      HairSpareColors.brandPrimary,
-                    ),
-                    _buildTag(
-                      context,
-                      '${jobDetailRegionName(job.regionId)} 인근',
-                      AppTheme.green100,
-                      AppTheme.green700,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildConditionItem(BuildContext context, String text) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        IconMapper.icon(
-              'checkcircle2',
-              size: 18,
-              color: HairSpareColors.brandPrimary,
-            ) ??
-            const Icon(
-              Icons.check_circle,
-              size: 18,
-              color: HairSpareColors.brandPrimary,
-            ),
-        const SizedBox(width: AppTheme.spacing2),
-        Expanded(
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            color: HairSpareColors.textSecondary,
+          ),
+        ),
+        Flexible(
           child: Text(
-            text,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontSize: 14,
-              color: AppTheme.textGray700,
-              height: 1.4,
+            value,
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: valueColor ?? HairSpareColors.textPrimary,
             ),
           ),
         ),
@@ -795,6 +455,106 @@ class JobDetailScrollBody extends StatelessWidget {
     );
   }
 
+  Widget _buildDescriptionSection(BuildContext context) {
+    return Padding(
+      padding: AppTheme.spacingSymmetric(
+        horizontal: AppTheme.spacing4,
+        vertical: AppTheme.spacing4,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '공고 설명',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: HairSpareColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing3),
+          Text(
+            job.description!.trim(),
+            style: const TextStyle(
+              fontSize: 14,
+              color: HairSpareColors.textStrong,
+              height: 1.55,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 위치 — 실제 좌표 데이터가 없어 정적 플레이스홀더 + 외부 지도 앱 검색으로 대체.
+  Widget _buildLocationSection(BuildContext context) {
+    final regionName = jobDetailRegionName(job.regionId);
+    final query = Uri.encodeComponent('${job.shopName} $regionName');
+
+    return Padding(
+      padding: AppTheme.spacingSymmetric(
+        horizontal: AppTheme.spacing4,
+        vertical: AppTheme.spacing4,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '위치',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: HairSpareColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing3),
+          Container(
+            width: double.infinity,
+            height: 140,
+            decoration: BoxDecoration(
+              color: HairSpareColors.placeholderWarm,
+              borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.location_on,
+                size: 32,
+                color: HairSpareColors.brandPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing3),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  regionName.isEmpty ? job.shopName : '$regionName · ${job.shopName}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: HairSpareColors.textStrong,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () => launchUrl(
+                  Uri.parse('https://map.naver.com/p/search/$query'),
+                  mode: LaunchMode.externalApplication,
+                ),
+                child: const Text(
+                  '지도에서 보기 >',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: HairSpareColors.brandPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildContactButton(BuildContext context) {
     final vm = context.read<JobDetailViewModel>();
@@ -834,60 +594,6 @@ class JobDetailScrollBody extends StatelessWidget {
             horizontal: AppTheme.spacing4,
             vertical: AppTheme.spacing3,
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShopInfoItem(BuildContext context, String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: AppTheme.textSecondary,
-          ),
-        ),
-        if (value.isNotEmpty) ...[
-          const SizedBox(height: AppTheme.spacing1),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textPrimary,
-              height: 1.35,
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildTag(
-    BuildContext context,
-    String text,
-    Color bgColor,
-    Color textColor,
-  ) {
-    return Container(
-      padding: AppTheme.spacingSymmetric(
-        horizontal: AppTheme.spacing3,
-        vertical: AppTheme.spacing1,
-      ),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-      ),
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: textColor,
         ),
       ),
     );

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../utils/icon_mapper.dart';
-import '../common/hairspare_brand_assets.dart';
 
-/// 구인 상세 상단 바 (뒤로, 로고, 공유).
+/// 구인 상세 상단 바 (뒤로, "공고 상세" 타이틀, 공유).
 class JobDetailHeader extends StatelessWidget {
   const JobDetailHeader({
     super.key,
@@ -48,7 +48,14 @@ class JobDetailHeader extends StatelessWidget {
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),
-          const HairSpareBrandLogo(height: 32),
+          const Text(
+            '공고 상세',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: HairSpareColors.textPrimary,
+            ),
+          ),
           trailing ??
               IconButton(
                 icon:
