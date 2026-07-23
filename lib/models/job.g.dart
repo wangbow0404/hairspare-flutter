@@ -28,6 +28,10 @@ Job _$JobFromJson(Map<String, dynamic> json) => Job(
   ownerId: json['ownerId'] as String?,
   status: json['status'] as String? ?? 'published',
   isHidden: json['isHidden'] as bool? ?? false,
+  viewCount: (json['viewCount'] as num?)?.toInt() ?? 0,
+  favoriteCount: (json['favoriteCount'] as num?)?.toInt() ?? 0,
+  remainingSlots: (json['remainingSlots'] as num?)?.toInt(),
+  shopCompletedCount: (json['shopCompletedCount'] as num?)?.toInt() ?? 0,
 );
 
 Map<String, dynamic> _$JobToJson(Job instance) => <String, dynamic>{
@@ -54,4 +58,8 @@ Map<String, dynamic> _$JobToJson(Job instance) => <String, dynamic>{
   'ownerId': instance.ownerId,
   'status': instance.status,
   'isHidden': instance.isHidden,
+  'viewCount': instance.viewCount,
+  'favoriteCount': instance.favoriteCount,
+  'remainingSlots': instance.remainingSlots,
+  'shopCompletedCount': instance.shopCompletedCount,
 };

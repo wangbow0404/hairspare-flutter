@@ -52,3 +52,21 @@ String jobDetailRelativeDayLabel(String date) {
     return date;
   }
 }
+
+/// 시급 환산 — 시작·종료 시간이 둘 다 있을 때만 계산(추측으로 지어내지 않음).
+double? jobDetailHourlyRate(Job job) {
+  final end = job.endTime;
+  if (end == null || end.isEmpty || job.time.isEmpty) return null;
+  try {
+    final startParts = job.time.split(':');
+    final endParts = end.split(':');
+    final startMin = int.parse(startParts[0]) * 60 + int.parse(startParts[1]);
+    var endMin = int.parse(endParts[0]) * 60 + int.parse(endParts[1]);
+    if (endMin <= startMin) endMin += 24 * 60; // 익일 종료
+    final minutes = endMin - startMin;
+    if (minutes <= 0) return null;
+    return job.amount / (minutes / 60);
+  } catch (_) {
+    return null;
+  }
+}

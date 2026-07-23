@@ -36,6 +36,10 @@ class Job {
     this.ownerId,
     this.status = 'published',
     this.isHidden = false,
+    this.viewCount = 0,
+    this.favoriteCount = 0,
+    this.remainingSlots,
+    this.shopCompletedCount = 0,
   });
 
   @JsonKey(defaultValue: '')
@@ -76,6 +80,14 @@ class Job {
   final String status;
   @JsonKey(defaultValue: false)
   final bool isHidden;
+  @JsonKey(defaultValue: 0)
+  final int viewCount;
+  @JsonKey(defaultValue: 0)
+  final int favoriteCount;
+  /// 서버가 안 내려주면(구버전 응답 등) null — UI에서 requiredCount로 대체.
+  final int? remainingSlots;
+  @JsonKey(defaultValue: 0)
+  final int shopCompletedCount;
 
   factory Job.fromJson(Map<String, dynamic> json) => _$JobFromJson(json);
 
@@ -101,6 +113,10 @@ class Job {
     String? ownerId,
     String? status,
     bool? isHidden,
+    int? viewCount,
+    int? favoriteCount,
+    int? remainingSlots,
+    int? shopCompletedCount,
   }) {
     return Job(
       id: id ?? this.id,
@@ -124,6 +140,10 @@ class Job {
       ownerId: ownerId ?? this.ownerId,
       status: status ?? this.status,
       isHidden: isHidden ?? this.isHidden,
+      viewCount: viewCount ?? this.viewCount,
+      favoriteCount: favoriteCount ?? this.favoriteCount,
+      remainingSlots: remainingSlots ?? this.remainingSlots,
+      shopCompletedCount: shopCompletedCount ?? this.shopCompletedCount,
     );
   }
 

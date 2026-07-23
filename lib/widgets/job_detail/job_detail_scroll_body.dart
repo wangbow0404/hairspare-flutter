@@ -85,6 +85,7 @@ class JobDetailScrollBody extends StatelessWidget {
                 _buildInfoTable(context),
                 if (job.description != null && job.description!.trim().isNotEmpty)
                   _buildDescriptionSection(context),
+                if (!forShopOwner) _buildDepositNotice(context),
                 _buildLocationSection(context),
                 if (!forShopOwner) ...[
                   const SizedBox(height: AppTheme.spacing2),
@@ -239,6 +240,8 @@ class JobDetailScrollBody extends StatelessWidget {
               ],
             ),
           ],
+          const SizedBox(height: AppTheme.spacing2),
+          _buildMetaRow(context),
           if (tags.isNotEmpty) ...[
             const SizedBox(height: AppTheme.spacing3),
             Wrap(
@@ -271,6 +274,69 @@ class JobDetailScrollBody extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+
+  /// 남은 자리(1명 이하일 때만 강조) + 조회수·찜수·매장 완료건수.
+  Widget _buildMetaRow(BuildContext context) {
+    final remaining = job.remainingSlots;
+    const metaStyle = TextStyle(fontSize: 12, color: HairSpareColors.textSecondary);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (remaining != null && remaining <= 1)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppTheme.spacing2),
+            child: Container(
+              padding: AppTheme.spacingSymmetric(
+                horizontal: AppTheme.spacing3,
+                vertical: AppTheme.spacing1,
+              ),
+              decoration: BoxDecoration(
+                color: HairSpareColors.statusUrgent.withValues(alpha: 0.1),
+                borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
+              ),
+              child: Text(
+                remaining <= 0 ? '모집 마감 임박' : '$remaining명만 남았어요!',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: HairSpareColors.statusUrgent,
+                ),
+              ),
+            ),
+          ),
+        Row(
+          children: [
+            const Icon(
+              Icons.visibility_outlined,
+              size: 14,
+              color: HairSpareColors.textSecondary,
+            ),
+            const SizedBox(width: 3),
+            Text('조회 ${job.viewCount}', style: metaStyle),
+            const SizedBox(width: AppTheme.spacing3),
+            const Icon(
+              Icons.bookmark_outline,
+              size: 14,
+              color: HairSpareColors.textSecondary,
+            ),
+            const SizedBox(width: 3),
+            Text('찜 ${job.favoriteCount}', style: metaStyle),
+            if (job.shopCompletedCount > 0) ...[
+              const SizedBox(width: AppTheme.spacing3),
+              const Icon(
+                Icons.verified_outlined,
+                size: 14,
+                color: HairSpareColors.textSecondary,
+              ),
+              const SizedBox(width: 3),
+              Text('매장 완료 ${job.shopCompletedCount}건', style: metaStyle),
+            ],
+          ],
+        ),
+      ],
     );
   }
 
@@ -418,10 +484,18 @@ class JobDetailScrollBody extends StatelessWidget {
             label: '급여',
             value: '${NumberFormat('#,###').format(job.amount)}원',
             valueColor: HairSpareColors.brandPrimary,
+            subtitle: _hourlyRateLabel(),
           ),
         ],
       ),
     );
+  }
+
+  /// 시작·종료 시간이 둘 다 있을 때만 시급 환산 표시 (없으면 추측하지 않음).
+  String? _hourlyRateLabel() {
+    final rate = jobDetailHourlyRate(job);
+    if (rate == null) return null;
+    return '시급 환산 약 ${NumberFormat('#,###').format(rate.round())}원';
   }
 
   Widget _infoRow(
@@ -429,9 +503,11 @@ class JobDetailScrollBody extends StatelessWidget {
     required String label,
     required String value,
     Color? valueColor,
+    String? subtitle,
   }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
@@ -441,14 +517,30 @@ class JobDetailScrollBody extends StatelessWidget {
           ),
         ),
         Flexible(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: valueColor ?? HairSpareColors.textPrimary,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                value,
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: valueColor ?? HairSpareColors.textPrimary,
+                ),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: HairSpareColors.textSecondary,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ],
@@ -487,6 +579,54 @@ class JobDetailScrollBody extends StatelessWidget {
   }
 
   /// 위치 — 실제 좌표 데이터가 없어 정적 플레이스홀더 + 외부 지도 앱 검색으로 대체.
+  /// 지원하기 버튼 누르기 전에 미리 보여주는 예약금 안내 (지원 확정 시트와 같은 문구).
+  Widget _buildDepositNotice(BuildContext context) {
+    return Padding(
+      padding: AppTheme.spacingSymmetric(
+        horizontal: AppTheme.spacing4,
+        vertical: AppTheme.spacing2,
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: AppTheme.spacing(AppTheme.spacing4),
+        decoration: BoxDecoration(
+          color: HairSpareColors.surfaceMuted,
+          borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(
+              Icons.lock_outline,
+              size: 18,
+              color: HairSpareColors.textSecondary,
+            ),
+            const SizedBox(width: AppTheme.spacing2),
+            Expanded(
+              child: RichText(
+                text: const TextSpan(
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: HairSpareColors.textStrong,
+                    height: 1.5,
+                  ),
+                  children: [
+                    TextSpan(text: '노쇼 방지를 위해 예약금 '),
+                    TextSpan(
+                      text: '5,000원',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(text: '이 결제돼요. 근무를 완료하면 전액 환급됩니다.'),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildLocationSection(BuildContext context) {
     final regionName = jobDetailRegionName(job.regionId);
     final query = Uri.encodeComponent('${job.shopName} $regionName');
