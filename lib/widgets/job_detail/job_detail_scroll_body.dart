@@ -322,7 +322,7 @@ class JobDetailScrollBody extends StatelessWidget {
             Text('조회 ${job.viewCount}', style: metaStyle),
             const SizedBox(width: AppTheme.spacing3),
             const Icon(
-              Icons.bookmark_outline,
+              Icons.favorite_border,
               size: 14,
               color: HairSpareColors.textSecondary,
             ),
