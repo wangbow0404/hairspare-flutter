@@ -36,6 +36,7 @@ import '../../screens/admin/admin_sanctions_screen.dart';
 import '../../screens/admin/admin_content_screen.dart';
 import '../../screens/admin/admin_notifications_screen.dart';
 import '../../screens/admin/admin_reference_screen.dart';
+import '../../screens/common/auto_login_splash_screen.dart';
 import '../../screens/common/privacy_policy_screen.dart';
 import '../../screens/shop/favorites_screen.dart';
 import '../../screens/shop/home_screen.dart';
@@ -86,12 +87,17 @@ final class AppRouter {
 
   static GoRouter createRouter(AuthProvider auth) {
     return GoRouter(
-      initialLocation: AppRoutes.roleSelect,
+      initialLocation: AppRoutes.autoLoginSplash,
       refreshListenable: auth,
       redirect: (BuildContext context, GoRouterState state) {
         return authRedirect(auth, state);
       },
       routes: <RouteBase>[
+        GoRoute(
+          path: AppRoutes.autoLoginSplash,
+          builder: (BuildContext context, GoRouterState state) =>
+              const AutoLoginSplashScreen(),
+        ),
         GoRoute(
           path: AppRoutes.roleSelect,
           builder: (BuildContext context, GoRouterState state) =>

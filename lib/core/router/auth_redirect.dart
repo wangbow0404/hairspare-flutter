@@ -5,7 +5,7 @@ import '../../providers/auth_provider.dart';
 import 'app_routes.dart';
 
 /// 로그인된 유저가 돌아갈 홈 경로 (역할·모델 여부 기준).
-String _homeRouteFor(User user) {
+String homeRouteFor(User user) {
   if (user.role == UserRole.admin) return AppRoutes.admin;
   if (user.role == UserRole.shop) return AppRoutes.shopHome;
   if (user.isModelAccount) return AppRoutes.modelHome;
@@ -36,6 +36,15 @@ String? authRedirect(AuthProvider auth, GoRouterState state) {
   final user = auth.currentUser;
   final loggedIn = auth.isAuthenticated && user != null;
 
+  // 자동로그인 성공 직후에만 보여주는 브랜드 스플래시. 관리자는 마케팅
+  // 스플래시가 의미 없어 건너뛰고, 비로그인이면(자동로그인 실패) 바로
+  // 역할선택으로 보낸다.
+  if (path == AppRoutes.autoLoginSplash) {
+    if (!loggedIn) return AppRoutes.roleSelect;
+    if (user.role == UserRole.admin) return AppRoutes.admin;
+    return null;
+  }
+
   const shopAuthPaths = <String>{
     AppRoutes.shopLogin,
     AppRoutes.shopSignup,
@@ -44,13 +53,13 @@ String? authRedirect(AuthProvider auth, GoRouterState state) {
 
   if (loggedIn) {
     if (path == AppRoutes.roleSelect) {
-      return _homeRouteFor(user);
+      return homeRouteFor(user);
     }
     if (_isSparePublicPath(path) && path != AppRoutes.spareSignupSuccess) {
-      return _homeRouteFor(user);
+      return homeRouteFor(user);
     }
     if (shopAuthPaths.contains(path)) {
-      return _homeRouteFor(user);
+      return homeRouteFor(user);
     }
   }
 
@@ -90,7 +99,7 @@ String? authRedirect(AuthProvider auth, GoRouterState state) {
 
   if (path.startsWith('/model')) {
     if (!loggedIn) return AppRoutes.spareLogin;
-    if (!user.isModelAccount) return _homeRouteFor(user);
+    if (!user.isModelAccount) return homeRouteFor(user);
     return null;
   }
 
