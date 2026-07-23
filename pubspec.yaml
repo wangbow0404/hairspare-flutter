@@ -60,6 +60,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   kpostal: ^1.1.0
+  google_fonts: ^8.2.0
 
 dev_dependencies:
   flutter_test:
