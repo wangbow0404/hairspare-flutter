@@ -39,6 +39,8 @@ abstract final class BusinessConfig {
     'spaceBookingWindowDays': 30,
     'spaceDefaultOpenHour': 9,
     'spaceDefaultCloseHour': 21,
+    // 2026년 고용노동부 고시 최저임금(시급). 매년 갱신 필요.
+    'minimumHourlyWage': 10320,
   };
 
   static Map<String, int> _values = Map<String, int>.from(defaults);
@@ -57,6 +59,7 @@ abstract final class BusinessConfig {
   static int get chatAddonFee => _v('chatAddonFee');
   static int get modelDepositAmount => _v('modelDepositAmount');
   static int get jobEnergyFormulaDivisor => _v('jobEnergyFormulaDivisor');
+  static int get minimumHourlyWage => _v('minimumHourlyWage');
 
   // quota
   static int get modelDailyMatchLimit => _v('modelDailyMatchLimit');

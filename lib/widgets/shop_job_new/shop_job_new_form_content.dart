@@ -1102,7 +1102,8 @@ class ShopJobNewFormContent extends StatelessWidget {
                         ),
                       ),
                       keyboardType: TextInputType.number,
-                      validator: vm.validateAmount,
+                      validator: (value) =>
+                          vm.validateAmount(value) ?? vm.minimumWageError,
                       onChanged: (value) {
                         vm.onAmountChanged(value);
                         _revalidateForm();

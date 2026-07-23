@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
+import '../config/business_config.dart';
 import '../core/di/service_locator.dart';
 import '../core/services/global_messenger_service.dart';
 import '../models/create_job_request.dart';
@@ -108,7 +109,9 @@ class ShopJobNewViewModel extends ChangeNotifier {
       showValidationErrors && endTimeBeforeStartMessage != null;
 
   bool get hasAmountError =>
-      showValidationErrors && validateAmount(amountController.text) != null;
+      showValidationErrors &&
+      (validateAmount(amountController.text) != null ||
+          minimumWageError != null);
 
   bool get hasRequiredCountError =>
       showValidationErrors &&
@@ -150,6 +153,33 @@ class ShopJobNewViewModel extends ChangeNotifier {
     if (value == null || value.trim().isEmpty) return '금액을 입력해주세요';
     final amount = int.tryParse(value.replaceAll(',', ''));
     if (amount == null || amount <= 0) return '올바른 금액을 입력해주세요';
+    return null;
+  }
+
+  /// 최저임금 미만 급여 차단 — 시급제는 금액 자체, 일급제는 근무시간으로 환산해 확인.
+  /// 일급제인데 종료 시간이 아직 없으면(계산 불가) null 반환(통과).
+  String? get minimumWageError {
+    final amount = int.tryParse(amountController.text.replaceAll(',', ''));
+    if (amount == null || amount <= 0) return null;
+    final minWage = BusinessConfig.minimumHourlyWage;
+    final minWageLabel = NumberFormat('#,###').format(minWage);
+
+    if (wageType == 'hourly') {
+      if (amount < minWage) {
+        return '최저임금(시급 $minWageLabel원) 미만으로는 등록할 수 없어요';
+      }
+      return null;
+    }
+
+    if (selectedStartTime == null || selectedEndTime == null) return null;
+    final startMin = selectedStartTime!.hour * 60 + selectedStartTime!.minute;
+    var endMin = selectedEndTime!.hour * 60 + selectedEndTime!.minute;
+    if (endMin <= startMin) endMin += 24 * 60;
+    final hours = (endMin - startMin) / 60;
+    if (hours <= 0) return null;
+    if (amount / hours < minWage) {
+      return '근무시간 기준 시급 환산 시 최저임금($minWageLabel원) 미만이에요';
+    }
     return null;
   }
 
@@ -202,6 +232,9 @@ class ShopJobNewViewModel extends ChangeNotifier {
     if (endTimeBeforeStartMessage != null) {
       return '종료 시간을 확인해 주세요';
     }
+    if (minimumWageError != null) {
+      return minimumWageError;
+    }
     return null;
   }
 
@@ -220,7 +253,8 @@ class ShopJobNewViewModel extends ChangeNotifier {
     if (selectedDate == null || selectedStartTime == null) {
       return ShopJobNewFormSection.schedule;
     }
-    if (validateAmount(amountController.text) != null) {
+    if (validateAmount(amountController.text) != null ||
+        minimumWageError != null) {
       return ShopJobNewFormSection.payment;
     }
     if (validateRequiredCount(requiredCountController.text) != null) {
@@ -245,6 +279,9 @@ class ShopJobNewViewModel extends ChangeNotifier {
     }
     if (amountController.text.trim().isEmpty) {
       return '금액을 입력해주세요';
+    }
+    if (minimumWageError != null) {
+      return minimumWageError;
     }
     if (requiredCountController.text.trim().isEmpty) {
       return '필요 인원을 입력해주세요';
@@ -399,7 +436,7 @@ class ShopJobNewViewModel extends ChangeNotifier {
     amountController.text = NumberFormat('#,###').format(job.amount);
     requiredCountController.text = job.requiredCount.toString();
     isUrgent = job.isUrgent;
-    selectedRole = roleOptions.first;
+    selectedRole = roleOptions.contains(job.role) ? job.role : roleOptions.first;
     selectedDate = DateTime.tryParse(job.date);
     selectedStartTime = _parseTime(job.time);
     if (selectedDate != null &&
@@ -427,7 +464,7 @@ class ShopJobNewViewModel extends ChangeNotifier {
     descriptionController.text = job.description ?? '';
     amountController.text = NumberFormat('#,###').format(job.amount);
     requiredCountController.text = job.requiredCount.toString();
-    selectedRole = roleOptions.first;
+    selectedRole = roleOptions.contains(job.role) ? job.role : roleOptions.first;
     selectedDate = null;
     selectedStartTime = null;
     selectedEndTime = null;

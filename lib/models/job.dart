@@ -27,6 +27,7 @@ class Job {
     required this.regionId,
     this.description,
     this.requirements,
+    this.role,
     this.images,
     required this.isUrgent,
     required this.isPremium,
@@ -63,6 +64,8 @@ class Job {
   final String regionId;
   final String? description;
   final String? requirements;
+  /// "스텝" | "디자이너" — 샵이 공고 등록 시 선택한 값 그대로 저장됨.
+  final String? role;
   @JsonKey(fromJson: _jobImagesFromJson, toJson: _jobImagesToJson)
   final List<String>? images;
   @JsonKey(defaultValue: false)
@@ -104,6 +107,7 @@ class Job {
     String? regionId,
     String? description,
     String? requirements,
+    String? role,
     List<String>? images,
     bool? isUrgent,
     bool? isPremium,
@@ -131,6 +135,7 @@ class Job {
       regionId: regionId ?? this.regionId,
       description: description ?? this.description,
       requirements: requirements ?? this.requirements,
+      role: role ?? this.role,
       images: images ?? this.images,
       isUrgent: isUrgent ?? this.isUrgent,
       isPremium: isPremium ?? this.isPremium,

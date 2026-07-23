@@ -196,9 +196,11 @@ class JobDetailScrollBody extends StatelessWidget {
     );
   }
 
-  /// 제목(샵명·지역) + 지역 + 초보가능/당일정산 태그.
+  /// 제목(공고 제목) + 샵명·지역 + 초보가능/당일정산 태그.
   Widget _buildTitleSection(BuildContext context) {
     final regionName = jobDetailRegionName(job.regionId);
+    final shopLine =
+        regionName.isNotEmpty ? '${job.shopName} · $regionName' : job.shopName;
     final tags = <String>[
       if (JobFilterUtils.matches('beginner', job)) '초보가능',
       if (JobFilterUtils.matches('same_day', job)) '당일정산',
@@ -213,33 +215,35 @@ class JobDetailScrollBody extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            regionName.isNotEmpty ? '${job.shopName} · $regionName' : job.shopName,
+            job.title.trim().isNotEmpty ? job.title : shopLine,
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: HairSpareColors.textPrimary,
             ),
           ),
-          if (regionName.isNotEmpty) ...[
-            const SizedBox(height: AppTheme.spacing1),
-            Row(
-              children: [
-                const Icon(
-                  Icons.location_on_outlined,
-                  size: 15,
-                  color: HairSpareColors.textSecondary,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  regionName,
+          const SizedBox(height: AppTheme.spacing1),
+          Row(
+            children: [
+              const Icon(
+                Icons.storefront_outlined,
+                size: 15,
+                color: HairSpareColors.textSecondary,
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  shopLine,
                   style: const TextStyle(
                     fontSize: 14,
                     color: HairSpareColors.textSecondary,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
           const SizedBox(height: AppTheme.spacing2),
           _buildMetaRow(context),
           if (tags.isNotEmpty) ...[
@@ -477,7 +481,7 @@ class JobDetailScrollBody extends StatelessWidget {
                 '${jobDetailRelativeDayLabel(job.date)} ${jobDetailFormatJobTime(job)}',
           ),
           const Divider(height: AppTheme.spacing6, color: HairSpareColors.border),
-          _infoRow(context, label: '역할', value: job.title),
+          _infoRow(context, label: '역할', value: job.role ?? '미지정'),
           const Divider(height: AppTheme.spacing6, color: HairSpareColors.border),
           _infoRow(
             context,

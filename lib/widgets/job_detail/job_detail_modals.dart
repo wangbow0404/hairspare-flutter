@@ -188,7 +188,8 @@ class _ConfirmApplySheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     final summary =
-        '${job.shopName} · ${jobDetailRelativeDayLabel(job.date)} ${jobDetailFormatJobTime(job)} · ${job.title}';
+        '${job.shopName} · ${jobDetailRelativeDayLabel(job.date)} ${jobDetailFormatJobTime(job)}'
+        '${job.role != null ? ' · ${job.role}' : ''}';
 
     return Container(
       decoration: const BoxDecoration(
