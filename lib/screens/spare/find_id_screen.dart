@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../widgets/common/hairspare_brand_assets.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/auth_service.dart';
@@ -177,7 +178,7 @@ class _FindIdScreenState extends State<FindIdScreen> {
                   Container(
                     padding: AppTheme.spacing(AppTheme.spacing6),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryPurpleLight,
+                      color: HairSpareColors.brandPrimarySoft,
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                       border: Border.all(color: AppTheme.primaryPurple.withValues(alpha: 0.2), width: 2),
                     ),
@@ -195,7 +196,7 @@ class _FindIdScreenState extends State<FindIdScreen> {
                           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryPurpleDarker,
+                            color: HairSpareColors.brandPrimary,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spacing4),

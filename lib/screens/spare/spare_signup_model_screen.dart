@@ -12,6 +12,7 @@ import '../../models/spare_subtype.dart';
 import '../../models/user.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../utils/birth_date_utils.dart';
 import '../../utils/region_helper.dart';
 import '../../widgets/common/shared_app_bar.dart';
@@ -310,7 +311,7 @@ class _SpareSignupModelScreenState extends State<SpareSignupModelScreen> {
             const SizedBox(height: AppTheme.spacing8),
             DecoratedBox(
               decoration: BoxDecoration(
-                color: AppTheme.primaryPurpleLight,
+                color: HairSpareColors.brandPrimarySoft,
                 borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                 border: Border.all(
                   color: AppTheme.stitchPrimary.withValues(alpha: 0.2),

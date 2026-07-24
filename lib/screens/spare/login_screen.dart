@@ -505,6 +505,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
                                 TextFormField(
                                   controller: _usernameController,
                                   decoration: InputDecoration(
+                                    labelText: '아이디',
                                     hintText: '아이디',
                                     border: OutlineInputBorder(
                                       borderRadius: AppTheme.borderRadius(AppTheme.radiusLg), // rounded-lg
@@ -537,6 +538,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
                                   controller: _passwordController,
                                   obscureText: _obscurePassword,
                                   decoration: InputDecoration(
+                                    labelText: '비밀번호',
                                     hintText: '비밀번호',
                                     border: OutlineInputBorder(
                                       borderRadius: AppTheme.borderRadius(AppTheme.radiusLg), // rounded-lg

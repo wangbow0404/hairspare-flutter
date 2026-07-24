@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/app_routes.dart';
 import '../../models/spare_subtype.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../widgets/common/hairspare_brand_assets.dart';
 import '../../widgets/common/shared_app_bar.dart';
 
@@ -158,7 +159,7 @@ class _TypeCard extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryPurpleLight,
+                  color: HairSpareColors.brandPrimarySoft,
                   borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                 ),
                 child: Icon(icon, color: AppTheme.stitchPrimary, size: 28),
