@@ -168,10 +168,13 @@ class _AutoLoginSplashScreenState extends State<AutoLoginSplashScreen>
                       child: FadeTransition(
                         opacity: logoFade,
                         child: Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withValues(alpha: 0.15),
@@ -180,7 +183,7 @@ class _AutoLoginSplashScreenState extends State<AutoLoginSplashScreen>
                               ),
                             ],
                           ),
-                          child: const HairSpareBrandSymbol(size: 26),
+                          child: const HairSpareBrandLogo(height: 42),
                         ),
                       ),
                     ),
