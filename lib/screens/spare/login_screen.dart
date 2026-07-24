@@ -122,7 +122,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
     // 로그인 화면을 역할별로 나누지 않으므로 portal 제한 없이 로그인한다 —
-    // 실제 role은 서버 응답으로 오고, 성공 후 goHomeForRole이 알맞은 홈으로 보낸다.
+    // 실제 role은 서버 응답으로 오고, 성공 후 인터스티셜(스플래시)을 거쳐 알맞은 홈으로 보낸다.
     await authProvider.login(
       username: username,
       password: password,
@@ -150,7 +150,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
 
       final user = authProvider.currentUser;
       if (mounted && user != null) {
-        AppNavigation.goHomeForRole(user.role);
+        context.go(AppRoutes.autoLoginSplash);
       }
     }
   }
@@ -184,7 +184,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
       await authProvider.setUser(user);
 
       if (!mounted) return;
-      AppNavigation.goHomeForRole(user.role);
+      context.go(AppRoutes.autoLoginSplash);
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
       if (!mounted) return;
@@ -244,7 +244,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
         await authProvider.setUser(user);
 
         if (!mounted) return;
-        AppNavigation.goHomeForRole(user.role);
+        context.go(AppRoutes.autoLoginSplash);
       } else {
         throw Exception('네이버 로그인이 취소되었습니다');
       }
@@ -322,7 +322,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
       await authProvider.setUser(user);
 
       if (!mounted) return;
-      AppNavigation.goHomeForRole(user.role);
+      context.go(AppRoutes.autoLoginSplash);
     } catch (e) {
       final appException = ErrorHandler.handleException(e);
       if (!mounted) return;
@@ -379,7 +379,7 @@ class _SpareLoginScreenState extends State<SpareLoginScreen> {
       await authProvider.setUser(user);
 
       if (!mounted) return;
-      AppNavigation.goHomeForRole(user.role);
+      context.go(AppRoutes.autoLoginSplash);
     } on SignInWithAppleAuthorizationException catch (e) {
       if (e.code == AuthorizationErrorCode.canceled) return;
       if (!mounted) return;
