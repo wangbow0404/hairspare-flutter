@@ -55,6 +55,7 @@ class CategoryGrid extends StatelessWidget {
           icon: category.icon,
           emoji: category.emoji,
           label: category.label,
+          color: category.color,
           onTap: category.onTap,
         );
       },
@@ -62,7 +63,8 @@ class CategoryGrid extends StatelessWidget {
 
     if (!wrapInCard) {
       return Padding(
-        padding: padding ??
+        padding:
+            padding ??
             const EdgeInsets.symmetric(
               horizontal: AppTheme.spacing4,
               vertical: AppTheme.spacing2,
@@ -72,8 +74,8 @@ class CategoryGrid extends StatelessWidget {
     }
 
     return Padding(
-      padding: padding ??
-          const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
+      padding:
+          padding ?? const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: HairSpareColors.surface,
@@ -94,12 +96,14 @@ class _CategoryItemTile extends StatefulWidget {
     required this.icon,
     required this.emoji,
     required this.label,
+    required this.color,
     this.onTap,
   });
 
   final IconData? icon;
   final String emoji;
   final String label;
+  final Color color;
   final VoidCallback? onTap;
 
   @override
@@ -139,19 +143,13 @@ class _CategoryItemTileState extends State<_CategoryItemTile> {
                   height: 44,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: _active
-                        ? HairSpareColors.brandPrimarySoft
-                        : HairSpareColors.surfaceMuted,
+                    color: widget.color.withValues(
+                      alpha: _active ? 0.22 : 0.12,
+                    ),
                     shape: BoxShape.circle,
                   ),
                   child: widget.icon != null
-                      ? Icon(
-                          widget.icon,
-                          size: 20,
-                          color: _active
-                              ? HairSpareColors.brandPrimary
-                              : HairSpareColors.textSecondary,
-                        )
+                      ? Icon(widget.icon, size: 20, color: widget.color)
                       : Text(
                           widget.emoji,
                           style: const TextStyle(fontSize: 18),

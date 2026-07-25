@@ -38,4 +38,8 @@ abstract final class HairSpareColors {
   static const Color statusMatching = Color(0xFF5C6B94);
   static const Color statusMatchingBg = Color(0xFFECEEF4);
   static const Color star = Color(0xFFFFB800);
+
+  // 홈 퀵메뉴 카테고리 구분용 보조 색상 (교육·모델매칭 등 기존 시맨틱
+  // 컬러와 겹치지 않는 항목만 추가).
+  static const Color categoryVenue = Color(0xFF3D8BA6);
 }

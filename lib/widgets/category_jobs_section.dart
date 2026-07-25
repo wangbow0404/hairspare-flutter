@@ -19,6 +19,7 @@ class CategoryJobsSection extends StatefulWidget {
   final Map<String, bool> favoriteMap;
   final Function(Job) onJobTap;
   final Function(String, bool) onFavoriteToggle;
+
   /// 홈에서 QuickMenu 바로 아래 붙일 때 상단 여백 축소용. null이면 EdgeInsets.all(spacing4)
   final EdgeInsetsGeometry? sectionPadding;
 
@@ -82,7 +83,8 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
     switch (_selectedCategory) {
       case CategoryType.region:
         // 지역 BEST: 선택된 지역이 있으면 해당 지역만, 없으면 전체 공고
-        if (widget.selectedRegionId != null && widget.selectedRegionId!.isNotEmpty) {
+        if (widget.selectedRegionId != null &&
+            widget.selectedRegionId!.isNotEmpty) {
           filtered = filtered
               .where((job) => job.regionId == widget.selectedRegionId)
               .toList();
@@ -152,10 +154,7 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
 
   /// 금액 포맷팅
   String formatAmount(int amount) {
-    return '${amount.toString().replaceAllMapped(
-          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]},',
-        )}원';
+    return '${amount.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원';
   }
 
   @override
@@ -197,8 +196,8 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                 child: Text(
                   '공고가 없습니다.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
               ),
             )
@@ -254,12 +253,16 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
       decoration: BoxDecoration(
         color: AppTheme.backgroundWhite,
         borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-        border: Border.all(
-          color: job.isUrgent
-              ? AppTheme.urgentRed.withValues(alpha: 0.4)
-              : AppTheme.borderGray,
-        ),
-        boxShadow: AppTheme.stitchSoftShadow,
+        border: job.isUrgent
+            ? Border.all(color: AppTheme.urgentRed.withValues(alpha: 0.4))
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Stack(
         children: [
@@ -279,7 +282,9 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                 ),
                 child: Icon(
                   isFavorite ? Icons.favorite : Icons.favorite_border,
-                  color: isFavorite ? AppTheme.urgentRed : AppTheme.textSecondary,
+                  color: isFavorite
+                      ? AppTheme.urgentRed
+                      : AppTheme.textSecondary,
                   size: 20,
                 ),
               ),
@@ -310,7 +315,7 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
           // 공고 내용
           Padding(
             padding: const EdgeInsets.all(AppTheme.spacing4),
-            child: GestureDetector(
+            child: _JobCardTapArea(
               onTap: () => widget.onJobTap(job),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -339,7 +344,9 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                               ),
                               decoration: BoxDecoration(
                                 color: AppTheme.surfaceContainerLow,
-                                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radiusFull,
+                                ),
                               ),
                               child: Text(
                                 timeTag,
@@ -358,9 +365,13 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                               ),
                               decoration: BoxDecoration(
                                 color: isShortTerm
-                                    ? AppTheme.stitchPrimary.withValues(alpha: 0.1)
+                                    ? AppTheme.stitchPrimary.withValues(
+                                        alpha: 0.1,
+                                      )
                                     : AppTheme.surfaceContainerLow,
-                                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radiusFull,
+                                ),
                               ),
                               child: Text(
                                 isShortTerm ? '단기' : '장기',
@@ -402,7 +413,8 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
                               ),
                             ),
                             const SizedBox(width: AppTheme.spacing2),
-                            if (_selectedCategory == CategoryType.hourly && hourlyRate != null)
+                            if (_selectedCategory == CategoryType.hourly &&
+                                hourlyRate != null)
                               Text(
                                 '시급 ${formatAmount(hourlyRate.toInt())}',
                                 style: const TextStyle(
@@ -449,6 +461,37 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 공고 카드 탭 시 살짝 눌리는 느낌을 주는 눌림(press) 피드백 래퍼.
+class _JobCardTapArea extends StatefulWidget {
+  const _JobCardTapArea({required this.onTap, required this.child});
+
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  State<_JobCardTapArea> createState() => _JobCardTapAreaState();
+}
+
+class _JobCardTapAreaState extends State<_JobCardTapArea> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _pressed ? 0.98 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: widget.child,
       ),
     );
   }

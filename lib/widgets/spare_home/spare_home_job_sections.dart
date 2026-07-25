@@ -11,6 +11,7 @@ import '../../utils/job_filter_utils.dart';
 import '../../utils/job_popularity.dart';
 import '../../utils/jobs_list_sort.dart';
 import '../category_jobs_section.dart';
+import '../common/staggered_fade_in.dart';
 import '../customer_service_section.dart';
 import '../normal_jobs_section.dart';
 import '../popular_jobs_section.dart';
@@ -23,13 +24,14 @@ import 'spare_home_filter_chips.dart';
 /// 급구·하이패스·카테고리 BEST·인기 공고는 결제/노출 우선순위가 있는 영역이라
 /// 필터칩과 무관하게 항상 전체 노출. 필터칩은 그 아래 일반 공고 목록에만 적용됨.
 class SpareHomeJobSections extends StatefulWidget {
-  const SpareHomeJobSections({
-    super.key,
-    required this.onToggleFavorite,
-  });
+  const SpareHomeJobSections({super.key, required this.onToggleFavorite});
 
-  final Future<void> Function(BuildContext context, String jobId, bool isFavorite)
-      onToggleFavorite;
+  final Future<void> Function(
+    BuildContext context,
+    String jobId,
+    bool isFavorite,
+  )
+  onToggleFavorite;
 
   @override
   State<SpareHomeJobSections> createState() => _SpareHomeJobSectionsState();
@@ -52,7 +54,10 @@ class _SpareHomeJobSectionsState extends State<SpareHomeJobSections> {
     return Consumer2<JobProvider, FavoriteProvider>(
       builder: (context, jobProvider, favoriteProvider, _) {
         final favoriteMap = _favoriteMap(favoriteProvider.favoriteJobIds);
-        final allJobsRaw = [...jobProvider.urgentJobs, ...jobProvider.normalJobs];
+        final allJobsRaw = [
+          ...jobProvider.urgentJobs,
+          ...jobProvider.normalJobs,
+        ];
 
         // 결제·노출 우선순위 섹션 — 필터칩과 무관하게 항상 전체 표시.
         final urgentJobs = jobProvider.urgentJobs;
@@ -71,52 +76,65 @@ class _SpareHomeJobSectionsState extends State<SpareHomeJobSections> {
         final popularJobIds = JobPopularity.popularJobIds(allJobsRaw);
 
         // 필터칩 아래 일반 공고 목록 — 선택된 칩에 따라 필터링(신규 공고도 여기 포함).
-        final filteredNormalJobs =
-            JobFilterUtils.apply(_filter, jobProvider.normalJobs);
+        final filteredNormalJobs = JobFilterUtils.apply(
+          _filter,
+          jobProvider.normalJobs,
+        );
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            UrgentJobSection(
-              urgentJobs: urgentJobs,
-              favoriteMap: favoriteMap,
-              onJobTap: (job) => _openJobDetail(context, job),
-              onFavoriteToggle: (jobId, isFav) =>
-                  widget.onToggleFavorite(context, jobId, isFav),
-              onViewAll: () => context.push(
-                AppRoutes.spareHomeJobsPath(filter: 'urgent'),
+            StaggeredFadeIn(
+              index: 0,
+              child: UrgentJobSection(
+                urgentJobs: urgentJobs,
+                favoriteMap: favoriteMap,
+                onJobTap: (job) => _openJobDetail(context, job),
+                onFavoriteToggle: (jobId, isFav) =>
+                    widget.onToggleFavorite(context, jobId, isFav),
+                onViewAll: () =>
+                    context.push(AppRoutes.spareHomeJobsPath(filter: 'urgent')),
               ),
             ),
-            UpcomingShopsSection(
-              jobs: hipassJobs,
-              favoriteMap: favoriteMap,
-              onJobTap: (job) => _openJobDetail(context, job),
-              onFavoriteToggle: (jobId, isFav) =>
-                  widget.onToggleFavorite(context, jobId, isFav),
-            ),
-            CategoryJobsSection(
-              allJobs: jobProvider.jobs,
-              selectedRegionId: jobProvider.selectedRegionId,
-              favoriteMap: favoriteMap,
-              onJobTap: (job) => _openJobDetail(context, job),
-              onFavoriteToggle: (jobId, isFav) =>
-                  widget.onToggleFavorite(context, jobId, isFav),
-              sectionPadding: const EdgeInsets.fromLTRB(
-                AppTheme.spacing4,
-                AppTheme.spacing1,
-                AppTheme.spacing4,
-                AppTheme.spacing4,
+            StaggeredFadeIn(
+              index: 1,
+              child: UpcomingShopsSection(
+                jobs: hipassJobs,
+                favoriteMap: favoriteMap,
+                onJobTap: (job) => _openJobDetail(context, job),
+                onFavoriteToggle: (jobId, isFav) =>
+                    widget.onToggleFavorite(context, jobId, isFav),
               ),
             ),
-            PopularJobsSection(
-              jobs: topPopularJobs,
-              favoriteMap: favoriteMap,
-              onJobTap: (job) => _openJobDetail(context, job),
-              onFavoriteToggle: (jobId, isFav) =>
-                  widget.onToggleFavorite(context, jobId, isFav),
-              onViewAll: () => context.push(
-                AppRoutes.spareHomeJobsPath(
-                  sort: JobsListSortMode.popular.name,
+            StaggeredFadeIn(
+              index: 2,
+              child: CategoryJobsSection(
+                allJobs: jobProvider.jobs,
+                selectedRegionId: jobProvider.selectedRegionId,
+                favoriteMap: favoriteMap,
+                onJobTap: (job) => _openJobDetail(context, job),
+                onFavoriteToggle: (jobId, isFav) =>
+                    widget.onToggleFavorite(context, jobId, isFav),
+                sectionPadding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing4,
+                  AppTheme.spacing1,
+                  AppTheme.spacing4,
+                  AppTheme.spacing4,
+                ),
+              ),
+            ),
+            StaggeredFadeIn(
+              index: 3,
+              child: PopularJobsSection(
+                jobs: topPopularJobs,
+                favoriteMap: favoriteMap,
+                onJobTap: (job) => _openJobDetail(context, job),
+                onFavoriteToggle: (jobId, isFav) =>
+                    widget.onToggleFavorite(context, jobId, isFav),
+                onViewAll: () => context.push(
+                  AppRoutes.spareHomeJobsPath(
+                    sort: JobsListSortMode.popular.name,
+                  ),
                 ),
               ),
             ),
@@ -126,14 +144,17 @@ class _SpareHomeJobSectionsState extends State<SpareHomeJobSections> {
               onSelected: (v) => setState(() => _filter = v),
             ),
             const SizedBox(height: AppTheme.spacing3),
-            NormalJobsSection(
-              jobs: filteredNormalJobs,
-              favoriteMap: favoriteMap,
-              popularJobIds: popularJobIds,
-              onJobTap: (job) => _openJobDetail(context, job),
-              onFavoriteToggle: (jobId, isFav) =>
-                  widget.onToggleFavorite(context, jobId, isFav),
-              onViewAll: () => context.push(AppRoutes.spareHomeJobs),
+            StaggeredFadeIn(
+              index: 4,
+              child: NormalJobsSection(
+                jobs: filteredNormalJobs,
+                favoriteMap: favoriteMap,
+                popularJobIds: popularJobIds,
+                onJobTap: (job) => _openJobDetail(context, job),
+                onFavoriteToggle: (jobId, isFav) =>
+                    widget.onToggleFavorite(context, jobId, isFav),
+                onViewAll: () => context.push(AppRoutes.spareHomeJobs),
+              ),
             ),
             const CustomerServiceSection(),
             SizedBox(height: MediaQuery.paddingOf(context).bottom + 24),
