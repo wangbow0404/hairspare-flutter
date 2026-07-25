@@ -127,3 +127,86 @@ class JobCardSkeleton extends StatelessWidget {
     );
   }
 }
+
+/// 공고 상세 로딩 스켈레톤 — 히어로 이미지 + 제목 + 정보카드 모양.
+class JobDetailSkeleton extends StatelessWidget {
+  const JobDetailSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const ShimmerBox(height: 288, borderRadius: 0),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ShimmerBox(
+                  width: MediaQuery.sizeOf(context).width * 0.55,
+                  height: 22,
+                ),
+                const SizedBox(height: 10),
+                const ShimmerBox(width: 160, height: 14),
+                const SizedBox(height: 20),
+                _SkeletonCard(
+                  child: Column(
+                    children: const [
+                      ShimmerBox(height: 16),
+                      SizedBox(height: 16),
+                      ShimmerBox(height: 16),
+                      SizedBox(height: 16),
+                      ShimmerBox(height: 16),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _SkeletonCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      ShimmerBox(width: 100, height: 15),
+                      SizedBox(height: 10),
+                      ShimmerBox(height: 12),
+                      SizedBox(height: 8),
+                      ShimmerBox(height: 12),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkeletonCard extends StatelessWidget {
+  const _SkeletonCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}

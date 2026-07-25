@@ -5,6 +5,7 @@ import '../../core/di/service_locator.dart';
 import '../../core/services/global_messenger_service.dart';
 import '../../models/job.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../view_models/job_detail_view_model.dart';
 import '../../mocks/mock_spare_data.dart';
 import '../../utils/api_config.dart';
@@ -13,6 +14,7 @@ import '../../utils/navigation_helper.dart';
 import '../../utils/shell_navigation.dart';
 import '../../models/spare_job_engagement.dart';
 import '../../widgets/schedule/schedule_conflict_dialog.dart';
+import '../../widgets/common/shimmer_box.dart';
 import '../../widgets/job_detail/job_detail_bottom_bar.dart';
 import '../../widgets/job_detail/job_detail_modals.dart';
 import '../../widgets/job_detail/job_detail_scroll_body.dart';
@@ -77,8 +79,8 @@ class _JobDetailScaffoldState extends State<_JobDetailScaffold> {
 
     if (vm.isLoading) {
       return const Scaffold(
-        backgroundColor: AppTheme.backgroundWhite,
-        body: Center(child: CircularProgressIndicator()),
+        backgroundColor: HairSpareColors.surfaceMuted,
+        body: SafeArea(child: JobDetailSkeleton()),
       );
     }
 
@@ -111,7 +113,7 @@ class _JobDetailScaffoldState extends State<_JobDetailScaffold> {
     return PopScope(
       canPop: true,
       child: Scaffold(
-        backgroundColor: AppTheme.backgroundWhite,
+        backgroundColor: HairSpareColors.surfaceMuted,
         body: SafeArea(
           top: true,
           bottom: false,
@@ -129,10 +131,12 @@ class _JobDetailScaffoldState extends State<_JobDetailScaffold> {
                   }
                 },
                 onAccept: () => _acceptProposalWithConflictCheck(context, vm),
-                primaryLabel: vm.isJobExpired && vm.engagement == SpareJobEngagement.open
+                primaryLabel:
+                    vm.isJobExpired && vm.engagement == SpareJobEngagement.open
                     ? '마감된 공고'
                     : vm.primaryActionLabel,
-                onPrimary: vm.isJobExpired && vm.engagement == SpareJobEngagement.open
+                onPrimary:
+                    vm.isJobExpired && vm.engagement == SpareJobEngagement.open
                     ? null
                     : () {
                         if (vm.engagement == SpareJobEngagement.open) {
@@ -142,8 +146,9 @@ class _JobDetailScaffoldState extends State<_JobDetailScaffold> {
                         final day = vm.linkedSchedule?.date;
                         NavigationHelper.navigateToWorkCheck(
                           context,
-                          initialDay:
-                              day != null ? DateTime.tryParse(day) : null,
+                          initialDay: day != null
+                              ? DateTime.tryParse(day)
+                              : null,
                           jobId: vm.jobId,
                           scheduleId: vm.linkedSchedule?.id,
                         );
@@ -154,7 +159,9 @@ class _JobDetailScaffoldState extends State<_JobDetailScaffold> {
                   onDismiss: vm.dismissVerificationModal,
                   onGoVerify: () {
                     vm.dismissVerificationModal();
-                    deferAfterTap(() => ShellNavigation.pushVerification(context));
+                    deferAfterTap(
+                      () => ShellNavigation.pushVerification(context),
+                    );
                   },
                 ),
             ],
@@ -165,7 +172,10 @@ class _JobDetailScaffoldState extends State<_JobDetailScaffold> {
   }
 }
 
-Future<void> _tryOpenApplyFlow(BuildContext context, JobDetailViewModel vm) async {
+Future<void> _tryOpenApplyFlow(
+  BuildContext context,
+  JobDetailViewModel vm,
+) async {
   if (ApiConfig.useMockData && vm.jobId == MockSpareData.overlapDemoJobId) {
     await vm.refreshJobSnapshot();
   }
@@ -235,9 +245,7 @@ Future<void> _acceptProposalWithConflictCheck(
     conflicts = await vm.findAcceptProposalConflicts();
     if (!context.mounted) return;
     if (conflicts.isNotEmpty) {
-      messenger.showError(
-        '아직 겹치는 근무가 남아 있습니다. 스케줄표에서 확인해 주세요.',
-      );
+      messenger.showError('아직 겹치는 근무가 남아 있습니다. 스케줄표에서 확인해 주세요.');
       return;
     }
   }

@@ -83,7 +83,8 @@ class JobDetailScrollBody extends StatelessWidget {
                 if (!forShopOwner && vm.isProposalMode)
                   _buildProposalNotice(context, vm),
                 _buildInfoTable(context),
-                if (job.description != null && job.description!.trim().isNotEmpty)
+                if (job.description != null &&
+                    job.description!.trim().isNotEmpty)
                   _buildDescriptionSection(context),
                 if (!forShopOwner) _buildDepositNotice(context),
                 _buildLocationSection(context),
@@ -115,11 +116,7 @@ class JobDetailScrollBody extends StatelessWidget {
   }
 
   Widget _buildHeroSection(BuildContext context, JobDetailViewModel vm) {
-    return _JobDetailHeroCarousel(
-      job: job,
-      vm: vm,
-      forShopOwner: forShopOwner,
-    );
+    return _JobDetailHeroCarousel(job: job, vm: vm, forShopOwner: forShopOwner);
   }
 
   Widget _buildShopOwnerStatusBanner(BuildContext context) {
@@ -137,23 +134,23 @@ class JobDetailScrollBody extends StatelessWidget {
             label: job.status == 'expired'
                 ? '지난 공고'
                 : job.status == 'closed'
-                    ? '마감'
-                    : '진행중',
+                ? '마감'
+                : '진행중',
             fg: job.status == 'expired'
                 ? Colors.blue.shade700
                 : job.status == 'closed'
-                    ? AppTheme.textSecondary
-                    : Colors.green.shade700,
+                ? AppTheme.textSecondary
+                : Colors.green.shade700,
             bg: job.status == 'expired'
                 ? Colors.blue.shade50
                 : job.status == 'closed'
-                    ? AppTheme.backgroundGray
-                    : Colors.green.shade50,
+                ? AppTheme.backgroundGray
+                : Colors.green.shade50,
             border: job.status == 'expired'
                 ? Colors.blue.shade200
                 : job.status == 'closed'
-                    ? AppTheme.borderGray
-                    : Colors.green.shade300,
+                ? AppTheme.borderGray
+                : Colors.green.shade300,
           ),
           if (job.isHidden)
             _shopOwnerPill(
@@ -188,10 +185,10 @@ class JobDetailScrollBody extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: fg,
-            ),
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: fg,
+        ),
       ),
     );
   }
@@ -199,8 +196,9 @@ class JobDetailScrollBody extends StatelessWidget {
   /// 제목(공고 제목) + 샵명·지역 + 초보가능/당일정산 태그.
   Widget _buildTitleSection(BuildContext context) {
     final regionName = jobDetailRegionName(job.regionId);
-    final shopLine =
-        regionName.isNotEmpty ? '${job.shopName} · $regionName' : job.shopName;
+    final shopLine = regionName.isNotEmpty
+        ? '${job.shopName} · $regionName'
+        : job.shopName;
     final tags = <String>[
       if (JobFilterUtils.matches('beginner', job)) '초보가능',
       if (JobFilterUtils.matches('same_day', job)) '당일정산',
@@ -260,8 +258,9 @@ class JobDetailScrollBody extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: HairSpareColors.surfaceMuted,
-                        borderRadius:
-                            AppTheme.borderRadius(AppTheme.radiusFull),
+                        borderRadius: AppTheme.borderRadius(
+                          AppTheme.radiusFull,
+                        ),
                       ),
                       child: Text(
                         tag,
@@ -284,7 +283,10 @@ class JobDetailScrollBody extends StatelessWidget {
   /// 남은 자리(1명 이하일 때만 강조) + 조회수·찜수·매장 완료건수.
   Widget _buildMetaRow(BuildContext context) {
     final remaining = job.remainingSlots;
-    const metaStyle = TextStyle(fontSize: 12, color: HairSpareColors.textSecondary);
+    const metaStyle = TextStyle(
+      fontSize: 12,
+      color: HairSpareColors.textSecondary,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -467,11 +469,7 @@ class JobDetailScrollBody extends StatelessWidget {
 
   /// 일정 / 역할 / 급여 정보 테이블 (PDF a안 02).
   Widget _buildInfoTable(BuildContext context) {
-    return Padding(
-      padding: AppTheme.spacingSymmetric(
-        horizontal: AppTheme.spacing4,
-        vertical: AppTheme.spacing2,
-      ),
+    return _sectionCard(
       child: Column(
         children: [
           _infoRow(
@@ -480,9 +478,15 @@ class JobDetailScrollBody extends StatelessWidget {
             value:
                 '${jobDetailRelativeDayLabel(job.date)} ${jobDetailFormatJobTime(job)}',
           ),
-          const Divider(height: AppTheme.spacing6, color: HairSpareColors.border),
+          const Divider(
+            height: AppTheme.spacing6,
+            color: HairSpareColors.border,
+          ),
           _infoRow(context, label: '역할', value: job.role ?? '미지정'),
-          const Divider(height: AppTheme.spacing6, color: HairSpareColors.border),
+          const Divider(
+            height: AppTheme.spacing6,
+            color: HairSpareColors.border,
+          ),
           _infoRow(
             context,
             label: '급여',
@@ -491,6 +495,34 @@ class JobDetailScrollBody extends StatelessWidget {
             subtitle: _hourlyRateLabel(),
           ),
         ],
+      ),
+    );
+  }
+
+  /// 정보 섹션 공통 카드 래퍼 — 흰 배경+그림자로 회색 페이지 위에서 구획을 나눈다.
+  Widget _sectionCard({required Widget child, Color? backgroundColor}) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing4,
+        AppTheme.spacing2,
+        AppTheme.spacing4,
+        AppTheme.spacing2,
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: AppTheme.spacing(AppTheme.spacing4),
+        decoration: BoxDecoration(
+          color: backgroundColor ?? HairSpareColors.surface,
+          borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: child,
       ),
     );
   }
@@ -552,11 +584,7 @@ class JobDetailScrollBody extends StatelessWidget {
   }
 
   Widget _buildDescriptionSection(BuildContext context) {
-    return Padding(
-      padding: AppTheme.spacingSymmetric(
-        horizontal: AppTheme.spacing4,
-        vertical: AppTheme.spacing4,
-      ),
+    return _sectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -585,48 +613,37 @@ class JobDetailScrollBody extends StatelessWidget {
   /// 위치 — 실제 좌표 데이터가 없어 정적 플레이스홀더 + 외부 지도 앱 검색으로 대체.
   /// 지원하기 버튼 누르기 전에 미리 보여주는 예약금 안내 (지원 확정 시트와 같은 문구).
   Widget _buildDepositNotice(BuildContext context) {
-    return Padding(
-      padding: AppTheme.spacingSymmetric(
-        horizontal: AppTheme.spacing4,
-        vertical: AppTheme.spacing2,
-      ),
-      child: Container(
-        width: double.infinity,
-        padding: AppTheme.spacing(AppTheme.spacing4),
-        decoration: BoxDecoration(
-          color: HairSpareColors.surfaceMuted,
-          borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Icon(
-              Icons.lock_outline,
-              size: 18,
-              color: HairSpareColors.textSecondary,
-            ),
-            const SizedBox(width: AppTheme.spacing2),
-            Expanded(
-              child: RichText(
-                text: const TextSpan(
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: HairSpareColors.textStrong,
-                    height: 1.5,
-                  ),
-                  children: [
-                    TextSpan(text: '노쇼 방지를 위해 예약금 '),
-                    TextSpan(
-                      text: '5,000원',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    TextSpan(text: '이 결제돼요. 근무를 완료하면 전액 환급됩니다.'),
-                  ],
+    return _sectionCard(
+      backgroundColor: HairSpareColors.brandPrimarySoft,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.lock_outline,
+            size: 18,
+            color: HairSpareColors.brandPrimary,
+          ),
+          const SizedBox(width: AppTheme.spacing2),
+          Expanded(
+            child: RichText(
+              text: const TextSpan(
+                style: TextStyle(
+                  fontSize: 13,
+                  color: HairSpareColors.textStrong,
+                  height: 1.5,
                 ),
+                children: [
+                  TextSpan(text: '노쇼 방지를 위해 예약금 '),
+                  TextSpan(
+                    text: '5,000원',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  TextSpan(text: '이 결제돼요. 근무를 완료하면 전액 환급됩니다.'),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -635,11 +652,7 @@ class JobDetailScrollBody extends StatelessWidget {
     final regionName = jobDetailRegionName(job.regionId);
     final query = Uri.encodeComponent('${job.shopName} $regionName');
 
-    return Padding(
-      padding: AppTheme.spacingSymmetric(
-        horizontal: AppTheme.spacing4,
-        vertical: AppTheme.spacing4,
-      ),
+    return _sectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -658,12 +671,29 @@ class JobDetailScrollBody extends StatelessWidget {
             decoration: BoxDecoration(
               color: HairSpareColors.placeholderWarm,
               borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+              border: Border.all(
+                color: HairSpareColors.brandPrimary.withValues(alpha: 0.12),
+              ),
             ),
-            child: const Center(
-              child: Icon(
-                Icons.location_on,
-                size: 32,
-                color: HairSpareColors.brandPrimary,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.location_on,
+                    size: 32,
+                    color: HairSpareColors.brandPrimary,
+                  ),
+                  const SizedBox(height: AppTheme.spacing1),
+                  Text(
+                    regionName.isEmpty ? job.shopName : regionName,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: HairSpareColors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -672,7 +702,9 @@ class JobDetailScrollBody extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  regionName.isEmpty ? job.shopName : '$regionName · ${job.shopName}',
+                  regionName.isEmpty
+                      ? job.shopName
+                      : '$regionName · ${job.shopName}',
                   style: const TextStyle(
                     fontSize: 14,
                     color: HairSpareColors.textStrong,
@@ -720,19 +752,25 @@ class JobDetailScrollBody extends StatelessWidget {
         icon: Icon(
           Icons.chat_bubble_outline,
           size: 18,
-          color: canContact ? HairSpareColors.brandPrimary : AppTheme.textTertiary,
+          color: canContact
+              ? HairSpareColors.brandPrimary
+              : AppTheme.textTertiary,
         ),
         label: Text(
           label,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: canContact ? HairSpareColors.brandPrimary : AppTheme.textTertiary,
+            color: canContact
+                ? HairSpareColors.brandPrimary
+                : AppTheme.textTertiary,
           ),
         ),
         style: OutlinedButton.styleFrom(
           side: BorderSide(
-            color: canContact ? HairSpareColors.brandPrimary : AppTheme.borderGray,
+            color: canContact
+                ? HairSpareColors.brandPrimary
+                : AppTheme.borderGray,
           ),
           padding: AppTheme.spacingSymmetric(
             horizontal: AppTheme.spacing4,
@@ -810,10 +848,8 @@ class _JobDetailHeroCarouselState extends State<_JobDetailHeroCarousel> {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: images.length,
                 onPageChanged: (page) => setState(() => _currentPage = page),
-                itemBuilder: (_, index) => AppNetworkImage(
-                  imageUrl: images[index],
-                  fit: BoxFit.cover,
-                ),
+                itemBuilder: (_, index) =>
+                    AppNetworkImage(imageUrl: images[index], fit: BoxFit.cover),
               ),
             )
           else
