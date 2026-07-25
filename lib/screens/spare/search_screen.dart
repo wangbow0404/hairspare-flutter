@@ -17,6 +17,8 @@ import '../../theme/hairspare_colors.dart';
 import '../../utils/icon_mapper.dart';
 import '../../utils/job_popularity.dart';
 import '../../utils/spare_search_hints.dart';
+import '../../widgets/common/shimmer_box.dart';
+import '../../widgets/common/staggered_fade_in.dart';
 import '../../widgets/compact_announcement_card.dart';
 import '../../widgets/stitch/stitch_empty_state.dart';
 import '../../widgets/stitch/stitch_filter_chip.dart';
@@ -149,9 +151,14 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             Expanded(
               child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: AppTheme.stitchPrimaryContainer,
+                  ? const Padding(
+                      padding: EdgeInsets.all(AppTheme.spacing4),
+                      child: Column(
+                        children: [
+                          JobCardSkeleton(),
+                          JobCardSkeleton(),
+                          JobCardSkeleton(),
+                        ],
                       ),
                     )
                   : !_showResults
@@ -167,7 +174,8 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildResults() {
-    final hasAny = _jobs.isNotEmpty ||
+    final hasAny =
+        _jobs.isNotEmpty ||
         _educations.isNotEmpty ||
         _spaces.isNotEmpty ||
         _challenges.isNotEmpty;
@@ -195,64 +203,68 @@ class _SearchScreenState extends State<SearchScreen> {
             if (_showJobs && _jobs.isNotEmpty) ...[
               SearchResultSectionHeader(title: '공고', count: _jobs.length),
               const SizedBox(height: AppTheme.spacing3),
-              ..._jobs.map(
-                (job) => Padding(
+              for (final entry in _jobs.asMap().entries)
+                Padding(
                   padding: const EdgeInsets.only(bottom: AppTheme.spacing3),
-                  child: StitchListJobCard(
-                    job: job,
-                    isFavorite: favoriteMap[job.id] ?? false,
-                    showPopularBadge: JobPopularity.showsPopularBadge(
-                      job,
-                      popularJobIds,
+                  child: StaggeredFadeIn(
+                    index: entry.key,
+                    child: StitchListJobCard(
+                      job: entry.value,
+                      isFavorite: favoriteMap[entry.value.id] ?? false,
+                      showPopularBadge: JobPopularity.showsPopularBadge(
+                        entry.value,
+                        popularJobIds,
+                      ),
+                      onTap: () => context.push(
+                        AppRoutes.spareHomeJobDetail(entry.value.id),
+                      ),
+                      onFavoriteToggle: () =>
+                          favProvider.toggleFavorite(entry.value.id),
+                      margin: EdgeInsets.zero,
                     ),
-                    onTap: () =>
-                        context.push(AppRoutes.spareHomeJobDetail(job.id)),
-                    onFavoriteToggle: () =>
-                        favProvider.toggleFavorite(job.id),
-                    margin: EdgeInsets.zero,
                   ),
                 ),
-              ),
               const SizedBox(height: AppTheme.spacing4),
             ],
             if (_showEducations && _educations.isNotEmpty) ...[
               SearchResultSectionHeader(title: '교육', count: _educations.length),
               const SizedBox(height: AppTheme.spacing3),
-              ..._educations.map(
-                (edu) => Padding(
+              for (final entry in _educations.asMap().entries)
+                Padding(
                   padding: const EdgeInsets.only(bottom: AppTheme.spacing3),
-                  child: CompactAnnouncementCard(
-                    type: AnnouncementType.education,
-                    education: edu,
-                    isFavorite: false,
-                    onTap: () => context.push(
-                      AppRoutes.spareHomeEducationDetail,
-                      extra: edu,
+                  child: StaggeredFadeIn(
+                    index: entry.key,
+                    child: CompactAnnouncementCard(
+                      type: AnnouncementType.education,
+                      education: entry.value,
+                      isFavorite: false,
+                      onTap: () => context.push(
+                        AppRoutes.spareHomeEducationDetail,
+                        extra: entry.value,
+                      ),
                     ),
                   ),
                 ),
-              ),
               const SizedBox(height: AppTheme.spacing4),
             ],
             if (_showSpaces && _spaces.isNotEmpty) ...[
-              SearchResultSectionHeader(
-                title: '공간대여',
-                count: _spaces.length,
-              ),
+              SearchResultSectionHeader(title: '공간대여', count: _spaces.length),
               const SizedBox(height: AppTheme.spacing3),
-              ..._spaces.map(
-                (space) => Padding(
+              for (final entry in _spaces.asMap().entries)
+                Padding(
                   padding: const EdgeInsets.only(bottom: AppTheme.spacing3),
-                  child: CompactAnnouncementCard(
-                    type: AnnouncementType.spaceRental,
-                    spaceRental: space,
-                    isFavorite: false,
-                    onTap: () => context.push(
-                      AppRoutes.spareHomeSpaceDetail(space.id),
+                  child: StaggeredFadeIn(
+                    index: entry.key,
+                    child: CompactAnnouncementCard(
+                      type: AnnouncementType.spaceRental,
+                      spaceRental: entry.value,
+                      isFavorite: false,
+                      onTap: () => context.push(
+                        AppRoutes.spareHomeSpaceDetail(entry.value.id),
+                      ),
                     ),
                   ),
                 ),
-              ),
               const SizedBox(height: AppTheme.spacing4),
             ],
             if (_showChallenges && _challenges.isNotEmpty) ...[
@@ -261,15 +273,17 @@ class _SearchScreenState extends State<SearchScreen> {
                 count: _challenges.length,
               ),
               const SizedBox(height: AppTheme.spacing3),
-              ..._challenges.map(
-                (challenge) => Padding(
+              for (final entry in _challenges.asMap().entries)
+                Padding(
                   padding: const EdgeInsets.only(bottom: AppTheme.spacing2),
-                  child: SearchChallengeTile(
-                    challenge: challenge,
-                    onTap: () => context.push(AppRoutes.spareHomeChallenge),
+                  child: StaggeredFadeIn(
+                    index: entry.key,
+                    child: SearchChallengeTile(
+                      challenge: entry.value,
+                      onTap: () => context.push(AppRoutes.spareHomeChallenge),
+                    ),
                   ),
                 ),
-              ),
             ],
             SizedBox(height: MediaQuery.paddingOf(context).bottom + 16),
           ],
@@ -313,7 +327,8 @@ class SearchScreenHeader extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: IconMapper.icon(
+            icon:
+                IconMapper.icon(
                   'chevronleft',
                   size: 24,
                   color: AppTheme.textSecondary,
@@ -356,11 +371,8 @@ class SearchScreenHeader extends StatelessWidget {
                   borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
                 ),
                 alignment: Alignment.center,
-                child: IconMapper.icon(
-                      'search',
-                      size: 22,
-                      color: Colors.white,
-                    ) ??
+                child:
+                    IconMapper.icon('search', size: 22, color: Colors.white) ??
                     const Icon(Icons.search, size: 22, color: Colors.white),
               ),
             ),
@@ -455,7 +467,8 @@ class _SearchInputFieldState extends State<SearchInputField> {
           color: AppTheme.stitchTextSecondary,
           fontWeight: FontWeight.w400,
         ),
-        prefixIcon: IconMapper.icon(
+        prefixIcon:
+            IconMapper.icon(
               'search',
               size: 20,
               color: AppTheme.stitchTextSecondary,
@@ -468,9 +481,7 @@ class _SearchInputFieldState extends State<SearchInputField> {
         border: InputBorder.none,
         enabledBorder: InputBorder.none,
         focusedBorder: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: AppTheme.spacing2,
-        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: AppTheme.spacing2),
         isDense: true,
       ),
       onSubmitted: widget.onSubmitted,
@@ -482,6 +493,7 @@ class _QuickCategory {
   const _QuickCategory({
     required this.label,
     required this.icon,
+    required this.color,
     this.filter,
     this.sort,
     this.premium = false,
@@ -489,31 +501,41 @@ class _QuickCategory {
 
   final String label;
   final IconData icon;
+  final Color color;
   final String? filter;
   final String? sort;
   final bool premium;
 }
 
 const _quickCategories = [
-  _QuickCategory(label: '급구', icon: Icons.bolt, filter: 'urgent'),
+  _QuickCategory(
+    label: '급구',
+    icon: Icons.bolt,
+    color: HairSpareColors.statusUrgent,
+    filter: 'urgent',
+  ),
   _QuickCategory(
     label: '하이패스',
     icon: Icons.workspace_premium,
+    color: HairSpareColors.star,
     premium: true,
   ),
   _QuickCategory(
     label: '오픈예정',
     icon: Icons.upcoming_outlined,
+    color: HairSpareColors.statusMatching,
     filter: 'opening_soon',
   ),
-  _QuickCategory(label: '신규공고', icon: Icons.fiber_new_outlined, sort: 'latest'),
+  _QuickCategory(
+    label: '신규공고',
+    icon: Icons.fiber_new_outlined,
+    color: HairSpareColors.statusSuccess,
+    sort: 'latest',
+  ),
 ];
 
 class SearchEmptySuggestionsBody extends StatelessWidget {
-  const SearchEmptySuggestionsBody({
-    super.key,
-    required this.onSuggestionTap,
-  });
+  const SearchEmptySuggestionsBody({super.key, required this.onSuggestionTap});
 
   final ValueChanged<String> onSuggestionTap;
 
@@ -553,7 +575,8 @@ class SearchEmptySuggestionsBody extends StatelessWidget {
             _PopularSearchRow(
               rank: i + 1,
               keyword: SpareSearchHints.quickPickKeywords[i],
-              onTap: () => onSuggestionTap(SpareSearchHints.quickPickKeywords[i]),
+              onTap: () =>
+                  onSuggestionTap(SpareSearchHints.quickPickKeywords[i]),
             ),
         ],
       ),
@@ -581,7 +604,7 @@ class _QuickCategoryButton extends StatelessWidget {
         ),
         child: Ink(
           decoration: BoxDecoration(
-            color: HairSpareColors.brandPrimarySoft,
+            color: category.color.withValues(alpha: 0.1),
             borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
           ),
           padding: AppTheme.spacingSymmetric(
@@ -590,7 +613,7 @@ class _QuickCategoryButton extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(category.icon, size: 20, color: HairSpareColors.brandPrimary),
+              Icon(category.icon, size: 20, color: category.color),
               const SizedBox(width: AppTheme.spacing2),
               Text(
                 category.label,
