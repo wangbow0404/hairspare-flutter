@@ -39,9 +39,7 @@ class UrgentJobSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppTheme.spacing4,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
             child: StitchSectionHeader(
               title: '놓치면 아쉬운 ',
               titleHighlight: '급구 공고 ⏰',
@@ -69,6 +67,9 @@ class UrgentJobSection extends StatelessWidget {
                   height: HomeLayoutMetrics.compactCarouselHeight,
                   badgeLabel: '급구',
                   badgeColor: HairSpareColors.statusUrgent,
+                  borderColor: HairSpareColors.statusUrgent.withValues(
+                    alpha: 0.5,
+                  ),
                   onTap: () => onJobTap?.call(job),
                   onFavoriteToggle: onFavoriteToggle != null
                       ? () => onFavoriteToggle!(job.id, !isFavorite)

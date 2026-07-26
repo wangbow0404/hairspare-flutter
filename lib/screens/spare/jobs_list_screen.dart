@@ -23,7 +23,8 @@ import '../spare/education_screen.dart';
 
 /// Next.js와 동일한 공고 목록 화면
 class JobsListScreen extends StatefulWidget {
-  final String? filter; // 'urgent', 'opening_soon', 'latest', 'deadline', 'hourly', 'daily', 'recommended'
+  final String?
+  filter; // 'urgent', 'opening_soon', 'latest', 'deadline', 'hourly', 'daily', 'recommended'
   final String? searchQuery; // 홈 검색에서 전달된 검색어
   final JobsListSortMode? initialSortMode;
   final bool initialPremium; // 검색화면 "하이패스" 바로가기에서 전달
@@ -48,29 +49,29 @@ class _JobsListScreenState extends State<JobsListScreen> {
   // 지역 필터 상태
   String? _selectedProvince;
   String? _selectedDistrict;
-  
+
   // 드롭다운 상태
   bool _showProvinceDropdown = false;
   bool _showDistrictDropdown = false;
   bool _showSortDropdown = false;
-  
+
   // 드롭다운 버튼 키
   final GlobalKey _provinceButtonKey = GlobalKey();
   final GlobalKey _districtButtonKey = GlobalKey();
   final GlobalKey _sortButtonKey = GlobalKey();
-  
+
   // 추가 필터 상태
   bool _isPremium = false;
   DateTime? _selectedDateStart;
   bool _bodyReady = false;
-  
+
   // 지역 데이터
   List<Region> get _provinces {
     return RegionHelper.getAllRegions()
         .where((r) => r.type == RegionType.province)
         .toList();
   }
-  
+
   List<Region> get _districts {
     if (_selectedProvince == null) return [];
     return RegionHelper.getDistrictsByProvince(_selectedProvince!);
@@ -150,8 +151,10 @@ class _JobsListScreenState extends State<JobsListScreen> {
     if (jobProvider.jobs.isEmpty) {
       jobProvider.loadJobs(searchQuery: _searchQuery);
     }
-    final favoriteProvider =
-        Provider.of<FavoriteProvider>(context, listen: false);
+    final favoriteProvider = Provider.of<FavoriteProvider>(
+      context,
+      listen: false,
+    );
     if (favoriteProvider.favoriteJobIds.isEmpty) {
       favoriteProvider.loadFavorites();
     }
@@ -172,17 +175,13 @@ class _JobsListScreenState extends State<JobsListScreen> {
       ..refreshJobs();
   }
 
-
-
   void _handleJobTap(Job job) {
     context.push(AppRoutes.spareHomeJobDetail(job.id));
   }
 
   /// 공고별 화면: 공고만 표시 (필터·정렬 순서 유지)
   List<Map<String, dynamic>> _buildCombinedList(List<Job> filteredJobs) {
-    return filteredJobs
-        .map((job) => {'type': 'job', 'data': job})
-        .toList();
+    return filteredJobs.map((job) => {'type': 'job', 'data': job}).toList();
   }
 
   bool _isDeadlineImminent(Job job) {
@@ -279,17 +278,20 @@ class _JobsListScreenState extends State<JobsListScreen> {
     if (_searchQuery != null && _searchQuery!.trim().isNotEmpty) {
       final q = _searchQuery!.trim().toLowerCase();
       filtered = filtered.where((j) {
-        return j.title.toLowerCase().contains(q) || j.shopName.toLowerCase().contains(q);
+        return j.title.toLowerCase().contains(q) ||
+            j.shopName.toLowerCase().contains(q);
       }).toList();
     }
 
     // 날짜 필터
     if (_selectedDateStart != null) {
-      final targetKey = '${_selectedDateStart!.year}-${_selectedDateStart!.month.toString().padLeft(2, '0')}-${_selectedDateStart!.day.toString().padLeft(2, '0')}';
+      final targetKey =
+          '${_selectedDateStart!.year}-${_selectedDateStart!.month.toString().padLeft(2, '0')}-${_selectedDateStart!.day.toString().padLeft(2, '0')}';
       filtered = filtered.where((j) {
         try {
           final jobDate = DateTime.parse(j.date);
-          final jobKey = '${jobDate.year}-${jobDate.month.toString().padLeft(2, '0')}-${jobDate.day.toString().padLeft(2, '0')}';
+          final jobKey =
+              '${jobDate.year}-${jobDate.month.toString().padLeft(2, '0')}-${jobDate.day.toString().padLeft(2, '0')}';
           return jobKey == targetKey;
         } catch (_) {
           return j.date == targetKey || j.date.contains(targetKey);
@@ -299,10 +301,14 @@ class _JobsListScreenState extends State<JobsListScreen> {
 
     // 지역 필터
     if (_selectedDistrict != null) {
-      filtered = filtered.where((j) => j.regionId == _selectedDistrict).toList();
+      filtered = filtered
+          .where((j) => j.regionId == _selectedDistrict)
+          .toList();
     } else if (_selectedProvince != null) {
       final districtIds = _districts.map((d) => d.id).toList();
-      filtered = filtered.where((j) => districtIds.contains(j.regionId)).toList();
+      filtered = filtered
+          .where((j) => districtIds.contains(j.regionId))
+          .toList();
     }
 
     // 카테고리 필터 (칩)
@@ -376,173 +382,179 @@ class _JobsListScreenState extends State<JobsListScreen> {
                 onRefresh: _handleRefresh,
                 dropdownRow: Row(
                   children: [
-                          JobFilterDropdown(
-                            label: '지역',
-                            options: _provinces.map((p) => p.name).toList(),
-                            selectedValue: _selectedProvince != null
-                                ? _provinces.firstWhere((p) => p.id == _selectedProvince).name
-                                : null,
-                            onSelected: (value) {
-                              setState(() {
-                                _selectedProvince = value != null
-                                    ? _provinces.firstWhere((p) => p.name == value).id
-                                    : null;
-                                _selectedDistrict = null;
-                                _showProvinceDropdown = false;
-                              });
-                            },
-                            buttonKey: _provinceButtonKey,
-                            isOpen: _showProvinceDropdown,
-                            onToggle: () {
-                              setState(() {
-                                _showProvinceDropdown = !_showProvinceDropdown;
-                                _showDistrictDropdown = false;
-                                _showSortDropdown = false;
-                              });
-                            },
-                          ),
-                          if (_selectedProvince != null && _districts.isNotEmpty) ...[
-                            const SizedBox(width: AppTheme.spacing2),
-                            JobFilterDropdown(
-                              label: '상세지역',
-                              options: _districts.map((d) => d.name).toList(),
-                              selectedValue: _selectedDistrict != null
-                                  ? _districts.firstWhere((d) => d.id == _selectedDistrict).name
-                                  : null,
-                              onSelected: (value) {
-                                setState(() {
-                                  _selectedDistrict = value != null
-                                      ? _districts.firstWhere((d) => d.name == value).id
-                                      : null;
-                                  _showDistrictDropdown = false;
-                                });
-                              },
-                              buttonKey: _districtButtonKey,
-                              isOpen: _showDistrictDropdown,
-                              onToggle: () {
-                                setState(() {
-                                  _showDistrictDropdown = !_showDistrictDropdown;
-                                  _showProvinceDropdown = false;
-                                  _showSortDropdown = false;
-                                });
-                              },
-                            ),
-                          ],
-                          const SizedBox(width: AppTheme.spacing2),
-                          DateFilterButton(
-                            selectedDate: _selectedDateStart,
-                            onDateSelected: (date) {
-                              setState(() {
-                                _selectedDateStart = date;
-                              });
-                            },
-                            onClear: () {
-                              setState(() {
-                                _selectedDateStart = null;
-                              });
-                            },
-                          ),
-                          const SizedBox(width: AppTheme.spacing2),
-                          JobFilterDropdown(
-                            label: '전체',
-                            options: const [
-                              '인기순',
-                              '최신순',
-                              '가격순',
-                              '마감순',
-                            ],
-                            selectedValue:
-                                jobsListSortDropdownLabel(_sortMode),
-                            onSelected: (value) {
-                              setState(() {
-                                _sortMode = jobsListSortModeFromDropdown(value);
-                                _showSortDropdown = false;
-                              });
-                            },
-                            buttonKey: _sortButtonKey,
-                            isOpen: _showSortDropdown,
-                            onToggle: () {
-                              setState(() {
-                                _showSortDropdown = !_showSortDropdown;
-                                _showProvinceDropdown = false;
-                                _showDistrictDropdown = false;
-                              });
-                            },
-                          ),
-                        ],
+                    JobFilterDropdown(
+                      label: '지역',
+                      options: _provinces.map((p) => p.name).toList(),
+                      selectedValue: _selectedProvince != null
+                          ? _provinces
+                                .firstWhere((p) => p.id == _selectedProvince)
+                                .name
+                          : null,
+                      onSelected: (value) {
+                        setState(() {
+                          _selectedProvince = value != null
+                              ? _provinces.firstWhere((p) => p.name == value).id
+                              : null;
+                          _selectedDistrict = null;
+                          _showProvinceDropdown = false;
+                        });
+                      },
+                      buttonKey: _provinceButtonKey,
+                      isOpen: _showProvinceDropdown,
+                      onToggle: () {
+                        setState(() {
+                          _showProvinceDropdown = !_showProvinceDropdown;
+                          _showDistrictDropdown = false;
+                          _showSortDropdown = false;
+                        });
+                      },
+                    ),
+                    if (_selectedProvince != null && _districts.isNotEmpty) ...[
+                      const SizedBox(width: AppTheme.spacing2),
+                      JobFilterDropdown(
+                        label: '상세지역',
+                        options: _districts.map((d) => d.name).toList(),
+                        selectedValue: _selectedDistrict != null
+                            ? _districts
+                                  .firstWhere((d) => d.id == _selectedDistrict)
+                                  .name
+                            : null,
+                        onSelected: (value) {
+                          setState(() {
+                            _selectedDistrict = value != null
+                                ? _districts
+                                      .firstWhere((d) => d.name == value)
+                                      .id
+                                : null;
+                            _showDistrictDropdown = false;
+                          });
+                        },
+                        buttonKey: _districtButtonKey,
+                        isOpen: _showDistrictDropdown,
+                        onToggle: () {
+                          setState(() {
+                            _showDistrictDropdown = !_showDistrictDropdown;
+                            _showProvinceDropdown = false;
+                            _showSortDropdown = false;
+                          });
+                        },
+                      ),
+                    ],
+                    const SizedBox(width: AppTheme.spacing2),
+                    DateFilterButton(
+                      selectedDate: _selectedDateStart,
+                      onDateSelected: (date) {
+                        setState(() {
+                          _selectedDateStart = date;
+                        });
+                      },
+                      onClear: () {
+                        setState(() {
+                          _selectedDateStart = null;
+                        });
+                      },
+                    ),
+                    const SizedBox(width: AppTheme.spacing2),
+                    JobFilterDropdown(
+                      label: '전체',
+                      options: const ['인기순', '최신순', '가격순', '마감순'],
+                      selectedValue: jobsListSortDropdownLabel(_sortMode),
+                      onSelected: (value) {
+                        setState(() {
+                          _sortMode = jobsListSortModeFromDropdown(value);
+                          _showSortDropdown = false;
+                        });
+                      },
+                      buttonKey: _sortButtonKey,
+                      isOpen: _showSortDropdown,
+                      onToggle: () {
+                        setState(() {
+                          _showSortDropdown = !_showSortDropdown;
+                          _showProvinceDropdown = false;
+                          _showDistrictDropdown = false;
+                        });
+                      },
+                    ),
+                  ],
                 ),
                 chipRow: Row(
                   children: [
-                          StitchFilterChip(
-                            label: '전체',
-                            isSelected:
-                                _activeFilter == null &&
-                                !_isPremium &&
-                                _sortMode == JobsListSortMode.all,
-                            onTap: () {
-                              setState(() {
-                                _activeFilter = null;
-                                _isPremium = false;
-                                _sortMode = JobsListSortMode.all;
-                              });
-                            },
-                          ),
-                          const SizedBox(width: AppTheme.spacing2),
-                          StitchFilterChip(
-                            label: '급구',
-                            emoji: '🚀',
-                            urgent: true,
-                            isSelected: _activeFilter == 'urgent',
-                            onTap: () {
-                              setState(() {
-                                _activeFilter = _activeFilter == 'urgent' ? null : 'urgent';
-                              });
-                            },
-                          ),
-                          const SizedBox(width: AppTheme.spacing2),
-                          StitchFilterChip(
-                            label: '프리미엄',
-                            isSelected: _isPremium,
-                            onTap: () {
-                              setState(() {
-                                _isPremium = !_isPremium;
-                              });
-                            },
-                          ),
-                          const SizedBox(width: AppTheme.spacing2),
-                          StitchFilterChip(
-                            label: '최신순',
-                            isSelected:
-                                _sortMode == JobsListSortMode.latest &&
-                                _activeFilter == null,
-                            onTap: () {
-                              setState(() {
-                                _sortMode = JobsListSortMode.latest;
-                                _activeFilter = null;
-                              });
-                            },
-                          ),
-                          const SizedBox(width: AppTheme.spacing2),
-                          StitchFilterChip(
-                            label: '추천',
-                            isSelected: _activeFilter == 'recommended',
-                            onTap: () {
-                              setState(() {
-                                _activeFilter = _activeFilter == 'recommended' ? null : 'recommended';
-                              });
-                            },
-                          ),
-                          const SizedBox(width: AppTheme.spacing2),
-                          StitchFilterChip(
-                            label: '마감임박',
-                            isSelected: _activeFilter == 'deadline',
-                            onTap: () {
-                              setState(() {
-                                _activeFilter = _activeFilter == 'deadline' ? null : 'deadline';
-                              });
-                            },
-                          ),
-                        ],
+                    StitchFilterChip(
+                      label: '전체',
+                      isSelected:
+                          _activeFilter == null &&
+                          !_isPremium &&
+                          _sortMode == JobsListSortMode.all,
+                      onTap: () {
+                        setState(() {
+                          _activeFilter = null;
+                          _isPremium = false;
+                          _sortMode = JobsListSortMode.all;
+                        });
+                      },
+                    ),
+                    const SizedBox(width: AppTheme.spacing2),
+                    StitchFilterChip(
+                      label: '급구',
+                      emoji: '🚀',
+                      urgent: true,
+                      isSelected: _activeFilter == 'urgent',
+                      onTap: () {
+                        setState(() {
+                          _activeFilter = _activeFilter == 'urgent'
+                              ? null
+                              : 'urgent';
+                        });
+                      },
+                    ),
+                    const SizedBox(width: AppTheme.spacing2),
+                    StitchFilterChip(
+                      label: '하이패스',
+                      isSelected: _isPremium,
+                      onTap: () {
+                        setState(() {
+                          _isPremium = !_isPremium;
+                        });
+                      },
+                    ),
+                    const SizedBox(width: AppTheme.spacing2),
+                    StitchFilterChip(
+                      label: '최신순',
+                      isSelected:
+                          _sortMode == JobsListSortMode.latest &&
+                          _activeFilter == null,
+                      onTap: () {
+                        setState(() {
+                          _sortMode = JobsListSortMode.latest;
+                          _activeFilter = null;
+                        });
+                      },
+                    ),
+                    const SizedBox(width: AppTheme.spacing2),
+                    StitchFilterChip(
+                      label: '추천',
+                      isSelected: _activeFilter == 'recommended',
+                      onTap: () {
+                        setState(() {
+                          _activeFilter = _activeFilter == 'recommended'
+                              ? null
+                              : 'recommended';
+                        });
+                      },
+                    ),
+                    const SizedBox(width: AppTheme.spacing2),
+                    StitchFilterChip(
+                      label: '마감임박',
+                      isSelected: _activeFilter == 'deadline',
+                      onTap: () {
+                        setState(() {
+                          _activeFilter = _activeFilter == 'deadline'
+                              ? null
+                              : 'deadline';
+                        });
+                      },
+                    ),
+                  ],
                 ),
               ),
               // 공고 목록
@@ -554,7 +566,7 @@ class _JobsListScreenState extends State<JobsListScreen> {
                           {},
                           (map, jobId) => map..[jobId] = true,
                         );
-                    
+
                     return allItems.isEmpty
                         ? const StitchEmptyState(
                             message: '조건에 맞는 공고가 없습니다',

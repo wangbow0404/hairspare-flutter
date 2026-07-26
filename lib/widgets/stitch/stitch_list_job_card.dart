@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../models/job.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../utils/icon_mapper.dart';
 import '../../utils/region_helper.dart';
 import '../common/job_thumbnail.dart';
@@ -64,7 +65,14 @@ class StitchListJobCard extends StatelessWidget {
           child: Ink(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-              border: Border.all(color: AppTheme.borderGray),
+              border: Border.all(
+                color: job.isUrgent
+                    ? AppTheme.urgentRed.withValues(alpha: 0.5)
+                    : job.isPremium
+                    ? HairSpareColors.hipass.withValues(alpha: 0.45)
+                    : AppTheme.borderGray,
+                width: job.isUrgent || job.isPremium ? 1.5 : 1,
+              ),
               boxShadow: AppTheme.stitchSoftShadow,
             ),
             child: Padding(
@@ -84,10 +92,13 @@ class StitchListJobCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (job.isUrgent) ...[
+                          _buildBadge('급구', AppTheme.urgentRed, Colors.white),
+                          const SizedBox(height: AppTheme.spacing2),
+                        ] else if (job.isPremium) ...[
                           _buildBadge(
-                            '급구',
-                            AppTheme.urgentRed.withValues(alpha: 0.1),
-                            AppTheme.urgentRed,
+                            '하이패스',
+                            HairSpareColors.hipass,
+                            Colors.white,
                           ),
                           const SizedBox(height: AppTheme.spacing2),
                         ] else if (showPopularBadge) ...[
@@ -148,10 +159,13 @@ class StitchListJobCard extends StatelessWidget {
                     IconButton(
                       visualDensity: VisualDensity.compact,
                       padding: EdgeInsets.zero,
-                      constraints:
-                          const BoxConstraints(minWidth: 36, minHeight: 36),
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
                       onPressed: onFavoriteToggle,
-                      icon: IconMapper.icon(
+                      icon:
+                          IconMapper.icon(
                             'heart',
                             size: 22,
                             color: isFavorite
@@ -159,9 +173,7 @@ class StitchListJobCard extends StatelessWidget {
                                 : AppTheme.outline,
                           ) ??
                           Icon(
-                            isFavorite
-                                ? Icons.favorite
-                                : Icons.favorite_border,
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
                             size: 22,
                             color: isFavorite
                                 ? AppTheme.urgentRed

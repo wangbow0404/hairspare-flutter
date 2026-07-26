@@ -422,9 +422,15 @@ class JobDetailScrollBody extends StatelessWidget {
                   isFavorite: favoriteMap[other.id] ?? false,
                   showThumbnail: true,
                   width: 180,
-                  badgeLabel: other.isUrgent ? '급구' : '추천',
+                  badgeLabel: other.isUrgent
+                      ? '급구'
+                      : other.isPremium
+                      ? '하이패스'
+                      : '추천',
                   badgeColor: other.isUrgent
                       ? HairSpareColors.statusUrgent
+                      : other.isPremium
+                      ? HairSpareColors.hipass
                       : HairSpareColors.brandPrimary,
                   onTap: () =>
                       context.push(AppRoutes.spareHomeJobDetail(other.id)),
@@ -1047,11 +1053,11 @@ class _JobDetailHeroCarouselState extends State<_JobDetailHeroCarousel> {
                       vertical: AppTheme.spacing2 - 2,
                     ),
                     decoration: BoxDecoration(
-                      color: HairSpareColors.brandPrimary,
+                      color: HairSpareColors.hipass,
                       borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                     ),
                     child: Text(
-                      '프리미엄',
+                      '하이패스',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,

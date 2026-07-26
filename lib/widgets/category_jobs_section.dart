@@ -3,6 +3,7 @@ import 'package:hairspare/widgets/job/urgent_job_card_theme.dart';
 import 'package:intl/intl.dart';
 import '../models/job.dart';
 import '../theme/app_theme.dart';
+import '../theme/hairspare_colors.dart';
 import 'common/job_thumbnail.dart';
 import 'stitch/stitch_section_header.dart';
 
@@ -255,6 +256,8 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
         borderRadius: BorderRadius.circular(AppTheme.radiusXl),
         border: job.isUrgent
             ? Border.all(color: AppTheme.urgentRed.withValues(alpha: 0.4))
+            : job.isPremium
+            ? Border.all(color: HairSpareColors.hipass.withValues(alpha: 0.4))
             : null,
         boxShadow: [
           BoxShadow(
@@ -296,6 +299,12 @@ class _CategoryJobsSectionState extends State<CategoryJobsSection> {
               top: AppTheme.spacing4,
               right: 64,
               child: UrgentJobBadge(),
+            )
+          else if (job.isPremium)
+            const Positioned(
+              top: AppTheme.spacing4,
+              right: 64,
+              child: HipassJobBadge(),
             ),
 
           // 근무 날짜

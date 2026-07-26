@@ -74,8 +74,9 @@ class UpcomingShopsSection extends StatelessWidget {
     if (end <= start) end += 24 * 60;
     final hours = (end - start) / 60;
     final rounded = hours.roundToDouble();
-    final label =
-        (hours - rounded).abs() < 0.01 ? '${rounded.toInt()}' : '$hours';
+    final label = (hours - rounded).abs() < 0.01
+        ? '${rounded.toInt()}'
+        : '$hours';
     return ' ($label시간)';
   }
 
@@ -88,7 +89,7 @@ class UpcomingShopsSection extends StatelessWidget {
       width: double.infinity,
       margin: const EdgeInsets.only(top: AppTheme.spacing2),
       decoration: BoxDecoration(
-        color: HairSpareColors.brandPrimarySoft,
+        color: HairSpareColors.hipassBg,
         border: Border(
           top: BorderSide(color: HairSpareColors.border),
           bottom: BorderSide(color: HairSpareColors.border),
@@ -189,7 +190,8 @@ class _UpcomingCard extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
               border: Border.all(
-                color: HairSpareColors.brandPrimary.withValues(alpha: 0.25),
+                color: HairSpareColors.hipass.withValues(alpha: 0.4),
+                width: 1.5,
               ),
             ),
             child: Column(
@@ -217,7 +219,9 @@ class _UpcomingCard extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusFull,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.18),
@@ -258,7 +262,8 @@ class _UpcomingCard extends StatelessWidget {
                           customBorder: const CircleBorder(),
                           child: Padding(
                             padding: const EdgeInsets.all(6),
-                            child: IconMapper.icon(
+                            child:
+                                IconMapper.icon(
                                   'heart',
                                   size: 16,
                                   color: isFavorite

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hairspare/theme/app_theme.dart';
+import 'package:hairspare/theme/hairspare_colors.dart';
 import 'package:hairspare/theme/home_text_styles.dart';
 
 /// Paid 급구 job cards — red tint, red border, rocket badge.
@@ -26,11 +27,7 @@ class UrgentJobCardTheme {
 }
 
 class UrgentJobBadge extends StatelessWidget {
-  const UrgentJobBadge({
-    super.key,
-    this.fontSize = 12,
-    this.rocketSize = 12,
-  });
+  const UrgentJobBadge({super.key, this.fontSize = 12, this.rocketSize = 12});
 
   final double fontSize;
   final double rocketSize;
@@ -60,6 +57,35 @@ class UrgentJobBadge extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 하이패스(유료 노출) 공고 배지 — 급구(빨강)와 구분되는 보라색.
+class HipassJobBadge extends StatelessWidget {
+  const HipassJobBadge({super.key, this.fontSize = 12});
+
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing2,
+        vertical: AppTheme.spacing1,
+      ),
+      decoration: BoxDecoration(
+        color: HairSpareColors.hipass,
+        borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
+      ),
+      child: Text(
+        '하이패스',
+        style: HomeTextStyles.homeCardTag.copyWith(
+          fontSize: fontSize,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
       ),
     );
   }

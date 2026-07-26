@@ -21,6 +21,7 @@ class HsJobCardHorizontal extends StatelessWidget {
     this.showThumbnail = false,
     this.badgeLabel = '급구',
     this.badgeColor = HairSpareColors.statusUrgent,
+    this.borderColor,
   });
 
   final Job job;
@@ -32,6 +33,10 @@ class HsJobCardHorizontal extends StatelessWidget {
   final bool showThumbnail;
   final String badgeLabel;
   final Color badgeColor;
+
+  /// 카드 테두리 강조색 — 급구(빨강)·하이패스(보라) 등 일반 공고와
+  /// 구분할 때 지정. null이면 기본 회색 테두리.
+  final Color? borderColor;
 
   String _formatPay(int amount) {
     return '${NumberFormat('#,###').format(amount)}원';
@@ -73,7 +78,10 @@ class HsJobCardHorizontal extends StatelessWidget {
           child: Ink(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-              border: Border.all(color: HairSpareColors.border),
+              border: Border.all(
+                color: borderColor ?? HairSpareColors.border,
+                width: borderColor != null ? 1.5 : 1,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

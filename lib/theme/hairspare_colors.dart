@@ -42,4 +42,9 @@ abstract final class HairSpareColors {
   // 홈 퀵메뉴 카테고리 구분용 보조 색상 (교육·모델매칭 등 기존 시맨틱
   // 컬러와 겹치지 않는 항목만 추가).
   static const Color categoryVenue = Color(0xFF3D8BA6);
+
+  // 하이패스(유료 노출) 전용 강조색 — 급구(red)·일반(brand pink)과
+  // 시각적으로 구분되는 보라 계열.
+  static const Color hipass = Color(0xFF8B5CF6);
+  static const Color hipassBg = Color(0xFFF3EEFF);
 }
