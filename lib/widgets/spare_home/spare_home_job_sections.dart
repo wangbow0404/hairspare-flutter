@@ -117,7 +117,7 @@ class _SpareHomeJobSectionsState extends State<SpareHomeJobSections> {
                     widget.onToggleFavorite(context, jobId, isFav),
                 sectionPadding: const EdgeInsets.fromLTRB(
                   AppTheme.spacing4,
-                  AppTheme.spacing1,
+                  AppTheme.spacing6,
                   AppTheme.spacing4,
                   AppTheme.spacing4,
                 ),
