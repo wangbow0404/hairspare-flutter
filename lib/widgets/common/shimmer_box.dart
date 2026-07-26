@@ -177,6 +177,60 @@ class NotificationListSkeleton extends StatelessWidget {
   }
 }
 
+/// 세로형 사진 카드 로딩 스켈레톤 — 교육 등 상단 이미지+본문 카드 목록용.
+class PhotoCardListSkeleton extends StatelessWidget {
+  const PhotoCardListSkeleton({super.key, this.itemCount = 3});
+
+  final int itemCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: itemCount,
+      itemBuilder: (context, _) => Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const ShimmerBox(height: 160, borderRadius: 0),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ShimmerBox(
+                    width: MediaQuery.sizeOf(context).width * 0.6,
+                    height: 18,
+                  ),
+                  const SizedBox(height: 10),
+                  const ShimmerBox(height: 13),
+                  const SizedBox(height: 6),
+                  ShimmerBox(
+                    width: MediaQuery.sizeOf(context).width * 0.4,
+                    height: 13,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// 공고 상세 로딩 스켈레톤 — 히어로 이미지 + 제목 + 정보카드 모양.
 class JobDetailSkeleton extends StatelessWidget {
   const JobDetailSkeleton({super.key});

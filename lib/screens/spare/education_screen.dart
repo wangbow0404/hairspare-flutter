@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../providers/job_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
+import '../../widgets/common/shimmer_box.dart';
 import '../../widgets/common/shared_app_bar.dart';
 import '../../widgets/common/spare_subpage_app_bar_actions.dart';
 import '../../utils/icon_mapper.dart';
@@ -449,7 +451,7 @@ class _EducationScreenState extends State<EducationScreen>
           title: '교육',
           actions: buildSpareSubpageAppBarActions(context),
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const PhotoCardListSkeleton(),
       );
     }
 
@@ -460,7 +462,7 @@ class _EducationScreenState extends State<EducationScreen>
         actions: buildSpareSubpageAppBarActions(context),
       ),
       body: deferredBody(
-        loading: const Center(child: CircularProgressIndicator()),
+        loading: const PhotoCardListSkeleton(),
         builder: (context) => Column(
           children: [
             // 필터 섹션
@@ -1007,180 +1009,191 @@ class _EducationScreenState extends State<EducationScreen>
   }
 
   Widget _buildEducationCard(Education education) {
-    return GestureDetector(
-      onTap: () {
-        deferAfterTap(
-          () => ShellNavigation.pushEducationDetail(context, education),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
-        decoration: BoxDecoration(
-          color: AppTheme.backgroundWhite,
-          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          border: Border.all(color: AppTheme.borderGray),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 이미지 영역 (imageUrl 있으면 표시, 없으면 그라데이션)
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(AppTheme.radiusLg),
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
+      decoration: BoxDecoration(
+        color: AppTheme.backgroundWhite,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.07),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () {
+            deferAfterTap(
+              () => ShellNavigation.pushEducationDetail(context, education),
+            );
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 이미지 영역 (imageUrl 있으면 표시, 없으면 그라데이션)
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(AppTheme.radiusLg),
+                ),
+                child:
+                    education.imageUrl != null && education.imageUrl!.isNotEmpty
+                    ? _buildEducationImage(education.imageUrl!)
+                    : _buildEducationImagePlaceholder(),
               ),
-              child:
-                  education.imageUrl != null && education.imageUrl!.isNotEmpty
-                  ? _buildEducationImage(education.imageUrl!)
-                  : _buildEducationImagePlaceholder(),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(AppTheme.spacing4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      if (education.isUrgent)
+              Padding(
+                padding: const EdgeInsets.all(AppTheme.spacing4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        if (education.isUrgent)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppTheme.spacing2,
+                              vertical: AppTheme.spacing1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.urgentRed,
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusSm,
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.bolt, size: 14, color: Colors.white),
+                                SizedBox(width: 4),
+                                Text(
+                                  '급구',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        const SizedBox(width: AppTheme.spacing2),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppTheme.spacing2,
                             vertical: AppTheme.spacing1,
                           ),
                           decoration: BoxDecoration(
-                            color: AppTheme.urgentRed,
+                            color: education.isOnline
+                                ? HairSpareColors.statusMatchingBg
+                                : HairSpareColors.statusSuccessBg,
                             borderRadius: BorderRadius.circular(
                               AppTheme.radiusSm,
                             ),
                           ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('🚀', style: TextStyle(fontSize: 12)),
-                              SizedBox(width: 4),
-                              Text(
-                                '급구',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                          child: Text(
+                            education.isOnline ? '온라인' : '오프라인',
+                            style: TextStyle(
+                              color: education.isOnline
+                                  ? HairSpareColors.statusMatching
+                                  : HairSpareColors.statusSuccess,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
-                      const SizedBox(width: AppTheme.spacing2),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.spacing2,
-                          vertical: AppTheme.spacing1,
+                      ],
+                    ),
+                    const SizedBox(height: AppTheme.spacing3),
+                    Text(
+                      education.title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing2),
+                    Text(
+                      education.description,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.textSecondary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: AppTheme.spacing2),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on,
+                          size: 16,
+                          color: AppTheme.textSecondary,
                         ),
-                        decoration: BoxDecoration(
-                          color: education.isOnline
-                              ? Colors.blue.shade100
-                              : Colors.green.shade100,
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radiusSm,
-                          ),
-                        ),
-                        child: Text(
-                          education.isOnline ? '온라인' : '오프라인',
-                          style: TextStyle(
-                            color: education.isOnline
-                                ? Colors.blue.shade700
-                                : Colors.green.shade700,
+                        const SizedBox(width: 4),
+                        Text(
+                          '${education.province}${education.district != null ? ' ${education.district}' : ''}',
+                          style: const TextStyle(
                             fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                            color: AppTheme.textSecondary,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.spacing3),
-                  Text(
-                    education.title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
+                        const SizedBox(width: AppTheme.spacing3),
+                        const Icon(
+                          Icons.attach_money,
+                          size: 16,
+                          color: AppTheme.textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          education.price == 0
+                              ? '무료'
+                              : '${NumberFormat('#,###').format(education.price)}원',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: education.price == 0
+                                ? AppTheme.primaryGreen
+                                : AppTheme.textPrimary,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing2),
-                  Text(
-                    education.description,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppTheme.textSecondary,
+                    const SizedBox(height: AppTheme.spacing2),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.people,
+                          size: 16,
+                          color: AppTheme.textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '신청 ${education.applicants}/${education.maxApplicants}명',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '마감: ${DateFormat('yyyy-MM-dd').format(education.deadline)}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: AppTheme.spacing2),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on,
-                        size: 16,
-                        color: AppTheme.textSecondary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${education.province}${education.district != null ? ' ${education.district}' : ''}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(width: AppTheme.spacing3),
-                      const Icon(
-                        Icons.attach_money,
-                        size: 16,
-                        color: AppTheme.textSecondary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        education.price == 0
-                            ? '무료'
-                            : '${NumberFormat('#,###').format(education.price)}원',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: education.price == 0
-                              ? AppTheme.primaryGreen
-                              : AppTheme.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.spacing2),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.people,
-                        size: 16,
-                        color: AppTheme.textSecondary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '신청 ${education.applicants}/${education.maxApplicants}명',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        '마감: ${DateFormat('yyyy-MM-dd').format(education.deadline)}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
