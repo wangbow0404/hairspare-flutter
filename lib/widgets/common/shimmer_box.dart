@@ -128,6 +128,55 @@ class JobCardSkeleton extends StatelessWidget {
   }
 }
 
+/// 알림 목록 로딩 스켈레톤 — 아이콘 사각형 + 제목/본문/시간 줄 모양.
+class NotificationListSkeleton extends StatelessWidget {
+  const NotificationListSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: 5,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, _) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFEFEFEF)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const ShimmerBox(width: 40, height: 40, borderRadius: 12),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ShimmerBox(
+                    width: MediaQuery.sizeOf(context).width * 0.4,
+                    height: 15,
+                  ),
+                  const SizedBox(height: 8),
+                  const ShimmerBox(height: 13),
+                  const SizedBox(height: 6),
+                  ShimmerBox(
+                    width: MediaQuery.sizeOf(context).width * 0.6,
+                    height: 13,
+                  ),
+                  const SizedBox(height: 8),
+                  const ShimmerBox(width: 90, height: 11),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// 공고 상세 로딩 스켈레톤 — 히어로 이미지 + 제목 + 정보카드 모양.
 class JobDetailSkeleton extends StatelessWidget {
   const JobDetailSkeleton({super.key});

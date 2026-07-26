@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../theme/app_theme.dart';
+import '../../widgets/common/shimmer_box.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../widgets/stitch/stitch_empty_state.dart';
 import '../../providers/notification_provider.dart';
@@ -17,7 +18,8 @@ class NotificationsListScreen extends StatefulWidget {
   const NotificationsListScreen({super.key});
 
   @override
-  State<NotificationsListScreen> createState() => _NotificationsListScreenState();
+  State<NotificationsListScreen> createState() =>
+      _NotificationsListScreenState();
 }
 
 class _NotificationsListScreenState extends State<NotificationsListScreen> {
@@ -28,14 +30,41 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      Provider.of<NotificationProvider>(context, listen: false)
-          .loadNotifications(audience: _audience(context));
+      Provider.of<NotificationProvider>(
+        context,
+        listen: false,
+      ).loadNotifications(audience: _audience(context));
     });
   }
 
+  /// 알림 삭제 — 즉시 화면에서만 숨기고, 스낵바 "실행취소"를 안 누르면
+  /// 스낵바가 닫힐 때 실제 삭제를 확정한다.
+  void _deleteWithUndo(AppNotification notification) {
+    final provider = Provider.of<NotificationProvider>(context, listen: false);
+    final audience = _audience(context);
+    provider.removeLocally(notification.id);
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+          SnackBar(
+            content: const Text('알림을 삭제했어요'),
+            action: SnackBarAction(
+              label: '실행취소',
+              onPressed: () => provider.restoreLocally(notification),
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        )
+        .closed
+        .then((reason) {
+          if (reason != SnackBarClosedReason.action && mounted) {
+            provider.deleteNotification(notification.id, audience: audience);
+          }
+        });
+  }
+
   Future<void> _handleNotificationTap(AppNotification notification) async {
-    final provider =
-        Provider.of<NotificationProvider>(context, listen: false);
+    final provider = Provider.of<NotificationProvider>(context, listen: false);
     final audience = _audience(context);
     if (!notification.isRead) {
       await provider.markAsRead(notification.id, audience: audience);
@@ -61,7 +90,7 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
       body: Consumer<NotificationProvider>(
         builder: (context, notificationProvider, _) {
           if (notificationProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const NotificationListSkeleton();
           }
 
           final unread = notificationProvider.unreadNotifications;
@@ -86,18 +115,12 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
                   (n) => Dismissible(
                     key: ValueKey('unread-${n.id}'),
                     direction: DismissDirection.endToStart,
-                    onDismissed: (_) => notificationProvider.deleteNotification(
-                        n.id,
-                        audience: _audience(context),
-                      ),
+                    onDismissed: (_) => _deleteWithUndo(n),
                     background: _deleteBackground(),
                     child: SpareNotificationTile(
                       notification: n,
                       onTap: () => _handleNotificationTap(n),
-                      onDelete: () => notificationProvider.deleteNotification(
-                        n.id,
-                        audience: _audience(context),
-                      ),
+                      onDelete: () => _deleteWithUndo(n),
                     ),
                   ),
                 ),
@@ -113,18 +136,12 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
                   (n) => Dismissible(
                     key: ValueKey('read-${n.id}'),
                     direction: DismissDirection.endToStart,
-                    onDismissed: (_) => notificationProvider.deleteNotification(
-                        n.id,
-                        audience: _audience(context),
-                      ),
+                    onDismissed: (_) => _deleteWithUndo(n),
                     background: _deleteBackground(),
                     child: SpareNotificationTile(
                       notification: n,
                       onTap: () => _handleNotificationTap(n),
-                      onDelete: () => notificationProvider.deleteNotification(
-                        n.id,
-                        audience: _audience(context),
-                      ),
+                      onDelete: () => _deleteWithUndo(n),
                     ),
                   ),
                 ),
@@ -145,11 +162,7 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
       ),
       alignment: Alignment.centerRight,
       padding: const EdgeInsets.only(right: 24),
-      child: const Icon(
-        Icons.delete_outline,
-        color: Colors.white,
-        size: 28,
-      ),
+      child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
     );
   }
 }
@@ -159,7 +172,9 @@ class _SectionDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: Divider(color: AppTheme.borderGray.withValues(alpha: 0.8))),
+        Expanded(
+          child: Divider(color: AppTheme.borderGray.withValues(alpha: 0.8)),
+        ),
         Padding(
           padding: AppTheme.spacingSymmetric(
             horizontal: AppTheme.spacing3,
@@ -168,12 +183,14 @@ class _SectionDivider extends StatelessWidget {
           child: Text(
             '이전 알림',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textTertiary,
-                  fontWeight: FontWeight.w500,
-                ),
+              color: AppTheme.textTertiary,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
-        Expanded(child: Divider(color: AppTheme.borderGray.withValues(alpha: 0.8))),
+        Expanded(
+          child: Divider(color: AppTheme.borderGray.withValues(alpha: 0.8)),
+        ),
       ],
     );
   }
