@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/date_filter_button.dart';
 import '../../widgets/space_rental_card.dart';
 import '../../widgets/job_filter_dropdown.dart';
 import '../../widgets/common/shared_app_bar.dart';
+import '../../widgets/common/shimmer_box.dart';
 import '../../widgets/common/spare_subpage_app_bar_actions.dart';
 import '../../utils/icon_mapper.dart';
 import '../../models/space_rental.dart';
 import '../../models/region.dart';
+import '../../providers/job_provider.dart';
 import '../../services/space_rental_service.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/region_helper.dart';
@@ -28,28 +31,28 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
   final TextEditingController _searchController = TextEditingController();
   String? _activeFilter;
   SpaceRentalListSortMode _sortMode = SpaceRentalListSortMode.all;
-  
+
   // 지역 필터 상태
   String? _selectedProvince;
   String? _selectedDistrict;
-  
+
   // 드롭다운 상태
   bool _showProvinceDropdown = false;
   bool _showDistrictDropdown = false;
   bool _showSortDropdown = false;
-  
+
   // 드롭다운 버튼 키
   final GlobalKey _provinceButtonKey = GlobalKey();
   final GlobalKey _districtButtonKey = GlobalKey();
   final GlobalKey _sortButtonKey = GlobalKey();
-  
+
   // 추가 필터 상태
   String? _spaceType; // 'room' = 개인실
   List<String> _selectedFacilities = [];
-  
+
   // 날짜 필터
   DateTime? _selectedDateStart;
-  
+
   // 데이터
   List<SpaceRental> _allSpaces = [];
   List<SpaceRental> _filteredSpaces = [];
@@ -62,7 +65,7 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
         .where((r) => r.type == RegionType.province)
         .toList();
   }
-  
+
   List<Region> get _districts {
     if (_selectedProvince == null) return [];
     return RegionHelper.getDistrictsByProvince(_selectedProvince!);
@@ -71,7 +74,19 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
   @override
   void initState() {
     super.initState();
+    _applyDefaultRegion();
     _loadSpaces();
+  }
+
+  /// 지역 필터를 아직 고르지 않았으면 내 지역을 기본값으로 적용.
+  void _applyDefaultRegion() {
+    if (_selectedProvince != null || _selectedDistrict != null) return;
+    final myRegionId = context.read<JobProvider>().selectedRegionId;
+    if (myRegionId == null || myRegionId.isEmpty) return;
+    final provinceId = RegionHelper.provinceIdOf(myRegionId);
+    if (provinceId == null) return;
+    _selectedProvince = provinceId;
+    _selectedDistrict = myRegionId;
   }
 
   @override
@@ -103,7 +118,9 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
           _isLoading = false;
         });
         final appException = ErrorHandler.handleException(error);
-        final userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(appException);
+        final userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(
+          appException,
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(userFriendlyMessage),
@@ -126,8 +143,9 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
     }
 
     if (_selectedDistrict != null) {
-      filtered =
-          filtered.where((space) => space.regionId == _selectedDistrict).toList();
+      filtered = filtered
+          .where((space) => space.regionId == _selectedDistrict)
+          .toList();
     } else if (_selectedProvince != null) {
       final districtIds = _districts.map((d) => d.id).toList();
       filtered = filtered
@@ -205,7 +223,7 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
         actions: buildSpareSubpageAppBarActions(context),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const PhotoCardListSkeleton()
           : Column(
               children: [
                 // 필터 섹션
@@ -220,9 +238,15 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                         onChanged: (_) => _applyFilters(),
                         decoration: InputDecoration(
                           hintText: '미용실명 또는 주소 검색',
-                          prefixIcon: const Icon(Icons.search, size: 20, color: AppTheme.textSecondary),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            size: 20,
+                            color: AppTheme.textSecondary,
+                          ),
                           border: OutlineInputBorder(
-                            borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+                            borderRadius: AppTheme.borderRadius(
+                              AppTheme.radiusLg,
+                            ),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: AppTheme.spacing4,
@@ -243,15 +267,17 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                               options: _provinces.map((p) => p.name).toList(),
                               selectedValue: _selectedProvince != null
                                   ? _provinces
-                                      .firstWhere((p) => p.id == _selectedProvince)
-                                      .name
+                                        .firstWhere(
+                                          (p) => p.id == _selectedProvince,
+                                        )
+                                        .name
                                   : null,
                               onSelected: (value) {
                                 setState(() {
                                   _selectedProvince = value != null
                                       ? _provinces
-                                          .firstWhere((p) => p.name == value)
-                                          .id
+                                            .firstWhere((p) => p.name == value)
+                                            .id
                                       : null;
                                   _selectedDistrict = null;
                                   _showProvinceDropdown = false;
@@ -262,7 +288,8 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                               isOpen: _showProvinceDropdown,
                               onToggle: () {
                                 setState(() {
-                                  _showProvinceDropdown = !_showProvinceDropdown;
+                                  _showProvinceDropdown =
+                                      !_showProvinceDropdown;
                                   _showDistrictDropdown = false;
                                   _showSortDropdown = false;
                                 });
@@ -276,15 +303,19 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                                 options: _districts.map((d) => d.name).toList(),
                                 selectedValue: _selectedDistrict != null
                                     ? _districts
-                                        .firstWhere((d) => d.id == _selectedDistrict)
-                                        .name
+                                          .firstWhere(
+                                            (d) => d.id == _selectedDistrict,
+                                          )
+                                          .name
                                     : null,
                                 onSelected: (value) {
                                   setState(() {
                                     _selectedDistrict = value != null
                                         ? _districts
-                                            .firstWhere((d) => d.name == value)
-                                            .id
+                                              .firstWhere(
+                                                (d) => d.name == value,
+                                              )
+                                              .id
                                         : null;
                                     _showDistrictDropdown = false;
                                   });
@@ -294,7 +325,8 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                                 isOpen: _showDistrictDropdown,
                                 onToggle: () {
                                   setState(() {
-                                    _showDistrictDropdown = !_showDistrictDropdown;
+                                    _showDistrictDropdown =
+                                        !_showDistrictDropdown;
                                     _showProvinceDropdown = false;
                                     _showSortDropdown = false;
                                   });
@@ -316,18 +348,15 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                             const SizedBox(width: AppTheme.spacing2),
                             JobFilterDropdown(
                               label: '전체',
-                              options: const [
-                                '인기순',
-                                '최신순',
-                                '가격순',
-                                '마감순',
-                              ],
-                              selectedValue:
-                                  spaceRentalSortDropdownLabel(_sortMode),
+                              options: const ['인기순', '최신순', '가격순', '마감순'],
+                              selectedValue: spaceRentalSortDropdownLabel(
+                                _sortMode,
+                              ),
                               onSelected: (value) {
                                 setState(() {
-                                  _sortMode =
-                                      spaceRentalSortModeFromDropdown(value);
+                                  _sortMode = spaceRentalSortModeFromDropdown(
+                                    value,
+                                  );
                                   _showSortDropdown = false;
                                 });
                                 _applyFilters();
@@ -348,7 +377,8 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                           children: [
                             StitchFilterChip(
                               label: '전체',
-                              isSelected: _activeFilter == null &&
+                              isSelected:
+                                  _activeFilter == null &&
                                   _spaceType == null &&
                                   _sortMode == SpaceRentalListSortMode.all,
                               onTap: () {
@@ -368,8 +398,9 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                               isSelected: _activeFilter == 'urgent',
                               onTap: () {
                                 setState(() {
-                                  _activeFilter =
-                                      _activeFilter == 'urgent' ? null : 'urgent';
+                                  _activeFilter = _activeFilter == 'urgent'
+                                      ? null
+                                      : 'urgent';
                                 });
                                 _applyFilters();
                               },
@@ -377,7 +408,8 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                             const SizedBox(width: AppTheme.spacing2),
                             StitchFilterChip(
                               label: '인기순',
-                              isSelected: _sortMode ==
+                              isSelected:
+                                  _sortMode ==
                                       SpaceRentalListSortMode.popular &&
                                   _activeFilter == null,
                               onTap: () {
@@ -391,8 +423,8 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                             const SizedBox(width: AppTheme.spacing2),
                             StitchFilterChip(
                               label: '최신순',
-                              isSelected: _sortMode ==
-                                      SpaceRentalListSortMode.latest &&
+                              isSelected:
+                                  _sortMode == SpaceRentalListSortMode.latest &&
                                   _activeFilter == null,
                               onTap: () {
                                 setState(() {
@@ -418,8 +450,8 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                             const SizedBox(width: AppTheme.spacing2),
                             StitchFilterChip(
                               label: '가격순',
-                              isSelected: _sortMode ==
-                                      SpaceRentalListSortMode.price &&
+                              isSelected:
+                                  _sortMode == SpaceRentalListSortMode.price &&
                                   _activeFilter == null,
                               onTap: () {
                                 setState(() {
@@ -435,8 +467,9 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                               isSelected: _spaceType == 'room',
                               onTap: () {
                                 setState(() {
-                                  _spaceType =
-                                      _spaceType == 'room' ? null : 'room';
+                                  _spaceType = _spaceType == 'room'
+                                      ? null
+                                      : 'room';
                                 });
                                 _applyFilters();
                               },
@@ -455,10 +488,10 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               IconMapper.icon(
-                                'briefcase',
-                                size: 64,
-                                color: AppTheme.textTertiary,
-                              ) ??
+                                    'briefcase',
+                                    size: 64,
+                                    color: AppTheme.textTertiary,
+                                  ) ??
                                   const Icon(
                                     Icons.business_outlined,
                                     size: 64,
@@ -467,9 +500,8 @@ class _RegionSelectScreenState extends State<RegionSelectScreen> {
                               const SizedBox(height: AppTheme.spacing4),
                               Text(
                                 '공간이 없습니다',
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: AppTheme.textSecondary,
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(color: AppTheme.textSecondary),
                               ),
                             ],
                           ),

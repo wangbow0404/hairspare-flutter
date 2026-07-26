@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../widgets/spare_app_bar.dart';
+import '../../widgets/common/shimmer_box.dart';
 import '../../utils/icon_mapper.dart';
 import '../../models/space_rental.dart';
 import '../../services/space_rental_service.dart';
@@ -17,17 +19,16 @@ import '../../utils/app_bar_navigation.dart';
 import '../../core/router/route_extras.dart';
 import '../../utils/shell_navigation.dart';
 import 'education_screen.dart' show EducationReview;
+
 /// 공간대여 상세 화면
 class SpaceRentalDetailScreen extends StatefulWidget {
   final String spaceId;
 
-  const SpaceRentalDetailScreen({
-    super.key,
-    required this.spaceId,
-  });
+  const SpaceRentalDetailScreen({super.key, required this.spaceId});
 
   @override
-  State<SpaceRentalDetailScreen> createState() => _SpaceRentalDetailScreenState();
+  State<SpaceRentalDetailScreen> createState() =>
+      _SpaceRentalDetailScreenState();
 }
 
 class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
@@ -51,7 +52,9 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
     try {
       final bookings = await _spaceRentalService.getMyBookings();
       if (mounted) {
-        final hasBooking = bookings.any((b) => b.spaceRentalId == widget.spaceId);
+        final hasBooking = bookings.any(
+          (b) => b.spaceRentalId == widget.spaceId,
+        );
         setState(() => _hasBooking = hasBooking);
       }
     } catch (_) {}
@@ -62,7 +65,9 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
       _isLoading = true;
     });
     try {
-      final space = await _spaceRentalService.getSpaceRentalById(widget.spaceId);
+      final space = await _spaceRentalService.getSpaceRentalById(
+        widget.spaceId,
+      );
       setState(() {
         _spaceRental = space;
         _isLoading = false;
@@ -73,7 +78,9 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
           _isLoading = false;
         });
         final appException = ErrorHandler.handleException(error);
-        final userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(appException);
+        final userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(
+          appException,
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(userFriendlyMessage),
@@ -143,8 +150,7 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
     if (_rangeStart == null || _rangeEnd == null || _spaceRental == null) {
       return false;
     }
-    final hours =
-        SpaceHourlySlotGrid.durationHours(_rangeStart!, _rangeEnd!);
+    final hours = SpaceHourlySlotGrid.durationHours(_rangeStart!, _rangeEnd!);
     return SpaceBookingRules.meetsMinHours(
       selectedHours: hours,
       minHours: _spaceRental!.minHours,
@@ -260,7 +266,9 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
     } catch (error) {
       if (mounted) {
         final appException = ErrorHandler.handleException(error);
-        final userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(appException);
+        final userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(
+          appException,
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(userFriendlyMessage),
@@ -276,7 +284,7 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        body: Center(child: CircularProgressIndicator()),
+        body: JobDetailSkeleton(),
       );
     }
 
@@ -287,9 +295,9 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
         body: Center(
           child: Text(
             '공간 정보를 불러올 수 없습니다.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
           ),
         ),
       );
@@ -305,7 +313,12 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
         showBackButton: true,
         actions: [
           IconButton(
-            icon: IconMapper.icon('share', size: 22, color: AppTheme.textPrimary) ??
+            icon:
+                IconMapper.icon(
+                  'share',
+                  size: 22,
+                  color: AppTheme.textPrimary,
+                ) ??
                 const Icon(Icons.share, size: 22, color: AppTheme.textPrimary),
             onPressed: () => Share.share(
               '${_spaceRental!.shopName}\n${_spaceRental!.fullAddress}\n시간당 ${NumberFormat('#,###').format(_spaceRental!.pricePerHour)}원',
@@ -320,152 +333,185 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-            // 공간 사진
-            _buildImageSection(),
+                  // 공간 사진
+                  _buildImageSection(),
 
-            // 미용실 정보
-            Padding(
-              padding: AppTheme.spacingSymmetric(horizontal: AppTheme.spacing4, vertical: AppTheme.spacing4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildTags(),
-                  const SizedBox(height: AppTheme.spacing3),
-                  Text(
-                    _spaceRental!.shopName,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
+                  // 미용실 정보
+                  Padding(
+                    padding: AppTheme.spacingSymmetric(
+                      horizontal: AppTheme.spacing4,
+                      vertical: AppTheme.spacing4,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildTags(),
+                        const SizedBox(height: AppTheme.spacing3),
+                        Text(
+                          _spaceRental!.shopName,
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textPrimary,
+                              ),
+                        ),
+                        const SizedBox(height: AppTheme.spacing2),
+                        Row(
+                          children: [
+                            IconMapper.icon(
+                                  'mappin',
+                                  size: 16,
+                                  color: AppTheme.textSecondary,
+                                ) ??
+                                const Icon(
+                                  Icons.location_on,
+                                  size: 16,
+                                  color: AppTheme.textSecondary,
+                                ),
+                            const SizedBox(width: AppTheme.spacing1),
+                            Expanded(
+                              child: Text(
+                                _spaceRental!.fullAddress,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      fontSize: 13,
+                                      color: AppTheme.textSecondary,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppTheme.spacing4),
+                        _buildQuickInfoGrid(),
+                        const SizedBox(height: AppTheme.spacing4),
+                        _buildDetailInfoBox(),
+                        const SizedBox(height: AppTheme.spacing4),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: AppTheme.spacing2),
-                  Row(
-                    children: [
-                      IconMapper.icon('mappin', size: 16, color: AppTheme.textSecondary) ??
-                          const Icon(Icons.location_on, size: 16, color: AppTheme.textSecondary),
-                      const SizedBox(width: AppTheme.spacing1),
-                      Expanded(
-                        child: Text(
-                          _spaceRental!.fullAddress,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontSize: 13,
-                            color: AppTheme.textSecondary,
-                          ),
+
+                  // 시설 박스
+                  if (_spaceRental!.facilities.isNotEmpty)
+                    Padding(
+                      padding: AppTheme.spacingSymmetric(
+                        horizontal: AppTheme.spacing4,
+                        vertical: 0,
+                      ),
+                      child: _buildSectionBox(
+                        '시설',
+                        Icons.apartment,
+                        Wrap(
+                          spacing: AppTheme.spacing2,
+                          runSpacing: AppTheme.spacing2,
+                          children: _spaceRental!.facilities.map((facility) {
+                            return Container(
+                              padding: AppTheme.spacingSymmetric(
+                                horizontal: AppTheme.spacing3,
+                                vertical: AppTheme.spacing2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.backgroundGray,
+                                borderRadius: AppTheme.borderRadius(
+                                  AppTheme.radiusSm,
+                                ),
+                              ),
+                              child: Text(
+                                facility,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      fontSize: 12,
+                                      color: AppTheme.textPrimary,
+                                    ),
+                              ),
+                            );
+                          }).toList(),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.spacing4),
-                  _buildQuickInfoGrid(),
-                  const SizedBox(height: AppTheme.spacing4),
-                  _buildDetailInfoBox(),
-                  const SizedBox(height: AppTheme.spacing4),
-                ],
-              ),
-            ),
+                    ),
 
-            // 시설 박스
-            if (_spaceRental!.facilities.isNotEmpty)
-              Padding(
-                padding: AppTheme.spacingSymmetric(horizontal: AppTheme.spacing4, vertical: 0),
-                child: _buildSectionBox(
-                  '시설',
-                  Icons.apartment,
-                  Wrap(
-                    spacing: AppTheme.spacing2,
-                    runSpacing: AppTheme.spacing2,
-                    children: _spaceRental!.facilities.map((facility) {
-                      return Container(
-                        padding: AppTheme.spacingSymmetric(
-                          horizontal: AppTheme.spacing3,
-                          vertical: AppTheme.spacing2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.backgroundGray,
-                          borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
-                        ),
-                        child: Text(
-                          facility,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontSize: 12,
-                            color: AppTheme.textPrimary,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
-
-            Padding(
-              padding: AppTheme.spacingSymmetric(
-                horizontal: AppTheme.spacing4,
-                vertical: 0,
-              ),
-              child: SpaceRentalTimeSlotPicker(
-                selectedDate: _selectedDate,
-                cells: hourlyCells,
-                rangeStart: _rangeStart,
-                rangeEnd: _rangeEnd,
-                totalPrice: _calculateTotalPrice(),
-                minHours: _spaceRental!.minHours,
-                firstDate: now,
-                lastDate: now.add(const Duration(days: 30)),
-                onDateChanged: (picked) {
-                  setState(() {
-                    _selectedDate = picked;
-                    _clearRange();
-                  });
-                },
-                onCellTap: _onHourlyCellTap,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing4),
-
-            if (_spaceRental!.usageNotes != null && _spaceRental!.usageNotes!.isNotEmpty)
-              Padding(
-                padding: AppTheme.spacingSymmetric(horizontal: AppTheme.spacing4, vertical: 0),
-                child: _buildSectionBox(
-                  '이용 안내',
-                  Icons.info_outline,
-                  Text(
-                    _spaceRental!.usageNotes!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontSize: 13,
-                      color: AppTheme.textSecondary,
-                      height: 1.6,
+                  Padding(
+                    padding: AppTheme.spacingSymmetric(
+                      horizontal: AppTheme.spacing4,
+                      vertical: 0,
+                    ),
+                    child: SpaceRentalTimeSlotPicker(
+                      selectedDate: _selectedDate,
+                      cells: hourlyCells,
+                      rangeStart: _rangeStart,
+                      rangeEnd: _rangeEnd,
+                      totalPrice: _calculateTotalPrice(),
+                      minHours: _spaceRental!.minHours,
+                      firstDate: now,
+                      lastDate: now.add(const Duration(days: 30)),
+                      onDateChanged: (picked) {
+                        setState(() {
+                          _selectedDate = picked;
+                          _clearRange();
+                        });
+                      },
+                      onCellTap: _onHourlyCellTap,
                     ),
                   ),
-                ),
-              ),
+                  const SizedBox(height: AppTheme.spacing4),
 
-            if (_spaceRental!.description != null && _spaceRental!.description!.isNotEmpty)
-              Padding(
-                padding: AppTheme.spacingSymmetric(horizontal: AppTheme.spacing4, vertical: 0),
-                child: _buildSectionBox(
-                  '상세 설명',
-                  Icons.description,
-                  Text(
-                    _spaceRental!.description!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontSize: 13,
-                      color: AppTheme.textSecondary,
-                      height: 1.5,
+                  if (_spaceRental!.usageNotes != null &&
+                      _spaceRental!.usageNotes!.isNotEmpty)
+                    Padding(
+                      padding: AppTheme.spacingSymmetric(
+                        horizontal: AppTheme.spacing4,
+                        vertical: 0,
+                      ),
+                      child: _buildSectionBox(
+                        '이용 안내',
+                        Icons.info_outline,
+                        Text(
+                          _spaceRental!.usageNotes!,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                fontSize: 13,
+                                color: AppTheme.textSecondary,
+                                height: 1.6,
+                              ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
 
-            if (_spaceRental!.reviews != null && _spaceRental!.reviews!.isNotEmpty)
-              Padding(
-                padding: AppTheme.spacingSymmetric(horizontal: AppTheme.spacing4, vertical: 0),
-                child: _SpaceRentalReviewsSection(
-                  title: _spaceRental!.shopName,
-                  reviews: _spaceRental!.reviews!,
-                  averageRating: _spaceRental!.averageRating ?? 0.0,
-                ),
-              ),
+                  if (_spaceRental!.description != null &&
+                      _spaceRental!.description!.isNotEmpty)
+                    Padding(
+                      padding: AppTheme.spacingSymmetric(
+                        horizontal: AppTheme.spacing4,
+                        vertical: 0,
+                      ),
+                      child: _buildSectionBox(
+                        '상세 설명',
+                        Icons.description,
+                        Text(
+                          _spaceRental!.description!,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                fontSize: 13,
+                                color: AppTheme.textSecondary,
+                                height: 1.5,
+                              ),
+                        ),
+                      ),
+                    ),
+
+                  if (_spaceRental!.reviews != null &&
+                      _spaceRental!.reviews!.isNotEmpty)
+                    Padding(
+                      padding: AppTheme.spacingSymmetric(
+                        horizontal: AppTheme.spacing4,
+                        vertical: 0,
+                      ),
+                      child: _SpaceRentalReviewsSection(
+                        title: _spaceRental!.shopName,
+                        reviews: _spaceRental!.reviews!,
+                        averageRating: _spaceRental!.averageRating ?? 0.0,
+                      ),
+                    ),
 
                   const SizedBox(height: AppTheme.spacing4),
                 ],
@@ -486,20 +532,20 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
                   onPressed: _selectionMeetsMinHours()
                       ? _handleBooking
                       : (_rangeStart != null && _rangeEnd != null
-                          ? () {
-                              sl<GlobalMessengerService>().showInfo(
-                                SpaceBookingRules.belowMinHoursMessage(
-                                  _spaceRental!.minHours,
-                                ),
-                              );
-                            }
-                          : null),
+                            ? () {
+                                sl<GlobalMessengerService>().showInfo(
+                                  SpaceBookingRules.belowMinHoursMessage(
+                                    _spaceRental!.minHours,
+                                  ),
+                                );
+                              }
+                            : null),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _selectionMeetsMinHours()
-                        ? AppTheme.primaryBlue
+                        ? HairSpareColors.categoryVenue
                         : (_rangeStart != null && _rangeEnd != null
-                            ? AppTheme.orange500
-                            : AppTheme.borderGray300),
+                              ? AppTheme.orange500
+                              : AppTheme.borderGray300),
                     foregroundColor: Colors.white,
                     padding: AppTheme.spacing(AppTheme.spacing4),
                     shape: RoundedRectangleBorder(
@@ -510,8 +556,8 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
                     _selectionMeetsMinHours()
                         ? '예약하기'
                         : (_rangeStart != null && _rangeEnd != null
-                            ? '최소 ${_spaceRental!.minHours}시간 선택'
-                            : '시간대를 선택해주세요'),
+                              ? '최소 ${_spaceRental!.minHours}시간 선택'
+                              : '시간대를 선택해주세요'),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -528,19 +574,22 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
   }
 
   Widget _buildImageSection() {
-    final hasImage = _spaceRental!.imageUrls != null && _spaceRental!.imageUrls!.isNotEmpty;
+    final hasImage =
+        _spaceRental!.imageUrls != null && _spaceRental!.imageUrls!.isNotEmpty;
     return Container(
       height: 220,
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: hasImage ? null : LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppTheme.primaryBlue.withValues(alpha: 0.7),
-            AppTheme.primaryPurple.withValues(alpha: 0.6),
-          ],
-        ),
+        gradient: hasImage
+            ? null
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  HairSpareColors.categoryVenue.withValues(alpha: 0.75),
+                  HairSpareColors.categoryVenue.withValues(alpha: 0.45),
+                ],
+              ),
         color: hasImage ? AppTheme.backgroundGray : null,
       ),
       child: hasImage
@@ -570,20 +619,34 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
       children: [
         if (_spaceRental!.isPremium)
           _tag('프리미엄', AppTheme.primaryPurple, Colors.white),
-        _tag('시간당 ${NumberFormat('#,###').format(_spaceRental!.pricePerHour)}원', AppTheme.primaryBlue.withValues(alpha: 0.15), AppTheme.primaryBlue),
-        _tag('${_spaceRental!.facilities.length}개 시설', AppTheme.backgroundGray, AppTheme.textSecondary),
+        _tag(
+          '시간당 ${NumberFormat('#,###').format(_spaceRental!.pricePerHour)}원',
+          HairSpareColors.categoryVenue.withValues(alpha: 0.15),
+          HairSpareColors.categoryVenue,
+        ),
+        _tag(
+          '${_spaceRental!.facilities.length}개 시설',
+          AppTheme.backgroundGray,
+          AppTheme.textSecondary,
+        ),
       ],
     );
   }
 
   Widget _tag(String label, Color bg, Color fg) {
     return Container(
-      padding: AppTheme.spacingSymmetric(horizontal: AppTheme.spacing3, vertical: AppTheme.spacing2),
+      padding: AppTheme.spacingSymmetric(
+        horizontal: AppTheme.spacing3,
+        vertical: AppTheme.spacing2,
+      ),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
       ),
-      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: fg)),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: fg),
+      ),
     );
   }
 
@@ -591,17 +654,32 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
     return Row(
       children: [
         Expanded(
-          child: _quickInfoItem(Icons.payments, '시간당', '${NumberFormat('#,###').format(_spaceRental!.pricePerHour)}원', AppTheme.primaryBlue),
+          child: _quickInfoItem(
+            Icons.payments,
+            '시간당',
+            '${NumberFormat('#,###').format(_spaceRental!.pricePerHour)}원',
+            HairSpareColors.categoryVenue,
+          ),
         ),
         const SizedBox(width: AppTheme.spacing3),
         Expanded(
-          child: _quickInfoItem(Icons.apartment, '시설', '${_spaceRental!.facilities.length}개', null),
+          child: _quickInfoItem(
+            Icons.apartment,
+            '시설',
+            '${_spaceRental!.facilities.length}개',
+            null,
+          ),
         ),
       ],
     );
   }
 
-  Widget _quickInfoItem(IconData icon, String label, String value, Color? valueColor) {
+  Widget _quickInfoItem(
+    IconData icon,
+    String label,
+    String value,
+    Color? valueColor,
+  ) {
     return Container(
       padding: AppTheme.spacing(AppTheme.spacing4),
       decoration: BoxDecoration(
@@ -616,11 +694,25 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
             children: [
               Icon(icon, size: 16, color: AppTheme.textSecondary),
               const SizedBox(width: AppTheme.spacing2),
-              Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppTheme.textSecondary)),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: AppTheme.spacing2),
-          Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: valueColor ?? AppTheme.textPrimary)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: valueColor ?? AppTheme.textPrimary,
+            ),
+          ),
         ],
       ),
     );
@@ -631,14 +723,21 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
       width: double.infinity,
       padding: AppTheme.spacing(AppTheme.spacing4),
       decoration: BoxDecoration(
-        color: AppTheme.primaryBlue.withValues(alpha: 0.08),
+        color: HairSpareColors.categoryVenue.withValues(alpha: 0.08),
         borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
-        border: Border.all(color: AppTheme.primaryBlue.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: HairSpareColors.categoryVenue.withValues(alpha: 0.2),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _infoRow(Icons.location_on, '지역', _spaceRental!.regionName ?? _spaceRental!.address.split(' ').take(2).join(' ')),
+          _infoRow(
+            Icons.location_on,
+            '지역',
+            _spaceRental!.regionName ??
+                _spaceRental!.address.split(' ').take(2).join(' '),
+          ),
           if (_spaceRental!.subwayInfo != null) ...[
             const SizedBox(height: AppTheme.spacing3),
             _infoRow(Icons.directions_transit, '교통', _spaceRental!.subwayInfo!),
@@ -675,19 +774,30 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
         icon: Icon(
           Icons.chat_bubble_outline,
           size: 18,
-          color: canContact ? AppTheme.primaryBlue : AppTheme.textTertiary,
+          color: canContact
+              ? HairSpareColors.categoryVenue
+              : AppTheme.textTertiary,
         ),
         label: Text(
           canContact ? '연락하기' : '예약 후 연락 가능',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: canContact ? AppTheme.primaryBlue : AppTheme.textTertiary,
+            color: canContact
+                ? HairSpareColors.categoryVenue
+                : AppTheme.textTertiary,
           ),
         ),
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: canContact ? AppTheme.primaryBlue : AppTheme.borderGray),
-          padding: AppTheme.spacingSymmetric(horizontal: AppTheme.spacing4, vertical: AppTheme.spacing3),
+          side: BorderSide(
+            color: canContact
+                ? HairSpareColors.categoryVenue
+                : AppTheme.borderGray,
+          ),
+          padding: AppTheme.spacingSymmetric(
+            horizontal: AppTheme.spacing4,
+            vertical: AppTheme.spacing3,
+          ),
         ),
       ),
     );
@@ -697,15 +807,27 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: AppTheme.primaryBlue),
+        Icon(icon, size: 18, color: HairSpareColors.categoryVenue),
         const SizedBox(width: AppTheme.spacing3),
         Expanded(
           child: RichText(
             text: TextSpan(
-              style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppTheme.textSecondary,
+              ),
               children: [
-                TextSpan(text: '$label  ', style: const TextStyle(fontWeight: FontWeight.w500)),
-                TextSpan(text: value, style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
+                TextSpan(
+                  text: '$label  ',
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+                TextSpan(
+                  text: value,
+                  style: const TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),
@@ -729,9 +851,16 @@ class _SpaceRentalDetailScreenState extends State<SpaceRentalDetailScreen> {
         children: [
           Row(
             children: [
-              Icon(icon, size: 18, color: AppTheme.primaryPurple),
+              Icon(icon, size: 18, color: HairSpareColors.categoryVenue),
               const SizedBox(width: AppTheme.spacing2),
-              Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: AppTheme.spacing4),
@@ -747,19 +876,27 @@ class _SpaceRentalReviewsSection extends StatefulWidget {
   final List<SpaceRentalReview> reviews;
   final double averageRating;
 
-  const _SpaceRentalReviewsSection({required this.title, required this.reviews, required this.averageRating});
+  const _SpaceRentalReviewsSection({
+    required this.title,
+    required this.reviews,
+    required this.averageRating,
+  });
 
   @override
-  State<_SpaceRentalReviewsSection> createState() => _SpaceRentalReviewsSectionState();
+  State<_SpaceRentalReviewsSection> createState() =>
+      _SpaceRentalReviewsSectionState();
 }
 
-class _SpaceRentalReviewsSectionState extends State<_SpaceRentalReviewsSection> {
+class _SpaceRentalReviewsSectionState
+    extends State<_SpaceRentalReviewsSection> {
   static const int _initialCount = 2;
   bool _expanded = false;
 
   @override
   Widget build(BuildContext context) {
-    final displayed = _expanded ? widget.reviews : widget.reviews.take(_initialCount).toList();
+    final displayed = _expanded
+        ? widget.reviews
+        : widget.reviews.take(_initialCount).toList();
     final hasMore = widget.reviews.length > _initialCount;
 
     return Container(
@@ -778,7 +915,14 @@ class _SpaceRentalReviewsSectionState extends State<_SpaceRentalReviewsSection> 
             children: [
               const Icon(Icons.star, size: 18, color: AppTheme.yellow500),
               const SizedBox(width: AppTheme.spacing2),
-              const Text('리뷰', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+              const Text(
+                '리뷰',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
               const SizedBox(width: AppTheme.spacing2),
               TextButton(
                 onPressed: () {
@@ -805,43 +949,93 @@ class _SpaceRentalReviewsSectionState extends State<_SpaceRentalReviewsSection> 
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: const Text('+더보기', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.primaryBlue)),
+                child: const Text(
+                  '+더보기',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: HairSpareColors.categoryVenue,
+                  ),
+                ),
               ),
               const Spacer(),
               Row(
                 children: [
                   const Icon(Icons.star, size: 18, color: AppTheme.yellow500),
                   const SizedBox(width: AppTheme.spacing1),
-                  Text('${widget.averageRating.toStringAsFixed(1)} (${widget.reviews.length}개)', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+                  Text(
+                    '${widget.averageRating.toStringAsFixed(1)} (${widget.reviews.length}개)',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
                 ],
               ),
             ],
           ),
           const SizedBox(height: AppTheme.spacing4),
-          ...displayed.map((r) => Padding(
-                padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        ...List.generate(5, (i) => Icon(i < r.rating ? Icons.star : Icons.star_border, size: 16, color: AppTheme.yellow500)),
-                        const SizedBox(width: AppTheme.spacing2),
-                        Text(r.userName, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
-                        const Spacer(),
-                        Text(DateFormat('M/d', 'ko_KR').format(r.createdAt), style: const TextStyle(fontSize: 12, color: AppTheme.textTertiary)),
-                      ],
+          ...displayed.map(
+            (r) => Padding(
+              padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      ...List.generate(
+                        5,
+                        (i) => Icon(
+                          i < r.rating ? Icons.star : Icons.star_border,
+                          size: 16,
+                          color: AppTheme.yellow500,
+                        ),
+                      ),
+                      const SizedBox(width: AppTheme.spacing2),
+                      Text(
+                        r.userName,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        DateFormat('M/d', 'ko_KR').format(r.createdAt),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spacing2),
+                  Text(
+                    r.comment,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.textSecondary,
+                      height: 1.5,
                     ),
-                    const SizedBox(height: AppTheme.spacing2),
-                    Text(r.comment, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.5)),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            ),
+          ),
           if (hasMore)
             Center(
               child: TextButton(
                 onPressed: () => setState(() => _expanded = !_expanded),
-                child: Text(_expanded ? '접기' : '열기', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.primaryBlue)),
+                child: Text(
+                  _expanded ? '접기' : '열기',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: HairSpareColors.categoryVenue,
+                  ),
+                ),
               ),
             ),
         ],

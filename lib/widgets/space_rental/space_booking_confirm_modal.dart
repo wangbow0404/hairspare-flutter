@@ -14,16 +14,16 @@ Future<bool> showSpaceBookingConfirmModal(
   required int totalPrice,
 }) {
   return showDialog<bool>(
-        context: context,
-        barrierDismissible: true,
-        barrierColor: Colors.transparent,
-        builder: (dialogContext) => SpaceBookingConfirmModal(
-          shopName: shopName,
-          startTime: startTime,
-          endTime: endTime,
-          totalPrice: totalPrice,
-        ),
-      ).then((v) => v ?? false);
+    context: context,
+    barrierDismissible: true,
+    barrierColor: Colors.transparent,
+    builder: (dialogContext) => SpaceBookingConfirmModal(
+      shopName: shopName,
+      startTime: startTime,
+      endTime: endTime,
+      totalPrice: totalPrice,
+    ),
+  ).then((v) => v ?? false);
 }
 
 class SpaceBookingConfirmModal extends StatelessWidget {
@@ -237,9 +237,10 @@ class _BookingHeroIcon extends StatelessWidget {
         ],
       ),
       alignment: Alignment.center,
-      child: const Text(
-        '🪑',
-        style: TextStyle(fontSize: 36, height: 1),
+      child: const Icon(
+        Icons.event_seat_rounded,
+        size: 36,
+        color: Color(0xFF6366F1),
       ),
     );
   }
@@ -413,10 +414,7 @@ class _BookingCancelButton extends StatelessWidget {
       ),
       child: const Text(
         '취소',
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 13,
-        ),
+        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
       ),
     );
   }
