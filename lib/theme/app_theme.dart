@@ -207,6 +207,7 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'Pretendard',
       colorScheme: ColorScheme.fromSeed(
         seedColor: brandPrimary,
         primary: brandPrimary,

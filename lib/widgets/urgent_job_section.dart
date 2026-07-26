@@ -49,7 +49,7 @@ class UrgentJobSection extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spacing4),
           SizedBox(
-            height: HomeLayoutMetrics.compactCarouselHeight,
+            height: HomeLayoutMetrics.thumbnailCarouselHeight,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(
@@ -64,7 +64,8 @@ class UrgentJobSection extends StatelessWidget {
                 return HsJobCardHorizontal(
                   job: job,
                   isFavorite: isFavorite,
-                  height: HomeLayoutMetrics.compactCarouselHeight,
+                  height: HomeLayoutMetrics.thumbnailCarouselHeight,
+                  showThumbnail: true,
                   badgeLabel: '급구',
                   badgeColor: HairSpareColors.statusUrgent,
                   borderColor: HairSpareColors.statusUrgent.withValues(
