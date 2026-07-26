@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/router/app_routes.dart';
 import '../../providers/chat_provider.dart';
 import '../../theme/app_theme.dart';
 import '../common/shared_app_bar.dart';
@@ -58,7 +60,9 @@ class WorkCheckSliverAppBar extends StatelessWidget {
                       size: 20,
                       color: AppTheme.textSecondary,
                     ),
-                onPressed: () => Navigator.maybePop(context),
+                onPressed: () => context.go(
+                  isModelMode ? AppRoutes.modelHome : AppRoutes.spareHome,
+                ),
                 tooltip: MaterialLocalizations.of(context).backButtonTooltip,
               ),
             Text(

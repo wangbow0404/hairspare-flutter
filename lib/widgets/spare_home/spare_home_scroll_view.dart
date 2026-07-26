@@ -71,7 +71,7 @@ class _SpareHomeScrollViewState extends State<SpareHomeScrollView> {
                     right: AppTheme.spacing4,
                     bottom: AppTheme.spacing2,
                   ),
-                  crossAxisCount: 6,
+                  crossAxisCount: 4,
                   wrapInCard: false,
                   categories: SpareHomeQuickMenu.buildCategories(context),
                 ),

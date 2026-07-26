@@ -60,6 +60,7 @@ import '../../screens/spare/model_profile_screen.dart';
 import '../../screens/spare/notifications_list_screen.dart';
 import '../../screens/spare/payment_screen.dart';
 import '../../screens/spare/points_screen.dart';
+import '../../screens/spare/store_screen.dart';
 import '../../screens/spare/model_schedule_screen.dart';
 import '../../screens/spare/profile_screen.dart';
 import '../../screens/spare/search_screen.dart';
@@ -237,6 +238,12 @@ final class AppRouter {
                                   const PointsScreen(),
                         ),
                         GoRoute(
+                          path: 'store',
+                          builder:
+                              (BuildContext context, GoRouterState state) =>
+                                  const StoreScreen(),
+                        ),
+                        GoRoute(
                           path: 'model_match',
                           builder:
                               (BuildContext context, GoRouterState state) =>
@@ -278,9 +285,10 @@ final class AppRouter {
                         if (path == '/spare/payment') {
                           return AppRoutes.spareWork;
                         }
-                        return state.uri
-                            .toString()
-                            .replaceFirst('/spare/payment', '/spare/work');
+                        return state.uri.toString().replaceFirst(
+                          '/spare/payment',
+                          '/spare/work',
+                        );
                       },
                     ),
                   ],

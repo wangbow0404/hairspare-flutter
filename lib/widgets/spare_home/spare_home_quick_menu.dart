@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_routes.dart';
+import '../../theme/app_theme.dart';
 import '../../theme/hairspare_colors.dart';
 import '../category_grid.dart';
 
@@ -50,6 +51,20 @@ abstract final class SpareHomeQuickMenu {
         label: '공간대여',
         color: HairSpareColors.categoryVenue,
         onTap: () => context.push(AppRoutes.spareHomeRegionSelect),
+      ),
+      CategoryItem(
+        emoji: '',
+        icon: Icons.toll_outlined,
+        label: '포인트',
+        color: HairSpareColors.hipass,
+        onTap: () => context.push(AppRoutes.spareHomePoints),
+      ),
+      CategoryItem(
+        emoji: '',
+        icon: Icons.storefront,
+        label: '스토어',
+        color: AppTheme.orange500,
+        onTap: () => context.push(AppRoutes.spareHomeStore),
       ),
     ];
   }

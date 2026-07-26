@@ -20,6 +20,7 @@ abstract final class AppRoutes {
   static const spareHome = '/spare/home';
   static const spareHomeJobs = '/spare/home/jobs';
   static const spareHomePoints = '/spare/home/points';
+  static const spareHomeStore = '/spare/home/store';
   static const spareHomeModelMatch = '/spare/home/model_match';
   static const spareHomeWorkCheck = '/spare/home/work_check';
   static const spareHomeRegionSelect = '/spare/home/region_select';
@@ -31,6 +32,7 @@ abstract final class AppRoutes {
       '/spare/home/messages/chat/$chatId';
   static const spareWork = '/spare/work';
   static String spareWorkChat(String chatId) => '/spare/work/chat/$chatId';
+
   /// @deprecated Use [spareWork]
   static const sparePayment = '/spare/work';
   static String shopMessageChat(String chatId) =>
