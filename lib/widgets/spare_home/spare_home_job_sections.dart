@@ -9,20 +9,20 @@ import '../../providers/job_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/job_filter_utils.dart';
 import '../../utils/job_popularity.dart';
-import '../../utils/jobs_list_sort.dart';
 import '../category_jobs_section.dart';
 import '../common/staggered_fade_in.dart';
 import '../customer_service_section.dart';
 import '../normal_jobs_section.dart';
-import '../popular_jobs_section.dart';
 import '../upcoming_shops_section.dart';
 import '../urgent_job_section.dart';
+import 'spare_home_ad_banner.dart';
 import 'spare_home_filter_chips.dart';
 
 /// 스페어 홈 공고 섹션 묶음 — favoriteMap·sort 1회 계산.
 ///
-/// 급구·하이패스·카테고리 BEST·인기 공고는 결제/노출 우선순위가 있는 영역이라
+/// 급구·하이패스·카테고리 BEST는 결제/노출 우선순위가 있는 영역이라
 /// 필터칩과 무관하게 항상 전체 노출. 필터칩은 그 아래 일반 공고 목록에만 적용됨.
+/// (기존 별도 "인기 공고" 섹션은 카테고리 BEST의 "추천 BEST" 탭과 중복되어 제거)
 class SpareHomeJobSections extends StatefulWidget {
   const SpareHomeJobSections({super.key, required this.onToggleFavorite});
 
@@ -65,14 +65,6 @@ class _SpareHomeJobSectionsState extends State<SpareHomeJobSections> {
           jobProvider.jobs.where((j) => j.isPremium),
         )..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-        final shownIds = <String>{};
-        shownIds.addAll(urgentJobs.map((j) => j.id));
-        shownIds.addAll(hipassJobs.map((j) => j.id));
-
-        final topPopularJobs = JobPopularity.topPopular(
-          allJobsRaw.where((j) => !shownIds.contains(j.id)).toList(),
-        );
-
         final popularJobIds = JobPopularity.popularJobIds(allJobsRaw);
 
         // 필터칩 아래 일반 공고 목록 — 선택된 칩에 따라 필터링(신규 공고도 여기 포함).
@@ -106,8 +98,9 @@ class _SpareHomeJobSectionsState extends State<SpareHomeJobSections> {
                     widget.onToggleFavorite(context, jobId, isFav),
               ),
             ),
+            StaggeredFadeIn(index: 2, child: const SpareHomeAdBanner()),
             StaggeredFadeIn(
-              index: 2,
+              index: 3,
               child: CategoryJobsSection(
                 allJobs: jobProvider.jobs,
                 selectedRegionId: jobProvider.selectedRegionId,
@@ -120,21 +113,6 @@ class _SpareHomeJobSectionsState extends State<SpareHomeJobSections> {
                   AppTheme.spacing6,
                   AppTheme.spacing4,
                   AppTheme.spacing4,
-                ),
-              ),
-            ),
-            StaggeredFadeIn(
-              index: 3,
-              child: PopularJobsSection(
-                jobs: topPopularJobs,
-                favoriteMap: favoriteMap,
-                onJobTap: (job) => _openJobDetail(context, job),
-                onFavoriteToggle: (jobId, isFav) =>
-                    widget.onToggleFavorite(context, jobId, isFav),
-                onViewAll: () => context.push(
-                  AppRoutes.spareHomeJobsPath(
-                    sort: JobsListSortMode.popular.name,
-                  ),
                 ),
               ),
             ),
