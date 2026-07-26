@@ -14,113 +14,133 @@ import 'education_screen.dart';
 class EducationDetailScreen extends StatelessWidget {
   final Education education;
 
-  const EducationDetailScreen({
-    super.key,
-    required this.education,
-  });
+  const EducationDetailScreen({super.key, required this.education});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) =>
-          EducationDetailViewModel(education: education)..loadEnrollmentStatus(),
+          EducationDetailViewModel(education: education)
+            ..loadEnrollmentStatus(),
       child: Scaffold(
-      backgroundColor: AppTheme.backgroundGray,
-      appBar: SpareAppBar(
-        showBackButton: true,
-        actions: [
-          IconButton(
-            icon: IconMapper.icon('share', size: 22, color: AppTheme.textPrimary) ??
-                const Icon(Icons.share, size: 22, color: AppTheme.textPrimary),
-            onPressed: () => Share.share(
-              '${education.title}\n참가비: 에너지 ${education.energyCost}개',
-            ),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildImageSection(context),
-            Padding(
-              padding: AppTheme.spacingSymmetric(
-                horizontal: AppTheme.spacing4,
-                vertical: AppTheme.spacing4,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildTags(context),
-                  const SizedBox(height: AppTheme.spacing3),
-                  Text(
-                    education.title,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
-                      height: 1.3,
-                    ),
+        backgroundColor: AppTheme.backgroundGray,
+        appBar: SpareAppBar(
+          showBackButton: true,
+          actions: [
+            IconButton(
+              icon:
+                  IconMapper.icon(
+                    'share',
+                    size: 22,
+                    color: AppTheme.textPrimary,
+                  ) ??
+                  const Icon(
+                    Icons.share,
+                    size: 22,
+                    color: AppTheme.textPrimary,
                   ),
-                  const SizedBox(height: AppTheme.spacing4),
-                  _buildQuickInfoGrid(context),
-                  const SizedBox(height: AppTheme.spacing4),
-                  _buildDetailBox(context),
-                  const SizedBox(height: AppTheme.spacing4),
-                  _buildDescriptionBox(context),
-                  if ((education.curriculumSchedule != null && education.curriculumSchedule!.isNotEmpty) ||
-                      (education.curriculum != null && education.curriculum!.isNotEmpty)) ...[
-                    const SizedBox(height: AppTheme.spacing4),
-                    _buildCurriculumSection(context),
-                  ],
-                  if (education.instructorName != null) ...[
-                    const SizedBox(height: AppTheme.spacing4),
-                    _buildSectionBox(
-                      context,
-                      title: '강사 소개',
-                      icon: Icons.person,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            education.instructorName!,
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.textPrimary,
-                            ),
+              onPressed: () => Share.share(
+                '${education.title}\n참가비: ${education.price == 0 ? '무료' : '${NumberFormat('#,###').format(education.price)}원'}',
+              ),
+            ),
+          ],
+        ),
+        body: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildImageSection(context),
+              Padding(
+                padding: AppTheme.spacingSymmetric(
+                  horizontal: AppTheme.spacing4,
+                  vertical: AppTheme.spacing4,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildTags(context),
+                    const SizedBox(height: AppTheme.spacing3),
+                    Text(
+                      education.title,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textPrimary,
+                            height: 1.3,
                           ),
-                          if (education.instructorBio != null) ...[
-                            const SizedBox(height: AppTheme.spacing2),
-                            Text(
-                              education.instructorBio!,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontSize: 13,
-                                color: AppTheme.textSecondary,
-                                height: 1.45,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
                     ),
-                  ],
-                  if (education.benefits != null && education.benefits!.isNotEmpty) ...[
                     const SizedBox(height: AppTheme.spacing4),
-                    _buildSectionBox(
-                      context,
-                      title: '이런 점이 좋아요',
-                      icon: Icons.star,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: education.benefits!
-                            .map((b) => Padding(
-                                  padding: const EdgeInsets.only(bottom: AppTheme.spacing2),
+                    _buildQuickInfoGrid(context),
+                    const SizedBox(height: AppTheme.spacing4),
+                    _buildDetailBox(context),
+                    const SizedBox(height: AppTheme.spacing4),
+                    _buildDescriptionBox(context),
+                    if ((education.curriculumSchedule != null &&
+                            education.curriculumSchedule!.isNotEmpty) ||
+                        (education.curriculum != null &&
+                            education.curriculum!.isNotEmpty)) ...[
+                      const SizedBox(height: AppTheme.spacing4),
+                      _buildCurriculumSection(context),
+                    ],
+                    if (education.instructorName != null) ...[
+                      const SizedBox(height: AppTheme.spacing4),
+                      _buildSectionBox(
+                        context,
+                        title: '강사 소개',
+                        icon: Icons.person,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              education.instructorName!,
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.textPrimary,
+                                  ),
+                            ),
+                            if (education.instructorBio != null) ...[
+                              const SizedBox(height: AppTheme.spacing2),
+                              Text(
+                                education.instructorBio!,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      fontSize: 13,
+                                      color: AppTheme.textSecondary,
+                                      height: 1.45,
+                                    ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (education.benefits != null &&
+                        education.benefits!.isNotEmpty) ...[
+                      const SizedBox(height: AppTheme.spacing4),
+                      _buildSectionBox(
+                        context,
+                        title: '이런 점이 좋아요',
+                        icon: Icons.star,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: education.benefits!
+                              .map(
+                                (b) => Padding(
+                                  padding: const EdgeInsets.only(
+                                    bottom: AppTheme.spacing2,
+                                  ),
                                   child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      const Icon(Icons.check_circle,
-                                          size: 18, color: AppTheme.primaryGreen),
+                                      const Icon(
+                                        Icons.check_circle,
+                                        size: 18,
+                                        color: AppTheme.primaryGreen,
+                                      ),
                                       const SizedBox(width: AppTheme.spacing2),
                                       Expanded(
                                         child: Text(
@@ -137,47 +157,50 @@ class EducationDetailScreen extends StatelessWidget {
                                       ),
                                     ],
                                   ),
-                                ))
-                            .toList(),
-                      ),
-                    ),
-                  ],
-                  if (education.targetAudience != null) ...[
-                    const SizedBox(height: AppTheme.spacing4),
-                    _buildSectionBox(
-                      context,
-                      title: '이런 분들께 추천',
-                      icon: Icons.groups,
-                      child: Text(
-                        education.targetAudience!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontSize: 13,
-                          color: AppTheme.textSecondary,
-                          height: 1.5,
+                                ),
+                              )
+                              .toList(),
                         ),
                       ),
-                    ),
+                    ],
+                    if (education.targetAudience != null) ...[
+                      const SizedBox(height: AppTheme.spacing4),
+                      _buildSectionBox(
+                        context,
+                        title: '이런 분들께 추천',
+                        icon: Icons.groups,
+                        child: Text(
+                          education.targetAudience!,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                fontSize: 13,
+                                color: AppTheme.textSecondary,
+                                height: 1.5,
+                              ),
+                        ),
+                      ),
+                    ],
+                    if (education.reviews != null &&
+                        education.reviews!.isNotEmpty) ...[
+                      const SizedBox(height: AppTheme.spacing4),
+                      _buildReviewsSection(context),
+                    ],
+                    const SizedBox(height: AppTheme.spacing6),
+                    _buildApplyButton(context),
+                    const SizedBox(height: AppTheme.spacing8),
                   ],
-                  if (education.reviews != null && education.reviews!.isNotEmpty) ...[
-                    const SizedBox(height: AppTheme.spacing4),
-                    _buildReviewsSection(context),
-                  ],
-                  const SizedBox(height: AppTheme.spacing6),
-                  _buildApplyButton(context),
-                  const SizedBox(height: AppTheme.spacing8),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
 
   Widget _buildImageSection(BuildContext context) {
-    final hasImage = education.imageUrl != null &&
-        education.imageUrl!.isNotEmpty;
+    final hasImage =
+        education.imageUrl != null && education.imageUrl!.isNotEmpty;
     final isNetwork = hasImage && education.imageUrl!.startsWith('http');
 
     return Container(
@@ -230,8 +253,7 @@ class EducationDetailScreen extends StatelessWidget {
       spacing: AppTheme.spacing2,
       runSpacing: AppTheme.spacing2,
       children: [
-        if (education.isUrgent)
-          _tag('🚀 급구', AppTheme.urgentRed, Colors.white),
+        if (education.isUrgent) _tag('🚀 급구', AppTheme.urgentRed, Colors.white),
         if (education.isLive)
           _tag('LIVE', const Color(0xFFEF4444), Colors.white),
         _tag(
@@ -245,7 +267,11 @@ class EducationDetailScreen extends StatelessWidget {
           AppTheme.primaryPurple,
         ),
         if (education.duration != null)
-          _tag(education.duration!, AppTheme.backgroundGray, AppTheme.textSecondary),
+          _tag(
+            education.duration!,
+            AppTheme.backgroundGray,
+            AppTheme.textSecondary,
+          ),
       ],
     );
   }
@@ -262,11 +288,7 @@ class EducationDetailScreen extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: fg,
-        ),
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: fg),
       ),
     );
   }
@@ -280,9 +302,11 @@ class EducationDetailScreen extends StatelessWidget {
             Expanded(
               child: _buildQuickInfoItem(
                 context,
-                icon: Icons.flash_on,
+                icon: Icons.payments_outlined,
                 label: '참가비',
-                value: '에너지 ${education.energyCost}개',
+                value: education.price == 0
+                    ? '무료'
+                    : '${NumberFormat('#,###').format(education.price)}원',
                 valueColor: AppTheme.primaryGreen,
               ),
             ),
@@ -316,9 +340,12 @@ class EducationDetailScreen extends StatelessWidget {
                 label: hasEducationDate ? '교육일' : '진행',
                 value: hasEducationDate
                     ? (education.endDate != null &&
-                            education.endDate != education.startDate
-                        ? '${DateFormat('M/d', 'ko_KR').format(education.startDate!)}~${DateFormat('M/d', 'ko_KR').format(education.endDate!)}'
-                        : DateFormat('M/d', 'ko_KR').format(education.startDate!))
+                              education.endDate != education.startDate
+                          ? '${DateFormat('M/d', 'ko_KR').format(education.startDate!)}~${DateFormat('M/d', 'ko_KR').format(education.endDate!)}'
+                          : DateFormat(
+                              'M/d',
+                              'ko_KR',
+                            ).format(education.startDate!))
                     : (education.isOnline ? '온라인' : '오프라인'),
               ),
             ),
@@ -379,24 +406,46 @@ class EducationDetailScreen extends StatelessWidget {
   Widget _buildDetailBox(BuildContext context) {
     final items = <Widget>[
       if (!education.isOnline)
-        _buildInfoRow(context, Icons.location_on, '위치',
-            '${education.province}${education.district != null ? ' ${education.district}' : ''}'),
+        _buildInfoRow(
+          context,
+          Icons.location_on,
+          '위치',
+          '${education.province}${education.district != null ? ' ${education.district}' : ''}',
+        ),
       if (!education.isOnline) const SizedBox(height: AppTheme.spacing3),
       if (education.startDate != null) ...[
-        _buildInfoRow(context, Icons.event_available, '교육 진행일자',
-            education.endDate != null && education.endDate != education.startDate
-                ? '${DateFormat('yyyy년 M월 d일', 'ko_KR').format(education.startDate!)} ~ ${DateFormat('M월 d일', 'ko_KR').format(education.endDate!)}'
-                : DateFormat('yyyy년 M월 d일', 'ko_KR').format(education.startDate!)),
+        _buildInfoRow(
+          context,
+          Icons.event_available,
+          '교육 진행일자',
+          education.endDate != null && education.endDate != education.startDate
+              ? '${DateFormat('yyyy년 M월 d일', 'ko_KR').format(education.startDate!)} ~ ${DateFormat('M월 d일', 'ko_KR').format(education.endDate!)}'
+              : DateFormat('yyyy년 M월 d일', 'ko_KR').format(education.startDate!),
+        ),
         const SizedBox(height: AppTheme.spacing3),
       ],
-      _buildInfoRow(context, Icons.flash_on, '참가비',
-          '에너지 ${education.energyCost}개'),
+      _buildInfoRow(
+        context,
+        Icons.payments_outlined,
+        '참가비',
+        education.price == 0
+            ? '무료'
+            : '${NumberFormat('#,###').format(education.price)}원',
+      ),
       const SizedBox(height: AppTheme.spacing3),
-      _buildInfoRow(context, Icons.people, '신청 현황',
-          '${education.applicants}/${education.maxApplicants}명'),
+      _buildInfoRow(
+        context,
+        Icons.people,
+        '신청 현황',
+        '${education.applicants}/${education.maxApplicants}명',
+      ),
       const SizedBox(height: AppTheme.spacing3),
-      _buildInfoRow(context, Icons.calendar_today, '마감일',
-          DateFormat('yyyy년 M월 d일', 'ko_KR').format(education.deadline)),
+      _buildInfoRow(
+        context,
+        Icons.calendar_today,
+        '마감일',
+        DateFormat('yyyy년 M월 d일', 'ko_KR').format(education.deadline),
+      ),
     ];
 
     return Container(
@@ -426,7 +475,11 @@ class EducationDetailScreen extends StatelessWidget {
   }
 
   Widget _buildInfoRow(
-      BuildContext context, IconData icon, String label, String value) {
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -440,7 +493,10 @@ class EducationDetailScreen extends StatelessWidget {
                 color: AppTheme.textSecondary,
               ),
               children: [
-                TextSpan(text: '$label  ', style: const TextStyle(fontWeight: FontWeight.w500)),
+                TextSpan(
+                  text: '$label  ',
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
                 TextSpan(
                   text: value,
                   style: const TextStyle(
@@ -529,7 +585,8 @@ class EducationDetailScreen extends StatelessWidget {
   }
 
   Widget _buildCurriculumSection(BuildContext context) {
-    if (education.curriculumSchedule != null && education.curriculumSchedule!.isNotEmpty) {
+    if (education.curriculumSchedule != null &&
+        education.curriculumSchedule!.isNotEmpty) {
       return _buildSectionBox(
         context,
         title: '커리큘럼',
@@ -614,18 +671,18 @@ class EducationDetailScreen extends StatelessWidget {
                     );
                   }
                 : vm.canApply
-                    ? () async {
-                        final result = await ShellNavigation.pushEducationCheckout(
-                          context,
-                          education,
-                        );
-                        if (result == true && context.mounted) {
-                          await vm.loadEnrollmentStatus();
-                        } else if (context.mounted) {
-                          await vm.loadEnrollmentStatus();
-                        }
-                      }
-                    : null,
+                ? () async {
+                    final result = await ShellNavigation.pushEducationCheckout(
+                      context,
+                      education,
+                    );
+                    if (result == true && context.mounted) {
+                      await vm.loadEnrollmentStatus();
+                    } else if (context.mounted) {
+                      await vm.loadEnrollmentStatus();
+                    }
+                  }
+                : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: enrolled
                   ? AppTheme.primaryGreen
@@ -643,14 +700,12 @@ class EducationDetailScreen extends StatelessWidget {
               elevation: 0,
             ),
             child: Text(
-              enrolled
-                  ? '신청 내역 보기'
-                  : blockReason ?? '신청하기',
+              enrolled ? '신청 내역 보기' : blockReason ?? '신청하기',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
             ),
           ),
         );
@@ -672,7 +727,8 @@ class _ExpandableReviewsSection extends StatefulWidget {
   });
 
   @override
-  State<_ExpandableReviewsSection> createState() => _ExpandableReviewsSectionState();
+  State<_ExpandableReviewsSection> createState() =>
+      _ExpandableReviewsSectionState();
 }
 
 class _ExpandableReviewsSectionState extends State<_ExpandableReviewsSection> {
@@ -682,7 +738,9 @@ class _ExpandableReviewsSectionState extends State<_ExpandableReviewsSection> {
   @override
   Widget build(BuildContext context) {
     final reviews = widget.reviews;
-    final displayedReviews = _expanded ? reviews : reviews.take(_initialCount).toList();
+    final displayedReviews = _expanded
+        ? reviews
+        : reviews.take(_initialCount).toList();
     final hasMore = reviews.length > _initialCount;
 
     return Container(
@@ -759,49 +817,55 @@ class _ExpandableReviewsSectionState extends State<_ExpandableReviewsSection> {
             ],
           ),
           const SizedBox(height: AppTheme.spacing4),
-          ...displayedReviews.map((r) => Padding(
-                padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        ...List.generate(5, (i) => Icon(
-                              i < r.rating ? Icons.star : Icons.star_border,
-                              size: 16,
-                              color: AppTheme.yellow500,
-                            )),
-                        const SizedBox(width: AppTheme.spacing2),
-                        Text(
-                          r.userName,
-                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textPrimary,
-                          ),
+          ...displayedReviews.map(
+            (r) => Padding(
+              padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      ...List.generate(
+                        5,
+                        (i) => Icon(
+                          i < r.rating ? Icons.star : Icons.star_border,
+                          size: 16,
+                          color: AppTheme.yellow500,
                         ),
-                        const Spacer(),
-                        Text(
-                          DateFormat('M/d', 'ko_KR').format(r.createdAt),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontSize: 12,
-                            color: AppTheme.textTertiary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppTheme.spacing2),
-                    Text(
-                      r.comment,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontSize: 13,
-                        color: AppTheme.textSecondary,
-                        height: 1.5,
                       ),
+                      const SizedBox(width: AppTheme.spacing2),
+                      Text(
+                        r.userName,
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textPrimary,
+                            ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        DateFormat('M/d', 'ko_KR').format(r.createdAt),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: 12,
+                          color: AppTheme.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spacing2),
+                  Text(
+                    r.comment,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: 13,
+                      color: AppTheme.textSecondary,
+                      height: 1.5,
                     ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            ),
+          ),
           if (hasMore)
             Center(
               child: TextButton(

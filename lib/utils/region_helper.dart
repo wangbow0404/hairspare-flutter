@@ -1405,6 +1405,13 @@ class RegionHelper {
     return _regions.where((r) => r.parentId == provinceId).toList();
   }
 
+  /// 구/군 ID로 상위 시/도 ID 조회 (없으면 null).
+  static String? provinceIdOf(String districtId) {
+    final matches = _regions.where((r) => r.id == districtId);
+    if (matches.isEmpty) return null;
+    return matches.first.parentId;
+  }
+
   /// 시/도 목록
   static List<Region> getProvinces() {
     return _regions.where((r) => r.type == RegionType.province).toList();

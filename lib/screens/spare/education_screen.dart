@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../../providers/job_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_app_bar.dart';
 import '../../widgets/common/spare_subpage_app_bar_actions.dart';
@@ -130,6 +132,9 @@ class _EducationScreenState extends State<EducationScreen>
   Future<void> _loadEducations() async {
     // Mock 데이터 생성 (백엔드 API 없음)
     await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+
+    _applyDefaultRegion();
 
     setState(() {
       _educations = _generateMockEducations();
@@ -138,6 +143,18 @@ class _EducationScreenState extends State<EducationScreen>
     });
 
     _applyFilters();
+  }
+
+  /// 오프라인 강의 위주 화면이라 홈에서 선택한 내 지역을 기본값으로 잡는다.
+  /// (이미 사용자가 필터를 직접 골랐으면 덮어쓰지 않음)
+  void _applyDefaultRegion() {
+    if (_selectedProvince != null || _selectedDistrict != null) return;
+    final myRegionId = context.read<JobProvider>().selectedRegionId;
+    if (myRegionId == null || myRegionId.isEmpty) return;
+    final provinceId = RegionHelper.provinceIdOf(myRegionId);
+    if (provinceId == null) return;
+    _selectedProvince = provinceId;
+    _selectedDistrict = myRegionId;
   }
 
   List<Education> _generateMockEducations() {
@@ -260,7 +277,7 @@ class _EducationScreenState extends State<EducationScreen>
   void _applyFilters() {
     var filtered = List<Education>.from(_educations);
 
-    // 지역 필터 (RegionHelper 사용)
+    // 지역 필터 (RegionHelper 사용) — 온라인 강의는 위치가 의미 없어 제외 대상에서 뺀다.
     if (_selectedDistrict != null) {
       final district = _districts.firstWhere(
         (d) => d.id == _selectedDistrict,
@@ -268,7 +285,10 @@ class _EducationScreenState extends State<EducationScreen>
       );
       filtered = filtered
           .where(
-            (e) => e.regionId == district.id || e.district == district.name,
+            (e) =>
+                e.isOnline ||
+                e.regionId == district.id ||
+                e.district == district.name,
           )
           .toList();
     } else if (_selectedProvince != null) {
@@ -279,6 +299,7 @@ class _EducationScreenState extends State<EducationScreen>
       filtered = filtered
           .where(
             (e) =>
+                e.isOnline ||
                 e.regionId == province.id ||
                 e.regionId?.startsWith(province.id) == true ||
                 e.province == province.name,
@@ -1117,10 +1138,15 @@ class _EducationScreenState extends State<EducationScreen>
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '에너지 ${education.energyCost}개',
-                        style: const TextStyle(
+                        education.price == 0
+                            ? '무료'
+                            : '${NumberFormat('#,###').format(education.price)}원',
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textSecondary,
+                          fontWeight: FontWeight.w600,
+                          color: education.price == 0
+                              ? AppTheme.primaryGreen
+                              : AppTheme.textPrimary,
                         ),
                       ),
                     ],
