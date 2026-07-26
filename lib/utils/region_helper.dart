@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../models/region.dart';
 
 /// 지역 이름을 가져오는 유틸리티 클래스
@@ -22,277 +24,1374 @@ class RegionHelper {
     const Region(id: 'gyeongnam', name: '경남', type: RegionType.province),
     const Region(id: 'sejong', name: '세종', type: RegionType.province),
     const Region(id: 'jeju', name: '제주', type: RegionType.province),
-    
+
     // 서울 구
-    const Region(id: 'seoul-gangnam', name: '강남구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-gangdong', name: '강동구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-gangbuk', name: '강북구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-gangseo', name: '강서구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-gwanak', name: '관악구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-gwangjin', name: '광진구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-guro', name: '구로구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-nowon', name: '노원구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-dobong', name: '도봉구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-dongdaemun', name: '동대문구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-dongjak', name: '동작구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-mapo', name: '마포구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-seodaemun', name: '서대문구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-seocho', name: '서초구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-seongdong', name: '성동구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-seongbuk', name: '성북구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-songpa', name: '송파구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-yangcheon', name: '양천구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-yeongdeungpo', name: '영등포구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-yongsan', name: '용산구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-eunpyeong', name: '은평구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-jongno', name: '종로구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-jung', name: '중구', parentId: 'seoul', type: RegionType.district),
-    const Region(id: 'seoul-jungnang', name: '중랑구', parentId: 'seoul', type: RegionType.district),
-    
+    const Region(
+      id: 'seoul-gangnam',
+      name: '강남구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-gangdong',
+      name: '강동구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-gangbuk',
+      name: '강북구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-gangseo',
+      name: '강서구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-gwanak',
+      name: '관악구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-gwangjin',
+      name: '광진구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-guro',
+      name: '구로구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-nowon',
+      name: '노원구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-dobong',
+      name: '도봉구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-dongdaemun',
+      name: '동대문구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-dongjak',
+      name: '동작구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-mapo',
+      name: '마포구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-seodaemun',
+      name: '서대문구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-seocho',
+      name: '서초구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-seongdong',
+      name: '성동구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-seongbuk',
+      name: '성북구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-songpa',
+      name: '송파구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-yangcheon',
+      name: '양천구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-yeongdeungpo',
+      name: '영등포구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-yongsan',
+      name: '용산구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-eunpyeong',
+      name: '은평구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-jongno',
+      name: '종로구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-jung',
+      name: '중구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'seoul-jungnang',
+      name: '중랑구',
+      parentId: 'seoul',
+      type: RegionType.district,
+    ),
+
     // 경기 시/군
-    const Region(id: 'gyeonggi-suwon', name: '수원시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-seongnam', name: '성남시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-goyang', name: '고양시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-yongin', name: '용인시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-bucheon', name: '부천시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-ansan', name: '안산시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-anyang', name: '안양시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-pyeongtaek', name: '평택시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-siheung', name: '시흥시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-gimpo', name: '김포시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-hwaseong', name: '화성시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-gwangju', name: '광주시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-paju', name: '파주시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-icheon', name: '이천시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-ansan-si', name: '안성시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-pocheon', name: '포천시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-uijeongbu', name: '의정부시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-yangju', name: '양주시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-guri', name: '구리시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-namyangju', name: '남양주시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-osan', name: '오산시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-hanam', name: '하남시', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-gapyeong', name: '가평군', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-yangpyeong', name: '양평군', parentId: 'gyeonggi', type: RegionType.district),
-    const Region(id: 'gyeonggi-yeoncheon', name: '연천군', parentId: 'gyeonggi', type: RegionType.district),
-    
+    const Region(
+      id: 'gyeonggi-suwon',
+      name: '수원시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-seongnam',
+      name: '성남시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-goyang',
+      name: '고양시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-yongin',
+      name: '용인시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-bucheon',
+      name: '부천시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-ansan',
+      name: '안산시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-anyang',
+      name: '안양시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-pyeongtaek',
+      name: '평택시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-siheung',
+      name: '시흥시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-gimpo',
+      name: '김포시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-hwaseong',
+      name: '화성시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-gwangju',
+      name: '광주시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-paju',
+      name: '파주시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-icheon',
+      name: '이천시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-ansan-si',
+      name: '안성시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-pocheon',
+      name: '포천시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-uijeongbu',
+      name: '의정부시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-yangju',
+      name: '양주시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-guri',
+      name: '구리시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-namyangju',
+      name: '남양주시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-osan',
+      name: '오산시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-hanam',
+      name: '하남시',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-gapyeong',
+      name: '가평군',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-yangpyeong',
+      name: '양평군',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeonggi-yeoncheon',
+      name: '연천군',
+      parentId: 'gyeonggi',
+      type: RegionType.district,
+    ),
+
     // 부산 구
-    const Region(id: 'busan-haeundae', name: '해운대구', parentId: 'busan', type: RegionType.district),
-    const Region(id: 'busan-busanjin', name: '부산진구', parentId: 'busan', type: RegionType.district),
-    const Region(id: 'busan-dong', name: '동구', parentId: 'busan', type: RegionType.district),
-    const Region(id: 'busan-nam', name: '남구', parentId: 'busan', type: RegionType.district),
-    const Region(id: 'busan-buk', name: '북구', parentId: 'busan', type: RegionType.district),
-    const Region(id: 'busan-sasang', name: '사상구', parentId: 'busan', type: RegionType.district),
-    const Region(id: 'busan-saha', name: '사하구', parentId: 'busan', type: RegionType.district),
-    const Region(id: 'busan-seo', name: '서구', parentId: 'busan', type: RegionType.district),
-    const Region(id: 'busan-suyeong', name: '수영구', parentId: 'busan', type: RegionType.district),
-    const Region(id: 'busan-yeongdo', name: '영도구', parentId: 'busan', type: RegionType.district),
-    const Region(id: 'busan-jung', name: '중구', parentId: 'busan', type: RegionType.district),
-    const Region(id: 'busan-geumjeong', name: '금정구', parentId: 'busan', type: RegionType.district),
-    const Region(id: 'busan-gangseo', name: '강서구', parentId: 'busan', type: RegionType.district),
-    const Region(id: 'busan-gijang', name: '기장군', parentId: 'busan', type: RegionType.district),
-    
+    const Region(
+      id: 'busan-haeundae',
+      name: '해운대구',
+      parentId: 'busan',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'busan-busanjin',
+      name: '부산진구',
+      parentId: 'busan',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'busan-dong',
+      name: '동구',
+      parentId: 'busan',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'busan-nam',
+      name: '남구',
+      parentId: 'busan',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'busan-buk',
+      name: '북구',
+      parentId: 'busan',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'busan-sasang',
+      name: '사상구',
+      parentId: 'busan',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'busan-saha',
+      name: '사하구',
+      parentId: 'busan',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'busan-seo',
+      name: '서구',
+      parentId: 'busan',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'busan-suyeong',
+      name: '수영구',
+      parentId: 'busan',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'busan-yeongdo',
+      name: '영도구',
+      parentId: 'busan',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'busan-jung',
+      name: '중구',
+      parentId: 'busan',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'busan-geumjeong',
+      name: '금정구',
+      parentId: 'busan',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'busan-gangseo',
+      name: '강서구',
+      parentId: 'busan',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'busan-gijang',
+      name: '기장군',
+      parentId: 'busan',
+      type: RegionType.district,
+    ),
+
     // 대구 구
-    const Region(id: 'daegu-jung', name: '중구', parentId: 'daegu', type: RegionType.district),
-    const Region(id: 'daegu-dong', name: '동구', parentId: 'daegu', type: RegionType.district),
-    const Region(id: 'daegu-seo', name: '서구', parentId: 'daegu', type: RegionType.district),
-    const Region(id: 'daegu-nam', name: '남구', parentId: 'daegu', type: RegionType.district),
-    const Region(id: 'daegu-buk', name: '북구', parentId: 'daegu', type: RegionType.district),
-    const Region(id: 'daegu-suseong', name: '수성구', parentId: 'daegu', type: RegionType.district),
-    const Region(id: 'daegu-dalseo', name: '달서구', parentId: 'daegu', type: RegionType.district),
-    const Region(id: 'daegu-dalseong', name: '달성군', parentId: 'daegu', type: RegionType.district),
-    
+    const Region(
+      id: 'daegu-jung',
+      name: '중구',
+      parentId: 'daegu',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'daegu-dong',
+      name: '동구',
+      parentId: 'daegu',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'daegu-seo',
+      name: '서구',
+      parentId: 'daegu',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'daegu-nam',
+      name: '남구',
+      parentId: 'daegu',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'daegu-buk',
+      name: '북구',
+      parentId: 'daegu',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'daegu-suseong',
+      name: '수성구',
+      parentId: 'daegu',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'daegu-dalseo',
+      name: '달서구',
+      parentId: 'daegu',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'daegu-dalseong',
+      name: '달성군',
+      parentId: 'daegu',
+      type: RegionType.district,
+    ),
+
     // 인천 구
-    const Region(id: 'incheon-jung', name: '중구', parentId: 'incheon', type: RegionType.district),
-    const Region(id: 'incheon-dong', name: '동구', parentId: 'incheon', type: RegionType.district),
-    const Region(id: 'incheon-michuhol', name: '미추홀구', parentId: 'incheon', type: RegionType.district),
-    const Region(id: 'incheon-yeonbyeong', name: '연수구', parentId: 'incheon', type: RegionType.district),
-    const Region(id: 'incheon-namdong', name: '남동구', parentId: 'incheon', type: RegionType.district),
-    const Region(id: 'incheon-bupyeong', name: '부평구', parentId: 'incheon', type: RegionType.district),
-    const Region(id: 'incheon-gyeeyang', name: '계양구', parentId: 'incheon', type: RegionType.district),
-    const Region(id: 'incheon-seo', name: '서구', parentId: 'incheon', type: RegionType.district),
-    const Region(id: 'incheon-ganghwa', name: '강화군', parentId: 'incheon', type: RegionType.district),
-    const Region(id: 'incheon-ongjin', name: '옹진군', parentId: 'incheon', type: RegionType.district),
-    
+    const Region(
+      id: 'incheon-jung',
+      name: '중구',
+      parentId: 'incheon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'incheon-dong',
+      name: '동구',
+      parentId: 'incheon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'incheon-michuhol',
+      name: '미추홀구',
+      parentId: 'incheon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'incheon-yeonbyeong',
+      name: '연수구',
+      parentId: 'incheon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'incheon-namdong',
+      name: '남동구',
+      parentId: 'incheon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'incheon-bupyeong',
+      name: '부평구',
+      parentId: 'incheon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'incheon-gyeeyang',
+      name: '계양구',
+      parentId: 'incheon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'incheon-seo',
+      name: '서구',
+      parentId: 'incheon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'incheon-ganghwa',
+      name: '강화군',
+      parentId: 'incheon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'incheon-ongjin',
+      name: '옹진군',
+      parentId: 'incheon',
+      type: RegionType.district,
+    ),
+
     // 광주 구
-    const Region(id: 'gwangju-dong', name: '동구', parentId: 'gwangju', type: RegionType.district),
-    const Region(id: 'gwangju-seo', name: '서구', parentId: 'gwangju', type: RegionType.district),
-    const Region(id: 'gwangju-nam', name: '남구', parentId: 'gwangju', type: RegionType.district),
-    const Region(id: 'gwangju-buk', name: '북구', parentId: 'gwangju', type: RegionType.district),
-    const Region(id: 'gwangju-gwangsan', name: '광산구', parentId: 'gwangju', type: RegionType.district),
-    
+    const Region(
+      id: 'gwangju-dong',
+      name: '동구',
+      parentId: 'gwangju',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gwangju-seo',
+      name: '서구',
+      parentId: 'gwangju',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gwangju-nam',
+      name: '남구',
+      parentId: 'gwangju',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gwangju-buk',
+      name: '북구',
+      parentId: 'gwangju',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gwangju-gwangsan',
+      name: '광산구',
+      parentId: 'gwangju',
+      type: RegionType.district,
+    ),
+
     // 대전 구
-    const Region(id: 'daejeon-dong', name: '동구', parentId: 'daejeon', type: RegionType.district),
-    const Region(id: 'daejeon-jung', name: '중구', parentId: 'daejeon', type: RegionType.district),
-    const Region(id: 'daejeon-seo', name: '서구', parentId: 'daejeon', type: RegionType.district),
-    const Region(id: 'daejeon-yuseong', name: '유성구', parentId: 'daejeon', type: RegionType.district),
-    const Region(id: 'daejeon-daedeok', name: '대덕구', parentId: 'daejeon', type: RegionType.district),
-    
+    const Region(
+      id: 'daejeon-dong',
+      name: '동구',
+      parentId: 'daejeon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'daejeon-jung',
+      name: '중구',
+      parentId: 'daejeon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'daejeon-seo',
+      name: '서구',
+      parentId: 'daejeon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'daejeon-yuseong',
+      name: '유성구',
+      parentId: 'daejeon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'daejeon-daedeok',
+      name: '대덕구',
+      parentId: 'daejeon',
+      type: RegionType.district,
+    ),
+
     // 울산 구
-    const Region(id: 'ulsan-jung', name: '중구', parentId: 'ulsan', type: RegionType.district),
-    const Region(id: 'ulsan-nam', name: '남구', parentId: 'ulsan', type: RegionType.district),
-    const Region(id: 'ulsan-dong', name: '동구', parentId: 'ulsan', type: RegionType.district),
-    const Region(id: 'ulsan-buk', name: '북구', parentId: 'ulsan', type: RegionType.district),
-    const Region(id: 'ulsan-ulju', name: '울주군', parentId: 'ulsan', type: RegionType.district),
-    
+    const Region(
+      id: 'ulsan-jung',
+      name: '중구',
+      parentId: 'ulsan',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'ulsan-nam',
+      name: '남구',
+      parentId: 'ulsan',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'ulsan-dong',
+      name: '동구',
+      parentId: 'ulsan',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'ulsan-buk',
+      name: '북구',
+      parentId: 'ulsan',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'ulsan-ulju',
+      name: '울주군',
+      parentId: 'ulsan',
+      type: RegionType.district,
+    ),
+
     // 경남 시/군
-    const Region(id: 'gyeongnam-changwon', name: '창원시', parentId: 'gyeongnam', type: RegionType.district),
-    const Region(id: 'gyeongnam-jinju', name: '진주시', parentId: 'gyeongnam', type: RegionType.district),
-    const Region(id: 'gyeongnam-tongyeong', name: '통영시', parentId: 'gyeongnam', type: RegionType.district),
-    const Region(id: 'gyeongnam-sacheon', name: '사천시', parentId: 'gyeongnam', type: RegionType.district),
-    const Region(id: 'gyeongnam-gimhae', name: '김해시', parentId: 'gyeongnam', type: RegionType.district),
-    const Region(id: 'gyeongnam-miryang', name: '밀양시', parentId: 'gyeongnam', type: RegionType.district),
-    const Region(id: 'gyeongnam-geoje', name: '거제시', parentId: 'gyeongnam', type: RegionType.district),
-    const Region(id: 'gyeongnam-yangsan', name: '양산시', parentId: 'gyeongnam', type: RegionType.district),
-    const Region(id: 'gyeongnam-uiryeong', name: '의령군', parentId: 'gyeongnam', type: RegionType.district),
-    const Region(id: 'gyeongnam-haman', name: '함안군', parentId: 'gyeongnam', type: RegionType.district),
-    const Region(id: 'gyeongnam-changnyeong', name: '창녕군', parentId: 'gyeongnam', type: RegionType.district),
-    const Region(id: 'gyeongnam-goseong', name: '고성군', parentId: 'gyeongnam', type: RegionType.district),
-    const Region(id: 'gyeongnam-namhae', name: '남해군', parentId: 'gyeongnam', type: RegionType.district),
-    const Region(id: 'gyeongnam-hadong', name: '하동군', parentId: 'gyeongnam', type: RegionType.district),
-    const Region(id: 'gyeongnam-sancheong', name: '산청군', parentId: 'gyeongnam', type: RegionType.district),
-    const Region(id: 'gyeongnam-hamyang', name: '함양군', parentId: 'gyeongnam', type: RegionType.district),
-    const Region(id: 'gyeongnam-geochang', name: '거창군', parentId: 'gyeongnam', type: RegionType.district),
-    const Region(id: 'gyeongnam-hapcheon', name: '합천군', parentId: 'gyeongnam', type: RegionType.district),
-    
+    const Region(
+      id: 'gyeongnam-changwon',
+      name: '창원시',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongnam-jinju',
+      name: '진주시',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongnam-tongyeong',
+      name: '통영시',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongnam-sacheon',
+      name: '사천시',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongnam-gimhae',
+      name: '김해시',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongnam-miryang',
+      name: '밀양시',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongnam-geoje',
+      name: '거제시',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongnam-yangsan',
+      name: '양산시',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongnam-uiryeong',
+      name: '의령군',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongnam-haman',
+      name: '함안군',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongnam-changnyeong',
+      name: '창녕군',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongnam-goseong',
+      name: '고성군',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongnam-namhae',
+      name: '남해군',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongnam-hadong',
+      name: '하동군',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongnam-sancheong',
+      name: '산청군',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongnam-hamyang',
+      name: '함양군',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongnam-geochang',
+      name: '거창군',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongnam-hapcheon',
+      name: '합천군',
+      parentId: 'gyeongnam',
+      type: RegionType.district,
+    ),
+
     // 경북 시/군
-    const Region(id: 'gyeongbuk-pohang', name: '포항시', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-gyeongju', name: '경주시', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-gimcheon', name: '김천시', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-andong', name: '안동시', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-gumi', name: '구미시', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-yeongju', name: '영주시', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-yeongcheon', name: '영천시', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-sangju', name: '상주시', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-mungyeong', name: '문경시', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-gyeongsan', name: '경산시', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-gunwi', name: '군위군', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-uiseong', name: '의성군', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-cheongsong', name: '청송군', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-yeongyang', name: '영양군', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-yeongdeok', name: '영덕군', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-cheongdo', name: '청도군', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-goryeong', name: '고령군', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-seongju', name: '성주군', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-chilgok', name: '칠곡군', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-yechon', name: '예천군', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-bonghwa', name: '봉화군', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-uljin', name: '울진군', parentId: 'gyeongbuk', type: RegionType.district),
-    const Region(id: 'gyeongbuk-ulleung', name: '울릉군', parentId: 'gyeongbuk', type: RegionType.district),
-    
+    const Region(
+      id: 'gyeongbuk-pohang',
+      name: '포항시',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-gyeongju',
+      name: '경주시',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-gimcheon',
+      name: '김천시',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-andong',
+      name: '안동시',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-gumi',
+      name: '구미시',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-yeongju',
+      name: '영주시',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-yeongcheon',
+      name: '영천시',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-sangju',
+      name: '상주시',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-mungyeong',
+      name: '문경시',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-gyeongsan',
+      name: '경산시',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-gunwi',
+      name: '군위군',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-uiseong',
+      name: '의성군',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-cheongsong',
+      name: '청송군',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-yeongyang',
+      name: '영양군',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-yeongdeok',
+      name: '영덕군',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-cheongdo',
+      name: '청도군',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-goryeong',
+      name: '고령군',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-seongju',
+      name: '성주군',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-chilgok',
+      name: '칠곡군',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-yechon',
+      name: '예천군',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-bonghwa',
+      name: '봉화군',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-uljin',
+      name: '울진군',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gyeongbuk-ulleung',
+      name: '울릉군',
+      parentId: 'gyeongbuk',
+      type: RegionType.district,
+    ),
+
     // 충남 시/군
-    const Region(id: 'chungnam-cheonan', name: '천안시', parentId: 'chungnam', type: RegionType.district),
-    const Region(id: 'chungnam-gongju', name: '공주시', parentId: 'chungnam', type: RegionType.district),
-    const Region(id: 'chungnam-boryeong', name: '보령시', parentId: 'chungnam', type: RegionType.district),
-    const Region(id: 'chungnam-asan', name: '아산시', parentId: 'chungnam', type: RegionType.district),
-    const Region(id: 'chungnam-seosan', name: '서산시', parentId: 'chungnam', type: RegionType.district),
-    const Region(id: 'chungnam-nonsan', name: '논산시', parentId: 'chungnam', type: RegionType.district),
-    const Region(id: 'chungnam-gyeryong', name: '계룡시', parentId: 'chungnam', type: RegionType.district),
-    const Region(id: 'chungnam-dangjin', name: '당진시', parentId: 'chungnam', type: RegionType.district),
-    const Region(id: 'chungnam-geumsan', name: '금산군', parentId: 'chungnam', type: RegionType.district),
-    const Region(id: 'chungnam-buyeo', name: '부여군', parentId: 'chungnam', type: RegionType.district),
-    const Region(id: 'chungnam-seocheon', name: '서천군', parentId: 'chungnam', type: RegionType.district),
-    const Region(id: 'chungnam-cheongyang', name: '청양군', parentId: 'chungnam', type: RegionType.district),
-    const Region(id: 'chungnam-hongseong', name: '홍성군', parentId: 'chungnam', type: RegionType.district),
-    const Region(id: 'chungnam-yesan', name: '예산군', parentId: 'chungnam', type: RegionType.district),
-    const Region(id: 'chungnam-taean', name: '태안군', parentId: 'chungnam', type: RegionType.district),
-    
+    const Region(
+      id: 'chungnam-cheonan',
+      name: '천안시',
+      parentId: 'chungnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungnam-gongju',
+      name: '공주시',
+      parentId: 'chungnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungnam-boryeong',
+      name: '보령시',
+      parentId: 'chungnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungnam-asan',
+      name: '아산시',
+      parentId: 'chungnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungnam-seosan',
+      name: '서산시',
+      parentId: 'chungnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungnam-nonsan',
+      name: '논산시',
+      parentId: 'chungnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungnam-gyeryong',
+      name: '계룡시',
+      parentId: 'chungnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungnam-dangjin',
+      name: '당진시',
+      parentId: 'chungnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungnam-geumsan',
+      name: '금산군',
+      parentId: 'chungnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungnam-buyeo',
+      name: '부여군',
+      parentId: 'chungnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungnam-seocheon',
+      name: '서천군',
+      parentId: 'chungnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungnam-cheongyang',
+      name: '청양군',
+      parentId: 'chungnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungnam-hongseong',
+      name: '홍성군',
+      parentId: 'chungnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungnam-yesan',
+      name: '예산군',
+      parentId: 'chungnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungnam-taean',
+      name: '태안군',
+      parentId: 'chungnam',
+      type: RegionType.district,
+    ),
+
     // 충북 시/군
-    const Region(id: 'chungbuk-cheongju', name: '청주시', parentId: 'chungbuk', type: RegionType.district),
-    const Region(id: 'chungbuk-chungju', name: '충주시', parentId: 'chungbuk', type: RegionType.district),
-    const Region(id: 'chungbuk-jecheon', name: '제천시', parentId: 'chungbuk', type: RegionType.district),
-    const Region(id: 'chungbuk-boeun', name: '보은군', parentId: 'chungbuk', type: RegionType.district),
-    const Region(id: 'chungbuk-okcheon', name: '옥천군', parentId: 'chungbuk', type: RegionType.district),
-    const Region(id: 'chungbuk-yeongdong', name: '영동군', parentId: 'chungbuk', type: RegionType.district),
-    const Region(id: 'chungbuk-jeungpyeong', name: '증평군', parentId: 'chungbuk', type: RegionType.district),
-    const Region(id: 'chungbuk-jincheon', name: '진천군', parentId: 'chungbuk', type: RegionType.district),
-    const Region(id: 'chungbuk-goesan', name: '괴산군', parentId: 'chungbuk', type: RegionType.district),
-    const Region(id: 'chungbuk-eumseong', name: '음성군', parentId: 'chungbuk', type: RegionType.district),
-    const Region(id: 'chungbuk-danyang', name: '단양군', parentId: 'chungbuk', type: RegionType.district),
-    
+    const Region(
+      id: 'chungbuk-cheongju',
+      name: '청주시',
+      parentId: 'chungbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungbuk-chungju',
+      name: '충주시',
+      parentId: 'chungbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungbuk-jecheon',
+      name: '제천시',
+      parentId: 'chungbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungbuk-boeun',
+      name: '보은군',
+      parentId: 'chungbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungbuk-okcheon',
+      name: '옥천군',
+      parentId: 'chungbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungbuk-yeongdong',
+      name: '영동군',
+      parentId: 'chungbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungbuk-jeungpyeong',
+      name: '증평군',
+      parentId: 'chungbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungbuk-jincheon',
+      name: '진천군',
+      parentId: 'chungbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungbuk-goesan',
+      name: '괴산군',
+      parentId: 'chungbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungbuk-eumseong',
+      name: '음성군',
+      parentId: 'chungbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'chungbuk-danyang',
+      name: '단양군',
+      parentId: 'chungbuk',
+      type: RegionType.district,
+    ),
+
     // 전북 시/군
-    const Region(id: 'jeonbuk-jeonju', name: '전주시', parentId: 'jeonbuk', type: RegionType.district),
-    const Region(id: 'jeonbuk-gunsan', name: '군산시', parentId: 'jeonbuk', type: RegionType.district),
-    const Region(id: 'jeonbuk-iksan', name: '익산시', parentId: 'jeonbuk', type: RegionType.district),
-    const Region(id: 'jeonbuk-jeongeup', name: '정읍시', parentId: 'jeonbuk', type: RegionType.district),
-    const Region(id: 'jeonbuk-namwon', name: '남원시', parentId: 'jeonbuk', type: RegionType.district),
-    const Region(id: 'jeonbuk-gimje', name: '김제시', parentId: 'jeonbuk', type: RegionType.district),
-    const Region(id: 'jeonbuk-wanju', name: '완주군', parentId: 'jeonbuk', type: RegionType.district),
-    const Region(id: 'jeonbuk-jinan', name: '진안군', parentId: 'jeonbuk', type: RegionType.district),
-    const Region(id: 'jeonbuk-muju', name: '무주군', parentId: 'jeonbuk', type: RegionType.district),
-    const Region(id: 'jeonbuk-jangsu', name: '장수군', parentId: 'jeonbuk', type: RegionType.district),
-    const Region(id: 'jeonbuk-imsil', name: '임실군', parentId: 'jeonbuk', type: RegionType.district),
-    const Region(id: 'jeonbuk-sunchang', name: '순창군', parentId: 'jeonbuk', type: RegionType.district),
-    const Region(id: 'jeonbuk-gochang', name: '고창군', parentId: 'jeonbuk', type: RegionType.district),
-    const Region(id: 'jeonbuk-buan', name: '부안군', parentId: 'jeonbuk', type: RegionType.district),
-    
+    const Region(
+      id: 'jeonbuk-jeonju',
+      name: '전주시',
+      parentId: 'jeonbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonbuk-gunsan',
+      name: '군산시',
+      parentId: 'jeonbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonbuk-iksan',
+      name: '익산시',
+      parentId: 'jeonbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonbuk-jeongeup',
+      name: '정읍시',
+      parentId: 'jeonbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonbuk-namwon',
+      name: '남원시',
+      parentId: 'jeonbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonbuk-gimje',
+      name: '김제시',
+      parentId: 'jeonbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonbuk-wanju',
+      name: '완주군',
+      parentId: 'jeonbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonbuk-jinan',
+      name: '진안군',
+      parentId: 'jeonbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonbuk-muju',
+      name: '무주군',
+      parentId: 'jeonbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonbuk-jangsu',
+      name: '장수군',
+      parentId: 'jeonbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonbuk-imsil',
+      name: '임실군',
+      parentId: 'jeonbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonbuk-sunchang',
+      name: '순창군',
+      parentId: 'jeonbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonbuk-gochang',
+      name: '고창군',
+      parentId: 'jeonbuk',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonbuk-buan',
+      name: '부안군',
+      parentId: 'jeonbuk',
+      type: RegionType.district,
+    ),
+
     // 전남 시/군
-    const Region(id: 'jeonnam-mokpo', name: '목포시', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-yeosu', name: '여수시', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-suncheon', name: '순천시', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-naju', name: '나주시', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-gwangyang', name: '광양시', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-damyang', name: '담양군', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-gokseong', name: '곡성군', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-gurye', name: '구례군', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-goheung', name: '고흥군', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-boseong', name: '보성군', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-hwasun', name: '화순군', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-jangheung', name: '장흥군', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-gangjin', name: '강진군', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-haenam', name: '해남군', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-yeongam', name: '영암군', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-muan', name: '무안군', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-hampyeong', name: '함평군', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-yeonggwang', name: '영광군', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-jangseong', name: '장성군', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-wando', name: '완도군', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-jindo', name: '진도군', parentId: 'jeonnam', type: RegionType.district),
-    const Region(id: 'jeonnam-sinan', name: '신안군', parentId: 'jeonnam', type: RegionType.district),
-    
+    const Region(
+      id: 'jeonnam-mokpo',
+      name: '목포시',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-yeosu',
+      name: '여수시',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-suncheon',
+      name: '순천시',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-naju',
+      name: '나주시',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-gwangyang',
+      name: '광양시',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-damyang',
+      name: '담양군',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-gokseong',
+      name: '곡성군',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-gurye',
+      name: '구례군',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-goheung',
+      name: '고흥군',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-boseong',
+      name: '보성군',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-hwasun',
+      name: '화순군',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-jangheung',
+      name: '장흥군',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-gangjin',
+      name: '강진군',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-haenam',
+      name: '해남군',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-yeongam',
+      name: '영암군',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-muan',
+      name: '무안군',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-hampyeong',
+      name: '함평군',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-yeonggwang',
+      name: '영광군',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-jangseong',
+      name: '장성군',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-wando',
+      name: '완도군',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-jindo',
+      name: '진도군',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeonnam-sinan',
+      name: '신안군',
+      parentId: 'jeonnam',
+      type: RegionType.district,
+    ),
+
     // 강원 시/군
-    const Region(id: 'gangwon-chuncheon', name: '춘천시', parentId: 'gangwon', type: RegionType.district),
-    const Region(id: 'gangwon-wonju', name: '원주시', parentId: 'gangwon', type: RegionType.district),
-    const Region(id: 'gangwon-gangneung', name: '강릉시', parentId: 'gangwon', type: RegionType.district),
-    const Region(id: 'gangwon-donghae', name: '동해시', parentId: 'gangwon', type: RegionType.district),
-    const Region(id: 'gangwon-taebaek', name: '태백시', parentId: 'gangwon', type: RegionType.district),
-    const Region(id: 'gangwon-sokcho', name: '속초시', parentId: 'gangwon', type: RegionType.district),
-    const Region(id: 'gangwon-samcheok', name: '삼척시', parentId: 'gangwon', type: RegionType.district),
-    const Region(id: 'gangwon-hongcheon', name: '홍천군', parentId: 'gangwon', type: RegionType.district),
-    const Region(id: 'gangwon-hoengseong', name: '횡성군', parentId: 'gangwon', type: RegionType.district),
-    const Region(id: 'gangwon-yeongwol', name: '영월군', parentId: 'gangwon', type: RegionType.district),
-    const Region(id: 'gangwon-pyeongchang', name: '평창군', parentId: 'gangwon', type: RegionType.district),
-    const Region(id: 'gangwon-jeongseon', name: '정선군', parentId: 'gangwon', type: RegionType.district),
-    const Region(id: 'gangwon-cheorwon', name: '철원군', parentId: 'gangwon', type: RegionType.district),
-    const Region(id: 'gangwon-hwacheon', name: '화천군', parentId: 'gangwon', type: RegionType.district),
-    const Region(id: 'gangwon-yanggu', name: '양구군', parentId: 'gangwon', type: RegionType.district),
-    const Region(id: 'gangwon-inje', name: '인제군', parentId: 'gangwon', type: RegionType.district),
-    const Region(id: 'gangwon-goseong', name: '고성군', parentId: 'gangwon', type: RegionType.district),
-    const Region(id: 'gangwon-yangyang', name: '양양군', parentId: 'gangwon', type: RegionType.district),
-    
+    const Region(
+      id: 'gangwon-chuncheon',
+      name: '춘천시',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gangwon-wonju',
+      name: '원주시',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gangwon-gangneung',
+      name: '강릉시',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gangwon-donghae',
+      name: '동해시',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gangwon-taebaek',
+      name: '태백시',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gangwon-sokcho',
+      name: '속초시',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gangwon-samcheok',
+      name: '삼척시',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gangwon-hongcheon',
+      name: '홍천군',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gangwon-hoengseong',
+      name: '횡성군',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gangwon-yeongwol',
+      name: '영월군',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gangwon-pyeongchang',
+      name: '평창군',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gangwon-jeongseon',
+      name: '정선군',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gangwon-cheorwon',
+      name: '철원군',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gangwon-hwacheon',
+      name: '화천군',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gangwon-yanggu',
+      name: '양구군',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gangwon-inje',
+      name: '인제군',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gangwon-goseong',
+      name: '고성군',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'gangwon-yangyang',
+      name: '양양군',
+      parentId: 'gangwon',
+      type: RegionType.district,
+    ),
+
     // 제주 시/군
-    const Region(id: 'jeju-jeju', name: '제주시', parentId: 'jeju', type: RegionType.district),
-    const Region(id: 'jeju-seogwipo', name: '서귀포시', parentId: 'jeju', type: RegionType.district),
+    const Region(
+      id: 'jeju-jeju',
+      name: '제주시',
+      parentId: 'jeju',
+      type: RegionType.district,
+    ),
+    const Region(
+      id: 'jeju-seogwipo',
+      name: '서귀포시',
+      parentId: 'jeju',
+      type: RegionType.district,
+    ),
   ];
 
   /// 지역 ID로 지역 이름 가져오기
   static String getRegionName(String regionId) {
     final region = _regions.firstWhere(
       (r) => r.id == regionId,
-      orElse: () => Region(id: regionId, name: regionId, type: RegionType.district),
+      orElse: () =>
+          Region(id: regionId, name: regionId, type: RegionType.district),
     );
-    
+
     // 부모 지역이 있으면 "부모 지역명 지역명" 형식으로 반환
     if (region.parentId != null) {
       final parent = _regions.firstWhere(
         (r) => r.id == region.parentId,
-        orElse: () => Region(id: region.parentId!, name: '', type: RegionType.province),
+        orElse: () =>
+            Region(id: region.parentId!, name: '', type: RegionType.province),
       );
       if (parent.name.isNotEmpty) {
         return '${parent.name} ${region.name}';
       }
     }
-    
+
     return region.name;
   }
 
@@ -366,8 +1465,9 @@ class RegionHelper {
       administrativeArea,
     ].whereType<String>().where((s) => s.trim().isNotEmpty);
 
-    final districts =
-        _regions.where((r) => r.type == RegionType.district).toList();
+    final districts = _regions
+        .where((r) => r.type == RegionType.district)
+        .toList();
 
     for (final raw in haystack) {
       final normalized = _normalizeRegionToken(raw);
@@ -409,5 +1509,89 @@ class RegionHelper {
         .replaceAll('특별자치도', '')
         .replaceAll('도', '')
         .toLowerCase();
+  }
+
+  /// 구 중심 좌표(구청 인근) — 정밀 지도용이 아니라 "가까운 순서" 정렬용
+  /// 근사치. 서울 25개 구만 우선 확보(현재 서비스 지역 범위).
+  static const Map<String, (double, double)> _districtCentroids = {
+    'seoul-gangnam': (37.5172, 127.0473),
+    'seoul-gangdong': (37.5301, 127.1238),
+    'seoul-gangbuk': (37.6396, 127.0257),
+    'seoul-gangseo': (37.5509, 126.8495),
+    'seoul-gwanak': (37.4784, 126.9516),
+    'seoul-gwangjin': (37.5385, 127.0823),
+    'seoul-guro': (37.4954, 126.8874),
+    'seoul-geumcheon': (37.4519, 126.9020),
+    'seoul-nowon': (37.6542, 127.0568),
+    'seoul-dobong': (37.6688, 127.0471),
+    'seoul-dongdaemun': (37.5744, 127.0396),
+    'seoul-dongjak': (37.5124, 126.9393),
+    'seoul-mapo': (37.5663, 126.9019),
+    'seoul-seodaemun': (37.5791, 126.9368),
+    'seoul-seocho': (37.4837, 127.0324),
+    'seoul-seongdong': (37.5633, 127.0371),
+    'seoul-seongbuk': (37.5894, 127.0167),
+    'seoul-songpa': (37.5145, 127.1059),
+    'seoul-yangcheon': (37.5170, 126.8664),
+    'seoul-yeongdeungpo': (37.5264, 126.8963),
+    'seoul-yongsan': (37.5326, 126.9905),
+    'seoul-eunpyeong': (37.6027, 126.9291),
+    'seoul-jongno': (37.5730, 126.9794),
+    'seoul-jung': (37.5641, 126.9979),
+    'seoul-jungnang': (37.6066, 127.0927),
+  };
+
+  /// 두 구 사이 대략적 직선거리(km). 좌표 없는 구는 null.
+  static double? distanceKmBetweenDistricts(String a, String b) {
+    final pa = _districtCentroids[a];
+    final pb = _districtCentroids[b];
+    if (pa == null || pb == null) return null;
+    return _haversineKm(pa.$1, pa.$2, pb.$1, pb.$2);
+  }
+
+  static double _haversineKm(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
+    const earthRadiusKm = 6371.0;
+    final dLat = _degToRad(lat2 - lat1);
+    final dLon = _degToRad(lon2 - lon1);
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_degToRad(lat1)) *
+            math.cos(_degToRad(lat2)) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadiusKm * c;
+  }
+
+  static double _degToRad(double deg) => deg * (math.pi / 180);
+
+  /// [items]를 [fromDistrictId]에서 가까운 구 순서로 정렬한다.
+  /// 좌표를 모르는 구는 목록 맨 뒤로 밀려난다(같은 순서끼리는 원래 순서 유지).
+  static List<T> sortByProximity<T>(
+    String fromDistrictId,
+    List<T> items,
+    String Function(T) regionIdOf,
+  ) {
+    final withDistance = items.map((item) {
+      final distance = distanceKmBetweenDistricts(
+        fromDistrictId,
+        regionIdOf(item),
+      );
+      return (item: item, distance: distance);
+    }).toList();
+
+    withDistance.sort((a, b) {
+      if (a.distance == null && b.distance == null) return 0;
+      if (a.distance == null) return 1;
+      if (b.distance == null) return -1;
+      return a.distance!.compareTo(b.distance!);
+    });
+
+    return withDistance.map((e) => e.item).toList();
   }
 }

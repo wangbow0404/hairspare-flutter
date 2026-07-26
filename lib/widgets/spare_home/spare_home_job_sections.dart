@@ -9,6 +9,7 @@ import '../../providers/job_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/job_filter_utils.dart';
 import '../../utils/job_popularity.dart';
+import '../../utils/region_helper.dart';
 import '../category_jobs_section.dart';
 import '../common/staggered_fade_in.dart';
 import '../customer_service_section.dart';
@@ -67,19 +68,30 @@ class _SpareHomeJobSectionsState extends State<SpareHomeJobSections> {
 
         final popularJobIds = JobPopularity.popularJobIds(allJobsRaw);
 
-        // 필터칩 아래 일반 공고 목록 — 선택된 지역(있으면) + 필터칩 순으로 필터링
-        // (신규 공고도 여기 포함). "지역 BEST" 탭과 동일하게 선택된 지역 우선.
-        final regionScopedJobs =
-            jobProvider.selectedRegionId != null &&
-                jobProvider.selectedRegionId!.isNotEmpty
-            ? jobProvider.normalJobs
-                  .where((j) => j.regionId == jobProvider.selectedRegionId)
-                  .toList()
-            : jobProvider.normalJobs;
-        final filteredNormalJobs = JobFilterUtils.apply(
+        // 필터칩 아래 일반 공고 목록 — 필터칩 적용 후 선택된 지역 공고를
+        // 먼저 보여주고, 그다음 다른 지역 공고를 가까운 순서대로 이어붙인다.
+        final chipFilteredJobs = JobFilterUtils.apply(
           _filter,
-          regionScopedJobs,
+          jobProvider.normalJobs,
         );
+        final selectedRegionId = jobProvider.selectedRegionId;
+        final List<Job> filteredNormalJobs;
+        if (selectedRegionId != null && selectedRegionId.isNotEmpty) {
+          final sameRegion = chipFilteredJobs
+              .where((j) => j.regionId == selectedRegionId)
+              .toList();
+          final otherRegions = chipFilteredJobs
+              .where((j) => j.regionId != selectedRegionId)
+              .toList();
+          final otherRegionsByDistance = RegionHelper.sortByProximity(
+            selectedRegionId,
+            otherRegions,
+            (job) => job.regionId,
+          );
+          filteredNormalJobs = [...sameRegion, ...otherRegionsByDistance];
+        } else {
+          filteredNormalJobs = chipFilteredJobs;
+        }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
