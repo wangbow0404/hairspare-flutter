@@ -12,6 +12,7 @@ import 'providers/energy_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/chat_provider.dart';
 import 'providers/point_provider.dart';
+import 'providers/cart_provider.dart';
 import 'package:go_router/go_router.dart';
 
 import 'config/business_config.dart';
@@ -54,7 +55,7 @@ void main() async {
       return true;
     }());
   }
-  
+
   // API 클라이언트 초기화를 가장 먼저 (Dio _dio 초기화 필요)
   await ApiClient().init(
     onSessionExpiredMessage: (message) {
@@ -91,6 +92,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider.value(value: sl<NotificationProvider>()),
         ChangeNotifierProvider.value(value: sl<ChatProvider>()),
         ChangeNotifierProvider.value(value: sl<PointProvider>()),
+        ChangeNotifierProvider.value(value: sl<CartProvider>()),
       ],
       child: MaterialApp.router(
         title: 'HairSpare',
@@ -102,10 +104,7 @@ class MyApp extends StatelessWidget {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        supportedLocales: const [
-          Locale('ko', 'KR'),
-          Locale('en', 'US'),
-        ],
+        supportedLocales: const [Locale('ko', 'KR'), Locale('en', 'US')],
         locale: const Locale('ko', 'KR'),
         theme: AppTheme.lightTheme,
       ),

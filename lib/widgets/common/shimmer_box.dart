@@ -231,6 +231,40 @@ class PhotoCardListSkeleton extends StatelessWidget {
   }
 }
 
+/// 2열 상품 그리드 로딩 스켈레톤 — 스토어 등 정사각 썸네일+텍스트 카드 목록용.
+class ProductGridSkeleton extends StatelessWidget {
+  const ProductGridSkeleton({super.key, this.itemCount = 6});
+
+  final int itemCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: itemCount,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 12,
+        childAspectRatio: 0.68,
+      ),
+      itemBuilder: (context, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const AspectRatio(
+            aspectRatio: 1,
+            child: ShimmerBox(borderRadius: 14),
+          ),
+          const SizedBox(height: 10),
+          const ShimmerBox(height: 13),
+          const SizedBox(height: 6),
+          ShimmerBox(width: MediaQuery.sizeOf(context).width * 0.2, height: 13),
+        ],
+      ),
+    );
+  }
+}
+
 /// 공고 상세 로딩 스켈레톤 — 히어로 이미지 + 제목 + 정보카드 모양.
 class JobDetailSkeleton extends StatelessWidget {
   const JobDetailSkeleton({super.key});

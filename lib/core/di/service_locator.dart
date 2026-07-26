@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../providers/cart_provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../providers/energy_provider.dart';
 import '../../providers/favorite_provider.dart';
@@ -37,6 +38,7 @@ import '../../services/schedule_service.dart';
 import '../../services/search_service.dart';
 import '../../services/space_rental_service.dart';
 import '../../services/spare_service.dart';
+import '../../services/store_service.dart';
 import '../../services/spare_designer_profile_service.dart';
 import '../../services/subscription_service.dart';
 import '../../services/verification_service.dart';
@@ -77,13 +79,20 @@ void configureDependencies() {
   sl.registerLazySingleton<ApplicationService>(() => ApplicationService());
   sl.registerLazySingleton<ChallengeService>(() => ChallengeService());
   sl.registerLazySingleton<PaymentService>(() => PaymentService());
-  sl.registerLazySingleton<PaymentRequestService>(() => PaymentRequestService());
-  sl.registerLazySingleton<ModelSelfProfileService>(() => ModelSelfProfileService());
-  sl.registerLazySingleton<ModelApplicationService>(() => ModelApplicationService());
+  sl.registerLazySingleton<PaymentRequestService>(
+    () => PaymentRequestService(),
+  );
+  sl.registerLazySingleton<ModelSelfProfileService>(
+    () => ModelSelfProfileService(),
+  );
+  sl.registerLazySingleton<ModelApplicationService>(
+    () => ModelApplicationService(),
+  );
   sl.registerLazySingleton<PortfolioService>(() => PortfolioService());
   sl.registerLazySingleton<ReviewService>(() => ReviewService());
   sl.registerLazySingleton<SearchService>(() => SearchService());
   sl.registerLazySingleton<SpaceRentalService>(() => SpaceRentalService());
+  sl.registerLazySingleton<StoreService>(() => StoreService());
   sl.registerLazySingleton<SpareService>(() => SpareService());
   sl.registerLazySingleton<SpareDesignerProfileService>(
     () => SpareDesignerProfileService(),
@@ -95,21 +104,25 @@ void configureDependencies() {
 
   sl.registerLazySingleton<ImagePicker>(() => ImagePicker());
 
-  sl.registerLazySingleton<AuthProvider>(
-      () => AuthProvider(sl<AuthService>()));
+  sl.registerLazySingleton<AuthProvider>(() => AuthProvider(sl<AuthService>()));
   sl.registerLazySingleton<JobProvider>(() => JobProvider(sl<JobService>()));
   sl.registerLazySingleton<FavoriteProvider>(
-      () => FavoriteProvider(sl<FavoriteService>()));
+    () => FavoriteProvider(sl<FavoriteService>()),
+  );
   sl.registerLazySingleton<ScheduleProvider>(
-      () => ScheduleProvider(sl<ScheduleService>()));
+    () => ScheduleProvider(sl<ScheduleService>()),
+  );
   sl.registerLazySingleton<EnergyProvider>(
-      () => EnergyProvider(sl<EnergyService>()));
+    () => EnergyProvider(sl<EnergyService>()),
+  );
   sl.registerLazySingleton<NotificationProvider>(
-      () => NotificationProvider(sl<NotificationService>()));
-  sl.registerLazySingleton<ChatProvider>(
-      () => ChatProvider(sl<ChatService>()));
+    () => NotificationProvider(sl<NotificationService>()),
+  );
+  sl.registerLazySingleton<ChatProvider>(() => ChatProvider(sl<ChatService>()));
   sl.registerLazySingleton<PointProvider>(
-      () => PointProvider(sl<PointService>()));
+    () => PointProvider(sl<PointService>()),
+  );
+  sl.registerLazySingleton<CartProvider>(() => CartProvider());
 }
 
 /// [MaterialApp.router]에 넘기는 인스턴스와 동일한 [GoRouter] (앱 시작 시 한 번 등록).
