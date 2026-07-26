@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/router/app_routes.dart';
 import '../../models/job.dart';
+import '../../providers/favorite_provider.dart';
+import '../../providers/job_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/hairspare_colors.dart';
 import '../../utils/job_filter_utils.dart';
@@ -12,6 +16,7 @@ import '../../utils/schedule_work_session.dart';
 import '../../view_models/job_detail_view_model.dart';
 import '../common/app_network_image.dart';
 import '../common/job_thumbnail.dart';
+import '../stitch/stitch_compact_job_card.dart';
 import 'job_detail_formatters.dart';
 import 'job_detail_header.dart';
 import 'job_detail_hero_favorite_button.dart';
@@ -82,11 +87,14 @@ class JobDetailScrollBody extends StatelessWidget {
                   _buildUrgentCountdown(context),
                 if (!forShopOwner && vm.isProposalMode)
                   _buildProposalNotice(context, vm),
+                _buildShopCard(context),
                 _buildInfoTable(context),
                 if (job.description != null &&
                     job.description!.trim().isNotEmpty)
                   _buildDescriptionSection(context),
                 if (!forShopOwner) _buildDepositNotice(context),
+                if (!forShopOwner) _buildOtherShopJobsSection(context),
+                if (!forShopOwner) _buildSimilarJobsSection(context),
                 _buildLocationSection(context),
                 if (!forShopOwner) ...[
                   const SizedBox(height: AppTheme.spacing2),
@@ -193,7 +201,7 @@ class JobDetailScrollBody extends StatelessWidget {
     );
   }
 
-  /// 제목(공고 제목) + 샵명·지역 + 초보가능/당일정산 태그.
+  /// 제목(공고 제목) + 초보가능/당일정산 태그. 매장 정보는 [_buildShopCard]로 분리.
   Widget _buildTitleSection(BuildContext context) {
     final regionName = jobDetailRegionName(job.regionId);
     final shopLine = regionName.isNotEmpty
@@ -219,28 +227,6 @@ class JobDetailScrollBody extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: HairSpareColors.textPrimary,
             ),
-          ),
-          const SizedBox(height: AppTheme.spacing1),
-          Row(
-            children: [
-              const Icon(
-                Icons.storefront_outlined,
-                size: 15,
-                color: HairSpareColors.textSecondary,
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  shopLine,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: HairSpareColors.textSecondary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
           ),
           const SizedBox(height: AppTheme.spacing2),
           _buildMetaRow(context),
@@ -330,19 +316,173 @@ class JobDetailScrollBody extends StatelessWidget {
             ),
             const SizedBox(width: 3),
             Text('찜 ${job.favoriteCount}', style: metaStyle),
-            if (job.shopCompletedCount > 0) ...[
-              const SizedBox(width: AppTheme.spacing3),
-              const Icon(
-                Icons.verified_outlined,
-                size: 14,
-                color: HairSpareColors.textSecondary,
-              ),
-              const SizedBox(width: 3),
-              Text('매장 완료 ${job.shopCompletedCount}건', style: metaStyle),
-            ],
           ],
         ),
       ],
+    );
+  }
+
+  /// 매장 정보 카드 — 아바타·지역·완료건수·이 매장 다른 공고 보기.
+  Widget _buildShopCard(BuildContext context) {
+    final regionName = jobDetailRegionName(job.regionId);
+
+    return _sectionCard(
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: HairSpareColors.brandPrimarySoft,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.storefront_outlined,
+              size: 24,
+              color: HairSpareColors.brandPrimary,
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing3),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  job.shopName,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: HairSpareColors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  job.shopCompletedCount > 0
+                      ? '$regionName · 완료 ${job.shopCompletedCount}건'
+                      : regionName,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: HairSpareColors.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 가로 스크롤 공고 추천 섹션 공통 틀 (매장 다른 공고 / 비슷한 공고).
+  Widget _buildJobCarouselSection(
+    BuildContext context, {
+    required String title,
+    required List<Job> jobs,
+    required Map<String, bool> favoriteMap,
+    required void Function(String jobId, bool isFavorite) onFavoriteToggle,
+  }) {
+    if (jobs.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppTheme.spacing2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: HairSpareColors.textPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing3),
+          SizedBox(
+            height: 210,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing4,
+              ),
+              itemCount: jobs.length,
+              separatorBuilder: (_, __) =>
+                  const SizedBox(width: AppTheme.spacing3),
+              itemBuilder: (context, i) {
+                final other = jobs[i];
+                return StitchCompactJobCard(
+                  job: other,
+                  isFavorite: favoriteMap[other.id] ?? false,
+                  showThumbnail: true,
+                  width: 180,
+                  badgeLabel: other.isUrgent ? '급구' : '추천',
+                  badgeColor: other.isUrgent
+                      ? HairSpareColors.statusUrgent
+                      : HairSpareColors.brandPrimary,
+                  onTap: () =>
+                      context.push(AppRoutes.spareHomeJobDetail(other.id)),
+                  onFavoriteToggle: () => onFavoriteToggle(
+                    other.id,
+                    favoriteMap[other.id] ?? false,
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 같은 매장의 다른 공고 (최대 5개, 최신순).
+  Widget _buildOtherShopJobsSection(BuildContext context) {
+    final jobProvider = context.watch<JobProvider>();
+    final favProvider = context.watch<FavoriteProvider>();
+    final others =
+        jobProvider.jobs
+            .where((j) => j.id != job.id && j.shopName == job.shopName)
+            .toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final favoriteMap = {for (final id in favProvider.favoriteJobIds) id: true};
+
+    return _buildJobCarouselSection(
+      context,
+      title: '${job.shopName}의 다른 공고',
+      jobs: others.take(5).toList(),
+      favoriteMap: favoriteMap,
+      onFavoriteToggle: (id, isFav) => favProvider.toggleFavorite(id),
+    );
+  }
+
+  /// 비슷한 공고 추천 — 같은 지역 또는 같은 역할, 이미 위에서 보여준 매장은 제외.
+  Widget _buildSimilarJobsSection(BuildContext context) {
+    final jobProvider = context.watch<JobProvider>();
+    final favProvider = context.watch<FavoriteProvider>();
+    final similar =
+        jobProvider.jobs
+            .where(
+              (j) =>
+                  j.id != job.id &&
+                  j.shopName != job.shopName &&
+                  (j.regionId == job.regionId || j.role == job.role),
+            )
+            .toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final favoriteMap = {for (final id in favProvider.favoriteJobIds) id: true};
+
+    return _buildJobCarouselSection(
+      context,
+      title: '비슷한 공고',
+      jobs: similar.take(5).toList(),
+      favoriteMap: favoriteMap,
+      onFavoriteToggle: (id, isFav) => favProvider.toggleFavorite(id),
     );
   }
 
