@@ -25,6 +25,7 @@ abstract final class AppRoutes {
       '/spare/home/store_product/$productId';
   static const spareHomeStoreCart = '/spare/home/store_cart';
   static const spareHomeStoreWishlist = '/spare/home/store_wishlist';
+  static const spareHomeStoreMy = '/spare/home/store_my';
   static const spareHomeModelMatch = '/spare/home/model_match';
   static const spareHomeWorkCheck = '/spare/home/work_check';
   static const spareHomeRegionSelect = '/spare/home/region_select';

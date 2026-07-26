@@ -210,9 +210,10 @@ class StoreService {
     ),
   ];
 
-  /// 상품 목록 조회 — [category]가 null이면 전체, [searchQuery]로 이름·브랜드 검색.
+  /// 상품 목록 조회 — [category]·[sort]·[searchQuery] 필터.
   Future<List<StoreProduct>> getProducts({
     StoreProductCategory? category,
+    StoreSortFilter sort = StoreSortFilter.all,
     String? searchQuery,
   }) async {
     await Future.delayed(const Duration(milliseconds: 300));
@@ -231,7 +232,48 @@ class StoreService {
           )
           .toList();
     }
+
+    switch (sort) {
+      case StoreSortFilter.all:
+        break;
+      case StoreSortFilter.recommended:
+        results = results
+            .where((p) => p.isBestSeller || p.reviewCount > 0)
+            .toList();
+      case StoreSortFilter.bestSeller:
+        results = results.where((p) => p.isBestSeller).toList();
+      case StoreSortFilter.onSale:
+        results = results.where((p) => p.hasDiscount).toList();
+      case StoreSortFilter.newest:
+        results = results
+            .where((p) => p.tags.contains('신상품'))
+            .toList();
+    }
+
     return results;
+  }
+
+  /// 쇼핑 탭 상단 프로모 배너 (mock).
+  Future<List<StorePromoBanner>> getPromoBanners() async {
+    await Future.delayed(const Duration(milliseconds: 120));
+    return const [
+      StorePromoBanner(
+        id: 'banner-deal-1',
+        title: '프로 가위 특가 ~40%',
+        subtitle: '베스트셀러 + 포인트 5% 적립',
+        ctaLabel: '쿠폰 받기',
+        imageUrl:
+            'https://picsum.photos/seed/hairspare-store-banner-1/800/400',
+      ),
+      StorePromoBanner(
+        id: 'banner-deal-2',
+        title: '드라이기·고데기 여름 세일',
+        subtitle: '살롱 필수템 한정 할인',
+        ctaLabel: '특가 상품 보기',
+        imageUrl:
+            'https://picsum.photos/seed/hairspare-store-banner-2/800/400',
+      ),
+    ];
   }
 
   /// 상품 상세 조회.

@@ -3,8 +3,9 @@ import 'package:intl/intl.dart';
 
 import '../../models/store_product.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 
-/// 스토어 상품 카드 — 2열 그리드용, 오늘의집 스타일(썸네일+브랜드+이름+가격).
+/// HairSpare 스토어 상품 카드 — 2열 그리드(썸네일·브랜드·이름·가격).
 class StoreProductCard extends StatelessWidget {
   const StoreProductCard({
     super.key,
@@ -30,6 +31,7 @@ class StoreProductCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             AspectRatio(
               aspectRatio: 1,
@@ -67,7 +69,10 @@ class StoreProductCard extends StatelessWidget {
                       Positioned(
                         top: 8,
                         left: 8,
-                        child: _Badge(label: 'BEST', color: AppTheme.orange500),
+                        child: _Badge(
+                          label: 'BEST',
+                          color: HairSpareColors.brandPrimary,
+                        ),
                       ),
                     if (onWishlistToggle != null)
                       Positioned(
@@ -82,9 +87,11 @@ class StoreProductCard extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               product.brand,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -100,60 +107,59 @@ class StoreProductCard extends StatelessWidget {
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: AppTheme.textPrimary,
-                height: 1.3,
+                height: 1.25,
               ),
             ),
             if (product.reviewCount > 0) ...[
-              const SizedBox(height: 3),
+              const SizedBox(height: 2),
               Row(
                 children: [
-                  const Icon(Icons.star, size: 13, color: AppTheme.yellow500),
-                  const SizedBox(width: 3),
-                  Text(
-                    '${product.averageRating.toStringAsFixed(1)} (${product.reviewCount})',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textSecondary,
+                  const Icon(Icons.star, size: 12, color: AppTheme.yellow500),
+                  const SizedBox(width: 2),
+                  Flexible(
+                    child: Text(
+                      '${product.averageRating.toStringAsFixed(1)} (${product.reviewCount})',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                   ),
                 ],
               ),
             ],
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 if (product.hasDiscount) ...[
                   Text(
                     '${product.discountPercent}%',
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w800,
-                      color: AppTheme.orange600,
+                      color: HairSpareColors.brandPrimary,
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 3),
                 ],
-                Text(
-                  '${_priceFmt.format(product.price)}원',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary,
+                Flexible(
+                  child: Text(
+                    '${_priceFmt.format(product.price)}원',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.textPrimary,
+                    ),
                   ),
                 ),
               ],
             ),
-            if (product.hasDiscount)
-              Text(
-                '${_priceFmt.format(product.originalPrice)}원',
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: AppTheme.textTertiary,
-                  decoration: TextDecoration.lineThrough,
-                ),
-              ),
           ],
         ),
       ),

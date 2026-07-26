@@ -11,9 +11,11 @@ import '../../providers/cart_provider.dart';
 import '../../providers/store_wishlist_provider.dart';
 import '../../services/store_service.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/shell_navigation.dart';
 import '../../widgets/common/shimmer_box.dart';
+import '../../widgets/design_system/hs_primary_button.dart';
 import '../../widgets/spare_app_bar.dart';
 import 'education_screen.dart' show EducationReview;
 

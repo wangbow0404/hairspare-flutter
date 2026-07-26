@@ -11,6 +11,35 @@ enum StoreProductCategory {
   final String label;
 }
 
+/// 스토어 목록 정렬·필터.
+enum StoreSortFilter {
+  all('전체'),
+  recommended('프로추천'),
+  bestSeller('MD픽'),
+  onSale('특가'),
+  newest('신상');
+
+  const StoreSortFilter(this.label);
+  final String label;
+}
+
+/// 스토어 프로모 배너.
+class StorePromoBanner {
+  const StorePromoBanner({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+    required this.ctaLabel,
+    this.imageUrl,
+  });
+
+  final String id;
+  final String title;
+  final String subtitle;
+  final String ctaLabel;
+  final String? imageUrl;
+}
+
 /// 스토어 상품 리뷰 1건.
 class StoreProductReview {
   const StoreProductReview({
