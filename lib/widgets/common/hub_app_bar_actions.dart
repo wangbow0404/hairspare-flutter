@@ -16,7 +16,8 @@ List<Widget> buildHubAppBarActions(BuildContext context) {
   return [
     IconButton(
       tooltip: '검색',
-      icon: IconMapper.icon('search', size: 24, color: AppTheme.textSecondary) ??
+      icon:
+          IconMapper.icon('search', size: 24, color: AppTheme.textSecondary) ??
           const Icon(Icons.search, size: 24, color: AppTheme.textSecondary),
       onPressed: () => AppBarNavigation.pushSearch(context),
     ),
@@ -29,8 +30,17 @@ List<Widget> buildHubAppBarActions(BuildContext context) {
           children: [
             IconButton(
               tooltip: '메시지',
-              icon: IconMapper.icon('messagecircle', size: 24, color: AppTheme.textSecondary) ??
-                  const Icon(Icons.message_outlined, size: 24, color: AppTheme.textSecondary),
+              icon:
+                  IconMapper.icon(
+                    'messagecircle',
+                    size: 24,
+                    color: AppTheme.textSecondary,
+                  ) ??
+                  const Icon(
+                    Icons.chat_bubble_outline,
+                    size: 24,
+                    color: AppTheme.textSecondary,
+                  ),
               onPressed: () => AppBarNavigation.pushMessages(context),
             ),
             if (unreadCount > 0)
@@ -44,7 +54,10 @@ List<Widget> buildHubAppBarActions(BuildContext context) {
                     decoration: BoxDecoration(
                       color: AppTheme.urgentRed,
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppTheme.backgroundWhite, width: 1.5),
+                      border: Border.all(
+                        color: AppTheme.backgroundWhite,
+                        width: 1.5,
+                      ),
                     ),
                   ),
                 ),

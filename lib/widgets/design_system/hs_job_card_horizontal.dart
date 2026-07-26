@@ -85,9 +85,7 @@ class HsJobCardHorizontal extends StatelessWidget {
                     padding: EdgeInsets.all(
                       showThumbnail ? AppTheme.spacing4 : AppTheme.spacing3,
                     ),
-                    child: showThumbnail
-                        ? _buildBody()
-                        : _buildBodyWithStack(),
+                    child: showThumbnail ? _buildBody() : _buildBodyWithStack(),
                   ),
                 ),
               ],
@@ -144,7 +142,7 @@ class HsJobCardHorizontal extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _Badge(label: badgeLabel, color: badgeColor),
+            _Badge(label: badgeLabel, color: badgeColor, solid: true),
             const SizedBox(height: AppTheme.spacing2),
             ..._buildInfo(compact: true),
           ],
@@ -161,10 +159,8 @@ class HsJobCardHorizontal extends StatelessWidget {
   }
 
   List<Widget> _buildInfo({required bool compact}) {
-    final gapBeforeDivider =
-        compact ? AppTheme.spacing2 : AppTheme.spacing4;
-    final gapAfterDivider =
-        compact ? AppTheme.spacing2 : AppTheme.spacing3;
+    final gapBeforeDivider = compact ? AppTheme.spacing2 : AppTheme.spacing4;
+    final gapAfterDivider = compact ? AppTheme.spacing2 : AppTheme.spacing3;
 
     return [
       Text(
@@ -216,11 +212,7 @@ class HsJobCardHorizontal extends StatelessWidget {
 }
 
 class _Badge extends StatelessWidget {
-  const _Badge({
-    required this.label,
-    required this.color,
-    this.solid = false,
-  });
+  const _Badge({required this.label, required this.color, this.solid = false});
 
   final String label;
   final Color color;
@@ -262,7 +254,8 @@ class _FavoriteButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icon = IconMapper.icon(
+    final icon =
+        IconMapper.icon(
           'heart',
           size: 20,
           color: isFavorite

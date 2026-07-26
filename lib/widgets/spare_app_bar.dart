@@ -14,18 +14,25 @@ import '../widgets/notification_bell.dart';
 class SpareAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// 검색 기능 표시 여부 (기본 true)
   final bool showSearch;
+
   /// 상세페이지 등에서 좌측에 뒤로가기 버튼 표시 (기본 false)
   final bool showBackButton;
+
   /// [showBackButton]일 때 로고 대신 표시할 제목
   final String? title;
+
   /// 제목 아래 보조 문구 (공고명 등)
   final String? subtitle;
+
   /// 제목 좌측에 표시할 프로필 사진 (채팅방 상대방 등). null이면 기본 아이콘.
   final String? avatarUrl;
+
   /// 검색·메시지·알림 아이콘 (채팅방 등에서는 false)
   final bool showTrailingIcons;
+
   /// 우측에 표시할 커스텀 액션 위젯 (예: 공유 버튼)
   final List<Widget>? actions;
+
   /// 뒤로가기 탭 시 (null이면 [Navigator.maybePop]).
   final VoidCallback? onBackPressed;
 
@@ -52,10 +59,7 @@ class SpareAppBar extends StatelessWidget implements PreferredSizeWidget {
       decoration: const BoxDecoration(
         color: AppTheme.backgroundWhite,
         border: Border(
-          bottom: BorderSide(
-            color: AppTheme.borderGray,
-            width: 1,
-          ),
+          bottom: BorderSide(color: AppTheme.borderGray, width: 1),
         ),
       ),
       padding: AppTheme.spacingSymmetric(
@@ -71,11 +75,13 @@ class SpareAppBar extends StatelessWidget implements PreferredSizeWidget {
               Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: onBackPressed ?? () => Navigator.of(context).maybePop(),
+                  onTap:
+                      onBackPressed ?? () => Navigator.of(context).maybePop(),
                   borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                   child: Container(
                     padding: const EdgeInsets.all(AppTheme.spacing2),
-                    child: IconMapper.icon(
+                    child:
+                        IconMapper.icon(
                           'chevronleft',
                           size: 24,
                           color: AppTheme.textSecondary,
@@ -122,9 +128,7 @@ class SpareAppBar extends StatelessWidget implements PreferredSizeWidget {
                                 title!,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
+                                style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(
                                       fontSize: 17,
                                       fontWeight: FontWeight.w600,
@@ -136,9 +140,7 @@ class SpareAppBar extends StatelessWidget implements PreferredSizeWidget {
                                   subtitle!,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
+                                  style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         fontSize: 12,
                                         color: AppTheme.textSecondary,
@@ -183,8 +185,17 @@ class SpareAppBar extends StatelessWidget implements PreferredSizeWidget {
                   borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                   child: Container(
                     padding: const EdgeInsets.all(AppTheme.spacing2),
-                    child: IconMapper.icon('search', size: 24, color: AppTheme.textSecondary) ??
-                        const Icon(Icons.search, size: 24, color: AppTheme.textSecondary),
+                    child:
+                        IconMapper.icon(
+                          'search',
+                          size: 24,
+                          color: AppTheme.textSecondary,
+                        ) ??
+                        const Icon(
+                          Icons.search,
+                          size: 24,
+                          color: AppTheme.textSecondary,
+                        ),
                   ),
                 ),
               ),
@@ -192,52 +203,64 @@ class SpareAppBar extends StatelessWidget implements PreferredSizeWidget {
             ],
             if (showTrailingIcons)
               Consumer<ChatProvider>(
-              builder: (context, chatProvider, _) {
-                final unreadCount = chatProvider.totalUnreadCount;
-                return Stack(
-                  children: [
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => AppBarNavigation.pushMessages(context),
-                        borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          alignment: Alignment.center,
-                          child: IconMapper.icon('messagecircle', size: 24, color: AppTheme.textSecondary) ??
-                              const Icon(Icons.message_outlined, size: 24, color: AppTheme.textSecondary),
-                        ),
-                      ),
-                    ),
-                    if (unreadCount > 0)
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: IgnorePointer(
+                builder: (context, chatProvider, _) {
+                  final unreadCount = chatProvider.totalUnreadCount;
+                  return Stack(
+                    children: [
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => AppBarNavigation.pushMessages(context),
+                          borderRadius: AppTheme.borderRadius(
+                            AppTheme.radiusFull,
+                          ),
                           child: Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              color: AppTheme.urgentRed,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
-                            ),
+                            width: 40,
+                            height: 40,
+                            alignment: Alignment.center,
+                            child:
+                                IconMapper.icon(
+                                  'messagecircle',
+                                  size: 24,
+                                  color: AppTheme.textSecondary,
+                                ) ??
+                                const Icon(
+                                  Icons.chat_bubble_outline,
+                                  size: 24,
+                                  color: AppTheme.textSecondary,
+                                ),
                           ),
                         ),
                       ),
-                  ],
-                );
-              },
-            ),
+                      if (unreadCount > 0)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: IgnorePointer(
+                            child: Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: AppTheme.urgentRed,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
             if (showTrailingIcons) ...[
               const SizedBox(width: AppTheme.spacing3),
               const SizedBox(
                 width: 40,
                 height: 40,
-                child: Center(
-                  child: NotificationBell(role: 'spare'),
-                ),
+                child: Center(child: NotificationBell(role: 'spare')),
               ),
             ],
           ],

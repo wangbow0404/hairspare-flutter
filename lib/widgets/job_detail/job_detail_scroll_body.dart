@@ -406,7 +406,7 @@ class JobDetailScrollBody extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spacing3),
           SizedBox(
-            height: 210,
+            height: 264,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(

@@ -25,12 +25,31 @@ import '../utils/app_exception.dart';
 import '../utils/energy_purchase_pricing.dart';
 import '../utils/schedule_space_rental.dart';
 import '../utils/job_work_date_utils.dart';
+import '../utils/job_availability_utils.dart';
 import '../models/region.dart';
 import 'mock_shop_data.dart';
 
 /// 스페어·미용실(공고 목록) Mock 데이터
 class MockSpareData {
-  static String _mockImage(String key) => 'mock://$key';
+  /// 목데이터용 실제 미용실 사진 (Unsplash, 무료 상업적 이용 가능).
+  /// 디자인 확인용 — 실제 서비스에는 매장이 업로드한 사진이 대신 들어간다.
+  static const List<String> _mockPhotoPool = [
+    'photo-1521590832167-7bcbfaa6381f',
+    'photo-1580618672591-eb180b1a973f',
+    'photo-1621645582931-d1d3e6564943',
+    'photo-1633681926022-84c23e8cb2d6',
+    'photo-1623171678074-1b04ff0e694f',
+    'photo-1781450090585-1a511b7066d9',
+    'photo-1554519934-e32b1629d9ee',
+    'photo-1560869713-7d0a29430803',
+    'photo-1562322140-8baeececf3df',
+    'photo-1595475884562-073c30d45670',
+  ];
+
+  static String _mockImage(String key) {
+    final id = _mockPhotoPool[key.hashCode.abs() % _mockPhotoPool.length];
+    return 'https://images.unsplash.com/$id?w=800&q=80&auto=format&fit=crop';
+  }
 
   static String _mockJobImage(String jobId) => _mockImage('job/$jobId');
   static String _ymd(DateTime d) =>
@@ -38,33 +57,35 @@ class MockSpareData {
 
   /// 겹침 모달 QA용 — [overlapDemoDateYmd] 10:00~18:00 확정 근무와 15:00~21:00 공고.
   static const String overlapDemoJobId = 'job-mock-overlap-demo';
-  static const String overlapDemoBlockerScheduleId = 'sched-mock-overlap-blocker';
+  static const String overlapDemoBlockerScheduleId =
+      'sched-mock-overlap-blocker';
 
   static String get overlapDemoDateYmd =>
       _ymd(DateTime.now().add(const Duration(days: 1)));
 
   static Map<String, dynamic> _overlapDemoJobJson(String dateYmd) => {
-        'id': overlapDemoJobId,
-        'images': [_mockJobImage(overlapDemoJobId)],
-        'title': '[겹침테스트] 저녁 스텝 모집',
-        'shopName': '홍대 트렌디 헤어',
-        'date': dateYmd,
-        'time': '15:00',
-        'endTime': '21:00',
-        'amount': 55000,
-        'energy': 3,
-        'requiredCount': 1,
-        'regionId': 'seoul-mapo',
-        'isUrgent': true,
-        'isPremium': false,
-        'status': 'published',
-        'createdAt': DateTime.now().toIso8601String(),
-      };
+    'id': overlapDemoJobId,
+    'images': [_mockJobImage(overlapDemoJobId)],
+    'title': '[겹침테스트] 저녁 스텝 모집',
+    'shopName': '홍대 트렌디 헤어',
+    'date': dateYmd,
+    'time': '15:00',
+    'endTime': '21:00',
+    'amount': 55000,
+    'energy': 3,
+    'requiredCount': 1,
+    'regionId': 'seoul-mapo',
+    'isUrgent': true,
+    'isPremium': false,
+    'status': 'published',
+    'createdAt': DateTime.now().toIso8601String(),
+  };
 
   static Job _overlapDemoJob() =>
       Job.fromJson(_overlapDemoJobJson(overlapDemoDateYmd));
 
-  static Map<String, dynamic> _overlapDemoBlockerScheduleJson(String dateYmd) => {
+  static Map<String, dynamic> _overlapDemoBlockerScheduleJson(String dateYmd) =>
+      {
         'id': overlapDemoBlockerScheduleId,
         'jobId': 'job-mock-overlap-blocker-ref',
         'spareId': 'spare-mock-1',
@@ -310,18 +331,18 @@ class MockSpareData {
 
   static Future<void> removePublicJob(String jobId) async {
     _jobsJson.removeWhere((j) => j['id'] == jobId);
+    _favoriteJobIds.remove(jobId);
   }
 
   static Future<List<Job>> getJobs({String? searchQuery}) async {
     await Future.delayed(const Duration(milliseconds: 300));
     _refreshSeedJobWorkDates();
-    var jobs = [
-      _overlapDemoJob(),
-      ..._jobsJson.map((j) => Job.fromJson(j)),
-    ].where((j) {
-      if (j.isHidden || j.status != 'published') return false;
-      return !JobWorkDateUtils.isWorkDatePast(j.date);
-    }).toList();
+    var jobs = [_overlapDemoJob(), ..._jobsJson.map((j) => Job.fromJson(j))]
+        .where((j) {
+          if (j.isHidden || j.status != 'published') return false;
+          return !JobWorkDateUtils.isWorkDatePast(j.date);
+        })
+        .toList();
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
       final q = searchQuery.trim().toLowerCase();
       jobs = jobs.where((j) {
@@ -350,9 +371,7 @@ class MockSpareData {
   static Map<String, dynamic>? jobJsonSnapshot(String jobId) {
     _refreshSeedJobWorkDates();
     if (jobId == overlapDemoJobId) {
-      return Map<String, dynamic>.from(
-        _overlapDemoJobJson(overlapDemoDateYmd),
-      );
+      return Map<String, dynamic>.from(_overlapDemoJobJson(overlapDemoDateYmd));
     }
     for (final raw in _jobsJson) {
       if (raw['id'] == jobId) {
@@ -366,14 +385,26 @@ class MockSpareData {
     await Future.delayed(const Duration(milliseconds: 200));
     _refreshSeedJobWorkDates();
     final jobs = <Job>[];
+    final staleIds = <String>{};
     for (final id in _favoriteJobIds) {
+      var found = false;
       for (final json in _jobsJson) {
         if (json['id'] == id) {
-          jobs.add(Job.fromJson(Map<String, dynamic>.from(json)));
+          final job = Job.fromJson(Map<String, dynamic>.from(json));
+          if (JobAvailabilityUtils.isListable(job)) {
+            jobs.add(job);
+          } else {
+            staleIds.add(id);
+          }
+          found = true;
           break;
         }
       }
+      if (!found) {
+        staleIds.add(id);
+      }
     }
+    _favoriteJobIds.removeAll(staleIds);
     return jobs;
   }
 
@@ -406,17 +437,14 @@ class MockSpareData {
   static final Set<String> _readNotificationIds = {};
 
   static List<Schedule> _applyScheduleMutations(List<Schedule> list) {
-    return list
-        .where((s) => !_rejectedScheduleIds.contains(s.id))
-        .map((s) {
-          final override = _scheduleStatusOverrides[s.id];
-          if (override == null) return s;
-          final json = s.toJson();
-          json['status'] = override;
-          json['updatedAt'] = DateTime.now().toIso8601String();
-          return Schedule.fromJson(json);
-        })
-        .toList();
+    return list.where((s) => !_rejectedScheduleIds.contains(s.id)).map((s) {
+      final override = _scheduleStatusOverrides[s.id];
+      if (override == null) return s;
+      final json = s.toJson();
+      json['status'] = override;
+      json['updatedAt'] = DateTime.now().toIso8601String();
+      return Schedule.fromJson(json);
+    }).toList();
   }
 
   static Future<Schedule> acceptWorkProposal(String scheduleId) async {
@@ -514,9 +542,9 @@ class MockSpareData {
         : '';
     final content = actor == CancellationActor.shop
         ? '[시스템] $shop의 ${schedule.date} ${schedule.startTime} 근무가 '
-            '매장 사정으로 취소되었습니다.$reasonSuffix'
+              '매장 사정으로 취소되었습니다.$reasonSuffix'
         : '[시스템] ${schedule.date} ${schedule.startTime} $shop 근무가 '
-            '스페어 사정으로 취소되었습니다.$reasonSuffix';
+              '스페어 사정으로 취소되었습니다.$reasonSuffix';
 
     await sendMessage(
       chatId,
@@ -591,9 +619,7 @@ class MockSpareData {
     String shopId = 'mock-shop-1',
   }) {
     if (isContactBannedForJob(jobId: jobId, spareId: spareId)) {
-      throw ValidationException(
-        '연락처 위반으로 이 공고 지원이 취소되어 연락할 수 없습니다.',
-      );
+      throw ValidationException('연락처 위반으로 이 공고 지원이 취소되어 연락할 수 없습니다.');
     }
 
     final existing = findChatIdForJob(jobId);
@@ -601,8 +627,7 @@ class MockSpareData {
 
     final chatId = 'chat-job-$jobId';
     final now = DateTime.now();
-    const welcome =
-        '지원이 접수되었습니다. 근무 관련 문의는 이 채팅으로 남겨 주세요.';
+    const welcome = '지원이 접수되었습니다. 근무 관련 문의는 이 채팅으로 남겨 주세요.';
     _chatsJson.insert(0, {
       'id': chatId,
       'shopId': shopId,
@@ -611,10 +636,7 @@ class MockSpareData {
       'spareName': spareName,
       'jobId': jobId,
       'jobTitle': jobTitle,
-      'lastMessage': {
-        'content': welcome,
-        'createdAt': now.toIso8601String(),
-      },
+      'lastMessage': {'content': welcome, 'createdAt': now.toIso8601String()},
       'unreadCount': 0,
     });
     _chatMessages[chatId] = [
@@ -656,10 +678,7 @@ class MockSpareData {
       'spareName': spareName,
       'jobId': null,
       'jobTitle': '모델 매칭',
-      'lastMessage': {
-        'content': welcome,
-        'createdAt': now.toIso8601String(),
-      },
+      'lastMessage': {'content': welcome, 'createdAt': now.toIso8601String()},
       'unreadCount': 0,
     });
     _chatMessages[chatId] = [
@@ -741,8 +760,7 @@ class MockSpareData {
 
     final chatId = 'chat-space-${booking.id}';
     final now = DateTime.now();
-    const welcome =
-        '공간 예약이 확정되었습니다. 이용 시간과 준비물은 이 채팅으로 문의해 주세요.';
+    const welcome = '공간 예약이 확정되었습니다. 이용 시간과 준비물은 이 채팅으로 문의해 주세요.';
     _chatsJson.insert(0, {
       'id': chatId,
       'shopId': 'mock-shop-1',
@@ -751,10 +769,7 @@ class MockSpareData {
       'spareName': booking.spareName,
       'jobId': markerJobId,
       'jobTitle': '공간 대여',
-      'lastMessage': {
-        'content': welcome,
-        'createdAt': now.toIso8601String(),
-      },
+      'lastMessage': {'content': welcome, 'createdAt': now.toIso8601String()},
       'unreadCount': 0,
     });
     _chatMessages[chatId] = [
@@ -815,7 +830,8 @@ class MockSpareData {
       'shopId': 'mock-shop-1',
       'date': job.date,
       'startTime': job.time,
-      if (job.endTime != null && job.endTime!.isNotEmpty) 'endTime': job.endTime,
+      if (job.endTime != null && job.endTime!.isNotEmpty)
+        'endTime': job.endTime,
       'status': 'scheduled',
       'createdAt': now,
       'updatedAt': now,
@@ -915,9 +931,10 @@ class MockSpareData {
     final dynamicSchedules = _addedSchedulesJson
         .map((j) => Schedule.fromJson(Map<String, dynamic>.from(j)))
         .toList();
-    var list = _applyScheduleMutations([...base, ...dynamicSchedules])
-        .where((s) => s.status != 'cancelled')
-        .toList();
+    var list = _applyScheduleMutations([
+      ...base,
+      ...dynamicSchedules,
+    ]).where((s) => s.status != 'cancelled').toList();
 
     if (ownerId == 'model') {
       final modelJobs = [
@@ -1014,8 +1031,7 @@ class MockSpareData {
     } else if (ownerId == 'me') {
       list = list
           .where(
-            (s) =>
-                s.spareId == 'spare-mock-1' || s.spareId == 'mock-spare-1',
+            (s) => s.spareId == 'spare-mock-1' || s.spareId == 'mock-spare-1',
           )
           .toList();
     }
@@ -1147,9 +1163,7 @@ class MockSpareData {
     ];
     return all
         .where((n) => !_dismissedNotificationIds.contains(n.id))
-        .map(
-          (n) => n.copyWith(isRead: _notificationIsRead(n)),
-        )
+        .map((n) => n.copyWith(isRead: _notificationIsRead(n)))
         .toList();
   }
 
@@ -1264,16 +1278,8 @@ class MockSpareData {
   static void _ensureChatReadState() {
     if (_chatReadStateInitialized) return;
     _chatReadStateInitialized = true;
-    const unreadShopMessageIds = <String>{
-      'msg-1-3',
-      'msg-3-3',
-      'msg-5-3',
-    };
-    const unreadSpareMessageIds = <String>{
-      'msg-1-2',
-      'msg-3-2',
-      'msg-5-2',
-    };
+    const unreadShopMessageIds = <String>{'msg-1-3', 'msg-3-3', 'msg-5-3'};
+    const unreadSpareMessageIds = <String>{'msg-1-2', 'msg-3-2', 'msg-5-2'};
     for (final messages in _chatMessages.values) {
       for (final message in messages) {
         if (message['isRead'] != null) continue;
@@ -1295,9 +1301,7 @@ class MockSpareData {
     if (messages == null) return 0;
     final opponentRole = _opponentRole(viewerRole);
     return messages
-        .where(
-          (m) => m['senderRole'] == opponentRole && m['isRead'] != true,
-        )
+        .where((m) => m['senderRole'] == opponentRole && m['isRead'] != true)
         .length;
   }
 
@@ -1352,10 +1356,7 @@ class MockSpareData {
     String viewerRole = 'spare',
   }) async {
     if (viewerRole == 'model' || MockModelMessagingData.isModelChatId(chatId)) {
-      return MockModelMessagingData.markChatAsRead(
-        chatId,
-        viewerRole: 'model',
-      );
+      return MockModelMessagingData.markChatAsRead(chatId, viewerRole: 'model');
     }
     await Future.delayed(const Duration(milliseconds: 80));
     _ensureChatReadState();
@@ -1390,8 +1391,9 @@ class MockSpareData {
     await Future.delayed(const Duration(milliseconds: 150));
     final now = DateTime.now();
     final chatIndex = _chatsJson.indexWhere((c) => c['id'] == chatId);
-    final Map<String, dynamic>? chat =
-        chatIndex >= 0 ? _chatsJson[chatIndex] : null;
+    final Map<String, dynamic>? chat = chatIndex >= 0
+        ? _chatsJson[chatIndex]
+        : null;
 
     final String resolvedRole;
     if (senderRole != null) {
@@ -1537,19 +1539,16 @@ class MockSpareData {
     final amount =
         _lockedEnergyByJobSpare.remove(_jobSpareKey(jobId, spareId)) ?? 0;
     if (amount <= 0) return 0;
-    _energyTransactions.insert(
-      0,
-      {
-        'id': 'tx-forfeit-${DateTime.now().millisecondsSinceEpoch}',
-        'type': 'forfeit',
-        'amount': -amount,
-        'description': jobTitle != null && jobTitle.isNotEmpty
-            ? '연락처 위반 · $jobTitle 지원 취소 (에너지 몰수)'
-            : '연락처 위반 · 지원 취소 (에너지 몰수)',
-        'referenceId': jobId,
-        'createdAt': DateTime.now().toIso8601String(),
-      },
-    );
+    _energyTransactions.insert(0, {
+      'id': 'tx-forfeit-${DateTime.now().millisecondsSinceEpoch}',
+      'type': 'forfeit',
+      'amount': -amount,
+      'description': jobTitle != null && jobTitle.isNotEmpty
+          ? '연락처 위반 · $jobTitle 지원 취소 (에너지 몰수)'
+          : '연락처 위반 · 지원 취소 (에너지 몰수)',
+      'referenceId': jobId,
+      'createdAt': DateTime.now().toIso8601String(),
+    });
     return amount;
   }
 
@@ -1601,10 +1600,7 @@ class MockSpareData {
       if (energyForfeited <= 0 && locked > 0) {
         energyForfeited = locked;
       }
-      _markContactBannedForJob(
-        jobId: jobId,
-        spareId: spareId ?? senderId,
-      );
+      _markContactBannedForJob(jobId: jobId, spareId: spareId ?? senderId);
       applicationCancelled = true;
     }
 
@@ -1649,7 +1645,9 @@ class MockSpareData {
       'type': 'purchase',
       'amount': 3,
       'description': '에너지 3개 충전',
-      'createdAt': DateTime.now().subtract(const Duration(days: 2)).toIso8601String(),
+      'createdAt': DateTime.now()
+          .subtract(const Duration(days: 2))
+          .toIso8601String(),
     },
   ];
 
@@ -1660,20 +1658,19 @@ class MockSpareData {
   }) async {
     await Future.delayed(const Duration(milliseconds: 120));
     if (mockEnergyBalance < amount) {
-      throw ValidationException('에너지가 부족합니다. (필요: $amount개, 보유: $mockEnergyBalance개)');
+      throw ValidationException(
+        '에너지가 부족합니다. (필요: $amount개, 보유: $mockEnergyBalance개)',
+      );
     }
     mockEnergyBalance -= amount;
-    _energyTransactions.insert(
-      0,
-      {
-        'id': 'tx-spend-${DateTime.now().millisecondsSinceEpoch}',
-        'type': 'spend',
-        'amount': -amount,
-        'description': description,
-        'referenceId': referenceId,
-        'createdAt': DateTime.now().toIso8601String(),
-      },
-    );
+    _energyTransactions.insert(0, {
+      'id': 'tx-spend-${DateTime.now().millisecondsSinceEpoch}',
+      'type': 'spend',
+      'amount': -amount,
+      'description': description,
+      'referenceId': referenceId,
+      'createdAt': DateTime.now().toIso8601String(),
+    });
   }
 
   static final List<EducationEnrollment> _educationEnrollments = [];
@@ -2023,9 +2020,7 @@ class MockSpareData {
     await Future.delayed(const Duration(milliseconds: 200));
     final profile = await getChallengeProfile(creatorId);
     final videos = await getCreatorPublicVideos(creatorId, sortBy: 'latest');
-    return videos
-        .map((v) => _myChallengeToChallenge(v, profile))
-        .toList();
+    return videos.map((v) => _myChallengeToChallenge(v, profile)).toList();
   }
 
   /// 크리에이터 영상 소진 후 — 태그 유사도 기반 추천 (해당 크리에이터 제외).
@@ -2043,17 +2038,18 @@ class MockSpareData {
       return ct.where(tags.contains).length;
     }
 
-    final pool = _generateMockChallengesForSearch()
-        .where(
-          (c) =>
-              c.creatorId != excludeCreatorId && !excluded.contains(c.id),
-        )
-        .toList()
-      ..sort((a, b) {
-        final scoreDiff = tagScore(b).compareTo(tagScore(a));
-        if (scoreDiff != 0) return scoreDiff;
-        return b.views.compareTo(a.views);
-      });
+    final pool =
+        _generateMockChallengesForSearch()
+            .where(
+              (c) =>
+                  c.creatorId != excludeCreatorId && !excluded.contains(c.id),
+            )
+            .toList()
+          ..sort((a, b) {
+            final scoreDiff = tagScore(b).compareTo(tagScore(a));
+            if (scoreDiff != 0) return scoreDiff;
+            return b.views.compareTo(a.views);
+          });
 
     return pool;
   }
@@ -2085,9 +2081,7 @@ class MockSpareData {
       educationId: hasEducation ? 'edu_${video.id}' : null,
       educationName: hasEducation ? '교육 ${index + 1}' : null,
       educationUrl: hasEducation ? 'https://example.com/edu/${video.id}' : null,
-      taggedType: hasProduct
-          ? 'product'
-          : (hasEducation ? 'education' : null),
+      taggedType: hasProduct ? 'product' : (hasEducation ? 'education' : null),
       musicName: '음악',
       musicArtist: profile.challengeNickname ?? '아티스트',
       createdAt: video.createdAt,
@@ -2498,7 +2492,8 @@ class MockSpareData {
         booking.spaceRental?.shopName ??
         booking.spaceRental?.address ??
         booking.spaceRentalId;
-    final fmt = '${booking.startTime.month}/${booking.startTime.day} '
+    final fmt =
+        '${booking.startTime.month}/${booking.startTime.day} '
         '${booking.startTime.hour.toString().padLeft(2, '0')}:'
         '${booking.startTime.minute.toString().padLeft(2, '0')}~'
         '${booking.endTime.hour.toString().padLeft(2, '0')}:'
@@ -2525,9 +2520,7 @@ class MockSpareData {
   }
 
   static void _removeShopSpaceBookingNotification(String bookingId) {
-    _shopSpaceNotifications.removeWhere(
-      (n) => n.relatedBookingId == bookingId,
-    );
+    _shopSpaceNotifications.removeWhere((n) => n.relatedBookingId == bookingId);
   }
 
   // ——— Shop 공간관리 mock ———
@@ -2549,7 +2542,9 @@ class MockSpareData {
     _shopSpaceBookingsSeeded = true;
     final now = DateTime.now();
     final tomorrow = DateTime(now.year, now.month, now.day + 1, 14);
-    final space = _spaceRentalsJson.firstWhere((s) => s['id'] == 'space-mock-1');
+    final space = _spaceRentalsJson.firstWhere(
+      (s) => s['id'] == 'space-mock-1',
+    );
     _shopSpaceBookings.addAll([
       SpaceBooking(
         id: 'shop-booking-mock-1',
@@ -2561,9 +2556,7 @@ class MockSpareData {
         totalPrice: 90000,
         status: BookingStatus.pending,
         createdAt: now,
-        spaceRental: SpaceRental.fromJson(
-          Map<String, dynamic>.from(space),
-        ),
+        spaceRental: SpaceRental.fromJson(Map<String, dynamic>.from(space)),
       ),
       SpaceBooking(
         id: 'shop-booking-mock-2',
@@ -2575,9 +2568,7 @@ class MockSpareData {
         totalPrice: 60000,
         status: BookingStatus.pending,
         createdAt: now.subtract(const Duration(hours: 5)),
-        spaceRental: SpaceRental.fromJson(
-          Map<String, dynamic>.from(space),
-        ),
+        spaceRental: SpaceRental.fromJson(Map<String, dynamic>.from(space)),
       ),
     ]);
     _pushShopSpaceBookingNotification(_shopSpaceBookings.first);
@@ -2638,7 +2629,8 @@ class MockSpareData {
     await Future.delayed(const Duration(milliseconds: 220));
     final now = DateTime.now();
     final id = 'space-shop-${now.millisecondsSinceEpoch}';
-    final slots = availableSlots ??
+    final slots =
+        availableSlots ??
         SpaceSlotBuilder.build(schedule: operatingSchedule, fromDate: now);
     final json = <String, dynamic>{
       'id': id,
@@ -2782,8 +2774,9 @@ class MockSpareData {
   }) async {
     await Future.delayed(const Duration(milliseconds: 200));
     _ensureShopSpaceBookings();
-    final ownedIds =
-        _resolvedShopSpaceMaps().map((m) => m['id'] as String).toSet();
+    final ownedIds = _resolvedShopSpaceMaps()
+        .map((m) => m['id'] as String)
+        .toSet();
     var list = _shopSpaceBookings
         .where((b) => ownedIds.contains(b.spaceRentalId))
         .toList();
@@ -2888,7 +2881,11 @@ class MockSpareData {
         'regionId': 'seoul-gangnam',
         'regionName': '강남구',
         'operatingSchedule': defaultSchedule.toJson(),
-        'availableSlots': _makeSlots(now, defaultSchedule, applyMockUnavailable: true),
+        'availableSlots': _makeSlots(
+          now,
+          defaultSchedule,
+          applyMockUnavailable: true,
+        ),
         'pricePerHour': 30000,
         'facilities': ['의자', '세트', '샴푸대', '드라이어'],
         'imageUrls': [_mockImage('space/space-mock-1')],
@@ -3053,8 +3050,9 @@ class MockSpareData {
           TimeSlot(
             startTime: s.startTime,
             endTime: s.endTime,
-            isAvailable: !(s.startTime.hour == 12 ||
-                (s.startTime.day + s.startTime.hour) % 7 == 0),
+            isAvailable:
+                !(s.startTime.hour == 12 ||
+                    (s.startTime.day + s.startTime.hour) % 7 == 0),
             bookedBy: s.bookedBy,
             bookingId: s.bookingId,
           ),
@@ -3109,18 +3107,15 @@ class MockSpareData {
     }
 
     mockEnergyBalance += energyAmount;
-    _energyTransactions.insert(
-      0,
-      {
-        'id': 'tx-purchase-${DateTime.now().millisecondsSinceEpoch}',
-        'type': 'purchase',
-        'amount': energyAmount,
-        'description': paymentMethod == 'POINTS'
-            ? '포인트로 에너지 $energyAmount개 충전'
-            : '에너지 $energyAmount개 충전 (₩${cashPrice ?? 0})',
-        'createdAt': DateTime.now().toIso8601String(),
-      },
-    );
+    _energyTransactions.insert(0, {
+      'id': 'tx-purchase-${DateTime.now().millisecondsSinceEpoch}',
+      'type': 'purchase',
+      'amount': energyAmount,
+      'description': paymentMethod == 'POINTS'
+          ? '포인트로 에너지 $energyAmount개 충전'
+          : '에너지 $energyAmount개 충전 (₩${cashPrice ?? 0})',
+      'createdAt': DateTime.now().toIso8601String(),
+    });
   }
 
   static Future<List<PointTransaction>> getPointHistory({

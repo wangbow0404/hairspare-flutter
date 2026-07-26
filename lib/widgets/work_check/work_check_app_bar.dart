@@ -47,8 +47,17 @@ class WorkCheckSliverAppBar extends StatelessWidget {
           children: [
             if (showBackButton)
               IconButton(
-                icon: IconMapper.icon('chevronleft', size: 24, color: AppTheme.textSecondary) ??
-                    const Icon(Icons.arrow_back_ios, size: 20, color: AppTheme.textSecondary),
+                icon:
+                    IconMapper.icon(
+                      'chevronleft',
+                      size: 24,
+                      color: AppTheme.textSecondary,
+                    ) ??
+                    const Icon(
+                      Icons.arrow_back_ios,
+                      size: 20,
+                      color: AppTheme.textSecondary,
+                    ),
                 onPressed: () => Navigator.maybePop(context),
                 tooltip: MaterialLocalizations.of(context).backButtonTooltip,
               ),
@@ -104,8 +113,17 @@ class WorkCheckSliverAppBar extends StatelessWidget {
                   borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                   child: Container(
                     padding: const EdgeInsets.all(AppTheme.spacing2),
-                    child: IconMapper.icon('x', size: 24, color: AppTheme.textSecondary) ??
-                        const Icon(Icons.close, size: 24, color: AppTheme.textSecondary),
+                    child:
+                        IconMapper.icon(
+                          'x',
+                          size: 24,
+                          color: AppTheme.textSecondary,
+                        ) ??
+                        const Icon(
+                          Icons.close,
+                          size: 24,
+                          color: AppTheme.textSecondary,
+                        ),
                   ),
                 ),
               ),
@@ -117,8 +135,17 @@ class WorkCheckSliverAppBar extends StatelessWidget {
                   borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
                   child: Container(
                     padding: const EdgeInsets.all(AppTheme.spacing2),
-                    child: IconMapper.icon('search', size: 24, color: AppTheme.textSecondary) ??
-                        const Icon(Icons.search, size: 24, color: AppTheme.textSecondary),
+                    child:
+                        IconMapper.icon(
+                          'search',
+                          size: 24,
+                          color: AppTheme.textSecondary,
+                        ) ??
+                        const Icon(
+                          Icons.search,
+                          size: 24,
+                          color: AppTheme.textSecondary,
+                        ),
                   ),
                 ),
               ),
@@ -132,11 +159,22 @@ class WorkCheckSliverAppBar extends StatelessWidget {
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () => AppBarNavigation.pushMessages(context),
-                          borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
+                          borderRadius: AppTheme.borderRadius(
+                            AppTheme.radiusFull,
+                          ),
                           child: Container(
                             padding: const EdgeInsets.all(AppTheme.spacing2),
-                            child: IconMapper.icon('messagecircle', size: 24, color: AppTheme.textSecondary) ??
-                                const Icon(Icons.message_outlined, size: 24, color: AppTheme.textSecondary),
+                            child:
+                                IconMapper.icon(
+                                  'messagecircle',
+                                  size: 24,
+                                  color: AppTheme.textSecondary,
+                                ) ??
+                                const Icon(
+                                  Icons.chat_bubble_outline,
+                                  size: 24,
+                                  color: AppTheme.textSecondary,
+                                ),
                           ),
                         ),
                       ),

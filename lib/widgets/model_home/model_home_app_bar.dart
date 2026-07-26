@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/app_bar_navigation.dart';
-import '../../utils/icon_mapper.dart';
 import '../../widgets/common/hairspare_brand_assets.dart';
 import '../../widgets/notification_bell.dart';
 
@@ -49,16 +48,11 @@ class ModelHomeAppBarRow extends StatelessWidget {
                       width: 40,
                       height: 40,
                       alignment: Alignment.center,
-                      child: IconMapper.icon(
-                            'messagecircle',
-                            size: 24,
-                            color: AppTheme.textSecondary,
-                          ) ??
-                          const Icon(
-                            Icons.message_outlined,
-                            size: 24,
-                            color: AppTheme.textSecondary,
-                          ),
+                      child: const Icon(
+                        Icons.chat_bubble_outline,
+                        size: 24,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                   ),
                 ),
@@ -97,9 +91,7 @@ class ModelHomeAppBarRow extends StatelessWidget {
         const SizedBox(
           width: 40,
           height: 40,
-          child: Center(
-            child: NotificationBell(role: 'model'),
-          ),
+          child: Center(child: NotificationBell(role: 'model')),
         ),
       ],
     );
