@@ -67,10 +67,18 @@ class _SpareHomeJobSectionsState extends State<SpareHomeJobSections> {
 
         final popularJobIds = JobPopularity.popularJobIds(allJobsRaw);
 
-        // 필터칩 아래 일반 공고 목록 — 선택된 칩에 따라 필터링(신규 공고도 여기 포함).
+        // 필터칩 아래 일반 공고 목록 — 선택된 지역(있으면) + 필터칩 순으로 필터링
+        // (신규 공고도 여기 포함). "지역 BEST" 탭과 동일하게 선택된 지역 우선.
+        final regionScopedJobs =
+            jobProvider.selectedRegionId != null &&
+                jobProvider.selectedRegionId!.isNotEmpty
+            ? jobProvider.normalJobs
+                  .where((j) => j.regionId == jobProvider.selectedRegionId)
+                  .toList()
+            : jobProvider.normalJobs;
         final filteredNormalJobs = JobFilterUtils.apply(
           _filter,
-          jobProvider.normalJobs,
+          regionScopedJobs,
         );
 
         return Column(
