@@ -210,3 +210,42 @@ class _SkeletonCard extends StatelessWidget {
     );
   }
 }
+
+/// 채팅 목록 로딩 스켈레톤 — 아바타 원 + 이름/미리보기 줄 모양.
+class ChatListSkeleton extends StatelessWidget {
+  const ChatListSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      itemCount: 6,
+      separatorBuilder: (_, __) => const SizedBox(height: 4),
+      itemBuilder: (context, _) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            const ShimmerBox(width: 48, height: 48, borderRadius: 999),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ShimmerBox(
+                    width: MediaQuery.sizeOf(context).width * 0.3,
+                    height: 15,
+                  ),
+                  const SizedBox(height: 8),
+                  ShimmerBox(
+                    width: MediaQuery.sizeOf(context).width * 0.5,
+                    height: 13,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

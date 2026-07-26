@@ -9,8 +9,11 @@ import '../../providers/chat_provider.dart';
 import '../../services/chat_service.dart';
 import '../../services/model_designer_match_service.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/hairspare_colors.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/icon_mapper.dart';
+import '../../widgets/common/app_network_image.dart';
+import '../../widgets/common/shimmer_box.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../widgets/stitch/stitch_empty_state.dart';
 import '../../widgets/stitch/stitch_segment_tabs.dart';
@@ -74,9 +77,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: AppTheme.urgentRed,
-            ),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.urgentRed),
             child: Text(isModelDesignerChat ? '나가기' : '삭제'),
           ),
         ],
@@ -96,9 +97,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       messenger.showSnackBar(
         SnackBar(
           content: Text(
-            isModelDesignerChat
-                ? '채팅방을 나갔습니다. 매칭이 취소되었습니다.'
-                : '채팅방이 삭제되었습니다',
+            isModelDesignerChat ? '채팅방을 나갔습니다. 매칭이 취소되었습니다.' : '채팅방이 삭제되었습니다',
           ),
           backgroundColor: AppTheme.stitchPrimaryContainer,
         ),
@@ -122,7 +121,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
         if (chatProvider.isLoading && chatProvider.chats.isEmpty) {
           return const Scaffold(
             backgroundColor: AppTheme.backgroundGray,
-            body: Center(child: CircularProgressIndicator()),
+            appBar: SpareSubpageAppBar(title: '메시지', showBackButton: true),
+            body: ChatListSkeleton(),
           );
         }
 
@@ -138,16 +138,15 @@ class _MessagesScreenState extends State<MessagesScreen> {
               message: chatProvider.error!,
               iconName: 'alertcircle',
               actionLabel: '다시 시도',
-              onAction: () =>
-                  chatProvider.refreshChats(viewerRole: audience),
+              onAction: () => chatProvider.refreshChats(viewerRole: audience),
             ),
           );
         }
 
         final filteredChats = _activeTab == 'unread'
             ? chatProvider.chats
-                .where((chat) => (chat.unreadCount ?? 0) > 0)
-                .toList()
+                  .where((chat) => (chat.unreadCount ?? 0) > 0)
+                  .toList()
             : chatProvider.chats;
 
         final tabIndex = _activeTab == 'unread' ? 1 : 0;
@@ -176,8 +175,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                         message: _activeTab == 'unread'
                             ? '읽지 않은 메시지가 없습니다'
                             : isModelMessaging
-                                ? '매칭된 디자이너와의 대화가 없습니다'
-                                : '메시지가 없습니다',
+                            ? '매칭된 디자이너와의 대화가 없습니다'
+                            : '메시지가 없습니다',
                         iconName: 'messagecircle',
                       )
                     : ListView.builder(
@@ -200,18 +199,19 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                     ),
                                   )
                                   .then((_) {
-                                if (mounted) {
-                                  chatProvider.refreshChats(
-                                    viewerRole: audience,
-                                  );
-                                }
-                              });
+                                    if (mounted) {
+                                      chatProvider.refreshChats(
+                                        viewerRole: audience,
+                                      );
+                                    }
+                                  });
                             },
                             onDelete: () => _confirmDelete(
                               context,
                               chatProvider,
                               chat.id,
-                              isModelDesignerChat: isModelMessaging &&
+                              isModelDesignerChat:
+                                  isModelMessaging &&
                                   sl<ModelDesignerMatchService>()
                                       .isModelDesignerChat(chat.id),
                             ),
@@ -234,12 +234,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 }
 
 String _chatPreviewLine(Chat chat) {
-  final parts = <String>[
-    if (chat.jobTitle != null && chat.jobTitle!.isNotEmpty) chat.jobTitle!,
-    if (chat.lastMessage != null && chat.lastMessage!.content.isNotEmpty)
-      chat.lastMessage!.content,
-  ];
-  return parts.join(' · ');
+  return chat.lastMessage?.content.trim() ?? '';
 }
 
 class _ChatListItem extends StatefulWidget {
@@ -272,12 +267,18 @@ class _ChatListItemState extends State<_ChatListItem> {
     // 상대방 이름은 "내 역할이 shop이냐"가 아니라 "이 채팅방의 shopId 슬롯에
     // 내가 들어있냐"로 판단한다 — 모델↔디자이너 채팅은 양쪽 다 실제 역할이
     // 'spare'라 role 기반 판단이 불가능하다(chat_room_screen.dart와 동일 이유).
-    final currentUserId =
-        Provider.of<AuthProvider>(context, listen: false).currentUser?.id;
+    final currentUserId = Provider.of<AuthProvider>(
+      context,
+      listen: false,
+    ).currentUser?.id;
     final amInShopSlot =
         currentUserId != null && currentUserId == widget.chat.shopId;
-    final otherName =
-        amInShopSlot ? widget.chat.spareName : widget.chat.shopName;
+    final otherName = amInShopSlot
+        ? widget.chat.spareName
+        : widget.chat.shopName;
+    final otherPhoto = amInShopSlot
+        ? widget.chat.spareProfileImage
+        : widget.chat.shopProfileImage;
 
     return GestureDetector(
       onHorizontalDragStart: (_) => _dragDistance = 0.0,
@@ -321,7 +322,8 @@ class _ChatListItemState extends State<_ChatListItem> {
                     child: ColoredBox(
                       color: AppTheme.urgentRed.withValues(alpha: 0.1),
                       child: Center(
-                        child: IconMapper.icon(
+                        child:
+                            IconMapper.icon(
                               'trash',
                               size: 24,
                               color: AppTheme.urgentRed,
@@ -360,6 +362,7 @@ class _ChatListItemState extends State<_ChatListItem> {
                         children: [
                           _ChatAvatarLetter(
                             letter: otherName.isNotEmpty ? otherName[0] : '?',
+                            photoUrl: otherPhoto,
                           ),
                           const SizedBox(width: AppTheme.spacing3),
                           Expanded(
@@ -395,6 +398,31 @@ class _ChatListItemState extends State<_ChatListItem> {
                                       ),
                                   ],
                                 ),
+                                if (widget.chat.jobTitle != null &&
+                                    widget.chat.jobTitle!.isNotEmpty) ...[
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppTheme.spacing2,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: HairSpareColors.surfaceMuted,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      widget.chat.jobTitle!,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: HairSpareColors.textSecondary,
+                                        height: 1.3,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                                 if (preview.isNotEmpty) ...[
                                   const SizedBox(height: 4),
                                   Text(
@@ -432,12 +460,23 @@ class _ChatListItemState extends State<_ChatListItem> {
 }
 
 class _ChatAvatarLetter extends StatelessWidget {
-  const _ChatAvatarLetter({required this.letter});
+  const _ChatAvatarLetter({required this.letter, this.photoUrl});
 
   final String letter;
+  final String? photoUrl;
 
   @override
   Widget build(BuildContext context) {
+    if (photoUrl != null && photoUrl!.isNotEmpty) {
+      return ClipOval(
+        child: SizedBox(
+          width: 48,
+          height: 48,
+          child: AppNetworkImage(imageUrl: photoUrl, fit: BoxFit.cover),
+        ),
+      );
+    }
+
     return Container(
       width: 48,
       height: 48,
