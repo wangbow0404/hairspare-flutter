@@ -33,7 +33,7 @@ class _EducationScreenState extends State<EducationScreen>
   String? _selectedSubCategory;
   String _sortBy = 'latest';
   String _educationType = 'all';
-  
+
   // 필터 버튼 상태
   bool _isUrgent = false;
   bool _reviewReward = false;
@@ -130,13 +130,13 @@ class _EducationScreenState extends State<EducationScreen>
   Future<void> _loadEducations() async {
     // Mock 데이터 생성 (백엔드 API 없음)
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     setState(() {
       _educations = _generateMockEducations();
       _filteredEducations = _educations;
       _isLoading = false;
     });
-    
+
     _applyFilters();
   }
 
@@ -146,7 +146,9 @@ class _EducationScreenState extends State<EducationScreen>
     return List.generate(20, (index) {
       final province = provinces[index % provinces.length];
       final districts = RegionHelper.getDistrictsByProvince(province.id);
-      final district = districts.isNotEmpty ? districts[index % districts.length] : null;
+      final district = districts.isNotEmpty
+          ? districts[index % districts.length]
+          : null;
       final hasRichContent = index < 3;
       final isOnline = index % 2 == 0;
       final deadline = now.add(Duration(days: index + 5));
@@ -197,7 +199,8 @@ class _EducationScreenState extends State<EducationScreen>
       return Education(
         id: 'edu_$index',
         title: '교육 프로그램 ${index + 1}',
-        description: '교육 프로그램 ${index + 1}에 대한 설명입니다. 전문가 과정과 실습 위주의 커리큘럼으로 구성되어 있습니다. 미용 분야 실무 역량을 키우고 싶은 분들에게 적합한 과정입니다.',
+        description:
+            '교육 프로그램 ${index + 1}에 대한 설명입니다. 전문가 과정과 실습 위주의 커리큘럼으로 구성되어 있습니다. 미용 분야 실무 역량을 키우고 싶은 분들에게 적합한 과정입니다.',
         category: _categories[index % _categories.length].name,
         subCategory: _categories[index % _categories.length].subCategories[0],
         province: province.name,
@@ -219,11 +222,13 @@ class _EducationScreenState extends State<EducationScreen>
             ? [
                 const EducationMaterial(
                   title: '사전 학습 PDF',
-                  url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                  url:
+                      'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
                 ),
                 const EducationMaterial(
                   title: '실습 체크리스트',
-                  url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                  url:
+                      'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
                   fileType: 'pdf',
                 ),
               ]
@@ -257,20 +262,39 @@ class _EducationScreenState extends State<EducationScreen>
 
     // 지역 필터 (RegionHelper 사용)
     if (_selectedDistrict != null) {
-      final district = _districts.firstWhere((d) => d.id == _selectedDistrict, orElse: () => _districts.first);
-      filtered = filtered.where((e) => e.regionId == district.id || e.district == district.name).toList();
+      final district = _districts.firstWhere(
+        (d) => d.id == _selectedDistrict,
+        orElse: () => _districts.first,
+      );
+      filtered = filtered
+          .where(
+            (e) => e.regionId == district.id || e.district == district.name,
+          )
+          .toList();
     } else if (_selectedProvince != null) {
-      final province = _provinces.firstWhere((p) => p.id == _selectedProvince, orElse: () => _provinces.first);
-      filtered = filtered.where((e) => e.regionId == province.id || 
-          e.regionId?.startsWith(province.id) == true ||
-          e.province == province.name).toList();
+      final province = _provinces.firstWhere(
+        (p) => p.id == _selectedProvince,
+        orElse: () => _provinces.first,
+      );
+      filtered = filtered
+          .where(
+            (e) =>
+                e.regionId == province.id ||
+                e.regionId?.startsWith(province.id) == true ||
+                e.province == province.name,
+          )
+          .toList();
     }
 
     // 카테고리 필터
     if (_selectedSubCategory != null) {
-      filtered = filtered.where((e) => e.subCategory == _selectedSubCategory).toList();
+      filtered = filtered
+          .where((e) => e.subCategory == _selectedSubCategory)
+          .toList();
     } else if (_selectedCategory != null) {
-      final categoryName = _categories.firstWhere((c) => c.id == _selectedCategory).name;
+      final categoryName = _categories
+          .firstWhere((c) => c.id == _selectedCategory)
+          .name;
       filtered = filtered.where((e) => e.category == categoryName).toList();
     }
 
@@ -290,20 +314,39 @@ class _EducationScreenState extends State<EducationScreen>
       filtered = filtered.where((e) => e.price == 0).toList();
     }
     if (_insufficientApplicants) {
-      filtered = filtered.where((e) => e.applicants < e.maxApplicants * 0.5).toList();
+      filtered = filtered
+          .where((e) => e.applicants < e.maxApplicants * 0.5)
+          .toList();
     }
     if (_deadlineImminent) {
       final now = DateTime.now();
-      filtered = filtered.where((e) => e.deadline.difference(now).inDays <= 3).toList();
+      filtered = filtered
+          .where((e) => e.deadline.difference(now).inDays <= 3)
+          .toList();
     }
 
     // 날짜 필터: 선택한 날짜에 진행되는 교육 (startDate~endDate) 또는 진행일 없으면 마감일 기준
     if (_selectedDateStart != null) {
-      final targetDate = DateTime(_selectedDateStart!.year, _selectedDateStart!.month, _selectedDateStart!.day);
-      final targetEnd = DateTime(targetDate.year, targetDate.month, targetDate.day, 23, 59, 59);
+      final targetDate = DateTime(
+        _selectedDateStart!.year,
+        _selectedDateStart!.month,
+        _selectedDateStart!.day,
+      );
+      final targetEnd = DateTime(
+        targetDate.year,
+        targetDate.month,
+        targetDate.day,
+        23,
+        59,
+        59,
+      );
       filtered = filtered.where((e) {
         if (e.startDate != null) {
-          final start = DateTime(e.startDate!.year, e.startDate!.month, e.startDate!.day);
+          final start = DateTime(
+            e.startDate!.year,
+            e.startDate!.month,
+            e.startDate!.day,
+          );
           final end = e.endDate != null
               ? DateTime(e.endDate!.year, e.endDate!.month, e.endDate!.day)
               : start;
@@ -398,153 +441,181 @@ class _EducationScreenState extends State<EducationScreen>
       body: deferredBody(
         loading: const Center(child: CircularProgressIndicator()),
         builder: (context) => Column(
-        children: [
-          // 필터 섹션
-          Container(
-            color: AppTheme.backgroundWhite,
-            padding: const EdgeInsets.all(AppTheme.spacing3),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 전체교육 개수
-                Text(
-                  '전체교육 총 ${_filteredEducations.length}개',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textPrimary,
+          children: [
+            // 필터 섹션
+            Container(
+              color: AppTheme.backgroundWhite,
+              padding: const EdgeInsets.all(AppTheme.spacing3),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 전체교육 개수
+                  Text(
+                    '전체교육 총 ${_filteredEducations.length}개',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppTheme.spacing3),
+                  const SizedBox(height: AppTheme.spacing3),
 
-                // 첫 번째 줄: 새로고침, 지역, 상세지역, 카테고리, 세부카테고리
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      // 새로고침 버튼
-                      IconButton(
-                        icon: IconMapper.icon('refresh', size: 20, color: AppTheme.textSecondary) ??
-                            const Icon(Icons.refresh, size: 20, color: AppTheme.textSecondary),
-                        onPressed: _handleRefresh,
-                      ),
-                      const SizedBox(width: AppTheme.spacing2),
-
-                      // 지역 드롭다운
-                      _buildProvinceDropdown(),
-                      if (_selectedProvince != null && _districts.isNotEmpty) ...[
-                        const SizedBox(width: AppTheme.spacing2),
-                        _buildDistrictDropdown(),
-                      ],
-                      const SizedBox(width: AppTheme.spacing2),
-                      _buildCategoryDropdown(),
-                      if (_selectedCategory != null && _availableSubCategories.isNotEmpty) ...[
-                        const SizedBox(width: AppTheme.spacing2),
-                        _buildSubCategoryDropdown(),
-                      ],
-                      const SizedBox(width: AppTheme.spacing2),
-                      DateFilterButton(
-                        selectedDate: _selectedDateStart,
-                        onDateSelected: (date) {
-                          setState(() {
-                            _selectedDateStart = date;
-                            _applyFilters();
-                          });
-                        },
-                        onClear: () {
-                          setState(() {
-                            _selectedDateStart = null;
-                            _applyFilters();
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing3),
-
-                // 두 번째 줄: 정렬, 오프라인/온라인, 필터 버튼들
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildSortDropdown(),
-                      const SizedBox(width: AppTheme.spacing2),
-                      _buildEducationTypeToggle(),
-                      const SizedBox(width: AppTheme.spacing2),
-                      _buildFilterButton('🚀', '급구', _isUrgent, () {
-                        setState(() => _isUrgent = !_isUrgent);
-                        _applyFilters();
-                      }),
-                      const SizedBox(width: AppTheme.spacing2),
-                      _buildFilterButton('⭐', '무료교육', _reviewReward, () {
-                        setState(() => _reviewReward = !_reviewReward);
-                        _applyFilters();
-                      }),
-                      const SizedBox(width: AppTheme.spacing2),
-                      _buildFilterButton('🏠', '우리동네', _myNeighborhood, () {
-                        setState(() => _myNeighborhood = !_myNeighborhood);
-                        _applyFilters();
-                      }),
-                      const SizedBox(width: AppTheme.spacing2),
-                      _buildFilterButton('👥', '신청자부족', _insufficientApplicants, () {
-                        setState(() => _insufficientApplicants = !_insufficientApplicants);
-                        _applyFilters();
-                      }),
-                      const SizedBox(width: AppTheme.spacing2),
-                      _buildFilterButton('⏰', '마감임박', _deadlineImminent, () {
-                        setState(() => _deadlineImminent = !_deadlineImminent);
-                        _applyFilters();
-                      }),
-                      const SizedBox(width: AppTheme.spacing2),
-                      _buildFilterButton('📅', '예약불필요', _noReservation, () {
-                        setState(() => _noReservation = !_noReservation);
-                        _applyFilters();
-                      }),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // 교육 목록
-          Expanded(
-            child: _filteredEducations.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  // 첫 번째 줄: 새로고침, 지역, 상세지역, 카테고리, 세부카테고리
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
                       children: [
-                        IconMapper.icon('book', size: 64, color: AppTheme.textTertiary) ??
-                            const Icon(Icons.book, size: 64, color: AppTheme.textTertiary),
-                        const SizedBox(height: AppTheme.spacing4),
-                        Text(
-                          '교육 목록이 없습니다',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.textSecondary,
-                          ),
+                        // 새로고침 버튼
+                        IconButton(
+                          icon:
+                              IconMapper.icon(
+                                'refresh',
+                                size: 20,
+                                color: AppTheme.textSecondary,
+                              ) ??
+                              const Icon(
+                                Icons.refresh,
+                                size: 20,
+                                color: AppTheme.textSecondary,
+                              ),
+                          onPressed: _handleRefresh,
+                        ),
+                        const SizedBox(width: AppTheme.spacing2),
+
+                        // 지역 드롭다운
+                        _buildProvinceDropdown(),
+                        if (_selectedProvince != null &&
+                            _districts.isNotEmpty) ...[
+                          const SizedBox(width: AppTheme.spacing2),
+                          _buildDistrictDropdown(),
+                        ],
+                        const SizedBox(width: AppTheme.spacing2),
+                        _buildCategoryDropdown(),
+                        if (_selectedCategory != null &&
+                            _availableSubCategories.isNotEmpty) ...[
+                          const SizedBox(width: AppTheme.spacing2),
+                          _buildSubCategoryDropdown(),
+                        ],
+                        const SizedBox(width: AppTheme.spacing2),
+                        DateFilterButton(
+                          selectedDate: _selectedDateStart,
+                          onDateSelected: (date) {
+                            setState(() {
+                              _selectedDateStart = date;
+                              _applyFilters();
+                            });
+                          },
+                          onClear: () {
+                            setState(() {
+                              _selectedDateStart = null;
+                              _applyFilters();
+                            });
+                          },
                         ),
                       ],
                     ),
-                  )
-                : Column(
-                    children: [
-                      Expanded(
-                        child: ListView.builder(
-                          controller: _listScrollController,
-                          padding: const EdgeInsets.all(AppTheme.spacing4),
-                          itemCount: _paginatedEducations.length,
-                          itemBuilder: (context, index) {
-                            final education = _paginatedEducations[index];
-                            return _buildEducationCard(education);
+                  ),
+                  const SizedBox(height: AppTheme.spacing3),
+
+                  // 두 번째 줄: 정렬, 오프라인/온라인, 필터 버튼들
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildSortDropdown(),
+                        const SizedBox(width: AppTheme.spacing2),
+                        _buildEducationTypeToggle(),
+                        const SizedBox(width: AppTheme.spacing2),
+                        _buildFilterButton('🚀', '급구', _isUrgent, () {
+                          setState(() => _isUrgent = !_isUrgent);
+                          _applyFilters();
+                        }),
+                        const SizedBox(width: AppTheme.spacing2),
+                        _buildFilterButton('⭐', '무료교육', _reviewReward, () {
+                          setState(() => _reviewReward = !_reviewReward);
+                          _applyFilters();
+                        }),
+                        const SizedBox(width: AppTheme.spacing2),
+                        _buildFilterButton('🏠', '우리동네', _myNeighborhood, () {
+                          setState(() => _myNeighborhood = !_myNeighborhood);
+                          _applyFilters();
+                        }),
+                        const SizedBox(width: AppTheme.spacing2),
+                        _buildFilterButton(
+                          '👥',
+                          '신청자부족',
+                          _insufficientApplicants,
+                          () {
+                            setState(
+                              () => _insufficientApplicants =
+                                  !_insufficientApplicants,
+                            );
+                            _applyFilters();
                           },
                         ),
-                      ),
-                      if (_totalPages > 1) _buildPaginationBar(),
-                    ],
+                        const SizedBox(width: AppTheme.spacing2),
+                        _buildFilterButton('⏰', '마감임박', _deadlineImminent, () {
+                          setState(
+                            () => _deadlineImminent = !_deadlineImminent,
+                          );
+                          _applyFilters();
+                        }),
+                        const SizedBox(width: AppTheme.spacing2),
+                        _buildFilterButton('📅', '예약불필요', _noReservation, () {
+                          setState(() => _noReservation = !_noReservation);
+                          _applyFilters();
+                        }),
+                      ],
+                    ),
                   ),
-          ),
-        ],
+                ],
+              ),
+            ),
+
+            // 교육 목록
+            Expanded(
+              child: _filteredEducations.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconMapper.icon(
+                                'book',
+                                size: 64,
+                                color: AppTheme.textTertiary,
+                              ) ??
+                              const Icon(
+                                Icons.book,
+                                size: 64,
+                                color: AppTheme.textTertiary,
+                              ),
+                          const SizedBox(height: AppTheme.spacing4),
+                          Text(
+                            '교육 목록이 없습니다',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: AppTheme.textSecondary),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Column(
+                      children: [
+                        Expanded(
+                          child: ListView.builder(
+                            controller: _listScrollController,
+                            padding: const EdgeInsets.all(AppTheme.spacing4),
+                            itemCount: _paginatedEducations.length,
+                            itemBuilder: (context, index) {
+                              final education = _paginatedEducations[index];
+                              return _buildEducationCard(education);
+                            },
+                          ),
+                        ),
+                        if (_totalPages > 1) _buildPaginationBar(),
+                      ],
+                    ),
+            ),
+          ],
         ),
       ),
     );
@@ -555,12 +626,22 @@ class _EducationScreenState extends State<EducationScreen>
       label: '지역',
       options: _provinces.map((p) => p.name).toList(),
       selectedValue: _selectedProvince != null
-          ? _provinces.firstWhere((p) => p.id == _selectedProvince, orElse: () => _provinces.first).name
+          ? _provinces
+                .firstWhere(
+                  (p) => p.id == _selectedProvince,
+                  orElse: () => _provinces.first,
+                )
+                .name
           : null,
       onSelected: (value) {
         setState(() {
           _selectedProvince = value != null
-              ? _provinces.firstWhere((p) => p.name == value, orElse: () => _provinces.first).id
+              ? _provinces
+                    .firstWhere(
+                      (p) => p.name == value,
+                      orElse: () => _provinces.first,
+                    )
+                    .id
               : null;
           _selectedDistrict = null;
           _showProvinceDropdown = false;
@@ -586,12 +667,22 @@ class _EducationScreenState extends State<EducationScreen>
       label: '상세지역',
       options: _districts.map((d) => d.name).toList(),
       selectedValue: _selectedDistrict != null
-          ? _districts.firstWhere((d) => d.id == _selectedDistrict, orElse: () => _districts.first).name
+          ? _districts
+                .firstWhere(
+                  (d) => d.id == _selectedDistrict,
+                  orElse: () => _districts.first,
+                )
+                .name
           : null,
       onSelected: (value) {
         setState(() {
           _selectedDistrict = value != null
-              ? _districts.firstWhere((d) => d.name == value, orElse: () => _districts.first).id
+              ? _districts
+                    .firstWhere(
+                      (d) => d.name == value,
+                      orElse: () => _districts.first,
+                    )
+                    .id
               : null;
           _showDistrictDropdown = false;
         });
@@ -734,12 +825,20 @@ class _EducationScreenState extends State<EducationScreen>
         _applyFilters();
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing3, vertical: AppTheme.spacing1),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing3,
+          vertical: AppTheme.spacing1,
+        ),
         decoration: BoxDecoration(
           color: isSelected ? AppTheme.backgroundWhite : Colors.transparent,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           boxShadow: isSelected
-              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 2)]
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 2,
+                  ),
+                ]
               : null,
         ),
         child: Text(
@@ -754,15 +853,27 @@ class _EducationScreenState extends State<EducationScreen>
     );
   }
 
-  Widget _buildFilterButton(String emoji, String label, bool isActive, VoidCallback onTap) {
+  Widget _buildFilterButton(
+    String emoji,
+    String label,
+    bool isActive,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing3, vertical: AppTheme.spacing2),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing3,
+          vertical: AppTheme.spacing2,
+        ),
         decoration: BoxDecoration(
-          color: isActive ? Colors.purple.shade100 : AppTheme.backgroundGray,
+          color: isActive
+              ? AppTheme.primaryPurpleLight
+              : AppTheme.backgroundGray,
           border: Border.all(
-            color: isActive ? Colors.purple.shade300 : AppTheme.borderGray,
+            color: isActive
+                ? AppTheme.primaryPurple.withValues(alpha: 0.4)
+                : AppTheme.borderGray,
             width: isActive ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
@@ -777,7 +888,7 @@ class _EducationScreenState extends State<EducationScreen>
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: isActive ? Colors.purple.shade700 : AppTheme.textPrimary,
+                color: isActive ? AppTheme.primaryPurple : AppTheme.textPrimary,
               ),
             ),
           ],
@@ -818,7 +929,9 @@ class _EducationScreenState extends State<EducationScreen>
               children: [
                 IconButton(
                   visualDensity: VisualDensity.compact,
-                  onPressed: _currentPage > 1 ? () => _goToPage(_currentPage - 1) : null,
+                  onPressed: _currentPage > 1
+                      ? () => _goToPage(_currentPage - 1)
+                      : null,
                   icon: const Icon(Icons.chevron_left_rounded),
                 ),
                 ...List.generate(_totalPages, (index) {
@@ -833,7 +946,9 @@ class _EducationScreenState extends State<EducationScreen>
                       borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                       child: InkWell(
                         onTap: () => _goToPage(page),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                        borderRadius: BorderRadius.circular(
+                          AppTheme.radiusFull,
+                        ),
                         child: Container(
                           constraints: const BoxConstraints(
                             minWidth: 36,
@@ -889,8 +1004,11 @@ class _EducationScreenState extends State<EducationScreen>
           children: [
             // 이미지 영역 (imageUrl 있으면 표시, 없으면 그라데이션)
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
-              child: education.imageUrl != null && education.imageUrl!.isNotEmpty
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppTheme.radiusLg),
+              ),
+              child:
+                  education.imageUrl != null && education.imageUrl!.isNotEmpty
                   ? _buildEducationImage(education.imageUrl!)
                   : _buildEducationImagePlaceholder(),
             ),
@@ -901,45 +1019,59 @@ class _EducationScreenState extends State<EducationScreen>
                 children: [
                   Row(
                     children: [
-              if (education.isUrgent)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
-                  decoration: BoxDecoration(
-                    color: AppTheme.urgentRed,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('🚀', style: TextStyle(fontSize: 12)),
-                      SizedBox(width: 4),
-                      Text(
-                        '급구',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                      if (education.isUrgent)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing2,
+                            vertical: AppTheme.spacing1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.urgentRed,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusSm,
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('🚀', style: TextStyle(fontSize: 12)),
+                              SizedBox(width: 4),
+                              Text(
+                                '급구',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      const SizedBox(width: AppTheme.spacing2),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing2,
+                          vertical: AppTheme.spacing1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: education.isOnline
+                              ? Colors.blue.shade100
+                              : Colors.green.shade100,
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusSm,
+                          ),
+                        ),
+                        child: Text(
+                          education.isOnline ? '온라인' : '오프라인',
+                          style: TextStyle(
+                            color: education.isOnline
+                                ? Colors.blue.shade700
+                                : Colors.green.shade700,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              const SizedBox(width: AppTheme.spacing2),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing2, vertical: AppTheme.spacing1),
-                decoration: BoxDecoration(
-                  color: education.isOnline ? Colors.blue.shade100 : Colors.green.shade100,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                ),
-                child: Text(
-                  education.isOnline ? '온라인' : '오프라인',
-                  style: TextStyle(
-                    color: education.isOnline ? Colors.blue.shade700 : Colors.green.shade700,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
                     ],
                   ),
                   const SizedBox(height: AppTheme.spacing3),
@@ -964,34 +1096,58 @@ class _EducationScreenState extends State<EducationScreen>
                   const SizedBox(height: AppTheme.spacing2),
                   Row(
                     children: [
-                      const Icon(Icons.location_on, size: 16, color: AppTheme.textSecondary),
+                      const Icon(
+                        Icons.location_on,
+                        size: 16,
+                        color: AppTheme.textSecondary,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '${education.province}${education.district != null ? ' ${education.district}' : ''}',
-                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                        ),
                       ),
                       const SizedBox(width: AppTheme.spacing3),
-                      const Icon(Icons.attach_money, size: 16, color: AppTheme.textSecondary),
+                      const Icon(
+                        Icons.attach_money,
+                        size: 16,
+                        color: AppTheme.textSecondary,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '에너지 ${education.energyCost}개',
-                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: AppTheme.spacing2),
                   Row(
                     children: [
-                      const Icon(Icons.people, size: 16, color: AppTheme.textSecondary),
+                      const Icon(
+                        Icons.people,
+                        size: 16,
+                        color: AppTheme.textSecondary,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '신청 ${education.applicants}/${education.maxApplicants}명',
-                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                        ),
                       ),
                       const Spacer(),
                       Text(
                         '마감: ${DateFormat('yyyy-MM-dd').format(education.deadline)}',
-                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -1083,11 +1239,7 @@ class Category {
   final String name;
   final List<String> subCategories;
 
-  Category({
-    required this.id,
-    required this.name,
-    required this.subCategories,
-  });
+  Category({required this.id, required this.name, required this.subCategories});
 }
 
 /// 커리큘럼 일차 (날짜 포함)
@@ -1124,6 +1276,7 @@ class Education {
   final String? district;
   final String? regionId;
   final int price;
+
   /// 스페어 신청·결제 단위 (개). [`docs/yoram/EDUCATION_ENERGY_PRICING.md`]
   final int energyCost;
   final bool isUrgent;
