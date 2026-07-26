@@ -5,13 +5,17 @@ import 'package:provider/provider.dart';
 
 import '../../core/di/service_locator.dart';
 import '../../core/router/app_routes.dart';
+import '../../core/router/route_extras.dart';
 import '../../models/store_product.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/store_wishlist_provider.dart';
 import '../../services/store_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
+import '../../utils/shell_navigation.dart';
 import '../../widgets/common/shimmer_box.dart';
 import '../../widgets/spare_app_bar.dart';
+import 'education_screen.dart' show EducationReview;
 
 /// 스토어 상품 상세 화면.
 class StoreProductDetailScreen extends StatefulWidget {
@@ -106,7 +110,28 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: const SpareAppBar(showSearch: false, showBackButton: true),
+      appBar: SpareAppBar(
+        showSearch: false,
+        showBackButton: true,
+        actions: [
+          Consumer<StoreWishlistProvider>(
+            builder: (context, wishlist, _) {
+              final isWishlisted = wishlist.isWishlisted(product.id);
+              return IconButton(
+                icon: Icon(
+                  isWishlisted ? Icons.favorite : Icons.favorite_border,
+                  size: 22,
+                  color: isWishlisted
+                      ? AppTheme.urgentRed
+                      : AppTheme.textPrimary,
+                ),
+                onPressed: () => wishlist.toggle(product),
+                tooltip: '찜하기',
+              );
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(
@@ -153,6 +178,27 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
                                 color: AppTheme.textPrimary,
                               ),
                         ),
+                        if (product.reviewCount > 0) ...[
+                          const SizedBox(height: AppTheme.spacing2),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.star,
+                                size: 16,
+                                color: AppTheme.yellow500,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${product.averageRating.toStringAsFixed(1)} (리뷰 ${product.reviewCount}개)',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                         const SizedBox(height: AppTheme.spacing3),
                         if (product.hasDiscount) ...[
                           Text(
@@ -244,6 +290,10 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
                             ],
                           ),
                         ),
+                        if (product.reviews.isNotEmpty) ...[
+                          const SizedBox(height: AppTheme.spacing4),
+                          _StoreProductReviewsSection(product: product),
+                        ],
                       ],
                     ),
                   ),
@@ -283,6 +333,173 @@ class _TagChip extends StatelessWidget {
           fontWeight: FontWeight.w600,
           color: AppTheme.orange600,
         ),
+      ),
+    );
+  }
+}
+
+class _StoreProductReviewsSection extends StatefulWidget {
+  const _StoreProductReviewsSection({required this.product});
+
+  final StoreProduct product;
+
+  @override
+  State<_StoreProductReviewsSection> createState() =>
+      _StoreProductReviewsSectionState();
+}
+
+class _StoreProductReviewsSectionState
+    extends State<_StoreProductReviewsSection> {
+  static const int _initialCount = 2;
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final reviews = widget.product.reviews;
+    final displayed = _expanded
+        ? reviews
+        : reviews.take(_initialCount).toList();
+    final hasMore = reviews.length > _initialCount;
+
+    return Container(
+      width: double.infinity,
+      padding: AppTheme.spacing(AppTheme.spacing4),
+      decoration: BoxDecoration(
+        color: AppTheme.backgroundWhite,
+        borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
+        border: Border.all(color: AppTheme.borderGray),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.star, size: 18, color: AppTheme.yellow500),
+              const SizedBox(width: AppTheme.spacing2),
+              const Text(
+                '리뷰',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing2),
+              TextButton(
+                onPressed: () {
+                  ShellNavigation.pushReviews(
+                    context,
+                    ReviewsListRouteArgs(
+                      title: '${widget.product.name} 리뷰',
+                      averageRating: widget.product.averageRating,
+                      reviews: reviews
+                          .map(
+                            (r) => EducationReview(
+                              userName: r.userName,
+                              rating: r.rating,
+                              comment: r.comment,
+                              createdAt: r.createdAt,
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  );
+                },
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text(
+                  '+더보기',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.orange600,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Row(
+                children: [
+                  const Icon(Icons.star, size: 18, color: AppTheme.yellow500),
+                  const SizedBox(width: AppTheme.spacing1),
+                  Text(
+                    '${widget.product.averageRating.toStringAsFixed(1)} (${reviews.length}개)',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing4),
+          ...displayed.map(
+            (r) => Padding(
+              padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      ...List.generate(
+                        5,
+                        (i) => Icon(
+                          i < r.rating ? Icons.star : Icons.star_border,
+                          size: 16,
+                          color: AppTheme.yellow500,
+                        ),
+                      ),
+                      const SizedBox(width: AppTheme.spacing2),
+                      Text(
+                        r.userName,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        DateFormat('M/d', 'ko_KR').format(r.createdAt),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spacing2),
+                  Text(
+                    r.comment,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.textSecondary,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (hasMore)
+            Center(
+              child: TextButton(
+                onPressed: () => setState(() => _expanded = !_expanded),
+                child: Text(
+                  _expanded ? '접기' : '열기',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.orange600,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

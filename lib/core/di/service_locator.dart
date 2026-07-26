@@ -13,6 +13,7 @@ import '../../providers/job_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/point_provider.dart';
 import '../../providers/schedule_provider.dart';
+import '../../providers/store_wishlist_provider.dart';
 import '../../services/admin_service.dart';
 import '../../services/application_service.dart';
 import '../../services/auth_service.dart';
@@ -123,6 +124,9 @@ void configureDependencies() {
     () => PointProvider(sl<PointService>()),
   );
   sl.registerLazySingleton<CartProvider>(() => CartProvider());
+  sl.registerLazySingleton<StoreWishlistProvider>(
+    () => StoreWishlistProvider(),
+  );
 }
 
 /// [MaterialApp.router]에 넘기는 인스턴스와 동일한 [GoRouter] (앱 시작 시 한 번 등록).

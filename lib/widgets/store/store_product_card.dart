@@ -10,10 +10,14 @@ class StoreProductCard extends StatelessWidget {
     super.key,
     required this.product,
     required this.onTap,
+    this.isWishlisted = false,
+    this.onWishlistToggle,
   });
 
   final StoreProduct product;
   final VoidCallback onTap;
+  final bool isWishlisted;
+  final VoidCallback? onWishlistToggle;
 
   static final _priceFmt = NumberFormat('#,###');
 
@@ -65,6 +69,15 @@ class StoreProductCard extends StatelessWidget {
                         left: 8,
                         child: _Badge(label: 'BEST', color: AppTheme.orange500),
                       ),
+                    if (onWishlistToggle != null)
+                      Positioned(
+                        top: 6,
+                        right: 6,
+                        child: _WishlistButton(
+                          isWishlisted: isWishlisted,
+                          onTap: onWishlistToggle!,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -90,6 +103,23 @@ class StoreProductCard extends StatelessWidget {
                 height: 1.3,
               ),
             ),
+            if (product.reviewCount > 0) ...[
+              const SizedBox(height: 3),
+              Row(
+                children: [
+                  const Icon(Icons.star, size: 13, color: AppTheme.yellow500),
+                  const SizedBox(width: 3),
+                  Text(
+                    '${product.averageRating.toStringAsFixed(1)} (${product.reviewCount})',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 6),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -125,6 +155,44 @@ class StoreProductCard extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WishlistButton extends StatelessWidget {
+  const _WishlistButton({required this.isWishlisted, required this.onTap});
+
+  final bool isWishlisted;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Ink(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white.withValues(alpha: 0.92),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(
+            isWishlisted ? Icons.favorite : Icons.favorite_border,
+            size: 16,
+            color: isWishlisted ? AppTheme.urgentRed : AppTheme.textSecondary,
+          ),
         ),
       ),
     );

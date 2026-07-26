@@ -3,6 +3,22 @@ import '../utils/app_exception.dart';
 
 /// 스토어(미용 도구·용품) 서비스 — 아직 실 백엔드 연동 전이라 mock 데이터만 제공.
 class StoreService {
+  static List<StoreProductReview> _daysAgoReviews(
+    List<(String, int, String, int)> entries,
+  ) {
+    final now = DateTime.now();
+    return entries
+        .map(
+          (e) => StoreProductReview(
+            userName: e.$1,
+            rating: e.$2,
+            comment: e.$3,
+            createdAt: now.subtract(Duration(days: e.$4)),
+          ),
+        )
+        .toList();
+  }
+
   static final List<StoreProduct> _mockProducts = [
     StoreProduct(
       id: 'store-scissors-1',
@@ -18,6 +34,11 @@ class StoreService {
           '일본산 코발트 합금 소재로 날이 오래 유지되는 프로용 커팅 가위입니다. 손목 부담을 줄여주는 인체공학 손잡이 설계.',
       isBestSeller: true,
       tags: const ['무료배송', 'MD추천'],
+      reviews: _daysAgoReviews([
+        ('김디자이너', 5, '손에 착 감기고 날이 오래가요. 재구매 의사 100%입니다.', 3),
+        ('이헤어', 5, '가격 대비 정말 만족스러운 커팅감이에요.', 9),
+        ('박스타일', 4, '무게감이 살짝 있는 편인데 그립감이 좋아서 금방 적응됐어요.', 21),
+      ]),
     ),
     StoreProduct(
       id: 'store-scissors-2',
@@ -44,6 +65,10 @@ class StoreService {
           '마이너스 이온 케어로 모발 손상을 줄이는 살롱용 고속 드라이기. 2.0m 롱 코드로 작업 편의성을 높였습니다.',
       isBestSeller: true,
       tags: const ['무료배송'],
+      reviews: _daysAgoReviews([
+        ('최미용', 5, '건조 속도가 확실히 빨라져서 시술 회전율이 좋아졌어요.', 5),
+        ('정헤어샵', 4, '소음이 조금 있지만 파워는 확실합니다.', 14),
+      ]),
     ),
     StoreProduct(
       id: 'store-tools-2',
@@ -91,6 +116,7 @@ class StoreService {
       ],
       description: '염색과 동시에 모발 손상 케어가 가능한 트리트먼트 염모제.',
       tags: const ['무료배송'],
+      reviews: _daysAgoReviews([('조컬러', 4, '발색이 선명하고 손상도 덜한 것 같아요.', 6)]),
     ),
     StoreProduct(
       id: 'store-haircare-1',
@@ -103,6 +129,11 @@ class StoreService {
       ],
       description: '두피 밸런스를 맞춰주는 약산성 살롱 전용 샴푸. 대용량 1L 리필형.',
       isBestSeller: true,
+      reviews: _daysAgoReviews([
+        ('한스타일', 5, '두피가 덜 예민해지는 느낌이에요. 손님들 반응도 좋습니다.', 2),
+        ('윤디자이너', 5, '향도 은은하고 세정력도 좋아요.', 8),
+        ('강샵', 3, '용량 대비 가격이 조금 아쉬워요.', 30),
+      ]),
     ),
     StoreProduct(
       id: 'store-haircare-2',
@@ -160,6 +191,10 @@ class StoreService {
         'https://picsum.photos/seed/hairspare-store-apparel-1/600/600',
       ],
       description: '물과 커트 잔모가 잘 스며들지 않는 발수 원단 커트보.',
+      reviews: _daysAgoReviews([
+        ('임원장', 5, '물이 스며들지 않아서 관리가 훨씬 편해졌어요.', 11),
+        ('서헤어', 4, '색상도 고급스럽고 재질이 튼튼합니다.', 25),
+      ]),
     ),
     StoreProduct(
       id: 'store-apparel-2',

@@ -6,6 +6,7 @@ import '../../core/di/service_locator.dart';
 import '../../core/router/app_routes.dart';
 import '../../models/store_product.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/store_wishlist_provider.dart';
 import '../../services/store_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
@@ -73,6 +74,10 @@ class _StoreScreenState extends State<StoreScreen> {
     context.push(AppRoutes.spareHomeStoreCart);
   }
 
+  void _openWishlist() {
+    context.push(AppRoutes.spareHomeStoreWishlist);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,6 +86,49 @@ class _StoreScreenState extends State<StoreScreen> {
         title: '스토어',
         showToolbarActions: false,
         trailingActions: [
+          Consumer<StoreWishlistProvider>(
+            builder: (context, wishlist, _) {
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.favorite_border,
+                      size: 24,
+                      color: AppTheme.textSecondary,
+                    ),
+                    onPressed: _openWishlist,
+                    tooltip: '찜한 상품',
+                  ),
+                  if (wishlist.count > 0)
+                    Positioned(
+                      right: 6,
+                      top: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 1,
+                        ),
+                        decoration: const BoxDecoration(
+                          color: AppTheme.urgentRed,
+                          borderRadius: BorderRadius.all(Radius.circular(999)),
+                        ),
+                        constraints: const BoxConstraints(minWidth: 16),
+                        child: Text(
+                          '${wishlist.count}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
           Consumer<CartProvider>(
             builder: (context, cart, _) {
               return Stack(
@@ -178,9 +226,15 @@ class _StoreScreenState extends State<StoreScreen> {
                           ),
                       itemBuilder: (context, index) {
                         final product = _products[index];
-                        return StoreProductCard(
-                          product: product,
-                          onTap: () => _openProductDetail(product),
+                        return Consumer<StoreWishlistProvider>(
+                          builder: (context, wishlist, _) {
+                            return StoreProductCard(
+                              product: product,
+                              onTap: () => _openProductDetail(product),
+                              isWishlisted: wishlist.isWishlisted(product.id),
+                              onWishlistToggle: () => wishlist.toggle(product),
+                            );
+                          },
                         );
                       },
                     ),

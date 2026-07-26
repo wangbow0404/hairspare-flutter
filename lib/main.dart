@@ -13,6 +13,7 @@ import 'providers/notification_provider.dart';
 import 'providers/chat_provider.dart';
 import 'providers/point_provider.dart';
 import 'providers/cart_provider.dart';
+import 'providers/store_wishlist_provider.dart';
 import 'package:go_router/go_router.dart';
 
 import 'config/business_config.dart';
@@ -93,6 +94,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider.value(value: sl<ChatProvider>()),
         ChangeNotifierProvider.value(value: sl<PointProvider>()),
         ChangeNotifierProvider.value(value: sl<CartProvider>()),
+        ChangeNotifierProvider.value(value: sl<StoreWishlistProvider>()),
       ],
       child: MaterialApp.router(
         title: 'HairSpare',
