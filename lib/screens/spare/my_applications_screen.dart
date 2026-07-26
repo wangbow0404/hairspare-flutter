@@ -6,6 +6,7 @@ import '../../services/application_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/shell_navigation.dart';
+import '../../widgets/common/shimmer_box.dart';
 import '../../widgets/spare_app_bar.dart';
 
 /// 내 지원 현황 화면
@@ -130,57 +131,53 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen> {
           // 리스트
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const NotificationListSkeleton()
                 : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _error!,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: AppTheme.textSecondary,
-                                  ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: AppTheme.spacing4),
-                            ElevatedButton(
-                              onPressed: _loadApplications,
-                              child: const Text('다시 시도'),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _error!,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppTheme.textSecondary),
+                          textAlign: TextAlign.center,
                         ),
-                      )
-                    : _filteredApplications.isEmpty
-                        ? Center(
-                            child: Text(
-                              '지원 내역이 없습니다',
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: AppTheme.textSecondary,
-                                  ),
-                            ),
-                          )
-                        : RefreshIndicator(
-                            onRefresh: _loadApplications,
-                            child: ListView.builder(
-                              padding: AppTheme.spacing(AppTheme.spacing4),
-                              itemCount: _filteredApplications.length,
-                              itemBuilder: (context, index) {
-                                final app = _filteredApplications[index];
-                                return _ApplicationCard(
-                                  application: app,
-                                  statusLabel: _statusLabel(app.status),
-                                  statusColor: _statusColor(app.status),
-                                  onTap: () {
-                                    ShellNavigation.pushJobDetail(
-                                      context,
-                                      app.job.id,
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                          ),
+                        const SizedBox(height: AppTheme.spacing4),
+                        ElevatedButton(
+                          onPressed: _loadApplications,
+                          child: const Text('다시 시도'),
+                        ),
+                      ],
+                    ),
+                  )
+                : _filteredApplications.isEmpty
+                ? Center(
+                    child: Text(
+                      '지원 내역이 없습니다',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadApplications,
+                    child: ListView.builder(
+                      padding: AppTheme.spacing(AppTheme.spacing4),
+                      itemCount: _filteredApplications.length,
+                      itemBuilder: (context, index) {
+                        final app = _filteredApplications[index];
+                        return _ApplicationCard(
+                          application: app,
+                          statusLabel: _statusLabel(app.status),
+                          statusColor: _statusColor(app.status),
+                          onTap: () {
+                            ShellNavigation.pushJobDetail(context, app.job.id);
+                          },
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
@@ -215,9 +212,9 @@ class _FilterChip extends StatelessWidget {
         child: Text(
           label,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: isActive ? Colors.white : AppTheme.textSecondary,
-              ),
+            fontWeight: FontWeight.w600,
+            color: isActive ? Colors.white : AppTheme.textSecondary,
+          ),
         ),
       ),
     );
@@ -260,9 +257,9 @@ class _ApplicationCard extends StatelessWidget {
                   child: Text(
                     job.title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimary,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -279,9 +276,9 @@ class _ApplicationCard extends StatelessWidget {
                   child: Text(
                     statusLabel,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: statusColor,
-                        ),
+                      fontWeight: FontWeight.w600,
+                      color: statusColor,
+                    ),
                   ),
                 ),
               ],
@@ -289,26 +286,26 @@ class _ApplicationCard extends StatelessWidget {
             const SizedBox(height: AppTheme.spacing2),
             Text(
               job.shopName,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
             ),
             const SizedBox(height: AppTheme.spacing2),
             Row(
               children: [
                 Text(
                   '${job.date} ${job.time}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textTertiary,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppTheme.textTertiary),
                 ),
                 const SizedBox(width: AppTheme.spacing3),
                 Text(
                   '${NumberFormat('#,###').format(job.amount)}원',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.primaryBlue,
-                      ),
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.primaryBlue,
+                  ),
                 ),
               ],
             ),
@@ -316,9 +313,9 @@ class _ApplicationCard extends StatelessWidget {
             Text(
               '지원일: ${DateFormat('yyyy.M.d', 'ko_KR').format(application.createdAt)}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textTertiary,
-                    fontSize: 12,
-                  ),
+                color: AppTheme.textTertiary,
+                fontSize: 12,
+              ),
             ),
           ],
         ),

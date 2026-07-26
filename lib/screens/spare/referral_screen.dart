@@ -6,6 +6,7 @@ import '../../widgets/common/shared_app_bar.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/auth_service.dart';
 import '../../utils/error_handler.dart';
+import '../../widgets/common/shimmer_box.dart';
 
 /// Next.js와 동일한 추천 화면
 class ReferralScreen extends StatefulWidget {
@@ -33,18 +34,18 @@ class _ReferralScreenState extends State<ReferralScreen> {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       // API 호출하여 사용자 정보 및 추천 코드 가져오기
       final user = await _authService.getCurrentUser();
-      
+
       if (user != null) {
         // 추천 코드는 사용자 ID의 앞 8자를 대문자로 변환하여 사용
-        final referralCode = user.id.length >= 8 
+        final referralCode = user.id.length >= 8
             ? user.id.substring(0, 8).toUpperCase()
             : user.id.toUpperCase();
         final userEmail = user.email ?? user.username;
-        
+
         // 추천 이력 조회
         List<_ReferralHistory> referralHistory = [];
         try {
@@ -52,16 +53,25 @@ class _ReferralScreenState extends State<ReferralScreen> {
           referralHistory = historyData.map((item) {
             return _ReferralHistory(
               id: item['id']?.toString() ?? '',
-              friendName: item['friendName']?.toString() ?? item['friend']?['name']?.toString() ?? '친구',
-              joinedDate: item['joinedDate']?.toString() ?? item['createdAt']?.toString() ?? DateTime.now().toIso8601String(),
-              rewardGiven: item['rewardGiven'] as bool? ?? item['reward_given'] as bool? ?? false,
+              friendName:
+                  item['friendName']?.toString() ??
+                  item['friend']?['name']?.toString() ??
+                  '친구',
+              joinedDate:
+                  item['joinedDate']?.toString() ??
+                  item['createdAt']?.toString() ??
+                  DateTime.now().toIso8601String(),
+              rewardGiven:
+                  item['rewardGiven'] as bool? ??
+                  item['reward_given'] as bool? ??
+                  false,
             );
           }).toList();
         } catch (e) {
           // 추천 이력 조회 실패 시 빈 리스트 유지
           debugPrint('추천 이력 조회 오류: $e');
         }
-        
+
         setState(() {
           _referralCode = referralCode;
           _userEmail = userEmail;
@@ -125,7 +135,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        body: Center(child: CircularProgressIndicator()),
+        body: NotificationListSkeleton(),
       );
     }
 
@@ -154,19 +164,31 @@ class _ReferralScreenState extends State<ReferralScreen> {
                         height: 48,
                         decoration: BoxDecoration(
                           color: AppTheme.primaryPink.withValues(alpha: 0.1),
-                          borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+                          borderRadius: AppTheme.borderRadius(
+                            AppTheme.radiusLg,
+                          ),
                         ),
-                        child: IconMapper.icon('users', size: 24, color: AppTheme.primaryPink) ??
-                            const Icon(Icons.people, size: 24, color: AppTheme.primaryPink),
+                        child:
+                            IconMapper.icon(
+                              'users',
+                              size: 24,
+                              color: AppTheme.primaryPink,
+                            ) ??
+                            const Icon(
+                              Icons.people,
+                              size: 24,
+                              color: AppTheme.primaryPink,
+                            ),
                       ),
                       const SizedBox(width: AppTheme.spacing3),
                       Text(
                         '추천 링크',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textPrimary,
+                            ),
                       ),
                     ],
                   ),
@@ -190,17 +212,22 @@ class _ReferralScreenState extends State<ReferralScreen> {
                               padding: AppTheme.spacing(AppTheme.spacing3),
                               decoration: BoxDecoration(
                                 color: AppTheme.backgroundGray,
-                                borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+                                borderRadius: AppTheme.borderRadius(
+                                  AppTheme.radiusLg,
+                                ),
                                 border: Border.all(color: AppTheme.borderGray),
                               ),
                               child: Text(
-                                _referralLink.isEmpty ? '로딩 중...' : _referralLink,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontSize: 12,
-                                  color: _referralLink.isEmpty
-                                      ? AppTheme.textTertiary
-                                      : AppTheme.textPrimary,
-                                ),
+                                _referralLink.isEmpty
+                                    ? '로딩 중...'
+                                    : _referralLink,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      fontSize: 12,
+                                      color: _referralLink.isEmpty
+                                          ? AppTheme.textTertiary
+                                          : AppTheme.textPrimary,
+                                    ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -218,10 +245,12 @@ class _ReferralScreenState extends State<ReferralScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconMapper.icon(
-                                  _copiedType == 'link' ? 'checkcircle' : 'copy',
-                                  size: 16,
-                                  color: Colors.white,
-                                ) ??
+                                      _copiedType == 'link'
+                                          ? 'checkcircle'
+                                          : 'copy',
+                                      size: 16,
+                                      color: Colors.white,
+                                    ) ??
                                     Icon(
                                       _copiedType == 'link'
                                           ? Icons.check_circle
@@ -232,10 +261,11 @@ class _ReferralScreenState extends State<ReferralScreen> {
                                 const SizedBox(width: AppTheme.spacing1),
                                 Text(
                                   _copiedType == 'link' ? '복사됨' : '복사',
-                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                  ),
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(
+                                        fontSize: 12,
+                                        color: Colors.white,
+                                      ),
                                 ),
                               ],
                             ),
@@ -244,13 +274,26 @@ class _ReferralScreenState extends State<ReferralScreen> {
                       ),
                       if (_userEmail == null && !_isLoading)
                         Padding(
-                          padding: const EdgeInsets.only(top: AppTheme.spacing1),
-                          child: Text(
-                            '⚠️ 사용자 이메일을 불러올 수 없습니다',
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              fontSize: 12,
-                              color: AppTheme.urgentRed,
-                            ),
+                          padding: const EdgeInsets.only(
+                            top: AppTheme.spacing1,
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.error_outline,
+                                size: 14,
+                                color: AppTheme.urgentRed,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '사용자 이메일을 불러올 수 없습니다',
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      fontSize: 12,
+                                      color: AppTheme.urgentRed,
+                                    ),
+                              ),
+                            ],
                           ),
                         ),
                     ],
@@ -275,25 +318,30 @@ class _ReferralScreenState extends State<ReferralScreen> {
                               padding: AppTheme.spacing(AppTheme.spacing3),
                               decoration: BoxDecoration(
                                 color: AppTheme.backgroundGray,
-                                borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+                                borderRadius: AppTheme.borderRadius(
+                                  AppTheme.radiusLg,
+                                ),
                                 border: Border.all(color: AppTheme.borderGray),
                               ),
                               child: Text(
                                 _referralCode ?? '코드 생성 중...',
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontSize: 14,
-                                  fontFamily: 'monospace',
-                                  color: _referralCode == null
-                                      ? AppTheme.textTertiary
-                                      : AppTheme.textPrimary,
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      fontSize: 14,
+                                      fontFamily: 'monospace',
+                                      color: _referralCode == null
+                                          ? AppTheme.textTertiary
+                                          : AppTheme.textPrimary,
+                                    ),
                                 textAlign: TextAlign.center,
                               ),
                             ),
                           ),
                           const SizedBox(width: AppTheme.spacing2),
                           ElevatedButton(
-                            onPressed: (_referralCode == null || _referralCode!.isEmpty)
+                            onPressed:
+                                (_referralCode == null ||
+                                    _referralCode!.isEmpty)
                                 ? null
                                 : _copyCode,
                             style: ElevatedButton.styleFrom(
@@ -305,10 +353,12 @@ class _ReferralScreenState extends State<ReferralScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconMapper.icon(
-                                  _copiedType == 'code' ? 'checkcircle' : 'copy',
-                                  size: 16,
-                                  color: Colors.white,
-                                ) ??
+                                      _copiedType == 'code'
+                                          ? 'checkcircle'
+                                          : 'copy',
+                                      size: 16,
+                                      color: Colors.white,
+                                    ) ??
                                     Icon(
                                       _copiedType == 'code'
                                           ? Icons.check_circle
@@ -319,10 +369,11 @@ class _ReferralScreenState extends State<ReferralScreen> {
                                 const SizedBox(width: AppTheme.spacing1),
                                 Text(
                                   _copiedType == 'code' ? '복사됨' : '복사',
-                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                  ),
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(
+                                        fontSize: 12,
+                                        color: Colors.white,
+                                      ),
                                 ),
                               ],
                             ),
@@ -331,13 +382,26 @@ class _ReferralScreenState extends State<ReferralScreen> {
                       ),
                       if (_referralCode == null && !_isLoading)
                         Padding(
-                          padding: const EdgeInsets.only(top: AppTheme.spacing1),
-                          child: Text(
-                            '⚠️ 추천 코드를 생성할 수 없습니다',
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              fontSize: 12,
-                              color: AppTheme.urgentRed,
-                            ),
+                          padding: const EdgeInsets.only(
+                            top: AppTheme.spacing1,
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.error_outline,
+                                size: 14,
+                                color: AppTheme.urgentRed,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '추천 코드를 생성할 수 없습니다',
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      fontSize: 12,
+                                      color: AppTheme.urgentRed,
+                                    ),
+                              ),
+                            ],
                           ),
                         ),
                     ],
@@ -351,10 +415,16 @@ class _ReferralScreenState extends State<ReferralScreen> {
               padding: AppTheme.spacing(AppTheme.spacing6),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [AppTheme.primaryPinkLight, AppTheme.primaryPurpleLight],
+                  colors: [
+                    AppTheme.primaryPinkLight,
+                    AppTheme.primaryPurpleLight,
+                  ],
                 ),
                 borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                border: Border.all(color: AppTheme.primaryPink.withValues(alpha: 0.2), width: 2),
+                border: Border.all(
+                  color: AppTheme.primaryPink.withValues(alpha: 0.2),
+                  width: 2,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,14 +474,21 @@ class _ReferralScreenState extends State<ReferralScreen> {
                           padding: AppTheme.spacing(AppTheme.spacing8),
                           child: Column(
                             children: [
-                              IconMapper.icon('users', size: 48, color: AppTheme.textTertiary) ??
-                                  const Icon(Icons.people, size: 48, color: AppTheme.textTertiary),
+                              IconMapper.icon(
+                                    'users',
+                                    size: 48,
+                                    color: AppTheme.textTertiary,
+                                  ) ??
+                                  const Icon(
+                                    Icons.people,
+                                    size: 48,
+                                    color: AppTheme.textTertiary,
+                                  ),
                               const SizedBox(height: AppTheme.spacing4),
                               Text(
                                 '추천한 친구가 없습니다.',
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: AppTheme.textSecondary,
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(color: AppTheme.textSecondary),
                               ),
                             ],
                           ),
@@ -419,33 +496,47 @@ class _ReferralScreenState extends State<ReferralScreen> {
                       : Column(
                           children: _referralHistory.map((ref) {
                             return Container(
-                              margin: const EdgeInsets.only(bottom: AppTheme.spacing3),
+                              margin: const EdgeInsets.only(
+                                bottom: AppTheme.spacing3,
+                              ),
                               padding: AppTheme.spacing(AppTheme.spacing4),
                               decoration: BoxDecoration(
                                 color: AppTheme.backgroundGray,
-                                borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
+                                borderRadius: AppTheme.borderRadius(
+                                  AppTheme.radiusLg,
+                                ),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         ref.friendName,
-                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppTheme.textPrimary,
-                                        ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppTheme.textPrimary,
+                                            ),
                                       ),
-                                      const SizedBox(height: AppTheme.spacing1 / 2),
+                                      const SizedBox(
+                                        height: AppTheme.spacing1 / 2,
+                                      ),
                                       Text(
                                         '가입일: ${DateFormat('yyyy년 M월 d일', 'ko_KR').format(DateTime.parse(ref.joinedDate))}',
-                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                          fontSize: 12,
-                                          color: AppTheme.textSecondary,
-                                        ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              fontSize: 12,
+                                              color: AppTheme.textSecondary,
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -456,15 +547,20 @@ class _ReferralScreenState extends State<ReferralScreen> {
                                     ),
                                     decoration: BoxDecoration(
                                       color: AppTheme.green100,
-                                      borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
+                                      borderRadius: AppTheme.borderRadius(
+                                        AppTheme.radiusFull,
+                                      ),
                                     ),
                                     child: Text(
                                       '에너지 +1 지급됨',
-                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppTheme.primaryGreen,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppTheme.primaryGreen,
+                                          ),
                                     ),
                                   ),
                                 ],

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../utils/shell_navigation.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_app_bar.dart';
+import '../../widgets/common/shimmer_box.dart';
 import '../../utils/icon_mapper.dart';
 import '../../models/space_rental.dart';
 import '../../services/space_rental_service.dart';
@@ -77,7 +78,9 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
           _isLoading = false;
         });
         final appException = ErrorHandler.handleException(error);
-        final userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(appException);
+        final userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(
+          appException,
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(userFriendlyMessage),
@@ -127,7 +130,9 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
     } catch (error) {
       if (mounted) {
         final appException = ErrorHandler.handleException(error);
-        final userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(appException);
+        final userFriendlyMessage = ErrorHandler.getUserFriendlyMessage(
+          appException,
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(userFriendlyMessage),
@@ -173,7 +178,7 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: AppTheme.backgroundGray,
-        body: Center(child: CircularProgressIndicator()),
+        body: NotificationListSkeleton(),
       );
     }
 
@@ -205,8 +210,16 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IconMapper.icon('calendar', size: 64, color: AppTheme.textTertiary) ??
-                      const Icon(Icons.calendar_today, size: 64, color: AppTheme.textTertiary),
+                  IconMapper.icon(
+                        'calendar',
+                        size: 64,
+                        color: AppTheme.textTertiary,
+                      ) ??
+                      const Icon(
+                        Icons.calendar_today,
+                        size: 64,
+                        color: AppTheme.textTertiary,
+                      ),
                   const SizedBox(height: AppTheme.spacing4),
                   Text(
                     '예약 내역이 없습니다',
@@ -254,7 +267,8 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         booking.spaceRental?.shopName ?? '미용실',
@@ -262,10 +276,10 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
                                             .textTheme
                                             .titleMedium
                                             ?.copyWith(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppTheme.textPrimary,
-                                        ),
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppTheme.textPrimary,
+                                            ),
                                       ),
                                       const SizedBox(height: AppTheme.spacing1),
                                       Text(
@@ -274,9 +288,9 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
                                             .textTheme
                                             .bodySmall
                                             ?.copyWith(
-                                          fontSize: 12,
-                                          color: AppTheme.textSecondary,
-                                        ),
+                                              fontSize: 12,
+                                              color: AppTheme.textSecondary,
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -288,7 +302,9 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
                                   ),
                                   decoration: BoxDecoration(
                                     color: statusColor.withValues(alpha: 0.1),
-                                    borderRadius: AppTheme.borderRadius(AppTheme.radiusSm),
+                                    borderRadius: AppTheme.borderRadius(
+                                      AppTheme.radiusSm,
+                                    ),
                                   ),
                                   child: Text(
                                     _getStatusLabel(booking.status),
@@ -296,10 +312,10 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
                                         .textTheme
                                         .labelSmall
                                         ?.copyWith(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: statusColor,
-                                    ),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: statusColor,
+                                        ),
                                   ),
                                 ),
                               ],
@@ -309,16 +325,27 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
                             const SizedBox(height: AppTheme.spacing3),
                             Row(
                               children: [
-                                IconMapper.icon('clock', size: 16, color: AppTheme.textSecondary) ??
-                                    const Icon(Icons.access_time, size: 16, color: AppTheme.textSecondary),
+                                IconMapper.icon(
+                                      'clock',
+                                      size: 16,
+                                      color: AppTheme.textSecondary,
+                                    ) ??
+                                    const Icon(
+                                      Icons.access_time,
+                                      size: 16,
+                                      color: AppTheme.textSecondary,
+                                    ),
                                 const SizedBox(width: AppTheme.spacing2),
                                 Expanded(
                                   child: Text(
                                     '${DateFormat('yyyy년 M월 d일 HH:mm', 'ko_KR').format(booking.startTime)} - ${DateFormat('HH:mm', 'ko_KR').format(booking.endTime)}',
-                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      fontSize: 14,
-                                      color: AppTheme.textPrimary,
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          fontSize: 14,
+                                          color: AppTheme.textPrimary,
+                                        ),
                                   ),
                                 ),
                               ],
@@ -329,31 +356,39 @@ class _MySpaceBookingsScreenState extends State<MySpaceBookingsScreen>
                               children: [
                                 Text(
                                   '총 금액',
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontSize: 14,
-                                    color: AppTheme.textSecondary,
-                                  ),
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        fontSize: 14,
+                                        color: AppTheme.textSecondary,
+                                      ),
                                 ),
                                 Text(
                                   '${NumberFormat('#,###').format(booking.totalPrice)}원',
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.textPrimary,
-                                  ),
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.textPrimary,
+                                      ),
                                 ),
                               ],
                             ),
-                            if (canCancel && booking.status != BookingStatus.cancelled) ...[
+                            if (canCancel &&
+                                booking.status != BookingStatus.cancelled) ...[
                               const SizedBox(height: AppTheme.spacing3),
                               SizedBox(
                                 width: double.infinity,
                                 child: OutlinedButton(
-                                  onPressed: () => _handleCancelBooking(booking.id),
+                                  onPressed: () =>
+                                      _handleCancelBooking(booking.id),
                                   style: OutlinedButton.styleFrom(
-                                    side: const BorderSide(color: AppTheme.urgentRed),
+                                    side: const BorderSide(
+                                      color: AppTheme.urgentRed,
+                                    ),
                                     foregroundColor: AppTheme.urgentRed,
-                                    padding: AppTheme.spacing(AppTheme.spacing2),
+                                    padding: AppTheme.spacing(
+                                      AppTheme.spacing2,
+                                    ),
                                   ),
                                   child: const Text('예약 취소'),
                                 ),

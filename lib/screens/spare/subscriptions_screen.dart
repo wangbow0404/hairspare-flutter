@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/shared_app_bar.dart';
+import '../../widgets/common/shimmer_box.dart';
 import '../../utils/icon_mapper.dart';
 import '../../services/subscription_service.dart';
 import '../../utils/count_format.dart';
@@ -69,7 +70,9 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('구독 취소 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}'),
+            content: Text(
+              '구독 취소 실패: ${ErrorHandler.getUserFriendlyMessage(appException)}',
+            ),
             backgroundColor: AppTheme.urgentRed,
           ),
         );
@@ -83,45 +86,53 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
       backgroundColor: AppTheme.backgroundGray,
       appBar: const SharedAppBar(title: '구독한 크리에이터'),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const NotificationListSkeleton()
           : _creators.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconMapper.icon('users', size: 64, color: AppTheme.textTertiary) ??
-                          const Icon(Icons.people_outline, size: 64, color: AppTheme.textTertiary),
-                      const SizedBox(height: AppTheme.spacing4),
-                      Text(
-                        '구독한 크리에이터가 없습니다',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textSecondary,
-                        ),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconMapper.icon(
+                        'users',
+                        size: 64,
+                        color: AppTheme.textTertiary,
+                      ) ??
+                      const Icon(
+                        Icons.people_outline,
+                        size: 64,
+                        color: AppTheme.textTertiary,
                       ),
-                      const SizedBox(height: AppTheme.spacing2),
-                      Text(
-                        '챌린지에서 관심있는 크리에이터를 구독해보세요!',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textTertiary,
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: AppTheme.spacing4),
+                  Text(
+                    '구독한 크리에이터가 없습니다',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _loadSubscriptions,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(AppTheme.spacing3),
-                    itemCount: _creators.length,
-                    itemBuilder: (context, index) {
-                      final creator = _creators[index];
-                      return _CreatorListItem(
-                        creator: creator,
-                        onUnsubscribe: () => _handleUnsubscribe(creator.id),
-                      );
-                    },
+                  const SizedBox(height: AppTheme.spacing2),
+                  Text(
+                    '챌린지에서 관심있는 크리에이터를 구독해보세요!',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textTertiary,
+                    ),
                   ),
-                ),
+                ],
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _loadSubscriptions,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(AppTheme.spacing3),
+                itemCount: _creators.length,
+                itemBuilder: (context, index) {
+                  final creator = _creators[index];
+                  return _CreatorListItem(
+                    creator: creator,
+                    onUnsubscribe: () => _handleUnsubscribe(creator.id),
+                  );
+                },
+              ),
+            ),
     );
   }
 }
@@ -131,10 +142,7 @@ class _CreatorListItem extends StatelessWidget {
   final Creator creator;
   final VoidCallback onUnsubscribe;
 
-  const _CreatorListItem({
-    required this.creator,
-    required this.onUnsubscribe,
-  });
+  const _CreatorListItem({required this.creator, required this.onUnsubscribe});
 
   @override
   Widget build(BuildContext context) {
@@ -152,10 +160,7 @@ class _CreatorListItem extends StatelessWidget {
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                AppTheme.primaryPurple,
-                AppTheme.primaryBlue,
-              ],
+              colors: [AppTheme.primaryPurple, AppTheme.primaryBlue],
             ),
             borderRadius: AppTheme.borderRadius(AppTheme.radiusFull),
           ),
@@ -167,14 +172,24 @@ class _CreatorListItem extends StatelessWidget {
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Center(
-                        child: IconMapper.icon('user', size: 24, color: Colors.white) ??
-                            const Icon(Icons.person, size: 24, color: Colors.white),
+                        child:
+                            IconMapper.icon(
+                              'user',
+                              size: 24,
+                              color: Colors.white,
+                            ) ??
+                            const Icon(
+                              Icons.person,
+                              size: 24,
+                              color: Colors.white,
+                            ),
                       );
                     },
                   ),
                 )
               : Center(
-                  child: IconMapper.icon('user', size: 24, color: Colors.white) ??
+                  child:
+                      IconMapper.icon('user', size: 24, color: Colors.white) ??
                       const Icon(Icons.person, size: 24, color: Colors.white),
                 ),
         ),
@@ -222,10 +237,7 @@ class _CreatorListItem extends StatelessWidget {
           ),
           child: const Text(
             '구독 취소',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
           ),
         ),
       ),
