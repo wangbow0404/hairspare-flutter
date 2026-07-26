@@ -71,8 +71,11 @@ class AppTheme {
   static const Color green700 = Color(0xFF047857); // green-700
 
   // 퍼플 색상 (태그용)
-  static const Color purple100 = Color(0xFFF3E8FF); // purple-100
-  static const Color purple700 = Color(0xFF7E22CE); // purple-700
+  /// @deprecated Use [HairSpareColors.brandPrimarySoft]
+  static const Color purple100 = HairSpareColors.brandPrimarySoft;
+
+  /// @deprecated Use [HairSpareColors.brandPrimary]
+  static const Color purple700 = HairSpareColors.brandPrimary;
 
   // 그라데이션 색상 (이미지 영역용)
   static const Color green200 = Color(0xFFBBF7D0); // green-200
