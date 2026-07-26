@@ -30,17 +30,11 @@ List<Widget> buildHubAppBarActions(BuildContext context) {
           children: [
             IconButton(
               tooltip: '메시지',
-              icon:
-                  IconMapper.icon(
-                    'messagecircle',
-                    size: 24,
-                    color: AppTheme.textSecondary,
-                  ) ??
-                  const Icon(
-                    Icons.chat_bubble_outline,
-                    size: 24,
-                    color: AppTheme.textSecondary,
-                  ),
+              icon: const Icon(
+                Icons.chat_bubble_outline,
+                size: 24,
+                color: AppTheme.textSecondary,
+              ),
               onPressed: () => AppBarNavigation.pushMessages(context),
             ),
             if (unreadCount > 0)

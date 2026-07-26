@@ -10,7 +10,8 @@ import '../notification_bell.dart';
 import 'shared_app_bar.dart';
 
 /// 스페어 서브화면용 상단바 — 뒤로가기, 좌측 타이틀, 검색·채팅(뱃지)·알림(뱃지), 하단 그라데이션.
-class SpareSubpageAppBar extends StatelessWidget implements PreferredSizeWidget {
+class SpareSubpageAppBar extends StatelessWidget
+    implements PreferredSizeWidget {
   const SpareSubpageAppBar({
     super.key,
     required this.title,
@@ -25,6 +26,7 @@ class SpareSubpageAppBar extends StatelessWidget implements PreferredSizeWidget 
   final String title;
   final SpareSubpageAppBarGradientStyle gradientStyle;
   final bool showBackButton;
+
   /// false면 검색·채팅·알림 숨김 — 편집/포트폴리오 등 전환 중 rebuild 부하 감소.
   final bool showToolbarActions;
   final List<Widget>? trailingActions;
@@ -65,7 +67,8 @@ class SpareSubpageAppBar extends StatelessWidget implements PreferredSizeWidget 
           automaticallyImplyLeading: false,
           leading: showBackButton
               ? IconButton(
-                  icon: IconMapper.icon(
+                  icon:
+                      IconMapper.icon(
                         'chevronleft',
                         size: 24,
                         color: AppTheme.textSecondary,
@@ -75,19 +78,18 @@ class SpareSubpageAppBar extends StatelessWidget implements PreferredSizeWidget 
                         size: 20,
                         color: AppTheme.textSecondary,
                       ),
-                  onPressed:
-                      onBackPressed ?? () => Navigator.maybePop(context),
+                  onPressed: onBackPressed ?? () => Navigator.maybePop(context),
                   tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                 )
               : null,
           title: Text(title, style: SharedAppBar.titleTextStyle(context)),
           centerTitle: false,
-          titleSpacing:
-              showBackButton ? 0 : NavigationToolbar.kMiddleSpacing,
+          titleSpacing: showBackButton ? 0 : NavigationToolbar.kMiddleSpacing,
           actions: showToolbarActions
               ? [
                   IconButton(
-                    icon: IconMapper.icon(
+                    icon:
+                        IconMapper.icon(
                           'search',
                           size: 24,
                           color: AppTheme.textSecondary,
@@ -114,16 +116,11 @@ class SpareSubpageAppBar extends StatelessWidget implements PreferredSizeWidget 
                         alignment: Alignment.center,
                         children: [
                           IconButton(
-                            icon: IconMapper.icon(
-                                  'messagecircle',
-                                  size: 24,
-                                  color: AppTheme.textSecondary,
-                                ) ??
-                                const Icon(
-                                  Icons.chat_bubble_outline,
-                                  size: 24,
-                                  color: AppTheme.textSecondary,
-                                ),
+                            icon: const Icon(
+                              Icons.chat_bubble_outline,
+                              size: 24,
+                              color: AppTheme.textSecondary,
+                            ),
                             onPressed: () =>
                                 AppBarNavigation.pushMessages(context),
                             tooltip: '메시지',
@@ -165,7 +162,4 @@ class SpareSubpageAppBar extends StatelessWidget implements PreferredSizeWidget 
 }
 
 /// 하단 그라데이션 스타일 (스케줄·공고: 파랑→보라, 포인트 등: 보라→핑크).
-enum SpareSubpageAppBarGradientStyle {
-  bluePurple,
-  purplePink,
-}
+enum SpareSubpageAppBarGradientStyle { bluePurple, purplePink }

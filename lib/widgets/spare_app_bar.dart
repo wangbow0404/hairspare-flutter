@@ -218,17 +218,11 @@ class SpareAppBar extends StatelessWidget implements PreferredSizeWidget {
                             width: 40,
                             height: 40,
                             alignment: Alignment.center,
-                            child:
-                                IconMapper.icon(
-                                  'messagecircle',
-                                  size: 24,
-                                  color: AppTheme.textSecondary,
-                                ) ??
-                                const Icon(
-                                  Icons.chat_bubble_outline,
-                                  size: 24,
-                                  color: AppTheme.textSecondary,
-                                ),
+                            child: const Icon(
+                              Icons.chat_bubble_outline,
+                              size: 24,
+                              color: AppTheme.textSecondary,
+                            ),
                           ),
                         ),
                       ),

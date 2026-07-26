@@ -16,16 +16,18 @@ class IconMapper {
         return Icons.favorite;
       case 'user':
         return Icons.person;
-      
+
       // 알림 및 메시지
       case 'bell':
         return Icons.notifications;
       case 'messagecircle':
       case 'message-circle':
         return Icons.message;
+      case 'messagecircleoutline':
+        return Icons.chat_bubble_outline;
       case 'search':
         return Icons.search;
-      
+
       // 화살표
       case 'chevronleft':
       case 'chevron-left':
@@ -39,21 +41,21 @@ class IconMapper {
       case 'chevronup':
       case 'chevron-up':
         return Icons.keyboard_arrow_up;
-      
+
       // 위치 및 시간
       case 'mappin':
       case 'map-pin':
         return Icons.location_on;
       case 'clock':
         return Icons.access_time;
-      
+
       // 금액 및 인원
       case 'dollarsign':
       case 'dollar-sign':
         return Icons.attach_money;
       case 'users':
         return Icons.people;
-      
+
       // 에너지 및 상태
       case 'zap':
         return Icons.bolt;
@@ -66,14 +68,14 @@ class IconMapper {
         return Icons.shield;
       case 'x':
         return Icons.close;
-      
+
       // 공유 및 카메라
       case 'share2':
       case 'share-2':
         return Icons.share;
       case 'camera':
         return Icons.camera_alt;
-      
+
       // 기타
       case 'calendar':
         return Icons.calendar_today;
@@ -81,7 +83,7 @@ class IconMapper {
         return Icons.star;
       case 'info':
         return Icons.info;
-      
+
       // 추가 아이콘들
       case 'mail':
         return Icons.mail;
@@ -126,27 +128,20 @@ class IconMapper {
         return Icons.arrow_downward;
       case 'check':
         return Icons.check;
-      
+
       default:
         return null;
     }
   }
-  
+
   /// Lucide 아이콘 이름으로 Icon 위젯 생성
-  static Widget? icon(String lucideIconName, {
-    double? size,
-    Color? color,
-  }) {
+  static Widget? icon(String lucideIconName, {double? size, Color? color}) {
     final iconData = getIcon(lucideIconName);
     if (iconData == null) return null;
-    
-    return Icon(
-      iconData,
-      size: size,
-      color: color,
-    );
+
+    return Icon(iconData, size: size, color: color);
   }
-  
+
   /// Lucide 아이콘 이름으로 IconButton 위젯 생성
   static Widget? iconButton(
     String lucideIconName, {
@@ -157,7 +152,7 @@ class IconMapper {
   }) {
     final iconData = getIcon(lucideIconName);
     if (iconData == null) return null;
-    
+
     return IconButton(
       icon: Icon(iconData),
       iconSize: iconSize,

@@ -177,7 +177,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                             : isModelMessaging
                             ? '매칭된 디자이너와의 대화가 없습니다'
                             : '메시지가 없습니다',
-                        iconName: 'messagecircle',
+                        iconName: 'messagecircleoutline',
                       )
                     : ListView.builder(
                         itemCount: filteredChats.length,
