@@ -3,6 +3,7 @@ import '../models/job.dart';
 import '../utils/api_config.dart';
 import '../utils/error_handler.dart';
 import '../utils/app_exception.dart';
+import '../utils/job_availability_utils.dart';
 import '../mocks/mock_spare_data.dart';
 import '../core/di/service_locator.dart';
 
@@ -26,6 +27,7 @@ class FavoriteService {
             .whereType<Map<String, dynamic>>()
             .where((json) => json['job'] != null)
             .map((json) => Job.fromJson(json['job'] as Map<String, dynamic>))
+            .where(JobAvailabilityUtils.isListable)
             .toList();
       } else {
         throw ServerException(

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/job.dart';
 import '../services/favorite_service.dart';
 import '../utils/error_handler.dart';
+import '../utils/job_availability_utils.dart';
 class FavoriteProvider with ChangeNotifier {
   FavoriteProvider(this._favoriteService);
 
@@ -28,7 +29,8 @@ class FavoriteProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _favorites = await _favoriteService.getFavorites();
+      final loaded = await _favoriteService.getFavorites();
+      _favorites = loaded.where(JobAvailabilityUtils.isListable).toList();
       _favoriteJobIds = _favorites.map((job) => job.id).toSet();
       _error = null;
     } catch (e) {

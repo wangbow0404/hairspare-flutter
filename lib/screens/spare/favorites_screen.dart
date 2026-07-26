@@ -5,9 +5,9 @@ import 'package:provider/provider.dart';
 import '../../core/router/app_routes.dart';
 import '../../models/job.dart';
 import '../../providers/favorite_provider.dart';
-import '../../services/favorite_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/job_popularity.dart';
+import '../../widgets/common/shimmer_box.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../widgets/stitch/stitch_empty_state.dart';
 import '../../widgets/stitch/stitch_list_job_card.dart';
@@ -21,63 +21,31 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
-  List<Job> _favoriteJobs = [];
-  bool _isLoading = true;
-  final FavoriteService _favoriteService = FavoriteService();
-
   @override
   void initState() {
     super.initState();
-    _loadFavorites();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<FavoriteProvider>().loadFavorites();
+    });
   }
 
-  Future<void> _loadFavorites() async {
-    setState(() => _isLoading = true);
-    try {
-      final favorites = await _favoriteService.getFavorites();
-      if (mounted) {
-        setState(() {
-          _favoriteJobs = favorites;
-          _isLoading = false;
-        });
-      }
-    } catch (error) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        final errorMessage = error.toString().contains('connection errored') ||
-                error.toString().contains('XMLHttpRequest')
-            ? '서버에 연결할 수 없습니다. Next.js 서버가 실행 중인지 확인해주세요.'
-            : '찜 목록을 불러오는 중 오류가 발생했습니다.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: AppTheme.urgentRed,
-            duration: const Duration(seconds: 4),
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _handleRemoveFavorite(String jobId) async {
-    try {
-      await _favoriteService.removeFavorite(jobId);
-      setState(() {
-        _favoriteJobs.removeWhere((job) => job.id == jobId);
-      });
-      if (mounted) {
-        Provider.of<FavoriteProvider>(context, listen: false).loadFavorites();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('찜이 삭제되었습니다.')),
-        );
-      }
-    } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('찜 삭제 중 오류가 발생했습니다: $error')),
-        );
-      }
-    }
+  Future<void> _handleRemoveFavorite(
+    FavoriteProvider provider,
+    String jobId,
+  ) async {
+    final removed = await provider.removeFavorite(jobId);
+    if (!mounted || !removed) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('찜을 삭제했어요'),
+        action: SnackBarAction(
+          label: '실행취소',
+          onPressed: () => provider.addFavorite(jobId),
+        ),
+        duration: const Duration(seconds: 4),
+      ),
+    );
   }
 
   void _handleJobTap(Job job) {
@@ -89,38 +57,58 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     final canPop = Navigator.canPop(context);
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: SpareSubpageAppBar(
-        title: '찜한 공고',
-        showBackButton: canPop,
+      appBar: SpareSubpageAppBar(title: '찜한 공고', showBackButton: canPop),
+      body: Consumer<FavoriteProvider>(
+        builder: (context, favoriteProvider, _) {
+          if (favoriteProvider.isLoading &&
+              favoriteProvider.favorites.isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.all(AppTheme.spacing4),
+              child: Column(
+                children: [
+                  JobCardSkeleton(),
+                  JobCardSkeleton(),
+                  JobCardSkeleton(),
+                ],
+              ),
+            );
+          }
+
+          final favoriteJobs = favoriteProvider.favorites;
+          if (favoriteJobs.isEmpty) {
+            return StitchEmptyState(
+              message: '찜한 공고가 없습니다',
+              iconName: 'heart',
+              actionLabel: '공고 둘러보기',
+              onAction: () => Navigator.maybePop(context),
+            );
+          }
+
+          final popularIds = JobPopularity.popularJobIds(favoriteJobs);
+          return RefreshIndicator(
+            onRefresh: favoriteProvider.loadFavorites,
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: AppTheme.spacing(AppTheme.spacing4),
+              itemCount: favoriteJobs.length,
+              itemBuilder: (context, index) {
+                final job = favoriteJobs[index];
+                return StitchListJobCard(
+                  job: job,
+                  isFavorite: true,
+                  showPopularBadge: JobPopularity.showsPopularBadge(
+                    job,
+                    popularIds,
+                  ),
+                  onTap: () => _handleJobTap(job),
+                  onFavoriteToggle: () =>
+                      _handleRemoveFavorite(favoriteProvider, job.id),
+                );
+              },
+            ),
+          );
+        },
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _favoriteJobs.isEmpty
-              ? StitchEmptyState(
-                  message: '찜한 공고가 없습니다',
-                  iconName: 'heart',
-                  actionLabel: '공고 둘러보기',
-                  onAction: () => Navigator.maybePop(context),
-                )
-              : ListView.builder(
-                  padding: AppTheme.spacing(AppTheme.spacing4),
-                  itemCount: _favoriteJobs.length,
-                  itemBuilder: (context, index) {
-                    final job = _favoriteJobs[index];
-                    final popularIds =
-                        JobPopularity.popularJobIds(_favoriteJobs);
-                    return StitchListJobCard(
-                      job: job,
-                      isFavorite: true,
-                      showPopularBadge: JobPopularity.showsPopularBadge(
-                        job,
-                        popularIds,
-                      ),
-                      onTap: () => _handleJobTap(job),
-                      onFavoriteToggle: () => _handleRemoveFavorite(job.id),
-                    );
-                  },
-                ),
     );
   }
 }
