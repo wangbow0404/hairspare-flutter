@@ -98,6 +98,11 @@ class _AdminLayoutState extends State<AdminLayout> {
           icon: Icons.school,
           badgeKey: 'pendingEducations',
         ),
+        AdminNavItem(
+          route: AppRoutes.adminStoreSellers,
+          label: '스토어 판매자',
+          icon: Icons.storefront,
+        ),
       ],
     ),
     AdminNavGroup(

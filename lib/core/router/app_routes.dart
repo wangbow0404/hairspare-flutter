@@ -25,6 +25,7 @@ abstract final class AppRoutes {
       '/spare/home/store_product/$productId';
   static const spareHomeStoreCart = '/spare/home/store_cart';
   static const spareHomeStoreWishlist = '/spare/home/store_wishlist';
+  static const spareHomeStoreSellerApply = '/spare/home/store_seller_apply';
   static const spareHomeStoreMy = '/spare/home/store_my';
   static const spareHomeModelMatch = '/spare/home/model_match';
   static const spareHomeWorkCheck = '/spare/home/work_check';
@@ -158,6 +159,7 @@ abstract final class AppRoutes {
   static const adminNoShowReports = '/admin/no-show-reports';
   static const adminCheckin = '/admin/checkin';
   static const adminVerifications = '/admin/verifications';
+  static const adminStoreSellers = '/admin/store-sellers';
   static const adminReports = '/admin/reports';
   static const adminSettings = '/admin/settings';
   static const adminAuditLogs = '/admin/audit-logs';

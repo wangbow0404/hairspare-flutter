@@ -96,6 +96,11 @@ class _StoreMyScreenState extends State<StoreMyScreen> {
                     onStoreHome: () => context.go(AppRoutes.spareHomeStore),
                   ),
                   const SizedBox(height: AppTheme.spacing4),
+                  _SellerApplyBanner(
+                    onTap: () =>
+                        context.push(AppRoutes.spareHomeStoreSellerApply),
+                  ),
+                  const SizedBox(height: AppTheme.spacing4),
                   const _SectionTitle(title: '주문·배송 내역'),
                   const SizedBox(height: AppTheme.spacing2),
                   if (_orders.isEmpty)
@@ -274,6 +279,61 @@ class _QuickTile extends StatelessWidget {
                   color: HairSpareColors.textPrimary,
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SellerApplyBanner extends StatelessWidget {
+  const _SellerApplyBanner({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: HairSpareColors.brandPrimarySoft,
+      borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        child: const Padding(
+          padding: EdgeInsets.all(AppTheme.spacing4),
+          child: Row(
+            children: [
+              Icon(
+                Icons.storefront_outlined,
+                size: 22,
+                color: HairSpareColors.brandPrimary,
+              ),
+              SizedBox(width: AppTheme.spacing3),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '스토어 판매자 신청하기',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: HairSpareColors.brandPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      '내 도구·용품을 스토어에 등록해 판매해보세요',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: HairSpareColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: HairSpareColors.brandPrimary),
             ],
           ),
         ),

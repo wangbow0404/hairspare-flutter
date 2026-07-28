@@ -21,6 +21,7 @@ import '../../screens/admin/admin_settlement_cancel_requests_screen.dart';
 import '../../screens/admin/admin_settings_screen.dart';
 import '../../screens/admin/admin_user_detail_screen.dart';
 import '../../screens/admin/admin_users_screen.dart';
+import '../../screens/admin/admin_store_sellers_screen.dart';
 import '../../screens/admin/admin_verifications_screen.dart';
 import '../../screens/admin/admin_verification_detail_screen.dart';
 import '../../screens/admin/admin_report_detail_screen.dart';
@@ -652,6 +653,11 @@ final class AppRouter {
                   },
                 ),
               ],
+            ),
+            GoRoute(
+              path: AppRoutes.adminStoreSellers,
+              builder: (BuildContext context, GoRouterState state) =>
+                  const AdminStoreSellersScreen(),
             ),
             GoRoute(
               path: AppRoutes.adminReports,
