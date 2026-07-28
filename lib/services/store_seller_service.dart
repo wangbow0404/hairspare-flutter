@@ -74,6 +74,12 @@ class StoreSellerService {
 
   Future<StoreSeller?> getSellerById(String id) async {
     await Future.delayed(const Duration(milliseconds: 100));
+    return getSellerByIdSync(id);
+  }
+
+  /// [getSellerById]의 동기 버전 — 장바구니 판매자별 그룹핑처럼 화면에서
+  /// 이미 메모리에 있는 mock 목록을 즉시 조회해야 할 때 사용.
+  StoreSeller? getSellerByIdSync(String id) {
     for (final seller in _sellers) {
       if (seller.id == id) return seller;
     }

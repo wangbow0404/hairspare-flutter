@@ -7,10 +7,14 @@ class CartItem {
     required this.product,
     required this.quantity,
     this.selectedOptions = const {},
+    this.isSelected = true,
   });
 
   final StoreProduct product;
   int quantity;
+
+  /// 체크박스 선택 상태 — 선택된 항목만 주문 대상에 포함.
+  bool isSelected;
 
   /// 옵션 그룹명 → 선택한 옵션 값.
   final Map<String, StoreProductOptionValue> selectedOptions;
@@ -49,6 +53,46 @@ class CartProvider with ChangeNotifier {
 
   int get totalPrice =>
       _items.values.fold(0, (sum, item) => sum + item.subtotal);
+
+  List<CartItem> get selectedItems =>
+      _items.values.where((item) => item.isSelected).toList();
+
+  bool get allSelected =>
+      _items.isNotEmpty && _items.values.every((item) => item.isSelected);
+
+  int get selectedCount =>
+      selectedItems.fold(0, (sum, item) => sum + item.quantity);
+
+  int get selectedTotalPrice =>
+      selectedItems.fold(0, (sum, item) => sum + item.subtotal);
+
+  /// 판매자([StoreProduct.sellerId]) 기준으로 묶은 장바구니 아이템.
+  Map<String, List<CartItem>> get itemsBySeller {
+    final grouped = <String, List<CartItem>>{};
+    for (final item in _items.values) {
+      grouped.putIfAbsent(item.product.sellerId, () => []).add(item);
+    }
+    return grouped;
+  }
+
+  void toggleSelected(String lineKey) {
+    final existing = _items[lineKey];
+    if (existing == null) return;
+    existing.isSelected = !existing.isSelected;
+    notifyListeners();
+  }
+
+  void setAllSelected(bool value) {
+    for (final item in _items.values) {
+      item.isSelected = value;
+    }
+    notifyListeners();
+  }
+
+  void removeSelected() {
+    _items.removeWhere((_, item) => item.isSelected);
+    notifyListeners();
+  }
 
   void addProduct(
     StoreProduct product, {
