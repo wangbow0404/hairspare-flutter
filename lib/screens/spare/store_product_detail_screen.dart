@@ -37,6 +37,7 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
   bool _isLoading = true;
   String? _error;
   int _quantity = 1;
+  final Map<String, StoreProductOptionValue> _selectedOptions = {};
 
   static final _priceFmt = NumberFormat('#,###');
 
@@ -68,10 +69,37 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
     }
   }
 
+  bool get _allOptionsSelected {
+    final product = _product;
+    if (product == null) return false;
+    return product.optionGroups.every(
+      (g) => _selectedOptions.containsKey(g.name),
+    );
+  }
+
+  void _selectOption(String groupName, StoreProductOptionValue value) {
+    setState(() => _selectedOptions[groupName] = value);
+  }
+
+  bool _validateOptions() {
+    if (_allOptionsSelected) return true;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('옵션을 선택해주세요.'),
+        backgroundColor: AppTheme.urgentRed,
+      ),
+    );
+    return false;
+  }
+
   void _addToCart() {
     final product = _product;
-    if (product == null) return;
-    context.read<CartProvider>().addProduct(product, quantity: _quantity);
+    if (product == null || !_validateOptions()) return;
+    context.read<CartProvider>().addProduct(
+      product,
+      quantity: _quantity,
+      selectedOptions: Map.of(_selectedOptions),
+    );
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('장바구니에 담았습니다.'),
@@ -83,6 +111,17 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
         ),
       ),
     );
+  }
+
+  void _buyNow() {
+    final product = _product;
+    if (product == null || !_validateOptions()) return;
+    context.read<CartProvider>().addProduct(
+      product,
+      quantity: _quantity,
+      selectedOptions: Map.of(_selectedOptions),
+    );
+    context.push(AppRoutes.spareHomeStoreCart);
   }
 
   @override
@@ -244,6 +283,14 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
                                 .toList(),
                           ),
                         ],
+                        if (product.hasOptions) ...[
+                          const SizedBox(height: AppTheme.spacing4),
+                          _OptionSelector(
+                            product: product,
+                            selectedOptions: _selectedOptions,
+                            onSelect: _selectOption,
+                          ),
+                        ],
                         const SizedBox(height: AppTheme.spacing4),
                         Container(
                           width: double.infinity,
@@ -303,8 +350,10 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
           _BottomBar(
             product: product,
             quantity: _quantity,
+            selectedOptions: _selectedOptions,
             onQuantityChanged: (q) => setState(() => _quantity = q),
             onAddToCart: _addToCart,
+            onBuyNow: _buyNow,
           ),
         ],
       ),
@@ -333,6 +382,70 @@ class _TagChip extends StatelessWidget {
           color: HairSpareColors.brandPrimary,
         ),
       ),
+    );
+  }
+}
+
+class _OptionSelector extends StatelessWidget {
+  const _OptionSelector({
+    required this.product,
+    required this.selectedOptions,
+    required this.onSelect,
+  });
+
+  final StoreProduct product;
+  final Map<String, StoreProductOptionValue> selectedOptions;
+  final void Function(String groupName, StoreProductOptionValue value) onSelect;
+
+  static final _priceFmt = NumberFormat('#,###');
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final group in product.optionGroups) ...[
+          Text(
+            group.name,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing2),
+          Wrap(
+            spacing: AppTheme.spacing2,
+            runSpacing: AppTheme.spacing2,
+            children: group.values.map((value) {
+              final isSelected = selectedOptions[group.name] == value;
+              final isSoldOut = (value.stock ?? 1) <= 0;
+              final label = value.priceDelta > 0
+                  ? '${value.label} (+${_priceFmt.format(value.priceDelta)}원)'
+                  : value.label;
+              return ChoiceChip(
+                label: Text(label),
+                selected: isSelected,
+                onSelected: isSoldOut
+                    ? null
+                    : (_) => onSelect(group.name, value),
+                labelStyle: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isSoldOut
+                      ? AppTheme.textTertiary
+                      : (isSelected ? Colors.white : AppTheme.textPrimary),
+                ),
+                selectedColor: HairSpareColors.brandPrimary,
+                backgroundColor: AppTheme.backgroundGray,
+                side: BorderSide.none,
+                showCheckmark: false,
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: AppTheme.spacing3),
+        ],
+      ],
     );
   }
 }
@@ -508,17 +621,28 @@ class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.product,
     required this.quantity,
+    required this.selectedOptions,
     required this.onQuantityChanged,
     required this.onAddToCart,
+    required this.onBuyNow,
   });
 
   final StoreProduct product;
   final int quantity;
+  final Map<String, StoreProductOptionValue> selectedOptions;
   final ValueChanged<int> onQuantityChanged;
   final VoidCallback onAddToCart;
+  final VoidCallback onBuyNow;
+
+  static final _priceFmt = NumberFormat('#,###');
 
   @override
   Widget build(BuildContext context) {
+    final unitPrice =
+        product.price +
+        selectedOptions.values.fold<int>(0, (sum, v) => sum + v.priceDelta);
+    final totalPrice = unitPrice * quantity;
+
     return Container(
       padding: AppTheme.spacing(AppTheme.spacing4),
       decoration: BoxDecoration(
@@ -527,15 +651,62 @@ class _BottomBar extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  '총 금액',
+                  style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                ),
+                Text(
+                  '${_priceFmt.format(totalPrice)}원',
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spacing2),
             _QuantityStepper(quantity: quantity, onChanged: onQuantityChanged),
-            const SizedBox(width: AppTheme.spacing3),
-            Expanded(
-              child: HsPrimaryButton(
-                label: product.isSoldOut ? '품절' : '장바구니 담기',
-                onPressed: product.isSoldOut ? null : onAddToCart,
-              ),
+            const SizedBox(height: AppTheme.spacing3),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: product.isSoldOut ? null : onAddToCart,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: HairSpareColors.brandPrimary,
+                      side: const BorderSide(
+                        color: HairSpareColors.brandPrimary,
+                      ),
+                      padding: AppTheme.spacing(AppTheme.spacing4),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: AppTheme.borderRadius(AppTheme.radiusXl),
+                      ),
+                    ),
+                    child: const Text(
+                      '장바구니',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacing3),
+                Expanded(
+                  flex: 2,
+                  child: HsPrimaryButton(
+                    label: product.isSoldOut ? '품절' : '구매하기',
+                    onPressed: product.isSoldOut ? null : onBuyNow,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

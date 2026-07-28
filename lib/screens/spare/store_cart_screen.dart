@@ -69,8 +69,8 @@ class StoreCartScreen extends StatelessWidget {
                     return _CartItemCard(
                       item: item,
                       onQuantityChanged: (q) =>
-                          cart.updateQuantity(item.product.id, q),
-                      onRemove: () => cart.removeProduct(item.product.id),
+                          cart.updateQuantity(item.lineKey, q),
+                      onRemove: () => cart.removeProduct(item.lineKey),
                     );
                   },
                 ),
@@ -189,6 +189,16 @@ class _CartItemCard extends StatelessWidget {
                     color: AppTheme.textPrimary,
                   ),
                 ),
+                if (item.selectedOptions.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    '옵션: ${item.optionSummary}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: AppTheme.spacing2),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
