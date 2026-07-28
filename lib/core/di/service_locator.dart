@@ -13,6 +13,7 @@ import '../../providers/job_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/point_provider.dart';
 import '../../providers/schedule_provider.dart';
+import '../../providers/store_coupon_provider.dart';
 import '../../providers/store_wishlist_provider.dart';
 import '../../services/admin_service.dart';
 import '../../services/application_service.dart';
@@ -40,6 +41,7 @@ import '../../services/search_service.dart';
 import '../../services/space_rental_service.dart';
 import '../../services/spare_service.dart';
 import '../../services/store_account_service.dart';
+import '../../services/store_coupon_service.dart';
 import '../../services/store_seller_service.dart';
 import '../../services/store_service.dart';
 import '../../services/spare_designer_profile_service.dart';
@@ -98,6 +100,7 @@ void configureDependencies() {
   sl.registerLazySingleton<StoreService>(() => StoreService());
   sl.registerLazySingleton<StoreAccountService>(() => StoreAccountService());
   sl.registerLazySingleton<StoreSellerService>(() => StoreSellerService());
+  sl.registerLazySingleton<StoreCouponService>(() => StoreCouponService());
   sl.registerLazySingleton<SpareService>(() => SpareService());
   sl.registerLazySingleton<SpareDesignerProfileService>(
     () => SpareDesignerProfileService(),
@@ -131,6 +134,7 @@ void configureDependencies() {
   sl.registerLazySingleton<StoreWishlistProvider>(
     () => StoreWishlistProvider(),
   );
+  sl.registerLazySingleton<StoreCouponProvider>(() => StoreCouponProvider());
 }
 
 /// [MaterialApp.router]에 넘기는 인스턴스와 동일한 [GoRouter] (앱 시작 시 한 번 등록).
