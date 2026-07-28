@@ -39,6 +39,7 @@ import '../../services/schedule_service.dart';
 import '../../services/search_service.dart';
 import '../../services/space_rental_service.dart';
 import '../../services/spare_service.dart';
+import '../../services/store_account_service.dart';
 import '../../services/store_service.dart';
 import '../../services/spare_designer_profile_service.dart';
 import '../../services/subscription_service.dart';
@@ -94,6 +95,7 @@ void configureDependencies() {
   sl.registerLazySingleton<SearchService>(() => SearchService());
   sl.registerLazySingleton<SpaceRentalService>(() => SpaceRentalService());
   sl.registerLazySingleton<StoreService>(() => StoreService());
+  sl.registerLazySingleton<StoreAccountService>(() => StoreAccountService());
   sl.registerLazySingleton<SpareService>(() => SpareService());
   sl.registerLazySingleton<SpareDesignerProfileService>(
     () => SpareDesignerProfileService(),

@@ -4,7 +4,10 @@ import 'package:provider/provider.dart';
 
 import '../../providers/cart_provider.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/spare_app_bar.dart';
+import '../../theme/hairspare_colors.dart';
+import '../../widgets/common/spare_subpage_app_bar.dart';
+import '../../widgets/design_system/hs_placeholder_image.dart';
+import '../../widgets/design_system/hs_primary_button.dart';
 
 /// 스토어 장바구니 화면 — 결제 연동 전이라 주문하기는 안내만 표시.
 class StoreCartScreen extends StatelessWidget {
@@ -16,7 +19,7 @@ class StoreCartScreen extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('결제 기능은 준비 중입니다.'),
-        backgroundColor: AppTheme.orange500,
+        backgroundColor: HairSpareColors.brandPrimary,
       ),
     );
   }
@@ -25,7 +28,10 @@ class StoreCartScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
-      appBar: const SpareAppBar(showSearch: false, showBackButton: true),
+      appBar: const SpareSubpageAppBar(
+        title: '장바구니',
+        showToolbarActions: false,
+      ),
       body: Consumer<CartProvider>(
         builder: (context, cart, _) {
           if (cart.isEmpty) {
@@ -102,29 +108,9 @@ class StoreCartScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: AppTheme.spacing3),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () => _showCheckoutComingSoon(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.orange500,
-                            foregroundColor: Colors.white,
-                            padding: AppTheme.spacing(AppTheme.spacing4),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: AppTheme.borderRadius(
-                                AppTheme.radiusLg,
-                              ),
-                            ),
-                          ),
-                          child: Text(
-                            '${cart.totalCount}개 주문하기',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
+                      HsPrimaryButton(
+                        label: '${cart.totalCount}개 주문하기',
+                        onPressed: () => _showCheckoutComingSoon(context),
                       ),
                     ],
                   ),
@@ -171,14 +157,11 @@ class _CartItemCard extends StatelessWidget {
               width: 72,
               height: 72,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (_, __, ___) => const HsPlaceholderImage(
                 width: 72,
                 height: 72,
-                color: AppTheme.backgroundGray,
-                child: const Icon(
-                  Icons.shopping_bag_outlined,
-                  color: AppTheme.textTertiary,
-                ),
+                icon: Icons.shopping_bag_outlined,
+                borderRadius: BorderRadius.zero,
               ),
             ),
           ),

@@ -34,6 +34,7 @@ class _StoreScreenState extends State<StoreScreen> {
   StoreProductCategory? _selectedCategory;
   StoreSortFilter _sortFilter = StoreSortFilter.all;
   List<StoreProduct> _products = [];
+  List<StoreProduct> _bestSellers = [];
   List<StorePromoBanner> _banners = [];
   bool _isLoading = true;
   String? _error;
@@ -79,11 +80,19 @@ class _StoreScreenState extends State<StoreScreen> {
           sort: _sortFilter,
         ),
         _storeService.getPromoBanners(),
+        // 살롱 베스트 레일은 정렬 칩(전체/특가/신상 등)과 무관하게 항상
+        // 카테고리 기준 베스트셀러만 보여준다 (레일이 정렬에 따라 사라지는
+        // 문제 방지).
+        _storeService.getProducts(category: _selectedCategory),
       ]);
       if (!mounted) return;
       setState(() {
         _products = results[0] as List<StoreProduct>;
         _banners = results[1] as List<StorePromoBanner>;
+        _bestSellers = (results[2] as List<StoreProduct>)
+            .where((p) => p.isBestSeller)
+            .take(6)
+            .toList();
         _isLoading = false;
       });
     } catch (error) {
@@ -118,8 +127,20 @@ class _StoreScreenState extends State<StoreScreen> {
 
   void _openSearch() => context.push(AppRoutes.spareSearch);
 
-  List<StoreProduct> get _bestSellers =>
-      _products.where((p) => p.isBestSeller).take(6).toList();
+  String get _gridSectionTitle {
+    switch (_sortFilter) {
+      case StoreSortFilter.all:
+        return '전체 상품';
+      case StoreSortFilter.recommended:
+        return '프로 추천';
+      case StoreSortFilter.bestSeller:
+        return 'MD픽';
+      case StoreSortFilter.onSale:
+        return '특가 상품';
+      case StoreSortFilter.newest:
+        return '신상품';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -198,9 +219,7 @@ class _StoreScreenState extends State<StoreScreen> {
                     ),
                   ),
                   if (_bestSellers.isNotEmpty) ...[
-                    SliverToBoxAdapter(
-                      child: _SectionHeader(title: '살롱 베스트'),
-                    ),
+                    SliverToBoxAdapter(child: _SectionHeader(title: '살롱 베스트')),
                     SliverToBoxAdapter(
                       child: SizedBox(
                         height: 248,
@@ -221,8 +240,9 @@ class _StoreScreenState extends State<StoreScreen> {
                                   return StoreProductCard(
                                     product: product,
                                     onTap: () => _openProductDetail(product),
-                                    isWishlisted:
-                                        wishlist.isWishlisted(product.id),
+                                    isWishlisted: wishlist.isWishlisted(
+                                      product.id,
+                                    ),
                                     onWishlistToggle: () =>
                                         wishlist.toggle(product),
                                   );
@@ -235,7 +255,7 @@ class _StoreScreenState extends State<StoreScreen> {
                     ),
                   ],
                   SliverToBoxAdapter(
-                    child: _SectionHeader(title: '프로 추천'),
+                    child: _SectionHeader(title: _gridSectionTitle),
                   ),
                   if (_products.isEmpty)
                     const SliverFillRemaining(
@@ -258,24 +278,20 @@ class _StoreScreenState extends State<StoreScreen> {
                               crossAxisSpacing: AppTheme.spacing3,
                               childAspectRatio: 0.54,
                             ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final product = _products[index];
-                            return Consumer<StoreWishlistProvider>(
-                              builder: (context, wishlist, _) {
-                                return StoreProductCard(
-                                  product: product,
-                                  onTap: () => _openProductDetail(product),
-                                  isWishlisted:
-                                      wishlist.isWishlisted(product.id),
-                                  onWishlistToggle: () =>
-                                      wishlist.toggle(product),
-                                );
-                              },
-                            );
-                          },
-                          childCount: _products.length,
-                        ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final product = _products[index];
+                          return Consumer<StoreWishlistProvider>(
+                            builder: (context, wishlist, _) {
+                              return StoreProductCard(
+                                product: product,
+                                onTap: () => _openProductDetail(product),
+                                isWishlisted: wishlist.isWishlisted(product.id),
+                                onWishlistToggle: () =>
+                                    wishlist.toggle(product),
+                              );
+                            },
+                          );
+                        }, childCount: _products.length),
                       ),
                     ),
                 ],
@@ -434,9 +450,9 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: AppTheme.spacing4),
           Text(
             '해당 조건에 맞는 상품이 없습니다',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
           ),
         ],
       ),
@@ -464,9 +480,9 @@ class _ErrorState extends StatelessWidget {
           const SizedBox(height: AppTheme.spacing3),
           Text(
             message,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
           ),
           const SizedBox(height: AppTheme.spacing3),
           TextButton(onPressed: onRetry, child: const Text('다시 시도')),

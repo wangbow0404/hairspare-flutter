@@ -15,6 +15,7 @@ import '../../theme/hairspare_colors.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/shell_navigation.dart';
 import '../../widgets/common/shimmer_box.dart';
+import '../../widgets/design_system/hs_placeholder_image.dart';
 import '../../widgets/design_system/hs_primary_button.dart';
 import '../../widgets/spare_app_bar.dart';
 import 'education_screen.dart' show EducationReview;
@@ -146,13 +147,9 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
                     child: Image.network(
                       product.thumbnailUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        color: AppTheme.backgroundGray,
-                        child: const Icon(
-                          Icons.shopping_bag_outlined,
-                          size: 64,
-                          color: AppTheme.textTertiary,
-                        ),
+                      errorBuilder: (_, __, ___) => const HsPlaceholderImage(
+                        icon: Icons.shopping_bag_outlined,
+                        borderRadius: BorderRadius.zero,
                       ),
                     ),
                   ),
@@ -222,7 +219,7 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
                                 style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w800,
-                                  color: AppTheme.orange600,
+                                  color: HairSpareColors.brandPrimary,
                                 ),
                               ),
                               const SizedBox(width: AppTheme.spacing2),
@@ -266,7 +263,7 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
                                   const Icon(
                                     Icons.description_outlined,
                                     size: 18,
-                                    color: AppTheme.orange500,
+                                    color: HairSpareColors.brandPrimary,
                                   ),
                                   const SizedBox(width: AppTheme.spacing2),
                                   const Text(
@@ -325,7 +322,7 @@ class _TagChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: AppTheme.orange50,
+        color: HairSpareColors.brandPrimarySoft,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
@@ -333,7 +330,7 @@ class _TagChip extends StatelessWidget {
         style: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: AppTheme.orange600,
+          color: HairSpareColors.brandPrimary,
         ),
       ),
     );
@@ -417,7 +414,7 @@ class _StoreProductReviewsSectionState
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.orange600,
+                    color: HairSpareColors.brandPrimary,
                   ),
                 ),
               ),
@@ -496,7 +493,7 @@ class _StoreProductReviewsSectionState
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.orange600,
+                    color: HairSpareColors.brandPrimary,
                   ),
                 ),
               ),
@@ -535,25 +532,9 @@ class _BottomBar extends StatelessWidget {
             _QuantityStepper(quantity: quantity, onChanged: onQuantityChanged),
             const SizedBox(width: AppTheme.spacing3),
             Expanded(
-              child: ElevatedButton(
+              child: HsPrimaryButton(
+                label: product.isSoldOut ? '품절' : '장바구니 담기',
                 onPressed: product.isSoldOut ? null : onAddToCart,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.orange500,
-                  disabledBackgroundColor: AppTheme.borderGray300,
-                  foregroundColor: Colors.white,
-                  padding: AppTheme.spacing(AppTheme.spacing4),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppTheme.borderRadius(AppTheme.radiusLg),
-                  ),
-                ),
-                child: Text(
-                  product.isSoldOut ? '품절' : '장바구니 담기',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
               ),
             ),
           ],

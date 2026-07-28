@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/di/service_locator.dart';
 import '../../core/router/app_routes.dart';
 import '../../models/store_order.dart';
 import '../../providers/cart_provider.dart';
@@ -20,7 +21,7 @@ class StoreMyScreen extends StatefulWidget {
 }
 
 class _StoreMyScreenState extends State<StoreMyScreen> {
-  final StoreAccountService _accountService = StoreAccountService();
+  final StoreAccountService _accountService = sl<StoreAccountService>();
   List<StoreOrder> _orders = [];
   List<StoreShippingAddress> _addresses = [];
   bool _loading = true;
@@ -63,9 +64,9 @@ class _StoreMyScreenState extends State<StoreMyScreen> {
     await _accountService.setDefaultAddress(id);
     await _load();
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('기본 배송지로 설정했습니다.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('기본 배송지로 설정했습니다.')));
   }
 
   @override
@@ -102,7 +103,9 @@ class _StoreMyScreenState extends State<StoreMyScreen> {
                   else
                     ..._orders.map(
                       (order) => Padding(
-                        padding: const EdgeInsets.only(bottom: AppTheme.spacing3),
+                        padding: const EdgeInsets.only(
+                          bottom: AppTheme.spacing3,
+                        ),
                         child: _OrderCard(
                           order: order,
                           priceFmt: _priceFmt,
@@ -128,16 +131,16 @@ class _StoreMyScreenState extends State<StoreMyScreen> {
                   OutlinedButton.icon(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('배송지 추가는 준비 중입니다.'),
-                        ),
+                        const SnackBar(content: Text('배송지 추가는 준비 중입니다.')),
                       );
                     },
                     icon: const Icon(Icons.add, size: 18),
                     label: const Text('배송지 추가'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: HairSpareColors.textPrimary,
-                      side: const BorderSide(color: HairSpareColors.borderStrong),
+                      side: const BorderSide(
+                        color: HairSpareColors.borderStrong,
+                      ),
                       padding: const EdgeInsets.symmetric(
                         vertical: AppTheme.spacing4,
                       ),
@@ -537,9 +540,7 @@ class _OrderDetailSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: DecoratedBox(
         decoration: const BoxDecoration(
           color: HairSpareColors.surface,
