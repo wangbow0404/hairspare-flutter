@@ -24,7 +24,18 @@ class StoreService {
       id: 'store-scissors-1',
       name: '프로 커팅 가위 6인치',
       brand: '하츠',
+      sellerId: 'seller-hairspare-official',
       category: StoreProductCategory.scissors,
+      optionGroups: const [
+        StoreProductOptionGroup(
+          name: '사이즈',
+          values: [
+            StoreProductOptionValue(label: '5.5인치'),
+            StoreProductOptionValue(label: '6인치'),
+            StoreProductOptionValue(label: '6.5인치', priceDelta: 5000),
+          ],
+        ),
+      ],
       price: 89000,
       originalPrice: 128000,
       imageUrls: const [
@@ -44,6 +55,7 @@ class StoreService {
       id: 'store-scissors-2',
       name: '틴닝 가위 (숱가위) 30단',
       brand: '준가위',
+      sellerId: 'seller-junscissors',
       category: StoreProductCategory.scissors,
       price: 65000,
       imageUrls: const [
@@ -55,6 +67,7 @@ class StoreService {
       id: 'store-tools-1',
       name: '이온 고속 드라이기 프로',
       brand: '헤어메이트',
+      sellerId: 'seller-hairspare-official',
       category: StoreProductCategory.tools,
       price: 159000,
       originalPrice: 199000,
@@ -74,17 +87,29 @@ class StoreService {
       id: 'store-tools-2',
       name: '티타늄 고데기 32mm',
       brand: '컬리스타',
+      sellerId: 'seller-curlstar',
       category: StoreProductCategory.tools,
       price: 72000,
       imageUrls: const [
         'https://picsum.photos/seed/hairspare-store-tools-2/600/600',
       ],
       description: '균일한 온도 유지가 강점인 티타늄 코팅 고데기. 자연스러운 웨이브 연출에 적합한 32mm.',
+      optionGroups: const [
+        StoreProductOptionGroup(
+          name: '굵기',
+          values: [
+            StoreProductOptionValue(label: '28mm'),
+            StoreProductOptionValue(label: '32mm'),
+            StoreProductOptionValue(label: '38mm', priceDelta: 3000),
+          ],
+        ),
+      ],
     ),
     StoreProduct(
       id: 'store-tools-3',
       name: '무선 헤어 아이론',
       brand: '컬리스타',
+      sellerId: 'seller-curlstar',
       category: StoreProductCategory.tools,
       price: 98000,
       imageUrls: const [
@@ -97,6 +122,7 @@ class StoreService {
       id: 'store-perm-1',
       name: '저자극 매직 스트레이트 약',
       brand: '케라시스 프로',
+      sellerId: 'seller-keracis',
       category: StoreProductCategory.perm,
       price: 45000,
       imageUrls: const [
@@ -108,6 +134,7 @@ class StoreService {
       id: 'store-perm-2',
       name: '데미지 케어 염색약 세트',
       brand: '컬러랩',
+      sellerId: 'seller-colorlab',
       category: StoreProductCategory.perm,
       price: 38000,
       originalPrice: 52000,
@@ -122,6 +149,7 @@ class StoreService {
       id: 'store-haircare-1',
       name: '살롱 전용 샴푸 1L',
       brand: '헤르젠',
+      sellerId: 'seller-herzen',
       category: StoreProductCategory.hairCare,
       price: 32000,
       imageUrls: const [
@@ -139,6 +167,7 @@ class StoreService {
       id: 'store-haircare-2',
       name: '단백질 트리트먼트 팩',
       brand: '헤르젠',
+      sellerId: 'seller-herzen',
       category: StoreProductCategory.hairCare,
       price: 41000,
       imageUrls: const [
@@ -150,6 +179,7 @@ class StoreService {
       id: 'store-supplies-1',
       name: '일회용 위생 가운 (50매)',
       brand: '하츠',
+      sellerId: 'seller-hairspare-official',
       category: StoreProductCategory.supplies,
       price: 18000,
       imageUrls: const [
@@ -162,6 +192,7 @@ class StoreService {
       id: 'store-supplies-2',
       name: '알루미늄 호일 (500매)',
       brand: '준가위',
+      sellerId: 'seller-junscissors',
       category: StoreProductCategory.supplies,
       price: 9800,
       imageUrls: const [
@@ -173,6 +204,7 @@ class StoreService {
       id: 'store-supplies-3',
       name: '롤빗 세트 (10개입)',
       brand: '헤어메이트',
+      sellerId: 'seller-hairspare-official',
       category: StoreProductCategory.supplies,
       price: 15000,
       imageUrls: const [
@@ -182,8 +214,9 @@ class StoreService {
     ),
     StoreProduct(
       id: 'store-apparel-1',
-      name: '발수 커트보 (다크그레이)',
+      name: '발수 커트보',
       brand: '헤르젠',
+      sellerId: 'seller-herzen',
       category: StoreProductCategory.apparel,
       price: 22000,
       originalPrice: 28000,
@@ -191,6 +224,16 @@ class StoreService {
         'https://picsum.photos/seed/hairspare-store-apparel-1/600/600',
       ],
       description: '물과 커트 잔모가 잘 스며들지 않는 발수 원단 커트보.',
+      optionGroups: const [
+        StoreProductOptionGroup(
+          name: '색상',
+          values: [
+            StoreProductOptionValue(label: '다크그레이'),
+            StoreProductOptionValue(label: '블랙'),
+            StoreProductOptionValue(label: '네이비'),
+          ],
+        ),
+      ],
       reviews: _daysAgoReviews([
         ('임원장', 5, '물이 스며들지 않아서 관리가 훨씬 편해졌어요.', 11),
         ('서헤어', 4, '색상도 고급스럽고 재질이 튼튼합니다.', 25),
@@ -200,6 +243,7 @@ class StoreService {
       id: 'store-apparel-2',
       name: '초극세사 헤어 타올 (3매)',
       brand: '케라시스 프로',
+      sellerId: 'seller-keracis',
       category: StoreProductCategory.apparel,
       price: 19000,
       imageUrls: const [
@@ -245,9 +289,7 @@ class StoreService {
       case StoreSortFilter.onSale:
         results = results.where((p) => p.hasDiscount).toList();
       case StoreSortFilter.newest:
-        results = results
-            .where((p) => p.tags.contains('신상품'))
-            .toList();
+        results = results.where((p) => p.tags.contains('신상품')).toList();
     }
 
     return results;
@@ -262,16 +304,14 @@ class StoreService {
         title: '프로 가위 특가 ~40%',
         subtitle: '베스트셀러 + 포인트 5% 적립',
         ctaLabel: '쿠폰 받기',
-        imageUrl:
-            'https://picsum.photos/seed/hairspare-store-banner-1/800/400',
+        imageUrl: 'https://picsum.photos/seed/hairspare-store-banner-1/800/400',
       ),
       StorePromoBanner(
         id: 'banner-deal-2',
         title: '드라이기·고데기 여름 세일',
         subtitle: '살롱 필수템 한정 할인',
         ctaLabel: '특가 상품 보기',
-        imageUrl:
-            'https://picsum.photos/seed/hairspare-store-banner-2/800/400',
+        imageUrl: 'https://picsum.photos/seed/hairspare-store-banner-2/800/400',
       ),
     ];
   }

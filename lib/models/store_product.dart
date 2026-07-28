@@ -40,6 +40,31 @@ class StorePromoBanner {
   final String? imageUrl;
 }
 
+/// 상품 옵션 값 1개 (예: 색상 그룹의 "블랙").
+class StoreProductOptionValue {
+  const StoreProductOptionValue({
+    required this.label,
+    this.priceDelta = 0,
+    this.stock,
+  });
+
+  final String label;
+
+  /// 이 옵션 선택 시 기본가에 추가되는 금액 (없으면 0).
+  final int priceDelta;
+
+  /// 옵션별 재고 — null이면 상품 전체 재고([StoreProduct.stock])를 따름.
+  final int? stock;
+}
+
+/// 상품 옵션 그룹 (예: "색상", "사이즈") — 판매자가 등록 시 지정.
+class StoreProductOptionGroup {
+  const StoreProductOptionGroup({required this.name, required this.values});
+
+  final String name;
+  final List<StoreProductOptionValue> values;
+}
+
 /// 스토어 상품 리뷰 1건.
 class StoreProductReview {
   const StoreProductReview({
@@ -61,6 +86,7 @@ class StoreProduct {
     required this.id,
     required this.name,
     required this.brand,
+    required this.sellerId,
     required this.category,
     required this.price,
     required this.imageUrls,
@@ -70,11 +96,15 @@ class StoreProduct {
     this.tags = const [],
     this.stock = 999,
     this.reviews = const [],
+    this.optionGroups = const [],
   });
 
   final String id;
   final String name;
   final String brand;
+
+  /// 이 상품을 등록한 스토어 판매자 ([StoreSeller.id]).
+  final String sellerId;
   final StoreProductCategory category;
   final int price;
   final int? originalPrice;
@@ -84,6 +114,9 @@ class StoreProduct {
   final List<String> tags;
   final int stock;
   final List<StoreProductReview> reviews;
+  final List<StoreProductOptionGroup> optionGroups;
+
+  bool get hasOptions => optionGroups.isNotEmpty;
 
   bool get isSoldOut => stock <= 0;
 
