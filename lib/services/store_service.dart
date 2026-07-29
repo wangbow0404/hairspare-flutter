@@ -335,4 +335,23 @@ class StoreService {
         .where((p) => p.sellerId == sellerId && p.id != excludeId)
         .toList();
   }
+
+  /// [sellerIds]에 속한 상품 중 베스트셀러·평점 우선으로 골라 [limit]개 반환 —
+  /// 홈 "지금 뜨는 스토어의 상품" 섹션용.
+  Future<List<StoreProduct>> getFeaturedSellerProducts(
+    List<String> sellerIds, {
+    int limit = 8,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 150));
+    final results = _mockProducts
+        .where((p) => sellerIds.contains(p.sellerId))
+        .toList();
+    results.sort((a, b) {
+      if (a.isBestSeller != b.isBestSeller) {
+        return a.isBestSeller ? -1 : 1;
+      }
+      return b.averageRating.compareTo(a.averageRating);
+    });
+    return results.take(limit).toList();
+  }
 }
