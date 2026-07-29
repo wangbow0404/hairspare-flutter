@@ -444,7 +444,7 @@ class _SellerProductsSection extends StatelessWidget {
         ),
         const SizedBox(height: AppTheme.spacing3),
         SizedBox(
-          height: 210,
+          height: 228,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: products.length,
