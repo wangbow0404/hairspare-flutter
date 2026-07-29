@@ -1,4 +1,5 @@
 import '../models/store_seller.dart';
+import '../models/store_product.dart';
 
 /// 스토어 판매자 서비스 — 아직 실 백엔드 연동 전이라 mock 데이터만 제공.
 class StoreSellerService {
@@ -139,5 +140,38 @@ class StoreSellerService {
       rejectReason: reason,
       logoUrl: s.logoUrl,
     );
+  }
+
+  /// 승인된 셀러의 상품수·평균 별점을 집계 — 평균 별점 내림차순, 동률이면 상품수 내림차순.
+  Future<List<StoreSellerSummary>> getSellerSummaries(
+    List<StoreProduct> allProducts,
+  ) async {
+    final approved = await getSellers(status: StoreSellerStatus.approved);
+    final summaries = approved.map((seller) {
+      final products = allProducts
+          .where((p) => p.sellerId == seller.id)
+          .toList();
+      final totalReviews = products.fold<int>(
+        0,
+        (sum, p) => sum + p.reviewCount,
+      );
+      final ratingSum = products.fold<double>(
+        0,
+        (sum, p) => sum + p.averageRating * p.reviewCount,
+      );
+      final averageRating = totalReviews == 0 ? 0.0 : ratingSum / totalReviews;
+      return StoreSellerSummary(
+        seller: seller,
+        productCount: products.length,
+        averageRating: averageRating,
+      );
+    }).toList();
+
+    summaries.sort((a, b) {
+      final byRating = b.averageRating.compareTo(a.averageRating);
+      if (byRating != 0) return byRating;
+      return b.productCount.compareTo(a.productCount);
+    });
+    return summaries;
   }
 }

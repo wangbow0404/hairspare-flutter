@@ -34,3 +34,16 @@ class StoreSeller {
 
   bool get isApproved => status == StoreSellerStatus.approved;
 }
+
+/// 셀러별 집계 지표(상품수·평균 별점) — [StoreSellerService.getSellerSummaries]가 생성.
+class StoreSellerSummary {
+  const StoreSellerSummary({
+    required this.seller,
+    required this.productCount,
+    required this.averageRating,
+  });
+
+  final StoreSeller seller;
+  final int productCount;
+  final double averageRating;
+}
