@@ -75,6 +75,32 @@ class CartProvider with ChangeNotifier {
     return grouped;
   }
 
+  /// 선택된 아이템만 판매자 기준으로 묶은 것 — 번들 할인 계산용.
+  Map<String, List<CartItem>> get selectedItemsBySeller {
+    final grouped = <String, List<CartItem>>{};
+    for (final item in selectedItems) {
+      grouped.putIfAbsent(item.product.sellerId, () => []).add(item);
+    }
+    return grouped;
+  }
+
+  /// 같은 판매자 상품을 서로 다른 종류로 2개 이상 함께 담으면 적용되는 할인율.
+  static const double bundleDiscountRate = 0.05;
+
+  /// 판매자별 번들(함께구매) 할인액 — 서로 다른 상품 2종 이상 선택 시에만 적용.
+  Map<String, int> get bundleDiscountBySeller {
+    final result = <String, int>{};
+    for (final entry in selectedItemsBySeller.entries) {
+      if (entry.value.length < 2) continue;
+      final subtotal = entry.value.fold<int>(0, (sum, i) => sum + i.subtotal);
+      result[entry.key] = (subtotal * bundleDiscountRate).round();
+    }
+    return result;
+  }
+
+  int get selectedBundleDiscountTotal =>
+      bundleDiscountBySeller.values.fold(0, (sum, v) => sum + v);
+
   void toggleSelected(String lineKey) {
     final existing = _items[lineKey];
     if (existing == null) return;

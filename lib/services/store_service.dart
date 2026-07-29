@@ -324,4 +324,15 @@ class StoreService {
       orElse: () => throw NotFoundException('상품을 찾을 수 없습니다.'),
     );
   }
+
+  /// 같은 판매자([sellerId])의 다른 상품 목록 — 상품 상세의 "함께 보면 좋은 상품" 추천용.
+  Future<List<StoreProduct>> getProductsBySeller(
+    String sellerId, {
+    String? excludeId,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 150));
+    return _mockProducts
+        .where((p) => p.sellerId == sellerId && p.id != excludeId)
+        .toList();
+  }
 }

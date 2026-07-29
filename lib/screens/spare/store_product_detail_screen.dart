@@ -18,6 +18,7 @@ import '../../widgets/common/shimmer_box.dart';
 import '../../widgets/design_system/hs_placeholder_image.dart';
 import '../../widgets/design_system/hs_primary_button.dart';
 import '../../widgets/spare_app_bar.dart';
+import '../../widgets/store/store_product_card.dart';
 import 'education_screen.dart' show EducationReview;
 
 /// 스토어 상품 상세 화면.
@@ -34,6 +35,7 @@ class StoreProductDetailScreen extends StatefulWidget {
 class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
   final StoreService _storeService = sl<StoreService>();
   StoreProduct? _product;
+  List<StoreProduct> _sellerProducts = [];
   bool _isLoading = true;
   String? _error;
   int _quantity = 1;
@@ -54,9 +56,14 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
     });
     try {
       final product = await _storeService.getProductById(widget.productId);
+      final sellerProducts = await _storeService.getProductsBySeller(
+        product.sellerId,
+        excludeId: product.id,
+      );
       if (!mounted) return;
       setState(() {
         _product = product;
+        _sellerProducts = sellerProducts;
         _isLoading = false;
       });
     } catch (error) {
@@ -336,6 +343,15 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
                             ],
                           ),
                         ),
+                        if (_sellerProducts.isNotEmpty) ...[
+                          const SizedBox(height: AppTheme.spacing4),
+                          _SellerProductsSection(
+                            products: _sellerProducts,
+                            onTap: (p) => context.push(
+                              AppRoutes.spareHomeStoreProductDetail(p.id),
+                            ),
+                          ),
+                        ],
                         if (product.reviews.isNotEmpty) ...[
                           const SizedBox(height: AppTheme.spacing4),
                           _StoreProductReviewsSection(product: product),
@@ -382,6 +398,71 @@ class _TagChip extends StatelessWidget {
           color: HairSpareColors.brandPrimary,
         ),
       ),
+    );
+  }
+}
+
+/// 같은 판매자의 다른 상품 추천 — 서로 다른 상품 2종 이상 함께 담으면
+/// [CartProvider.bundleDiscountRate]만큼 자동 할인된다는 안내 포함.
+class _SellerProductsSection extends StatelessWidget {
+  const _SellerProductsSection({required this.products, required this.onTap});
+
+  final List<StoreProduct> products;
+  final void Function(StoreProduct product) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final bundlePercent = (CartProvider.bundleDiscountRate * 100).round();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.storefront_outlined,
+              size: 18,
+              color: HairSpareColors.brandPrimary,
+            ),
+            const SizedBox(width: AppTheme.spacing2),
+            const Text(
+              '이 판매자의 다른 상품',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '함께 담으면 판매자 상품 합계에서 자동으로 $bundlePercent% 할인돼요',
+          style: const TextStyle(
+            fontSize: 12,
+            color: AppTheme.textSecondary,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing3),
+        SizedBox(
+          height: 210,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: products.length,
+            separatorBuilder: (_, __) =>
+                const SizedBox(width: AppTheme.spacing3),
+            itemBuilder: (context, index) {
+              final product = products[index];
+              return SizedBox(
+                width: 130,
+                child: StoreProductCard(
+                  product: product,
+                  onTap: () => onTap(product),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

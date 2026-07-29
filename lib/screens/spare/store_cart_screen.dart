@@ -134,10 +134,13 @@ class _StoreCartScreenState extends State<StoreCartScreen> {
                   appliedCoupon.isEligible(cart.selectedTotalPrice)
               ? appliedCoupon.discountAmount
               : 0;
-          final finalTotal = (cart.selectedTotalPrice - discount).clamp(
-            0,
-            1 << 31,
-          );
+          final bundleDiscountBySeller = cart.bundleDiscountBySeller;
+          final bundleDiscount = cart.selectedBundleDiscountTotal;
+          final finalTotal =
+              (cart.selectedTotalPrice - discount - bundleDiscount).clamp(
+                0,
+                1 << 31,
+              );
 
           return Column(
             children: [
@@ -206,6 +209,7 @@ class _StoreCartScreenState extends State<StoreCartScreen> {
                                 .getSellerByIdSync(entry.key)
                                 ?.shopName ??
                             '판매자 정보 없음',
+                        bundleDiscount: bundleDiscountBySeller[entry.key],
                       ),
                       const SizedBox(height: AppTheme.spacing2),
                       for (final item in entry.value) ...[
@@ -300,6 +304,28 @@ class _StoreCartScreenState extends State<StoreCartScreen> {
                             ),
                             Text(
                               '-${_priceFmt.format(discount)}원',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: HairSpareColors.brandPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (bundleDiscount > 0) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              '묶음구매 할인',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: HairSpareColors.brandPrimary,
+                              ),
+                            ),
+                            Text(
+                              '-${_priceFmt.format(bundleDiscount)}원',
                               style: const TextStyle(
                                 fontSize: 13,
                                 color: HairSpareColors.brandPrimary,
@@ -468,9 +494,14 @@ class _CouponPickerSheet extends StatelessWidget {
 }
 
 class _SellerHeader extends StatelessWidget {
-  const _SellerHeader({required this.sellerName});
+  const _SellerHeader({required this.sellerName, this.bundleDiscount});
 
   final String sellerName;
+
+  /// 이 판매자 상품에 적용된 번들(묶음구매) 할인액 — null·0이면 미적용.
+  final int? bundleDiscount;
+
+  static final _priceFmt = NumberFormat('#,###');
 
   @override
   Widget build(BuildContext context) {
@@ -490,6 +521,24 @@ class _SellerHeader extends StatelessWidget {
             color: AppTheme.textSecondary,
           ),
         ),
+        if (bundleDiscount != null && bundleDiscount! > 0) ...[
+          const SizedBox(width: AppTheme.spacing2),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: HairSpareColors.brandPrimarySoft,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              '묶음할인 -${_priceFmt.format(bundleDiscount)}원',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: HairSpareColors.brandPrimary,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
