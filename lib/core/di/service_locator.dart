@@ -13,7 +13,9 @@ import '../../providers/job_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/point_provider.dart';
 import '../../providers/schedule_provider.dart';
+import '../../providers/recently_viewed_store_provider.dart';
 import '../../providers/store_coupon_provider.dart';
+import '../../providers/store_seller_follow_provider.dart';
 import '../../providers/store_wishlist_provider.dart';
 import '../../services/admin_service.dart';
 import '../../services/application_service.dart';
@@ -135,6 +137,12 @@ void configureDependencies() {
     () => StoreWishlistProvider(),
   );
   sl.registerLazySingleton<StoreCouponProvider>(() => StoreCouponProvider());
+  sl.registerLazySingleton<StoreSellerFollowProvider>(
+    () => StoreSellerFollowProvider(),
+  );
+  sl.registerLazySingleton<RecentlyViewedStoreProvider>(
+    () => RecentlyViewedStoreProvider(),
+  );
 }
 
 /// [MaterialApp.router]에 넘기는 인스턴스와 동일한 [GoRouter] (앱 시작 시 한 번 등록).
