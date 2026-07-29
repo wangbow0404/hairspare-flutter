@@ -8,6 +8,7 @@ import '../../core/router/app_routes.dart';
 import '../../core/router/route_extras.dart';
 import '../../models/store_product.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/recently_viewed_store_provider.dart';
 import '../../providers/store_wishlist_provider.dart';
 import '../../services/store_service.dart';
 import '../../theme/app_theme.dart';
@@ -66,6 +67,7 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
         _sellerProducts = sellerProducts;
         _isLoading = false;
       });
+      sl<RecentlyViewedStoreProvider>().recordView(product.id);
     } catch (error) {
       if (!mounted) return;
       final appException = ErrorHandler.handleException(error);
