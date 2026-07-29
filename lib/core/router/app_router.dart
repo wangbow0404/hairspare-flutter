@@ -240,9 +240,11 @@ final class AppRouter {
                         ),
                         GoRoute(
                           path: 'store',
-                          builder:
-                              (BuildContext context, GoRouterState state) =>
-                                  const StoreScreen(),
+                          builder: (BuildContext context, GoRouterState state) {
+                            final sellerId =
+                                state.uri.queryParameters['sellerId'];
+                            return StoreScreen(sellerId: sellerId);
+                          },
                         ),
                         GoRoute(
                           path: 'model_match',

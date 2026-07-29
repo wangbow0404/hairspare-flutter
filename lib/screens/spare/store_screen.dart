@@ -7,6 +7,7 @@ import '../../core/router/app_routes.dart';
 import '../../models/store_product.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/store_wishlist_provider.dart';
+import '../../services/store_seller_service.dart';
 import '../../services/store_service.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/hairspare_colors.dart';
@@ -23,7 +24,10 @@ import '../../widgets/store/store_promo_banner.dart';
 
 /// HairSpare 미용 도구·용품 스토어 — 커머스 UX 패턴(검색·배너·카테고리·필터·그리드).
 class StoreScreen extends StatefulWidget {
-  const StoreScreen({super.key});
+  const StoreScreen({super.key, this.sellerId});
+
+  /// 특정 셀러 상품만 보고 있을 때(예: "인기 스토어" 카드 탭) 설정됨.
+  final String? sellerId;
 
   @override
   State<StoreScreen> createState() => _StoreScreenState();
@@ -38,10 +42,12 @@ class _StoreScreenState extends State<StoreScreen> {
   List<StorePromoBanner> _banners = [];
   bool _isLoading = true;
   String? _error;
+  String? _sellerFilter;
 
   @override
   void initState() {
     super.initState();
+    _sellerFilter = widget.sellerId;
     _loadProducts();
     StoreShellActions.openCategorySheet.addListener(_onCategorySheetRequested);
   }
@@ -86,13 +92,21 @@ class _StoreScreenState extends State<StoreScreen> {
         _storeService.getProducts(category: _selectedCategory),
       ]);
       if (!mounted) return;
-      setState(() {
-        _products = results[0] as List<StoreProduct>;
-        _banners = results[1] as List<StorePromoBanner>;
-        _bestSellers = (results[2] as List<StoreProduct>)
-            .where((p) => p.isBestSeller)
-            .take(6)
+      var products = results[0] as List<StoreProduct>;
+      if (_sellerFilter != null) {
+        products = products
+            .where((p) => p.sellerId == _sellerFilter)
             .toList();
+      }
+      setState(() {
+        _products = products;
+        _banners = results[1] as List<StorePromoBanner>;
+        _bestSellers = _sellerFilter != null
+            ? []
+            : (results[2] as List<StoreProduct>)
+                  .where((p) => p.isBestSeller)
+                  .take(6)
+                  .toList();
         _isLoading = false;
       });
     } catch (error) {
@@ -117,6 +131,11 @@ class _StoreScreenState extends State<StoreScreen> {
     _loadProducts();
   }
 
+  void _clearSellerFilter() {
+    setState(() => _sellerFilter = null);
+    _loadProducts();
+  }
+
   void _openProductDetail(StoreProduct product) {
     context.push(AppRoutes.spareHomeStoreProductDetail(product.id));
   }
@@ -126,6 +145,12 @@ class _StoreScreenState extends State<StoreScreen> {
   void _openWishlist() => context.push(AppRoutes.spareHomeStoreWishlist);
 
   void _openSearch() => context.push(AppRoutes.spareSearch);
+
+  String? get _sellerFilterName {
+    final sellerId = _sellerFilter;
+    if (sellerId == null) return null;
+    return sl<StoreSellerService>().getSellerByIdSync(sellerId)?.shopName;
+  }
 
   String get _gridSectionTitle {
     switch (_sortFilter) {
@@ -181,6 +206,35 @@ class _StoreScreenState extends State<StoreScreen> {
                       ),
                     ),
                   ),
+                  if (_sellerFilter != null)
+                    SliverToBoxAdapter(
+                      child: Container(
+                        width: double.infinity,
+                        color: HairSpareColors.brandPrimarySoft,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing4,
+                          vertical: AppTheme.spacing2,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${_sellerFilterName ?? '선택한'} 스토어 상품만 보는 중',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: HairSpareColors.brandPrimary,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: _clearSellerFilter,
+                              child: const Text('전체보기'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   SliverToBoxAdapter(
                     child: ColoredBox(
                       color: HairSpareColors.surface,
@@ -255,7 +309,11 @@ class _StoreScreenState extends State<StoreScreen> {
                     ),
                   ],
                   SliverToBoxAdapter(
-                    child: _SectionHeader(title: _gridSectionTitle),
+                    child: _SectionHeader(
+                      title: _sellerFilter != null
+                          ? '${_sellerFilterName ?? ''} 상품'
+                          : _gridSectionTitle,
+                    ),
                   ),
                   if (_products.isEmpty)
                     const SliverFillRemaining(
