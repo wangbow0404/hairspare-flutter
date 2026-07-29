@@ -3,6 +3,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hairspare/core/di/service_locator.dart';
 import 'package:hairspare/providers/cart_provider.dart';
+import 'package:hairspare/providers/chat_provider.dart';
+import 'package:hairspare/providers/notification_provider.dart';
 import 'package:hairspare/providers/recently_viewed_store_provider.dart';
 import 'package:hairspare/providers/store_wishlist_provider.dart';
 import 'package:hairspare/screens/spare/store_product_detail_screen.dart';
@@ -15,7 +17,7 @@ void main() {
 
   setUp(() async {
     dotenv.testLoad(fileInput: '');
-    ApiClient().init(
+    await ApiClient().init(
       onSessionExpired: () async {},
       onSessionExpiredMessage: (_) {},
     );
@@ -38,6 +40,12 @@ void main() {
           ChangeNotifierProvider<CartProvider>.value(
             value: sl<CartProvider>(),
           ),
+          ChangeNotifierProvider<ChatProvider>.value(
+            value: sl<ChatProvider>(),
+          ),
+          ChangeNotifierProvider<NotificationProvider>.value(
+            value: sl<NotificationProvider>(),
+          ),
           ChangeNotifierProvider<StoreWishlistProvider>.value(
             value: sl<StoreWishlistProvider>(),
           ),
@@ -50,13 +58,7 @@ void main() {
         ),
       ),
     );
-
-    // Try to settle, but don't fail if there are exceptions
-    try {
-      await tester.pumpAndSettle(const Duration(seconds: 5));
-    } catch (_) {
-      // Ignore settling errors, the important thing is the provider state
-    }
+    await tester.pumpAndSettle();
 
     expect(
       sl<RecentlyViewedStoreProvider>().productIds,
