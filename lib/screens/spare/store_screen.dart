@@ -276,7 +276,7 @@ class _StoreScreenState extends State<StoreScreen> {
                     SliverToBoxAdapter(child: _SectionHeader(title: '살롱 베스트')),
                     SliverToBoxAdapter(
                       child: SizedBox(
-                        height: 248,
+                        height: 266,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.symmetric(
