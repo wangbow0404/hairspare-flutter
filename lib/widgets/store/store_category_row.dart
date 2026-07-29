@@ -93,18 +93,15 @@ class _CategoryTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: selected
                       ? HairSpareColors.activeStructural
-                      : HairSpareColors.surfaceMuted,
+                      : HairSpareColors.brandPrimarySoft,
                   borderRadius: BorderRadius.circular(14),
-                  border: selected
-                      ? null
-                      : Border.all(color: HairSpareColors.border),
                 ),
                 child: Icon(
                   icon,
                   size: 24,
                   color: selected
                       ? Colors.white
-                      : HairSpareColors.textStrong,
+                      : HairSpareColors.brandPrimary,
                 ),
               ),
               const SizedBox(height: 6),
