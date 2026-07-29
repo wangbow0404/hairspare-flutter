@@ -61,3 +61,4 @@ repomix-output.xml
 repomix-output*.xml
 .vercel
 .env*
+.superpowers/
