@@ -29,6 +29,7 @@ abstract final class AppRoutes {
   static const spareHomeStoreMy = '/spare/home/store_my';
   static String spareHomeStoreForSeller(String sellerId) =>
       '$spareHomeStore?sellerId=$sellerId';
+  static const spareHomeStoreAllSellers = '/spare/home/store_all_sellers';
   static const spareHomeModelMatch = '/spare/home/model_match';
   static const spareHomeWorkCheck = '/spare/home/work_check';
   static const spareHomeRegionSelect = '/spare/home/region_select';

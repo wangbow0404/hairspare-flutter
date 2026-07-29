@@ -32,6 +32,7 @@ import '../../screens/spare/point_history_screen.dart';
 import '../../screens/spare/profile_edit_screen.dart';
 import '../../screens/spare/reviews_list_screen.dart';
 import '../../screens/spare/space_rental_detail_screen.dart';
+import '../../screens/spare/store_all_sellers_screen.dart';
 import '../../screens/spare/store_cart_screen.dart';
 import '../../screens/spare/store_product_detail_screen.dart';
 import '../../screens/spare/store_my_screen.dart';
@@ -124,6 +125,10 @@ abstract final class SharedLeafRoutes {
       builder: (_, __) => const StoreWishlistScreen(),
     ),
     GoRoute(path: 'store_my', builder: (_, __) => const StoreMyScreen()),
+    GoRoute(
+      path: 'store_all_sellers',
+      builder: (_, __) => const StoreAllSellersScreen(),
+    ),
     GoRoute(
       path: 'store_seller_apply',
       builder: (_, __) => const StoreSellerApplyScreen(),
