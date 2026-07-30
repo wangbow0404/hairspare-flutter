@@ -18,9 +18,9 @@ void main() {
     await initializeDateFormatting('ko_KR');
   });
 
-  setUp(() {
+  setUp(() async {
     dotenv.testLoad(fileInput: '');
-    ApiClient().init(
+    await ApiClient().init(
       onSessionExpired: () async {},
       onSessionExpiredMessage: (_) {},
     );

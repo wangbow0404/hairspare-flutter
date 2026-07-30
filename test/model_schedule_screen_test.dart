@@ -22,7 +22,7 @@ void main() {
 
   Future<void> pumpModelApp(WidgetTester tester) async {
     dotenv.testLoad(fileInput: '');
-    ApiClient().init(
+    await ApiClient().init(
       onSessionExpired: () async {},
       onSessionExpiredMessage: (_) {},
     );

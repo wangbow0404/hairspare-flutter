@@ -17,7 +17,7 @@ void main() {
 
   Future<void> pumpAppForUser(WidgetTester tester, dynamic user) async {
     dotenv.testLoad(fileInput: '');
-    ApiClient().init(
+    await ApiClient().init(
       onSessionExpired: () async {},
       onSessionExpiredMessage: (_) {},
     );
