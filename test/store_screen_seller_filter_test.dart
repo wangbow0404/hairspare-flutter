@@ -12,9 +12,9 @@ import 'package:provider/provider.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUp(() {
+  setUp(() async {
     dotenv.testLoad(fileInput: '');
-    ApiClient().init(
+    await ApiClient().init(
       onSessionExpired: () async {},
       onSessionExpiredMessage: (_) {},
     );
