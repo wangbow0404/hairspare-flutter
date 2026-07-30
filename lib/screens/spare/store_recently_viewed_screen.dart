@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -26,15 +27,16 @@ class _StoreRecentlyViewedScreenState
   final StoreService _storeService = sl<StoreService>();
   List<StoreProduct> _products = [];
   bool _isLoading = true;
+  List<String> _lastLoadedIds = const [];
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _load(sl<RecentlyViewedStoreProvider>().productIds);
   }
 
-  Future<void> _load() async {
-    final ids = sl<RecentlyViewedStoreProvider>().productIds;
+  Future<void> _load(List<String> ids) async {
+    _lastLoadedIds = ids;
     final products = <StoreProduct>[];
     for (final id in ids) {
       try {
@@ -56,6 +58,13 @@ class _StoreRecentlyViewedScreenState
 
   @override
   Widget build(BuildContext context) {
+    final recentlyViewed = context.watch<RecentlyViewedStoreProvider>();
+    final ids = recentlyViewed.productIds;
+    if (!listEquals(ids, _lastLoadedIds)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _load(ids);
+      });
+    }
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,
       appBar: const SpareSubpageAppBar(
