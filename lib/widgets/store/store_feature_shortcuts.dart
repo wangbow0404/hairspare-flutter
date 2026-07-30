@@ -54,14 +54,16 @@ class StoreFeatureShortcuts extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing2),
-      child: Wrap(
-        children: [
-          for (final item in items)
-            SizedBox(
-              width: MediaQuery.of(context).size.width / 3,
-              child: _ShortcutTile(item: item),
-            ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final tileWidth = constraints.maxWidth / 3;
+          return Wrap(
+            children: [
+              for (final item in items)
+                SizedBox(width: tileWidth, child: _ShortcutTile(item: item)),
+            ],
+          );
+        },
       ),
     );
   }
