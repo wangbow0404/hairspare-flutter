@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 import '../../core/di/service_locator.dart';
 import '../../core/router/app_routes.dart';
 import '../../models/store_product.dart';
+import '../../models/store_seller.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/store_seller_follow_provider.dart';
 import '../../providers/store_wishlist_provider.dart';
 import '../../services/store_seller_service.dart';
 import '../../services/store_service.dart';
@@ -19,8 +21,10 @@ import '../../widgets/design_system/hs_filter_chip.dart';
 import '../../widgets/design_system/hs_search_bar.dart';
 import '../../widgets/store/store_category_row.dart';
 import '../../widgets/store/store_category_sheet.dart';
+import '../../widgets/store/store_feature_shortcuts.dart';
 import '../../widgets/store/store_product_card.dart';
 import '../../widgets/store/store_promo_banner.dart';
+import '../../widgets/store/store_seller_card.dart';
 
 /// HairSpare 미용 도구·용품 스토어 — 커머스 UX 패턴(검색·배너·카테고리·필터·그리드).
 class StoreScreen extends StatefulWidget {
@@ -35,11 +39,14 @@ class StoreScreen extends StatefulWidget {
 
 class _StoreScreenState extends State<StoreScreen> {
   final StoreService _storeService = sl<StoreService>();
+  final StoreSellerService _sellerService = sl<StoreSellerService>();
   StoreProductCategory? _selectedCategory;
   StoreSortFilter _sortFilter = StoreSortFilter.all;
   List<StoreProduct> _products = [];
   List<StoreProduct> _bestSellers = [];
   List<StorePromoBanner> _banners = [];
+  List<StoreSellerSummary> _sellerSummaries = [];
+  List<StoreProduct> _featuredSellerProducts = [];
   bool _isLoading = true;
   String? _error;
   String? _sellerFilter;
@@ -98,6 +105,24 @@ class _StoreScreenState extends State<StoreScreen> {
             .where((p) => p.sellerId == _sellerFilter)
             .toList();
       }
+
+      var sellerSummaries = <StoreSellerSummary>[];
+      var featuredSellerProducts = <StoreProduct>[];
+      if (_sellerFilter == null) {
+        final allProducts = await _storeService.getProducts();
+        sellerSummaries = await _sellerService.getSellerSummaries(
+          allProducts,
+        );
+        final topSellerIds = sellerSummaries
+            .take(6)
+            .map((s) => s.seller.id)
+            .toList();
+        featuredSellerProducts = await _storeService.getFeaturedSellerProducts(
+          topSellerIds,
+        );
+      }
+
+      if (!mounted) return;
       setState(() {
         _products = products;
         _banners = results[1] as List<StorePromoBanner>;
@@ -107,6 +132,8 @@ class _StoreScreenState extends State<StoreScreen> {
                   .where((p) => p.isBestSeller)
                   .take(6)
                   .toList();
+        _sellerSummaries = sellerSummaries;
+        _featuredSellerProducts = featuredSellerProducts;
         _isLoading = false;
       });
     } catch (error) {
@@ -145,6 +172,19 @@ class _StoreScreenState extends State<StoreScreen> {
   void _openWishlist() => context.push(AppRoutes.spareHomeStoreWishlist);
 
   void _openSearch() => context.push(AppRoutes.spareSearch);
+
+  void _openAllSellers() => context.push(AppRoutes.spareHomeStoreAllSellers);
+
+  void _openCouponBox() => context.push(AppRoutes.spareHomeStoreCouponBox);
+
+  void _openOrders() => context.push(AppRoutes.spareHomeStoreMy);
+
+  void _openRecentlyViewed() =>
+      context.push(AppRoutes.spareHomeStoreRecentlyViewed);
+
+  void _openSellerFromCard(StoreSeller seller) {
+    context.push(AppRoutes.spareHomeStoreForSeller(seller.id));
+  }
 
   String? get _sellerFilterName {
     final sellerId = _sellerFilter;
@@ -272,6 +312,80 @@ class _StoreScreenState extends State<StoreScreen> {
                       ),
                     ),
                   ),
+                  if (_sellerFilter == null && _sellerSummaries.isNotEmpty) ...[
+                    SliverToBoxAdapter(
+                      child: _SectionHeader(
+                        title: '인기 스토어',
+                        trailing: TextButton(
+                          onPressed: _openAllSellers,
+                          child: const Text('더보기 ›'),
+                        ),
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: 168,
+                        child: Consumer<StoreSellerFollowProvider>(
+                          builder: (context, follow, _) {
+                            return ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppTheme.spacing4,
+                              ),
+                              itemCount: _sellerSummaries.take(6).length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(width: AppTheme.spacing3),
+                              itemBuilder: (context, index) {
+                                final summary = _sellerSummaries[index];
+                                final sellerId = summary.seller.id;
+                                return StoreSellerCard(
+                                  summary: summary,
+                                  isFollowing: follow.isFollowing(sellerId),
+                                  followerCount: follow.followerCount(
+                                    sellerId,
+                                  ),
+                                  onTap: () =>
+                                      _openSellerFromCard(summary.seller),
+                                  onFollowToggle: () => follow.toggle(
+                                    sellerId,
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    const SliverToBoxAdapter(
+                      child: SizedBox(height: AppTheme.spacing2),
+                    ),
+                  ],
+                  if (_sellerFilter == null) ...[
+                    SliverToBoxAdapter(child: _SectionHeader(title: '바로가기')),
+                    SliverToBoxAdapter(
+                      child: Consumer<CartProvider>(
+                        builder: (context, cart, _) {
+                          return Consumer<StoreWishlistProvider>(
+                            builder: (context, wishlist, _) {
+                              return StoreFeatureShortcuts(
+                                cartCount: cart.totalCount,
+                                wishlistCount: wishlist.count,
+                                onCart: _openCart,
+                                onWishlist: _openWishlist,
+                                onOrders: _openOrders,
+                                onAllSellers: _openAllSellers,
+                                onCouponBox: _openCouponBox,
+                                onRecentlyViewed: _openRecentlyViewed,
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    const SliverToBoxAdapter(
+                      child: SizedBox(height: AppTheme.spacing2),
+                    ),
+                  ],
                   if (_bestSellers.isNotEmpty) ...[
                     SliverToBoxAdapter(child: _SectionHeader(title: '살롱 베스트')),
                     SliverToBoxAdapter(
@@ -287,6 +401,45 @@ class _StoreScreenState extends State<StoreScreen> {
                               const SizedBox(width: AppTheme.spacing3),
                           itemBuilder: (context, index) {
                             final product = _bestSellers[index];
+                            return SizedBox(
+                              width: 156,
+                              child: Consumer<StoreWishlistProvider>(
+                                builder: (context, wishlist, _) {
+                                  return StoreProductCard(
+                                    product: product,
+                                    onTap: () => _openProductDetail(product),
+                                    isWishlisted: wishlist.isWishlisted(
+                                      product.id,
+                                    ),
+                                    onWishlistToggle: () =>
+                                        wishlist.toggle(product),
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (_sellerFilter == null &&
+                      _featuredSellerProducts.isNotEmpty) ...[
+                    SliverToBoxAdapter(
+                      child: _SectionHeader(title: '지금 뜨는 스토어의 상품'),
+                    ),
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: 266,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing4,
+                          ),
+                          itemCount: _featuredSellerProducts.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(width: AppTheme.spacing3),
+                          itemBuilder: (context, index) {
+                            final product = _featuredSellerProducts[index];
                             return SizedBox(
                               width: 156,
                               child: Consumer<StoreWishlistProvider>(
@@ -360,9 +513,10 @@ class _StoreScreenState extends State<StoreScreen> {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
+  const _SectionHeader({required this.title, this.trailing});
 
   final String title;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -370,16 +524,23 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(
         AppTheme.spacing4,
         AppTheme.spacing2,
-        AppTheme.spacing4,
+        AppTheme.spacing2,
         AppTheme.spacing3,
       ),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w800,
-          color: HairSpareColors.textPrimary,
-        ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: HairSpareColors.textPrimary,
+              ),
+            ),
+          ),
+          if (trailing != null) trailing!,
+        ],
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hairspare/core/di/service_locator.dart';
 import 'package:hairspare/providers/cart_provider.dart';
+import 'package:hairspare/providers/store_seller_follow_provider.dart';
 import 'package:hairspare/providers/store_wishlist_provider.dart';
 import 'package:hairspare/screens/spare/store_screen.dart';
 import 'package:hairspare/utils/api_client.dart';
@@ -37,6 +38,9 @@ void main() {
           ),
           ChangeNotifierProvider<StoreWishlistProvider>.value(
             value: sl<StoreWishlistProvider>(),
+          ),
+          ChangeNotifierProvider<StoreSellerFollowProvider>.value(
+            value: sl<StoreSellerFollowProvider>(),
           ),
         ],
         child: const MaterialApp(
