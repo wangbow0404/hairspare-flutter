@@ -61,8 +61,13 @@ void main() {
       ),
     );
     await tester.pump();
+    // 공고 섹션들이 StaggeredFadeIn(순차 페이드인, 최대 지연 180ms)으로
+    // 감싸여 있어, 그 안의 Future.delayed 타이머가 모두 발화할 시간만큼
+    // 프레임을 더 진행해야 테스트 종료 시 "Timer is still pending" 오류가
+    // 나지 않는다.
+    await tester.pump(const Duration(milliseconds: 200));
 
-    expect(find.text('공고별'), findsOneWidget);
+    expect(find.text('공고정보'), findsOneWidget);
     expect(find.text('모델매칭'), findsOneWidget);
   });
 }

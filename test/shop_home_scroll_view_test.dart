@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hairspare/core/di/service_locator.dart';
+import 'package:hairspare/providers/auth_provider.dart';
 import 'package:hairspare/providers/chat_provider.dart';
 import 'package:hairspare/providers/notification_provider.dart';
 import 'package:hairspare/utils/api_client.dart';
@@ -40,6 +41,9 @@ void main() {
       MultiProvider(
         providers: [
           ChangeNotifierProvider<ShopHomeViewModel>.value(value: vm),
+          ChangeNotifierProvider<AuthProvider>.value(
+            value: sl<AuthProvider>(),
+          ),
           ChangeNotifierProvider<ChatProvider>.value(value: sl<ChatProvider>()),
           ChangeNotifierProvider<NotificationProvider>.value(
             value: sl<NotificationProvider>(),
@@ -54,16 +58,16 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.bySemanticsLabel('HairSpare'), findsOneWidget);
-    expect(find.text('인력별'), findsOneWidget);
-    expect(find.text('스케줄표'), findsOneWidget);
+    expect(find.text('내 샵'), findsOneWidget);
+    expect(find.text('스페어정보'), findsOneWidget);
+    expect(find.text('내 스케줄'), findsOneWidget);
 
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -520));
     await tester.pumpAndSettle();
 
-    expect(find.text('진행중 공고'), findsOneWidget);
+    expect(find.text('내 공고'), findsOneWidget);
     expect(find.text('대기 지원자'), findsOneWidget);
-    expect(find.text('오늘의 매칭'), findsOneWidget);
+    expect(find.text('오늘 모델매칭'), findsOneWidget);
 
     scrollController.dispose();
   });

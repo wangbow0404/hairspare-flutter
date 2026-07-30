@@ -20,13 +20,20 @@ void main() {
     await initializeDateFormatting('ko_KR');
   });
 
-  Future<void> pumpModelApp(WidgetTester tester) async {
+  // ApiClient().init()은 path_provider(getApplicationDocumentsDirectory)를
+  // 거치는데, 이 실제(미모킹) 플랫폼 채널 호출을 testWidgets 콜백 본문 안에서
+  // 직접 await하면 응답이 영원히 오지 않아 테스트가 멈춘다(hang). setUp에서
+  // 실행하면 정상적으로 완료된다.
+  setUp(() async {
     dotenv.testLoad(fileInput: '');
     await ApiClient().init(
       onSessionExpired: () async {},
       onSessionExpiredMessage: (_) {},
     );
     configureDependencies();
+  });
+
+  Future<void> pumpModelApp(WidgetTester tester) async {
     final auth = sl<AuthProvider>();
     await auth.setUser(MockAuthData.modelUser());
     final router = AppRouter.createRouter(auth);
