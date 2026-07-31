@@ -30,6 +30,14 @@ import '../../widgets/store/store_seller_card.dart';
 class StoreScreen extends StatefulWidget {
   const StoreScreen({super.key, this.sellerId});
 
+  /// "살롱 베스트" 가로 레일 — 두 레일이 같은 상품을 노출하지 않는지 테스트에서 식별용.
+  static const Key bestSellerRailKey = Key('store-best-sellers-rail');
+
+  /// "지금 뜨는 스토어의 상품" 가로 레일.
+  static const Key featuredSellerRailKey = Key(
+    'store-featured-seller-products-rail',
+  );
+
   /// 특정 셀러 상품만 보고 있을 때(예: "인기 스토어" 카드 탭) 설정됨.
   final String? sellerId;
 
@@ -56,6 +64,7 @@ class _StoreScreenState extends State<StoreScreen> {
     super.initState();
     _sellerFilter = widget.sellerId;
     _loadProducts();
+    if (_sellerFilter == null) _loadHomeSections();
     StoreShellActions.openCategorySheet.addListener(_onCategorySheetRequested);
   }
 
@@ -106,23 +115,6 @@ class _StoreScreenState extends State<StoreScreen> {
             .toList();
       }
 
-      var sellerSummaries = <StoreSellerSummary>[];
-      var featuredSellerProducts = <StoreProduct>[];
-      if (_sellerFilter == null) {
-        final allProducts = await _storeService.getProducts();
-        sellerSummaries = await _sellerService.getSellerSummaries(
-          allProducts,
-        );
-        final topSellerIds = sellerSummaries
-            .take(6)
-            .map((s) => s.seller.id)
-            .toList();
-        featuredSellerProducts = await _storeService.getFeaturedSellerProducts(
-          topSellerIds,
-        );
-      }
-
-      if (!mounted) return;
       setState(() {
         _products = products;
         _banners = results[1] as List<StorePromoBanner>;
@@ -132,8 +124,6 @@ class _StoreScreenState extends State<StoreScreen> {
                   .where((p) => p.isBestSeller)
                   .take(6)
                   .toList();
-        _sellerSummaries = sellerSummaries;
-        _featuredSellerProducts = featuredSellerProducts;
         _isLoading = false;
       });
     } catch (error) {
@@ -144,6 +134,47 @@ class _StoreScreenState extends State<StoreScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  /// "인기 스토어"·"지금 뜨는 스토어의 상품" 섹션 로드.
+  ///
+  /// 이 두 섹션은 카테고리·정렬 칩과 무관하므로 [_loadProducts]와 분리해
+  /// 최초 진입(그리고 셀러 필터 해제·당겨서 새로고침) 때만 불러온다.
+  /// 칩을 누를 때마다 다시 부르면 불필요한 재조회 + 가로 스크롤 위치 초기화가
+  /// 발생한다.
+  Future<void> _loadHomeSections() async {
+    try {
+      final allProducts = await _storeService.getProducts();
+      final sellerSummaries = await _sellerService.getSellerSummaries(
+        allProducts,
+      );
+      final topSellerIds = sellerSummaries
+          .take(6)
+          .map((s) => s.seller.id)
+          .toList();
+      final featuredSellerProducts = await _storeService
+          .getFeaturedSellerProducts(topSellerIds);
+      if (!mounted) return;
+      setState(() {
+        _sellerSummaries = sellerSummaries;
+        _featuredSellerProducts = featuredSellerProducts;
+      });
+    } catch (_) {
+      // 부가 섹션이므로 실패해도 상품 목록 화면 전체를 에러로 덮지 않고
+      // 해당 섹션만 숨긴다.
+      if (!mounted) return;
+      setState(() {
+        _sellerSummaries = [];
+        _featuredSellerProducts = [];
+      });
+    }
+  }
+
+  Future<void> _refresh() async {
+    await Future.wait([
+      _loadProducts(),
+      if (_sellerFilter == null) _loadHomeSections(),
+    ]);
   }
 
   void _onCategorySelected(StoreProductCategory? category) {
@@ -161,6 +192,8 @@ class _StoreScreenState extends State<StoreScreen> {
   void _clearSellerFilter() {
     setState(() => _sellerFilter = null);
     _loadProducts();
+    // 셀러 필터로 바로 진입한 경우엔 홈 섹션을 아직 못 불러왔으므로 이때 채운다.
+    if (_sellerSummaries.isEmpty) _loadHomeSections();
   }
 
   void _openProductDetail(StoreProduct product) {
@@ -182,8 +215,13 @@ class _StoreScreenState extends State<StoreScreen> {
   void _openRecentlyViewed() =>
       context.push(AppRoutes.spareHomeStoreRecentlyViewed);
 
+  /// "인기 스토어" 카드 탭 — 이 화면 자체가 `/spare/home/store`이므로 같은 라우트를
+  /// push 하면 StoreScreen이 두 겹으로 쌓인다(배너 타이머·카테고리 시트 리스너 중복).
+  /// 그래서 라우팅 대신 로컬 상태로 셀러 필터만 건다.
   void _openSellerFromCard(StoreSeller seller) {
-    context.push(AppRoutes.spareHomeStoreForSeller(seller.id));
+    if (_sellerFilter == seller.id) return;
+    setState(() => _sellerFilter = seller.id);
+    _loadProducts();
   }
 
   String? get _sellerFilterName {
@@ -225,7 +263,7 @@ class _StoreScreenState extends State<StoreScreen> {
           : _error != null
           ? _ErrorState(message: _error!, onRetry: _loadProducts)
           : RefreshIndicator(
-              onRefresh: _loadProducts,
+              onRefresh: _refresh,
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
@@ -341,8 +379,9 @@ class _StoreScreenState extends State<StoreScreen> {
                                 return StoreSellerCard(
                                   summary: summary,
                                   isFollowing: follow.isFollowing(sellerId),
-                                  followerCount: follow.followerCount(
+                                  followerCount: follow.displayFollowerCount(
                                     sellerId,
+                                    summary.followerCount,
                                   ),
                                   onTap: () =>
                                       _openSellerFromCard(summary.seller),
@@ -392,6 +431,7 @@ class _StoreScreenState extends State<StoreScreen> {
                       child: SizedBox(
                         height: 266,
                         child: ListView.separated(
+                          key: StoreScreen.bestSellerRailKey,
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppTheme.spacing4,
@@ -431,6 +471,7 @@ class _StoreScreenState extends State<StoreScreen> {
                       child: SizedBox(
                         height: 266,
                         child: ListView.separated(
+                          key: StoreScreen.featuredSellerRailKey,
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppTheme.spacing4,

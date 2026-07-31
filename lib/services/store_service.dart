@@ -336,22 +336,26 @@ class StoreService {
         .toList();
   }
 
-  /// [sellerIds]에 속한 상품 중 베스트셀러·평점 우선으로 골라 [limit]개 반환 —
+  /// [sellerIds]에 속한 상품 중 평점 높은 순으로 [limit]개 반환 —
   /// 홈 "지금 뜨는 스토어의 상품" 섹션용.
+  ///
+  /// 베스트셀러(`isBestSeller`)는 홈의 "살롱 베스트" 레일이 이미 전부 보여주므로
+  /// 두 레일이 같은 상품을 중복 노출하지 않도록 여기서는 제외한다.
+  /// (기본값 [excludeBestSellers] = true, 다른 화면에서 재사용할 때만 끈다.)
   Future<List<StoreProduct>> getFeaturedSellerProducts(
     List<String> sellerIds, {
     int limit = 8,
+    bool excludeBestSellers = true,
   }) async {
     await Future.delayed(const Duration(milliseconds: 150));
     final results = _mockProducts
-        .where((p) => sellerIds.contains(p.sellerId))
+        .where(
+          (p) =>
+              sellerIds.contains(p.sellerId) &&
+              !(excludeBestSellers && p.isBestSeller),
+        )
         .toList();
-    results.sort((a, b) {
-      if (a.isBestSeller != b.isBestSeller) {
-        return a.isBestSeller ? -1 : 1;
-      }
-      return b.averageRating.compareTo(a.averageRating);
-    });
+    results.sort((a, b) => b.averageRating.compareTo(a.averageRating));
     return results.take(limit).toList();
   }
 }

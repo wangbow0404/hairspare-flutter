@@ -92,5 +92,24 @@ void main() {
       expect(curlstar.productCount, 2);
       expect(curlstar.averageRating, 0.0);
     });
+
+    test('셀러 팔로워수(서버 기준값)를 요약에 함께 담는다', () async {
+      final service = StoreSellerService();
+      final summaries = await service.getSellerSummaries([
+        _product(id: 'p1', sellerId: 'seller-hairspare-official'),
+      ]);
+
+      final official = summaries.firstWhere(
+        (s) => s.seller.id == 'seller-hairspare-official',
+      );
+      final junscissors = summaries.firstWhere(
+        (s) => s.seller.id == 'seller-junscissors',
+      );
+
+      // 팔로워수는 상품/리뷰 집계와 무관한 별도 데이터라 상품이 없어도 채워진다.
+      expect(official.followerCount, 482);
+      expect(junscissors.followerCount, 216);
+      expect(junscissors.productCount, 0);
+    });
   });
 }

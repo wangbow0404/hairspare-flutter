@@ -1,24 +1,18 @@
 import 'package:flutter/foundation.dart';
 
 /// 스토어 셀러 팔로우 상태 — 결제와 마찬가지로 로컬(앱 세션) 상태로만 관리.
-/// 팔로워수는 mock 기준값에 현재 사용자의 팔로우 여부를 반영해 계산한다.
+///
+/// 이 Provider는 "이 사용자가 팔로우했는지"라는 로컬 변화량만 들고 있고,
+/// 팔로워 기준값은 서버(현재는 mock) 데이터인 `StoreSellerSummary.followerCount`가
+/// 가진다. 화면에 표시할 값은 [displayFollowerCount]로 둘을 합쳐 계산한다.
 class StoreSellerFollowProvider with ChangeNotifier {
-  static const Map<String, int> _baseFollowerCounts = {
-    'seller-hairspare-official': 482,
-    'seller-junscissors': 216,
-    'seller-herzen': 138,
-    'seller-curlstar': 97,
-    'seller-keracis': 64,
-    'seller-colorlab': 41,
-  };
-
   final Set<String> _followedSellerIds = {};
 
   bool isFollowing(String sellerId) => _followedSellerIds.contains(sellerId);
 
-  int followerCount(String sellerId) {
-    final base = _baseFollowerCounts[sellerId] ?? 0;
-    return isFollowing(sellerId) ? base + 1 : base;
+  /// 화면 표시용 팔로워수 = 서버 기준값([baseFollowerCount]) + 내가 팔로우했으면 +1.
+  int displayFollowerCount(String sellerId, int baseFollowerCount) {
+    return isFollowing(sellerId) ? baseFollowerCount + 1 : baseFollowerCount;
   }
 
   void toggle(String sellerId) {

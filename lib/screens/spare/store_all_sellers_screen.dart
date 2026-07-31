@@ -95,7 +95,10 @@ class _StoreAllSellersScreenState extends State<StoreAllSellersScreen> {
                     return _SellerRow(
                       summary: summary,
                       isFollowing: follow.isFollowing(sellerId),
-                      followerCount: follow.followerCount(sellerId),
+                      followerCount: follow.displayFollowerCount(
+                        sellerId,
+                        summary.followerCount,
+                      ),
                       onTap: () => _openSellerProducts(summary.seller),
                       onFollowToggle: () => follow.toggle(sellerId),
                     );

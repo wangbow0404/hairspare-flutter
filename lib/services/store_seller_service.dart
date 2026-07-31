@@ -67,6 +67,17 @@ class StoreSellerService {
     ),
   ];
 
+  /// 셀러별 팔로워수 (mock) — 실 백엔드가 붙으면 셀러 집계 API 응답으로 대체된다.
+  /// 목록에 없는 셀러(신규 승인 등)는 0명으로 본다.
+  static const Map<String, int> _mockFollowerCounts = {
+    'seller-hairspare-official': 482,
+    'seller-junscissors': 216,
+    'seller-herzen': 138,
+    'seller-curlstar': 97,
+    'seller-keracis': 64,
+    'seller-colorlab': 41,
+  };
+
   Future<List<StoreSeller>> getSellers({StoreSellerStatus? status}) async {
     await Future.delayed(const Duration(milliseconds: 150));
     if (status == null) return List<StoreSeller>.from(_sellers);
@@ -142,7 +153,7 @@ class StoreSellerService {
     );
   }
 
-  /// 승인된 셀러의 상품수·평균 별점을 집계 — 평균 별점 내림차순, 동률이면 상품수 내림차순.
+  /// 승인된 셀러의 상품수·평균 별점·팔로워수를 집계 — 평균 별점 내림차순, 동률이면 상품수 내림차순.
   Future<List<StoreSellerSummary>> getSellerSummaries(
     List<StoreProduct> allProducts,
   ) async {
@@ -164,6 +175,7 @@ class StoreSellerService {
         seller: seller,
         productCount: products.length,
         averageRating: averageRating,
+        followerCount: _mockFollowerCounts[seller.id] ?? 0,
       );
     }).toList();
 

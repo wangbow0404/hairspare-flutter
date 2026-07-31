@@ -56,5 +56,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('스토어 상품만 보는 중'), findsNothing);
+
+    // 필터 해제 시 뒤늦게 시작되는 홈 섹션(인기 스토어·지금 뜨는 스토어의 상품) 요청까지
+    // 마무리해야 "타이머가 아직 살아있다" 경고 없이 테스트가 끝난다.
+    await tester.pump(const Duration(milliseconds: 800));
+    await tester.pumpAndSettle();
+
+    expect(find.text('인기 스토어'), findsOneWidget);
   });
 }

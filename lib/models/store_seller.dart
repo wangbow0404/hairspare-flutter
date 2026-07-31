@@ -35,15 +35,20 @@ class StoreSeller {
   bool get isApproved => status == StoreSellerStatus.approved;
 }
 
-/// 셀러별 집계 지표(상품수·평균 별점) — [StoreSellerService.getSellerSummaries]가 생성.
+/// 셀러별 집계 지표(상품수·평균 별점·팔로워수) — [StoreSellerService.getSellerSummaries]가 생성.
 class StoreSellerSummary {
   const StoreSellerSummary({
     required this.seller,
     required this.productCount,
     required this.averageRating,
+    this.followerCount = 0,
   });
 
   final StoreSeller seller;
   final int productCount;
   final double averageRating;
+
+  /// 서버(현재는 mock) 기준 팔로워수 — 내가 방금 누른 팔로우는 포함하지 않는다.
+  /// 화면에 표시할 값은 `StoreSellerFollowProvider.displayFollowerCount`로 계산.
+  final int followerCount;
 }

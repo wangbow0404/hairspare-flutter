@@ -32,7 +32,8 @@ class _StoreRecentlyViewedScreenState
   @override
   void initState() {
     super.initState();
-    _load(sl<RecentlyViewedStoreProvider>().productIds);
+    // build의 context.watch와 같은 위젯 트리 인스턴스를 쓰도록 read로 통일.
+    _load(context.read<RecentlyViewedStoreProvider>().productIds);
   }
 
   Future<void> _load(List<String> ids) async {

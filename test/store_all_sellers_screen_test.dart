@@ -46,6 +46,9 @@ void main() {
 
     expect(find.text('준가위 공구몰'), findsOneWidget);
     expect(find.text('봄이네뷰티'), findsNothing); // pending 셀러는 제외
+    // 팔로워수는 Provider가 아니라 셀러 요약(StoreSellerSummary.followerCount)에서 온다.
+    expect(find.text('상품 2 · 팔로워 216'), findsOneWidget); // 준가위 공구몰
+    expect(find.text('상품 4 · 팔로워 482'), findsOneWidget); // HairSpare 공식스토어
   });
 
   testWidgets('팔로우 버튼을 탭하면 상태가 바뀐다', (tester) async {
@@ -67,9 +70,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    // 첫 행은 평점 1위인 HairSpare 공식스토어(기준 팔로워 482명).
+    expect(find.text('상품 4 · 팔로워 482'), findsOneWidget);
+
     await tester.tap(find.text('+ 팔로우').first);
     await tester.pump();
 
     expect(find.text('팔로잉'), findsOneWidget);
+    // 내가 누른 팔로우는 로컬 delta로만 더해진다.
+    expect(find.text('상품 4 · 팔로워 483'), findsOneWidget);
+    expect(find.text('상품 4 · 팔로워 482'), findsNothing);
   });
 }

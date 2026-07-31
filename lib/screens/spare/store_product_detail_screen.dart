@@ -67,7 +67,7 @@ class _StoreProductDetailScreenState extends State<StoreProductDetailScreen> {
         _sellerProducts = sellerProducts;
         _isLoading = false;
       });
-      sl<RecentlyViewedStoreProvider>().recordView(product.id);
+      context.read<RecentlyViewedStoreProvider>().recordView(product.id);
     } catch (error) {
       if (!mounted) return;
       final appException = ErrorHandler.handleException(error);
