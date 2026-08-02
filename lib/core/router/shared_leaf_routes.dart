@@ -39,6 +39,7 @@ import '../../screens/spare/store_product_detail_screen.dart';
 import '../../screens/spare/store_recently_viewed_screen.dart';
 import '../../screens/spare/store_my_screen.dart';
 import '../../screens/spare/store_seller_apply_screen.dart';
+import '../../screens/spare/store_seller_profile_screen.dart';
 import '../../screens/spare/store_wishlist_screen.dart';
 import '../../screens/spare/verification_screen.dart';
 import '../../view_models/shop_job_new_view_model.dart';
@@ -138,6 +139,13 @@ abstract final class SharedLeafRoutes {
     GoRoute(
       path: 'store_recently_viewed',
       builder: (_, __) => const StoreRecentlyViewedScreen(),
+    ),
+    GoRoute(
+      path: 'store_seller_profile',
+      builder: (_, state) {
+        final sellerId = state.uri.queryParameters['sellerId'] ?? '';
+        return StoreSellerProfileScreen(sellerId: sellerId);
+      },
     ),
     GoRoute(
       path: 'store_seller_apply',
