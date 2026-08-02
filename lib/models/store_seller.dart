@@ -20,6 +20,7 @@ class StoreSeller {
     this.approvedAt,
     this.rejectReason,
     this.logoUrl,
+    this.introText,
   });
 
   final String id;
@@ -31,6 +32,9 @@ class StoreSeller {
   final DateTime? approvedAt;
   final String? rejectReason;
   final String? logoUrl;
+
+  /// 스토어 프로필 페이지 상단에 노출되는 한 줄 소개글.
+  final String? introText;
 
   bool get isApproved => status == StoreSellerStatus.approved;
 }

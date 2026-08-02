@@ -11,6 +11,7 @@ class StoreSellerService {
       status: StoreSellerStatus.approved,
       appliedAt: DateTime(2026, 1, 5),
       approvedAt: DateTime(2026, 1, 6),
+      introText: 'HairSpare가 직접 검수한 프로 시술 도구만 모았습니다.',
     ),
     StoreSeller(
       id: 'seller-junscissors',
@@ -20,6 +21,7 @@ class StoreSellerService {
       status: StoreSellerStatus.approved,
       appliedAt: DateTime(2026, 3, 2),
       approvedAt: DateTime(2026, 3, 4),
+      introText: '20년 경력 헤어디자이너가 고른 가위 전문 셀렉샵입니다.',
     ),
     StoreSeller(
       id: 'seller-herzen',
@@ -29,6 +31,7 @@ class StoreSellerService {
       status: StoreSellerStatus.approved,
       appliedAt: DateTime(2026, 4, 10),
       approvedAt: DateTime(2026, 4, 12),
+      introText: '살롱 전용 뷰티 서플라이 — 대용량·업소용 특가로 만나보세요.',
     ),
     StoreSeller(
       id: 'seller-curlstar',
@@ -38,6 +41,7 @@ class StoreSellerService {
       status: StoreSellerStatus.approved,
       appliedAt: DateTime(2026, 5, 8),
       approvedAt: DateTime(2026, 5, 10),
+      introText: '펌·컬 전문 도구 브랜드, 컬리스타의 공식 스토어입니다.',
     ),
     StoreSeller(
       id: 'seller-keracis',
@@ -47,6 +51,7 @@ class StoreSellerService {
       status: StoreSellerStatus.approved,
       appliedAt: DateTime(2026, 5, 20),
       approvedAt: DateTime(2026, 5, 22),
+      introText: '손상모 케어 전문 케라시스 프로 라인을 소개합니다.',
     ),
     StoreSeller(
       id: 'seller-colorlab',
@@ -56,6 +61,7 @@ class StoreSellerService {
       status: StoreSellerStatus.approved,
       appliedAt: DateTime(2026, 6, 1),
       approvedAt: DateTime(2026, 6, 3),
+      introText: '저자극 컬러·케미컬 전문 연구소, 컬러랩입니다.',
     ),
     StoreSeller(
       id: 'seller-bomne',
@@ -64,6 +70,7 @@ class StoreSellerService {
       businessNumber: '678-90-12345',
       status: StoreSellerStatus.pending,
       appliedAt: DateTime(2026, 7, 20),
+      introText: '합리적인 가격의 헤어 소모품을 준비 중입니다.',
     ),
   ];
 
@@ -132,6 +139,7 @@ class StoreSellerService {
       appliedAt: s.appliedAt,
       approvedAt: DateTime.now(),
       logoUrl: s.logoUrl,
+      introText: s.introText,
     );
   }
 
@@ -150,6 +158,7 @@ class StoreSellerService {
       appliedAt: s.appliedAt,
       rejectReason: reason,
       logoUrl: s.logoUrl,
+      introText: s.introText,
     );
   }
 
