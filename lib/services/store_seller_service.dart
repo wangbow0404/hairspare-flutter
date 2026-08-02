@@ -1,5 +1,7 @@
+import '../core/di/service_locator.dart';
 import '../models/store_seller.dart';
 import '../models/store_product.dart';
+import 'store_service.dart';
 
 /// 스토어 판매자 서비스 — 아직 실 백엔드 연동 전이라 mock 데이터만 제공.
 class StoreSellerService {
@@ -194,5 +196,24 @@ class StoreSellerService {
       return b.productCount.compareTo(a.productCount);
     });
     return summaries;
+  }
+
+  /// [sellerId]의 모든 상품에 달린 리뷰를 최신순으로 모아 반환 — 스토어 프로필
+  /// 페이지 "리뷰" 탭용.
+  Future<List<StoreSellerReviewEntry>> getSellerReviews(
+    String sellerId,
+  ) async {
+    final products = await sl<StoreService>().getProductsBySeller(sellerId);
+    final entries = <StoreSellerReviewEntry>[
+      for (final product in products)
+        for (final review in product.reviews)
+          StoreSellerReviewEntry(
+            productId: product.id,
+            productName: product.name,
+            review: review,
+          ),
+    ];
+    entries.sort((a, b) => b.review.createdAt.compareTo(a.review.createdAt));
+    return entries;
   }
 }
