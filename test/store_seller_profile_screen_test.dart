@@ -76,4 +76,13 @@ void main() {
 
     expect(find.text('검색 결과가 없습니다'), findsOneWidget);
   });
+
+  testWidgets('리뷰 탭을 누르면 이 셀러 상품들의 리뷰가 최신순으로 보인다', (tester) async {
+    await pumpScreen(tester, 'seller-hairspare-official');
+
+    await tester.tap(find.text('리뷰').last);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListView), findsOneWidget);
+  });
 }

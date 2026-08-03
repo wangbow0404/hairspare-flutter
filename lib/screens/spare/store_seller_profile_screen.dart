@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/di/service_locator.dart';
@@ -296,13 +297,110 @@ class _ProductGrid extends StatelessWidget {
   }
 }
 
-class _SellerReviewsTab extends StatelessWidget {
+class _SellerReviewsTab extends StatefulWidget {
   const _SellerReviewsTab({required this.sellerId});
 
   final String sellerId;
 
   @override
+  State<_SellerReviewsTab> createState() => _SellerReviewsTabState();
+}
+
+class _SellerReviewsTabState extends State<_SellerReviewsTab> {
+  final StoreSellerService _sellerService = sl<StoreSellerService>();
+  List<StoreSellerReviewEntry> _entries = [];
+  bool _isLoading = true;
+
+  static final _dateFmt = DateFormat('yyyy.MM.dd');
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final entries = await _sellerService.getSellerReviews(widget.sellerId);
+    if (!mounted) return;
+    setState(() {
+      _entries = entries;
+      _isLoading = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const SizedBox.shrink();
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_entries.isEmpty) {
+      return const Center(child: Text('아직 등록된 리뷰가 없습니다'));
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.all(AppTheme.spacing4),
+      itemCount: _entries.length,
+      separatorBuilder: (_, __) =>
+          const SizedBox(height: AppTheme.spacing3),
+      itemBuilder: (context, index) {
+        final entry = _entries[index];
+        return Container(
+          padding: const EdgeInsets.all(AppTheme.spacing3),
+          decoration: BoxDecoration(
+            color: HairSpareColors.surface,
+            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+            border: Border.all(color: HairSpareColors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    entry.review.userName,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: HairSpareColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '★' * entry.review.rating,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: HairSpareColors.brandPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    _dateFmt.format(entry.review.createdAt),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: HairSpareColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                entry.productName,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: HairSpareColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                entry.review.comment,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: HairSpareColors.textStrong,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
