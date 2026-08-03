@@ -46,7 +46,7 @@ void main() {
   testWidgets('스토어명·소개글·통계·상품 그리드가 노출된다', (tester) async {
     await pumpScreen(tester, 'seller-hairspare-official');
 
-    expect(find.text('HairSpare 공식스토어'), findsWidgets);
+    expect(find.text('HairSpare 공식스토어'), findsNWidgets(2));
     expect(
       find.text('HairSpare가 직접 검수한 프로 시술 도구만 모았습니다.'),
       findsOneWidget,

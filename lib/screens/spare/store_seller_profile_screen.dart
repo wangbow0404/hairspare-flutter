@@ -10,6 +10,7 @@ import '../../services/store_seller_service.dart';
 import '../../services/store_service.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/hairspare_colors.dart';
+import '../../utils/error_handler.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../widgets/store/store_product_card.dart';
 
@@ -34,6 +35,7 @@ class _StoreSellerProfileScreenState extends State<StoreSellerProfileScreen>
   StoreSellerSummary? _summary;
   List<StoreProduct> _products = [];
   bool _isLoading = true;
+  String? _error;
   String _searchQuery = '';
 
   @override
@@ -50,18 +52,31 @@ class _StoreSellerProfileScreenState extends State<StoreSellerProfileScreen>
   }
 
   Future<void> _load() async {
-    final allProducts = await _storeService.getProducts();
-    final summaries = await _sellerService.getSellerSummaries(allProducts);
-    final sellerProducts = await _storeService.getProductsBySeller(
-      widget.sellerId,
-    );
-    if (!mounted) return;
-    final matches = summaries.where((s) => s.seller.id == widget.sellerId);
     setState(() {
-      _summary = matches.isEmpty ? null : matches.first;
-      _products = sellerProducts;
-      _isLoading = false;
+      _isLoading = true;
+      _error = null;
     });
+    try {
+      final allProducts = await _storeService.getProducts();
+      final summaries = await _sellerService.getSellerSummaries(allProducts);
+      final sellerProducts = await _storeService.getProductsBySeller(
+        widget.sellerId,
+      );
+      if (!mounted) return;
+      final matches = summaries.where((s) => s.seller.id == widget.sellerId);
+      setState(() {
+        _summary = matches.isEmpty ? null : matches.first;
+        _products = sellerProducts;
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      final appException = ErrorHandler.handleException(error);
+      setState(() {
+        _error = ErrorHandler.getUserFriendlyMessage(appException);
+        _isLoading = false;
+      });
+    }
   }
 
   List<StoreProduct> get _filteredProducts {
@@ -85,7 +100,20 @@ class _StoreSellerProfileScreenState extends State<StoreSellerProfileScreen>
         title: summary?.seller.shopName ?? '스토어',
         showToolbarActions: false,
       ),
-      body: _isLoading || summary == null
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(_error!),
+                  const SizedBox(height: AppTheme.spacing3),
+                  TextButton(onPressed: _load, child: const Text('다시 시도')),
+                ],
+              ),
+            )
+          : summary == null
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
