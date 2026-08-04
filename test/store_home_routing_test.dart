@@ -98,4 +98,30 @@ void main() {
     await settle();
     expect(find.byType(StoreScreen), findsOneWidget);
   });
+
+  testWidgets('인기 스토어 카드를 탭하면 스토어 프로필 화면으로 이동한다', (tester) async {
+    // 배너 자동스크롤 타이머 때문에 pumpAndSettle이 끝나지 않을 수 있어
+    // (위 테스트의 settle()과 동일한 이유) 고정 프레임을 진행한다.
+    Future<void> settle() async {
+      await tester.pump();
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+    }
+
+    final auth = sl<AuthProvider>();
+    await auth.setUser(MockAuthData.spareUser());
+    final router = AppRouter.createRouter(auth);
+    registerGoRouter(router);
+    router.go(AppRoutes.spareHomeStore);
+
+    await tester.pumpWidget(MyApp(router: router));
+    await settle();
+
+    await tester.tap(find.text('HairSpare 공식스토어').first);
+    await settle();
+
+    expect(find.text('상품'), findsWidgets);
+    expect(find.text('리뷰'), findsWidgets);
+  });
 }

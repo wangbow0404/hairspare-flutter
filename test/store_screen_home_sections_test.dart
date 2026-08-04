@@ -147,42 +147,4 @@ void main() {
       reason: '두 레일이 같은 상품을 중복 노출하면 안 된다',
     );
   });
-
-  testWidgets('인기 스토어 카드를 탭하면 화면을 새로 쌓지 않고 셀러 필터만 걸린다', (tester) async {
-    tester.view.physicalSize = const Size(390, 2600);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider<CartProvider>.value(
-            value: sl<CartProvider>(),
-          ),
-          ChangeNotifierProvider<StoreWishlistProvider>.value(
-            value: sl<StoreWishlistProvider>(),
-          ),
-          ChangeNotifierProvider<StoreSellerFollowProvider>.value(
-            value: sl<StoreSellerFollowProvider>(),
-          ),
-        ],
-        child: const MaterialApp(home: StoreScreen()),
-      ),
-    );
-    await settleStoreHome(tester);
-
-    // 카드 탭이 go_router push였다면 라우터 없는 이 테스트에서 예외가 났을 것이다.
-    await tester.tap(find.text('HairSpare 공식스토어').first);
-    await tester.pumpAndSettle();
-
-    expect(find.textContaining('스토어 상품만 보는 중'), findsOneWidget);
-    expect(find.byType(StoreScreen), findsOneWidget); // 화면이 두 겹으로 쌓이지 않음
-    expect(find.text('인기 스토어'), findsNothing);
-
-    await tester.tap(find.text('전체보기'));
-    await tester.pumpAndSettle();
-
-    expect(find.textContaining('스토어 상품만 보는 중'), findsNothing);
-    expect(find.text('인기 스토어'), findsOneWidget);
-  });
 }

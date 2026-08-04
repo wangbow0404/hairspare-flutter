@@ -215,13 +215,8 @@ class _StoreScreenState extends State<StoreScreen> {
   void _openRecentlyViewed() =>
       context.push(AppRoutes.spareHomeStoreRecentlyViewed);
 
-  /// "인기 스토어" 카드 탭 — 이 화면 자체가 `/spare/home/store`이므로 같은 라우트를
-  /// push 하면 StoreScreen이 두 겹으로 쌓인다(배너 타이머·카테고리 시트 리스너 중복).
-  /// 그래서 라우팅 대신 로컬 상태로 셀러 필터만 건다.
   void _openSellerFromCard(StoreSeller seller) {
-    if (_sellerFilter == seller.id) return;
-    setState(() => _sellerFilter = seller.id);
-    _loadProducts();
+    context.push(AppRoutes.spareHomeStoreSellerProfile(seller.id));
   }
 
   String? get _sellerFilterName {

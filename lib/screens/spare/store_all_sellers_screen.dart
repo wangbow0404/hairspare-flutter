@@ -58,7 +58,7 @@ class _StoreAllSellersScreenState extends State<StoreAllSellersScreen> {
   }
 
   void _openSellerProducts(StoreSeller seller) {
-    context.push(AppRoutes.spareHomeStoreForSeller(seller.id));
+    context.push(AppRoutes.spareHomeStoreSellerProfile(seller.id));
   }
 
   @override

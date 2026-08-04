@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/di/service_locator.dart';
+import '../../core/router/app_routes.dart';
 import '../../models/store_product.dart';
 import '../../models/store_seller.dart';
 import '../../providers/store_seller_follow_provider.dart';
@@ -89,7 +91,7 @@ class _StoreSellerProfileScreenState extends State<StoreSellerProfileScreen>
   }
 
   void _openProductDetail(StoreProduct product) {
-    Navigator.of(context).pushNamed('/spare/home/store/product/${product.id}');
+    context.push(AppRoutes.spareHomeStoreProductDetail(product.id));
   }
 
   @override
