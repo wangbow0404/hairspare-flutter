@@ -15,6 +15,7 @@ import '../../theme/app_theme.dart';
 import '../../theme/hairspare_colors.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
+import '../../widgets/store/store_app_bar_actions.dart';
 import '../../widgets/store/store_product_card.dart';
 
 /// 스토어 셀러 프로필 페이지 — 로고·소개글·통계·팔로우 + 상품/리뷰 탭.
@@ -60,11 +61,16 @@ class _StoreSellerProfileScreenState extends State<StoreSellerProfileScreen>
       _error = null;
     });
     try {
-      final allProducts = await _storeService.getProducts();
-      final summaries = await _sellerService.getSellerSummaries(allProducts);
-      final sellerProducts = await _storeService.getProductsBySeller(
-        widget.sellerId,
-      );
+      // 셀러 집계는 전체 상품 목록이 필요하지만(getProducts → getSellerSummaries),
+      // 이 셀러의 상품 조회는 그와 무관하므로 두 갈래를 동시에 진행한다.
+      final results = await Future.wait([
+        _storeService.getProducts().then(
+          (allProducts) => _sellerService.getSellerSummaries(allProducts),
+        ),
+        _storeService.getProductsBySeller(widget.sellerId),
+      ]);
+      final summaries = results[0] as List<StoreSellerSummary>;
+      final sellerProducts = results[1] as List<StoreProduct>;
       if (!mounted) return;
       final matches = summaries.where((s) => s.seller.id == widget.sellerId);
       setState(() {
@@ -82,17 +88,26 @@ class _StoreSellerProfileScreenState extends State<StoreSellerProfileScreen>
     }
   }
 
+  /// 상품 검색 — 스토어 홈(StoreService)과 같은 규약으로 공백을 다듬고 상품명·브랜드를 함께 본다.
   List<StoreProduct> get _filteredProducts {
-    if (_searchQuery.isEmpty) return _products;
-    final query = _searchQuery.toLowerCase();
+    final query = _searchQuery.trim().toLowerCase();
+    if (query.isEmpty) return _products;
     return _products
-        .where((p) => p.name.toLowerCase().contains(query))
+        .where(
+          (p) =>
+              p.name.toLowerCase().contains(query) ||
+              p.brand.toLowerCase().contains(query),
+        )
         .toList();
   }
 
   void _openProductDetail(StoreProduct product) {
     context.push(AppRoutes.spareHomeStoreProductDetail(product.id));
   }
+
+  void _openCart() => context.push(AppRoutes.spareHomeStoreCart);
+
+  void _openWishlist() => context.push(AppRoutes.spareHomeStoreWishlist);
 
   @override
   Widget build(BuildContext context) {
@@ -102,6 +117,11 @@ class _StoreSellerProfileScreenState extends State<StoreSellerProfileScreen>
       appBar: SpareSubpageAppBar(
         title: summary?.seller.shopName ?? '스토어',
         showToolbarActions: false,
+        trailingActions: [
+          StoreWishlistAction(onPressed: _openWishlist),
+          StoreCartAction(onPressed: _openCart),
+          const SizedBox(width: AppTheme.spacing2),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -116,8 +136,10 @@ class _StoreSellerProfileScreenState extends State<StoreSellerProfileScreen>
                 ],
               ),
             )
+          // 로딩도 끝나고 에러도 없는데 요약이 없다 = 미승인/오타/빈 sellerId.
+          // 무한 스피너 대신 명시적인 "없음" 상태를 보여준다.
           : summary == null
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: Text('스토어를 찾을 수 없습니다'))
           : Column(
               children: [
                 _ProfileHeader(summary: summary),
@@ -157,8 +179,12 @@ class _StoreSellerProfileScreenState extends State<StoreSellerProfileScreen>
                       _ProductGrid(
                         products: _filteredProducts,
                         onTapProduct: _openProductDetail,
+                        isSearching: _searchQuery.trim().isNotEmpty,
                       ),
-                      _SellerReviewsTab(sellerId: widget.sellerId),
+                      _SellerReviewsTab(
+                        sellerId: widget.sellerId,
+                        products: _products,
+                      ),
                     ],
                   ),
                 ),
@@ -263,15 +289,24 @@ class _ProfileHeader extends StatelessWidget {
 }
 
 class _ProductGrid extends StatelessWidget {
-  const _ProductGrid({required this.products, required this.onTapProduct});
+  const _ProductGrid({
+    required this.products,
+    required this.onTapProduct,
+    required this.isSearching,
+  });
 
   final List<StoreProduct> products;
   final ValueChanged<StoreProduct> onTapProduct;
 
+  /// 검색어가 입력된 상태인지 — 빈 화면 문구를 "검색 결과 없음"과 "상품 없음"으로 구분한다.
+  final bool isSearching;
+
   @override
   Widget build(BuildContext context) {
     if (products.isEmpty) {
-      return const Center(child: Text('검색 결과가 없습니다'));
+      return Center(
+        child: Text(isSearching ? '검색 결과가 없습니다' : '등록된 상품이 없습니다'),
+      );
     }
     return GridView.builder(
       padding: const EdgeInsets.all(AppTheme.spacing4),
@@ -300,9 +335,12 @@ class _ProductGrid extends StatelessWidget {
 }
 
 class _SellerReviewsTab extends StatefulWidget {
-  const _SellerReviewsTab({required this.sellerId});
+  const _SellerReviewsTab({required this.sellerId, required this.products});
 
   final String sellerId;
+
+  /// 부모가 이미 조회해 둔 이 셀러의 상품 목록 — 탭이 따로 재조회하지 않도록 내려받는다.
+  final List<StoreProduct> products;
 
   @override
   State<_SellerReviewsTab> createState() => _SellerReviewsTabState();
@@ -312,8 +350,10 @@ class _SellerReviewsTabState extends State<_SellerReviewsTab> {
   final StoreSellerService _sellerService = sl<StoreSellerService>();
   List<StoreSellerReviewEntry> _entries = [];
   bool _isLoading = true;
+  String? _error;
 
-  static final _dateFmt = DateFormat('yyyy.MM.dd');
+  /// 상품 상세 화면의 리뷰 날짜 표기와 동일한 포맷.
+  static final _dateFmt = DateFormat('M/d', 'ko_KR');
 
   @override
   void initState() {
@@ -322,18 +362,47 @@ class _SellerReviewsTabState extends State<_SellerReviewsTab> {
   }
 
   Future<void> _load() async {
-    final entries = await _sellerService.getSellerReviews(widget.sellerId);
-    if (!mounted) return;
     setState(() {
-      _entries = entries;
-      _isLoading = false;
+      _isLoading = true;
+      _error = null;
     });
+    try {
+      final entries = await _sellerService.getSellerReviews(
+        widget.sellerId,
+        widget.products,
+      );
+      if (!mounted) return;
+      setState(() {
+        _entries = entries;
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      final appException = ErrorHandler.handleException(error);
+      setState(() {
+        _error = ErrorHandler.getUserFriendlyMessage(appException);
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
+    }
+    final error = _error;
+    if (error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(error),
+            const SizedBox(height: AppTheme.spacing3),
+            TextButton(onPressed: _load, child: const Text('다시 시도')),
+          ],
+        ),
+      );
     }
     if (_entries.isEmpty) {
       return const Center(child: Text('아직 등록된 리뷰가 없습니다'));
@@ -366,11 +435,15 @@ class _SellerReviewsTabState extends State<_SellerReviewsTab> {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  Text(
-                    '★' * entry.review.rating,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: HairSpareColors.brandPrimary,
+                  // 상품 상세 화면과 같은 5개짜리 별 아이콘 행.
+                  ...List.generate(
+                    5,
+                    (i) => Icon(
+                      i < entry.review.rating
+                          ? Icons.star
+                          : Icons.star_border,
+                      size: 16,
+                      color: AppTheme.yellow500,
                     ),
                   ),
                   const Spacer(),

@@ -1,7 +1,5 @@
-import '../core/di/service_locator.dart';
 import '../models/store_seller.dart';
 import '../models/store_product.dart';
-import 'store_service.dart';
 
 /// 스토어 판매자 서비스 — 아직 실 백엔드 연동 전이라 mock 데이터만 제공.
 class StoreSellerService {
@@ -112,6 +110,7 @@ class StoreSellerService {
     required String shopName,
     required String ownerName,
     String? businessNumber,
+    String? introText,
   }) async {
     await Future.delayed(const Duration(milliseconds: 300));
     final seller = StoreSeller(
@@ -119,6 +118,7 @@ class StoreSellerService {
       shopName: shopName,
       ownerName: ownerName,
       businessNumber: businessNumber,
+      introText: introText,
       status: StoreSellerStatus.pending,
       appliedAt: DateTime.now(),
     );
@@ -198,12 +198,17 @@ class StoreSellerService {
     return summaries;
   }
 
-  /// [sellerId]의 모든 상품에 달린 리뷰를 최신순으로 모아 반환 — 스토어 프로필
-  /// 페이지 "리뷰" 탭용.
+  /// [sellerId]의 상품([sellerProducts])에 달린 리뷰를 최신순으로 모아 반환 —
+  /// 스토어 프로필 페이지 "리뷰" 탭용.
+  ///
+  /// [getSellerSummaries]와 같은 규약으로, 상품 목록은 호출자가 조회해서 넘긴다
+  /// (서비스가 다른 서비스를 service locator로 몰래 끌어쓰지 않도록).
+  /// 넘어온 목록에 다른 셀러 상품이 섞여 있어도 [sellerId] 것만 집계한다.
   Future<List<StoreSellerReviewEntry>> getSellerReviews(
     String sellerId,
+    List<StoreProduct> sellerProducts,
   ) async {
-    final products = await sl<StoreService>().getProductsBySeller(sellerId);
+    final products = sellerProducts.where((p) => p.sellerId == sellerId);
     final entries = <StoreSellerReviewEntry>[
       for (final product in products)
         for (final review in product.reviews)
