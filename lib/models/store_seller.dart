@@ -1,3 +1,5 @@
+import 'store_product.dart';
+
 /// 스토어 판매자 신청 상태.
 enum StoreSellerStatus {
   pending('심사중'),
@@ -20,6 +22,7 @@ class StoreSeller {
     this.approvedAt,
     this.rejectReason,
     this.logoUrl,
+    this.introText,
   });
 
   final String id;
@@ -31,6 +34,9 @@ class StoreSeller {
   final DateTime? approvedAt;
   final String? rejectReason;
   final String? logoUrl;
+
+  /// 스토어 프로필 페이지 상단에 노출되는 한 줄 소개글.
+  final String? introText;
 
   bool get isApproved => status == StoreSellerStatus.approved;
 }
@@ -51,4 +57,17 @@ class StoreSellerSummary {
   /// 서버(현재는 mock) 기준 팔로워수 — 내가 방금 누른 팔로우는 포함하지 않는다.
   /// 화면에 표시할 값은 `StoreSellerFollowProvider.displayFollowerCount`로 계산.
   final int followerCount;
+}
+
+/// 셀러 리뷰 탭용 — 리뷰 1건 + 그 리뷰가 달린 상품 정보.
+class StoreSellerReviewEntry {
+  const StoreSellerReviewEntry({
+    required this.productId,
+    required this.productName,
+    required this.review,
+  });
+
+  final String productId;
+  final String productName;
+  final StoreProductReview review;
 }

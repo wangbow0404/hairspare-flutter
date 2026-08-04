@@ -25,6 +25,7 @@ class _StoreSellerApplyScreenState extends State<StoreSellerApplyScreen> {
   late final TextEditingController _ownerNameController;
   final TextEditingController _businessNumberController =
       TextEditingController();
+  final TextEditingController _introTextController = TextEditingController();
 
   bool _isSubmitting = false;
   StoreSeller? _submittedSeller;
@@ -42,6 +43,7 @@ class _StoreSellerApplyScreenState extends State<StoreSellerApplyScreen> {
     _shopNameController.dispose();
     _ownerNameController.dispose();
     _businessNumberController.dispose();
+    _introTextController.dispose();
     super.dispose();
   }
 
@@ -55,6 +57,9 @@ class _StoreSellerApplyScreenState extends State<StoreSellerApplyScreen> {
         businessNumber: _businessNumberController.text.trim().isEmpty
             ? null
             : _businessNumberController.text.trim(),
+        introText: _introTextController.text.trim().isEmpty
+            ? null
+            : _introTextController.text.trim(),
       );
       if (!mounted) return;
       setState(() {
@@ -155,6 +160,22 @@ class _StoreSellerApplyScreenState extends State<StoreSellerApplyScreen> {
                       controller: _businessNumberController,
                       decoration: const InputDecoration(
                         hintText: '000-00-00000',
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing4),
+                    const Text(
+                      '스토어 소개글 (선택)',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing2),
+                    TextFormField(
+                      controller: _introTextController,
+                      decoration: const InputDecoration(
+                        hintText: '스토어 프로필에 보여줄 한 줄 소개',
                       ),
                     ),
                     const SizedBox(height: AppTheme.spacing6),

@@ -11,6 +11,7 @@ class StoreSellerService {
       status: StoreSellerStatus.approved,
       appliedAt: DateTime(2026, 1, 5),
       approvedAt: DateTime(2026, 1, 6),
+      introText: 'HairSpare가 직접 검수한 프로 시술 도구만 모았습니다.',
     ),
     StoreSeller(
       id: 'seller-junscissors',
@@ -20,6 +21,7 @@ class StoreSellerService {
       status: StoreSellerStatus.approved,
       appliedAt: DateTime(2026, 3, 2),
       approvedAt: DateTime(2026, 3, 4),
+      introText: '20년 경력 헤어디자이너가 고른 가위 전문 셀렉샵입니다.',
     ),
     StoreSeller(
       id: 'seller-herzen',
@@ -29,6 +31,7 @@ class StoreSellerService {
       status: StoreSellerStatus.approved,
       appliedAt: DateTime(2026, 4, 10),
       approvedAt: DateTime(2026, 4, 12),
+      introText: '살롱 전용 뷰티 서플라이 — 대용량·업소용 특가로 만나보세요.',
     ),
     StoreSeller(
       id: 'seller-curlstar',
@@ -38,6 +41,7 @@ class StoreSellerService {
       status: StoreSellerStatus.approved,
       appliedAt: DateTime(2026, 5, 8),
       approvedAt: DateTime(2026, 5, 10),
+      introText: '펌·컬 전문 도구 브랜드, 컬리스타의 공식 스토어입니다.',
     ),
     StoreSeller(
       id: 'seller-keracis',
@@ -47,6 +51,7 @@ class StoreSellerService {
       status: StoreSellerStatus.approved,
       appliedAt: DateTime(2026, 5, 20),
       approvedAt: DateTime(2026, 5, 22),
+      introText: '손상모 케어 전문 케라시스 프로 라인을 소개합니다.',
     ),
     StoreSeller(
       id: 'seller-colorlab',
@@ -56,6 +61,7 @@ class StoreSellerService {
       status: StoreSellerStatus.approved,
       appliedAt: DateTime(2026, 6, 1),
       approvedAt: DateTime(2026, 6, 3),
+      introText: '저자극 컬러·케미컬 전문 연구소, 컬러랩입니다.',
     ),
     StoreSeller(
       id: 'seller-bomne',
@@ -64,6 +70,7 @@ class StoreSellerService {
       businessNumber: '678-90-12345',
       status: StoreSellerStatus.pending,
       appliedAt: DateTime(2026, 7, 20),
+      introText: '합리적인 가격의 헤어 소모품을 준비 중입니다.',
     ),
   ];
 
@@ -103,6 +110,7 @@ class StoreSellerService {
     required String shopName,
     required String ownerName,
     String? businessNumber,
+    String? introText,
   }) async {
     await Future.delayed(const Duration(milliseconds: 300));
     final seller = StoreSeller(
@@ -110,6 +118,7 @@ class StoreSellerService {
       shopName: shopName,
       ownerName: ownerName,
       businessNumber: businessNumber,
+      introText: introText,
       status: StoreSellerStatus.pending,
       appliedAt: DateTime.now(),
     );
@@ -132,6 +141,7 @@ class StoreSellerService {
       appliedAt: s.appliedAt,
       approvedAt: DateTime.now(),
       logoUrl: s.logoUrl,
+      introText: s.introText,
     );
   }
 
@@ -150,6 +160,7 @@ class StoreSellerService {
       appliedAt: s.appliedAt,
       rejectReason: reason,
       logoUrl: s.logoUrl,
+      introText: s.introText,
     );
   }
 
@@ -185,5 +196,29 @@ class StoreSellerService {
       return b.productCount.compareTo(a.productCount);
     });
     return summaries;
+  }
+
+  /// [sellerId]의 상품([sellerProducts])에 달린 리뷰를 최신순으로 모아 반환 —
+  /// 스토어 프로필 페이지 "리뷰" 탭용.
+  ///
+  /// [getSellerSummaries]와 같은 규약으로, 상품 목록은 호출자가 조회해서 넘긴다
+  /// (서비스가 다른 서비스를 service locator로 몰래 끌어쓰지 않도록).
+  /// 넘어온 목록에 다른 셀러 상품이 섞여 있어도 [sellerId] 것만 집계한다.
+  Future<List<StoreSellerReviewEntry>> getSellerReviews(
+    String sellerId,
+    List<StoreProduct> sellerProducts,
+  ) async {
+    final products = sellerProducts.where((p) => p.sellerId == sellerId);
+    final entries = <StoreSellerReviewEntry>[
+      for (final product in products)
+        for (final review in product.reviews)
+          StoreSellerReviewEntry(
+            productId: product.id,
+            productName: product.name,
+            review: review,
+          ),
+    ];
+    entries.sort((a, b) => b.review.createdAt.compareTo(a.review.createdAt));
+    return entries;
   }
 }

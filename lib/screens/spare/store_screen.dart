@@ -19,6 +19,7 @@ import '../../widgets/common/shimmer_box.dart';
 import '../../widgets/common/spare_subpage_app_bar.dart';
 import '../../widgets/design_system/hs_filter_chip.dart';
 import '../../widgets/design_system/hs_search_bar.dart';
+import '../../widgets/store/store_app_bar_actions.dart';
 import '../../widgets/store/store_category_row.dart';
 import '../../widgets/store/store_category_sheet.dart';
 import '../../widgets/store/store_feature_shortcuts.dart';
@@ -215,13 +216,8 @@ class _StoreScreenState extends State<StoreScreen> {
   void _openRecentlyViewed() =>
       context.push(AppRoutes.spareHomeStoreRecentlyViewed);
 
-  /// "인기 스토어" 카드 탭 — 이 화면 자체가 `/spare/home/store`이므로 같은 라우트를
-  /// push 하면 StoreScreen이 두 겹으로 쌓인다(배너 타이머·카테고리 시트 리스너 중복).
-  /// 그래서 라우팅 대신 로컬 상태로 셀러 필터만 건다.
   void _openSellerFromCard(StoreSeller seller) {
-    if (_sellerFilter == seller.id) return;
-    setState(() => _sellerFilter = seller.id);
-    _loadProducts();
+    context.push(AppRoutes.spareHomeStoreSellerProfile(seller.id));
   }
 
   String? get _sellerFilterName {
@@ -253,8 +249,8 @@ class _StoreScreenState extends State<StoreScreen> {
         title: '스토어',
         showToolbarActions: false,
         trailingActions: [
-          _WishlistAction(onPressed: _openWishlist),
-          _CartAction(onPressed: _openCart),
+          StoreWishlistAction(onPressed: _openWishlist),
+          StoreCartAction(onPressed: _openCart),
           const SizedBox(width: AppTheme.spacing2),
         ],
       ),
@@ -583,112 +579,6 @@ class _SectionHeader extends StatelessWidget {
           if (trailing != null) trailing!,
         ],
       ),
-    );
-  }
-}
-
-class _WishlistAction extends StatelessWidget {
-  const _WishlistAction({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<StoreWishlistProvider>(
-      builder: (context, wishlist, _) {
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            IconButton(
-              icon: const Icon(
-                Icons.favorite_border,
-                size: 24,
-                color: HairSpareColors.textSecondary,
-              ),
-              onPressed: onPressed,
-              tooltip: '찜한 상품',
-            ),
-            if (wishlist.count > 0)
-              Positioned(
-                right: 6,
-                top: 6,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 5,
-                    vertical: 1,
-                  ),
-                  decoration: const BoxDecoration(
-                    color: HairSpareColors.statusUrgent,
-                    borderRadius: BorderRadius.all(Radius.circular(999)),
-                  ),
-                  constraints: const BoxConstraints(minWidth: 16),
-                  child: Text(
-                    '${wishlist.count}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _CartAction extends StatelessWidget {
-  const _CartAction({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<CartProvider>(
-      builder: (context, cart, _) {
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            IconButton(
-              icon: const Icon(
-                Icons.shopping_cart_outlined,
-                size: 24,
-                color: HairSpareColors.textSecondary,
-              ),
-              onPressed: onPressed,
-              tooltip: '장바구니',
-            ),
-            if (cart.totalCount > 0)
-              Positioned(
-                right: 6,
-                top: 6,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 5,
-                    vertical: 1,
-                  ),
-                  decoration: const BoxDecoration(
-                    color: HairSpareColors.brandPrimary,
-                    borderRadius: BorderRadius.all(Radius.circular(999)),
-                  ),
-                  constraints: const BoxConstraints(minWidth: 16),
-                  child: Text(
-                    '${cart.totalCount}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
     );
   }
 }
